@@ -136,8 +136,11 @@ void main() {
           home: CreateBusinessScreen(admin: AdminRepository(null))));
       await settle(tester);
       expect(find.text('Association'), findsOneWidget);
-      // Name, address, currency; the platform's create_org behind its button.
-      expect(find.byType(TextField), findsNWidgets(3));
+      // Name, address; the currency a picker since 144 (every money by
+      // name, the country's first); the platform's create_org behind its
+      // button.
+      expect(find.byType(TextField), findsNWidgets(2));
+      expect(find.byKey(const Key('create-business-currency')), findsOneWidget);
       expect(find.text('Créer l\'activité'), findsOneWidget);
     });
 

@@ -298,6 +298,9 @@ class _ArticleFlowState extends State<ArticleFlow> {
 
   double? _num(TextEditingController c) => FlowNumberField.read(c);
 
+  /// A price or a cost, in the shop's money (144): no centimes of a franc.
+  double? _amount(TextEditingController c) => FlowNumberField.readAmount(c, widget.org.currency);
+
   // On the vitrine unless the owner says no — for a shop too: off by
   // default, a shop of 57 priced articles was still told to « add 5 ».
   bool get _publishedValue => _published ?? true;
@@ -305,8 +308,8 @@ class _ArticleFlowState extends State<ArticleFlow> {
   Future<bool> _record() async {
     final existing = _existing;
     final name = existing?.name ?? _name.text.trim();
-    final price = _num(_price);
-    final cost = _num(_cost);
+    final price = _amount(_price);
+    final cost = _amount(_cost);
     // Not followed (131): no count to add, nothing received.
     final qty = _counts ? _num(_quantity) ?? 0 : 0.0;
     final retail = widget.retail;
@@ -481,11 +484,12 @@ class _ArticleFlowState extends State<ArticleFlow> {
           id: 'price',
           title: context.tr('Prix de vente ?'),
           shown: () => sell && existing == null,
-          isValid: () => (_num(_price) ?? -1) >= 0,
+          isValid: () => (_amount(_price) ?? -1) >= 0,
           builder: (_) => FlowNumberField(
             key: const Key('article-price'),
             controller: _price,
-            suffix: widget.org.currency == 'XOF' ? 'FCFA' : widget.org.currency,
+            suffix: currencySymbol(widget.org.currency),
+            currency: widget.org.currency,
             hint: '0',
             onChanged: (_) => setState(() {}),
           ),
@@ -515,7 +519,7 @@ class _ArticleFlowState extends State<ArticleFlow> {
               : context.tr('Ce qu\'un article vous coûte : il fait votre marge.'),
           optional: true,
           shown: () => sell && !_simple,
-          isValid: () => _cost.text.trim().isEmpty || (_num(_cost) ?? -1) >= 0,
+          isValid: () => _cost.text.trim().isEmpty || (_amount(_cost) ?? -1) >= 0,
           builder: _costStep,
         ),
         FlowStep(
@@ -742,7 +746,8 @@ class _ArticleFlowState extends State<ArticleFlow> {
           hint: existing != null && existing.costPrice > 0
               ? stockQty(existing.costPrice)
               : '0',
-          suffix: widget.org.currency == 'XOF' ? 'FCFA' : widget.org.currency,
+          suffix: currencySymbol(widget.org.currency),
+          currency: widget.org.currency,
           onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: 8),
@@ -760,12 +765,12 @@ class _ArticleFlowState extends State<ArticleFlow> {
                 homeCurrency: widget.org.currency,
               );
               if (converted != null && mounted) {
-                setState(() => _cost.text = converted.round().toString());
+                setState(() => _cost.text = amountField(converted, widget.org.currency));
               }
             },
           ),
         ),
-        if (_num(_price) != null &&
+        if (_amount(_price) != null &&
             _num(_cost) != null &&
             _num(_price)! < _num(_cost)!)
           Text(

@@ -88,7 +88,7 @@ class _IncomeFlowState extends State<IncomeFlow> {
   String? _filled;
 
   NumberFormat get _money => moneyFormat(widget.currency);
-  double get _value => parseAmount(_amount.text) ?? 0;
+  double get _value => parseAmount(_amount.text, currency: widget.currency) ?? 0;
 
   @override
   void initState() {
@@ -366,7 +366,8 @@ class _IncomeFlowState extends State<IncomeFlow> {
               FlowNumberField(
                 key: const Key('income-amount'),
                 controller: _amount,
-                suffix: widget.currency == 'XOF' ? 'FCFA' : widget.currency,
+                suffix: currencySymbol(widget.currency),
+                currency: widget.currency,
                 onChanged: (_) => setState(() {}),
               ),
               if (_kind == 'cotisation' && _usual != null) ...[

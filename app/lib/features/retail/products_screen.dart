@@ -1077,7 +1077,7 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                                 );
                                 if (converted != null && mounted) {
                                   setState(() => _cost.text =
-                                      converted.round().toString());
+                                      amountField(converted, widget.org.currency));
                                 }
                               },
                       ),

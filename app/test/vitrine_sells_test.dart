@@ -176,7 +176,13 @@ void main() {
     ));
     await settle(tester);
     expect(find.text('Bissap'), findsOneWidget);
-    expect(find.text('700 F'), findsOneWidget);
+    // The shop's money, written as everywhere else (144): « 700 FCFA ».
+    expect(
+        tester
+            .widget<Text>(find.byKey(const Key('street-preview-price-p2')))
+            .data!
+            .replaceAll(RegExp(r'[  ]'), ' '),
+        '700 FCFA');
     expect(find.text('B'), findsNothing, reason: 'no initial on a beige square');
   });
 }

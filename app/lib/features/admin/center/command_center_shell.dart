@@ -636,8 +636,10 @@ class _MoneyCard extends StatelessWidget {
         : [
             context.tr('Pro {amount}', {'amount': money.format(t.money['pro'] ?? 0)}),
             context.tr('mises en avant {amount}', {'amount': money.format(t.money['spots'] ?? 0)}),
+            // Each money its own (144): a euro part never added to francs.
             context.tr('livraisons {amount}', {
-              'amount': money.format(t.money['delivery_cut'] ?? 0),
+              'amount': t.withOthers('delivery_cut', money.format,
+                  (c, v) => moneyFormat(c).format(v)),
             }),
           ].join(' · ');
     final pro = overview?.pro;

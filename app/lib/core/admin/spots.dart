@@ -249,6 +249,7 @@ class PlatformToday {
     this.money = const {},
     this.growth = const {},
     this.health = const {},
+    this.other = const {},
   });
 
   factory PlatformToday.fromJson(Map<String, dynamic> j) {
@@ -259,12 +260,31 @@ class PlatformToday {
               else if (num.tryParse('${e.value}') != null)
                 '${e.key}': num.parse('${e.value}'),
         };
+    final other = j['money'] is Map ? (j['money'] as Map)['other'] : null;
     return PlatformToday(
       money: block(j['money']),
       growth: block(j['growth']),
       health: block(j['health']),
+      other: {
+        if (other is Map)
+          for (final e in other.entries) '${e.key}': block(e.value),
+      },
     );
   }
+
+  /// The month's delivery parts and vitrine sales in every money but the
+  /// franc CFA (140), by money: {'EUR': {'delivery_cut': 0.41,
+  /// 'shops_sold': 25}}. [money] is in francs CFA only — one money is
+  /// never added to another. Empty before 140.
+  final Map<String, Map<String, num>> other;
+
+  /// [key] of [money] (francs CFA, written by [xof]) and of every other
+  /// money with some: « 1 200 FCFA + 0,41 EUR ».
+  String withOthers(String key, String Function(num) xof, String Function(String, num) format) => [
+        xof(money[key] ?? 0),
+        for (final e in other.entries)
+          if ((e.value[key] ?? 0) != 0) format(e.key, e.value[key]!),
+      ].join(' + ');
 
   final Map<String, num> money;
   final Map<String, num> growth;

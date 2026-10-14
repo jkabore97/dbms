@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../../core/errors.dart';
+import '../../core/format/money.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/nav/app_scope.dart';
 import '../home/business_frame.dart';
@@ -400,6 +401,10 @@ class FlowOption<T> {
 
 /// A number typed big: an amount, a quantity. The keyboard is the phone's
 /// own numeric one; commas are read as points.
+///
+/// An amount gives its [currency] (144): the field says when what is typed
+/// does not fit that money (« Pas de centimes en FCFA »), and the flow
+/// reads it with [readAmount], which refuses it.
 class FlowNumberField extends StatelessWidget {
   const FlowNumberField({
     super.key,
@@ -409,7 +414,11 @@ class FlowNumberField extends StatelessWidget {
     this.hint,
     this.decimal = true,
     this.autofocus = true,
+    this.currency,
   });
+
+  /// The money of an amount (144); null for a quantity.
+  final String? currency;
 
   final TextEditingController controller;
   final ValueChanged<String>? onChanged;
@@ -418,15 +427,24 @@ class FlowNumberField extends StatelessWidget {
   final bool decimal;
   final bool autofocus;
 
-  /// The number in [c], or null when empty or not a number.
-  static double? read(TextEditingController c) =>
-      double.tryParse(c.text.trim().replaceAll(' ', '').replaceAll(',', '.'));
+  /// The number in [c], or null when empty or not a number — read as every
+  /// amount is (144's parseAmount: « 45.000 », « 1 000 », « 1.000,50 »,
+  /// « 12,50 » the same everywhere).
+  static double? read(TextEditingController c) => parseAmount(c.text);
+
+  /// The amount in [c] in [currency] (144), or null when empty, not a
+  /// number, or more decimals than the money has (centimes of a franc).
+  static double? readAmount(TextEditingController c, String currency) =>
+      parseAmount(c.text, currency: currency);
 
   @override
   Widget build(BuildContext context) => TextField(
         controller: controller,
         autofocus: autofocus,
-        keyboardType: TextInputType.numberWithOptions(decimal: decimal),
+        // An amount's keyboard has the decimal key when its money has cents
+        // (144: a farm in reais types « 18,90 »), whatever [decimal] says.
+        keyboardType: TextInputType.numberWithOptions(
+            decimal: currency == null ? decimal : currencyDecimals(currency!) > 0),
         style: Theme.of(context)
             .textTheme
             .headlineMedium
@@ -435,9 +453,20 @@ class FlowNumberField extends StatelessWidget {
         decoration: InputDecoration(
           hintText: hint,
           suffixText: suffix,
+          errorText: _problem(context),
+          errorMaxLines: 2,
           border: const OutlineInputBorder(),
         ),
       );
+
+  String? _problem(BuildContext context) {
+    final c = currency;
+    if (c == null) return null;
+    final p = amountProblem(controller.text, c);
+    return p == null
+        ? null
+        : context.tr(p, {'money': currencySymbol(c), 'n': currencyDecimals(c)});
+  }
 }
 
 /// Kept on the device while the flow is open: [save] turns the owner's

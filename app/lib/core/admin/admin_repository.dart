@@ -182,12 +182,24 @@ class AdminRepository {
   /// What each courier owes the platform for one month (067): the courses
   /// they delivered in it, the fees, the platform's share and what they
   /// kept. Platform only; the server refuses anyone else.
+  ///
+  /// One row per courier and per money since 140: a courier who carried
+  /// for a Paris shop owes its part in euros, never added to francs. A
+  /// database before 140 answers 067's rows, in francs CFA.
   Future<List<CourierSettlement>> deliverySettlement(DateTime month) async {
-    final rows = await _requireClient().rpc('platform_delivery_settlement',
-        params: {
-          'p_month': '${month.year.toString().padLeft(4, '0')}-'
-              '${month.month.toString().padLeft(2, '0')}-01',
-        }) as List<dynamic>;
+    final params = {
+      'p_month': '${month.year.toString().padLeft(4, '0')}-'
+          '${month.month.toString().padLeft(2, '0')}-01',
+    };
+    List<dynamic> rows;
+    try {
+      rows = await _requireClient()
+          .rpc('platform_delivery_settlement_by_currency', params: params) as List<dynamic>;
+    } on PostgrestException catch (e) {
+      if (e.code != 'PGRST202' && e.code != '42883') rethrow;
+      rows = await _requireClient()
+          .rpc('platform_delivery_settlement', params: params) as List<dynamic>;
+    }
     return rows
         .map((r) =>
             CourierSettlement.fromRow(Map<String, dynamic>.from(r as Map)))
@@ -1478,6 +1490,7 @@ class CourierSettlement {
     required this.share,
     required this.net,
     this.phone,
+    this.currency = 'XOF',
   });
 
   final String courierId;
@@ -1485,6 +1498,9 @@ class CourierSettlement {
   final String? phone;
   final int courses;
   final double fees;
+
+  /// The money of these courses (140); francs CFA before 140.
+  final String currency;
 
   /// What this courier owes the platform for the month.
   final double share;
@@ -1501,6 +1517,7 @@ class CourierSettlement {
       fees: num_(row['fees']),
       share: num_(row['share']),
       net: num_(row['net']),
+      currency: (row['currency'] as String?) ?? 'XOF',
     );
   }
 }

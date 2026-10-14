@@ -60,6 +60,7 @@ class ConsoleTodayState extends State<ConsoleToday> {
     if (!_loaded || today == null) return const SizedBox.shrink();
     final n = NumberFormat.decimalPattern('fr_FR');
     final money = moneyFormat('XOF');
+    String other(String c, num v) => moneyFormat(c).format(v);
     final m = today.money, g = today.growth, h = today.health;
     int c(Map<String, num> b, String k) => today.count(b, k);
 
@@ -74,12 +75,20 @@ class ConsoleTodayState extends State<ConsoleToday> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _Heading('Ce mois',
-            trailing: context.tr('gagné {amount}', {'amount': money.format(today.earnedMonth)})),
+            trailing: context.tr('gagné {amount}', {
+              'amount': [
+                money.format(today.earnedMonth),
+                for (final e in today.other.entries)
+                  if ((e.value['delivery_cut'] ?? 0) != 0)
+                    moneyFormat(e.key).format(e.value['delivery_cut']),
+              ].join(' + '),
+            })),
         _Figures([
           _Figure('Mara Pro', money.format(m['pro'] ?? 0)),
           _Figure('Mises en avant', money.format(m['spots'] ?? 0)),
-          _Figure('Part livraison', money.format(m['delivery_cut'] ?? 0)),
-          _Figure('Vendu par les vitrines', money.format(m['shops_sold'] ?? 0)),
+          // Each money its own (144): a euro part never added to francs.
+          _Figure('Part livraison', today.withOthers('delivery_cut', money.format, other)),
+          _Figure('Vendu par les vitrines', today.withOthers('shops_sold', money.format, other)),
         ]),
         const SizedBox(height: 16),
         const _Heading('Croissance'),

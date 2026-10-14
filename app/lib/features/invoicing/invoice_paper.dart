@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/format/money_text.dart';
 import '../../core/invoicing/models.dart';
 import '../../core/theme/kaj_theme.dart';
 import '../accounting/report_shell.dart';
@@ -193,10 +194,13 @@ class _LineHeader extends StatelessWidget {
               child: Text(context.tr('QTÉ'), style: style, textAlign: TextAlign.right)),
           Expanded(
               flex: 3,
-              child: Text('P.U.', style: style, textAlign: TextAlign.right)),
+              child: MoneyText('P.U.', style: style, alignment: Alignment.centerRight)),
           Expanded(
               flex: 3,
-              child: Text(context.tr('MONTANT'), style: style, textAlign: TextAlign.right)),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 6),
+                child: MoneyText(context.tr('MONTANT'), style: style, alignment: Alignment.centerRight),
+              )),
         ],
       ),
     );
@@ -221,17 +225,25 @@ class _LineRow extends StatelessWidget {
             flex: 2,
             child: Text(_trim(line.quantity), textAlign: TextAlign.right),
           ),
+          // Each amount whole on one line, shrunk rather than cut (144: at
+          // 320 px × 1.3 « 18,90 BRL » broke into « 18,90 B / RL »).
           Expanded(
             flex: 3,
-            child:
-                Text(money.format(line.unitPrice), textAlign: TextAlign.right),
+            child: Padding(
+              padding: const EdgeInsets.only(left: 6),
+              child: MoneyText(money.format(line.unitPrice),
+                  alignment: Alignment.centerRight),
+            ),
           ),
           Expanded(
             flex: 3,
-            child: Text(
-              money.format(line.amount),
-              textAlign: TextAlign.right,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+            child: Padding(
+              padding: const EdgeInsets.only(left: 6),
+              child: MoneyText(
+                money.format(line.amount),
+                alignment: Alignment.centerRight,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
             ),
           ),
         ],

@@ -653,7 +653,8 @@ class _DocumentScreenState extends State<DocumentScreen> {
                       Chip(
                         avatar: const Icon(Icons.sell_outlined, size: 16),
                         label: Text(context.tr('Prix lu : {price}',
-                            {'price': _suggestions.price!.toStringAsFixed(0)})),
+                            // As read, cents kept (144: « 12,5 », not « 13 »).
+                            {'price': NumberFormat.decimalPattern('fr_FR').format(_suggestions.price!)})),
                       ),
                     if (_suggestions.expiresOn != null)
                       Chip(

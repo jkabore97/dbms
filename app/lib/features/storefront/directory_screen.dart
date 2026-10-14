@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/capture/capture_repository.dart';
 import '../../core/format/money.dart';
+import '../../core/format/money_text.dart';
 import '../../core/nav/router.dart';
 import '../../core/theme/mara_mark.dart';
 import '../../core/theme/motion.dart';
@@ -1262,7 +1263,11 @@ class _ShopTile extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AspectRatio(
+            // Flexible (144): at 320 px with text × 1.3 the name and the
+            // line under it outgrew the grid's cell by 14 px; the square
+            // gives way rather than the words.
+            Flexible(
+              child: AspectRatio(
               aspectRatio: 1.15,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(6),
@@ -1334,6 +1339,7 @@ class _ShopTile extends StatelessWidget {
                   ),
                 ),
               ),
+            ),
             ),
             const SizedBox(height: 10),
             Text(
@@ -1457,12 +1463,18 @@ class _ShopFace extends StatelessWidget {
                               color: ShopStyle.ink)),
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      p.price == p.price.roundToDouble()
-                          ? '${p.price.toStringAsFixed(0)} F'
-                          : context.tr('{price} F', {'price': p.price}),
-                      style:
-                          const TextStyle(fontSize: 13, color: ShopStyle.mist),
+                    // The shop's own money (144): « 12,50 EUR » for a Paris
+                    // shop, « 1 500 FCFA » here — whole, shrunk rather than
+                    // cut on a narrow card. Before 140 is installed the
+                    // money is not said: the franc CFA, as the card always
+                    // assumed.
+                    Flexible(
+                      child: MoneyText(
+                        moneyFormat(p.currency ?? 'XOF').format(p.price),
+                        textKey: Key('street-preview-price-${p.productId}'),
+                        alignment: Alignment.centerRight,
+                        style: const TextStyle(fontSize: 13, color: ShopStyle.mist),
+                      ),
                     ),
                   ],
                 ),

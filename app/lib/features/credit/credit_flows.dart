@@ -117,7 +117,7 @@ class _NewCreditFlowState extends State<NewCreditFlow> {
 
   bool get _sums => widget.org.isAssociation;
   NumberFormat get _money => moneyFormat(widget.org.currency);
-  double get _value => parseAmount(_amount.text) ?? 0;
+  double get _value => parseAmount(_amount.text, currency: widget.org.currency) ?? 0;
   bool get _articles => !_sums && _what == 'articles';
 
   @override
@@ -318,7 +318,8 @@ class _NewCreditFlowState extends State<NewCreditFlow> {
           builder: (_) => FlowNumberField(
             key: const Key('credit-amount'),
             controller: _amount,
-            suffix: widget.org.currency == 'XOF' ? 'FCFA' : widget.org.currency,
+            suffix: currencySymbol(widget.org.currency),
+            currency: widget.org.currency,
             onChanged: (_) => setState(() {}),
           ),
         ),
@@ -460,7 +461,7 @@ class _RepayFlowState extends State<RepayFlow> {
   double? _left;
 
   NumberFormat get _money => moneyFormat(widget.org.currency);
-  double get _value => parseAmount(_amount.text) ?? 0;
+  double get _value => parseAmount(_amount.text, currency: widget.org.currency) ?? 0;
 
   DebtorRow? get _debtor {
     for (final d in widget.debtors) {
@@ -552,7 +553,8 @@ class _RepayFlowState extends State<RepayFlow> {
               FlowNumberField(
                 key: const Key('repay-amount'),
                 controller: _amount,
-                suffix: widget.org.currency == 'XOF' ? 'FCFA' : widget.org.currency,
+                suffix: currencySymbol(widget.org.currency),
+                currency: widget.org.currency,
                 onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: 12),

@@ -2424,6 +2424,13 @@ const enStrings = <String, String>{
       'System',
   'Tarifs de la plateforme':
       'Platform rates',
+  // 144: a business's delivery prices in its own money.
+  '{base} {money} jusqu\'à {km} km, puis {perKm} {money}/km':
+      '{base} {money} up to {km} km, then {perKm} {money}/km',
+  'Le minimum couvre toute course jusqu\'à la distance choisie ; au-delà, chaque kilomètre ajoute le prix par km. Vide : le prix de la course est à convenir. Le montant est annoncé au client avant qu\'il commande.':
+      'The minimum covers any trip up to the chosen distance; beyond, each kilometre adds the price per km. Empty: the price of the trip is to be agreed. The amount is shown to the customer before they order.',
+  'Une base pour la course, plus un prix par kilomètre jusqu\'à la porte du client. Vide : le prix de la course est à convenir. Le montant est annoncé au client avant qu\'il commande, et payé au livreur à la porte.':
+      'A base for the trip, plus a price per kilometre to the customer\'s door. Empty: the price of the trip is to be agreed. The amount is shown to the customer before they order, and paid to the courier at the door.',
   'Taux fixe officiel : 655,957':
       'Official fixed rate: 655.957',
   'Taux horaire':
@@ -5405,6 +5412,8 @@ const enStrings = <String, String>{
       'Saved: {pct} % on the next deliveries. Orders already placed keep their share.',
   '{amount} F CFA dus à Mara':
       '{amount} F CFA owed to Mara',
+  '{amount} dus à Mara':
+      '{amount} owed to Mara',
   '{n} courses':
       '{n} runs',
   '{n} course':
@@ -5413,6 +5422,10 @@ const enStrings = <String, String>{
       'collected {amount} F',
   'gardé {amount} F':
       'kept {amount} F',
+  'encaissé {amount}':
+      'collected {amount}',
+  'gardé {amount}':
+      'kept {amount}',
   'Code changé.':
       'Code changed.',
   'Validation en deux étapes désactivée.':
@@ -7933,4 +7946,11 @@ const enStrings = <String, String>{
       'For a delivery, nearby couriers see the address and the delivery point, without your name or number; the courier who takes the job then receives your name and number, to reach you during the delivery, and commits in their charter not to use them for anything else.',
   'Un formateur Mara ne voit les données d\'une entreprise qu\'à sa demande, en lecture seule et pour un temps limité. En dehors de ces cas et des prestataires ci-dessous, Mara ne transmet vos informations à personne, sauf sur une demande légale des autorités.':
       'A Mara trainer sees a business\'s data only at its request, read-only and for a limited time. Apart from these cases and the service providers below, Mara passes your information on to no one, except on a lawful request from the authorities.',
+  // 144: an amount that does not fit its money.
+  'Ce n\'est pas un montant':
+      'This is not an amount',
+  'Pas de centimes en {money}':
+      'No cents in {money}',
+  'Au plus {n} chiffres après la virgule':
+      'At most {n} digits after the decimal point',
 };

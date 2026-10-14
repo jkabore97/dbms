@@ -210,9 +210,9 @@ class _BooksStartSheetState extends State<BooksStartSheet> {
   }
 
   Future<void> _save() async {
-    final caisse = parseAmount(_caisse.text.trim());
+    final caisse = parseAmount(_caisse.text.trim(), currency: widget.currency);
     final cotisationText = _cotisation.text.trim();
-    final cotisation = cotisationText.isEmpty ? null : parseAmount(cotisationText);
+    final cotisation = cotisationText.isEmpty ? null : parseAmount(cotisationText, currency: widget.currency);
     if (caisse == null || caisse < 0) {
       setState(() => _error = context.tr('Un montant de 0 ou plus, s\'il vous plaît.'));
       return;
@@ -250,7 +250,7 @@ class _BooksStartSheetState extends State<BooksStartSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final suffix = widget.currency == 'XOF' ? 'FCFA' : widget.currency;
+    final suffix = currencySymbol(widget.currency);
     return Padding(
       padding: EdgeInsets.fromLTRB(20, 4, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
       child: SingleChildScrollView(

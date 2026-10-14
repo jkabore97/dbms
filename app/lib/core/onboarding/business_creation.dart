@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../db/local_db.dart';
+import '../format/currencies.dart';
 import '../phone/country_codes.dart';
 import 'application_form.dart';
 
@@ -256,24 +257,17 @@ class SupabaseBusinessCreation implements BusinessCreation {
   }
 }
 
-/// The currency a business starts with, from its phone's country: the CFA
-/// franc of UEMOA (XOF) and of CEMAC (XAF), else the country's own when
-/// the app knows it, else XOF — the person may change it.
-String currencyOfCountry(String iso) => switch (iso.toUpperCase()) {
-      'BF' || 'ML' || 'NE' || 'CI' || 'SN' || 'TG' || 'BJ' || 'GW' => 'XOF',
-      'CM' || 'GA' || 'TD' || 'CF' || 'CG' || 'GQ' => 'XAF',
-      'GH' => 'GHS',
-      'NG' => 'NGN',
-      'GN' => 'GNF',
-      'MA' => 'MAD',
-      'GB' => 'GBP',
-      'US' => 'USD',
-      'CA' => 'CAD',
-      'CN' => 'CNY',
-      'FR' || 'BE' || 'DE' || 'ES' || 'IT' || 'PT' || 'NL' || 'LU' || 'AT' || 'IE' ||
-      'FI' || 'GR' || 'CY' => 'EUR',
-      _ => 'XOF',
-    };
+/// The currency a business starts with, from its phone's country (144):
+/// the franc CFA of UEMOA (XOF) and of CEMAC (XAF), the euro of the euro
+/// area, the dollar of the dollar area, the real, the naira, the cedi, the
+/// dirham… — currencies.dart's [countryCurrency], which names every
+/// country of the phone list. The person may change it.
+///
+/// Before 144 every country the app did not name fell back to XOF, and a
+/// São Paulo association read « XOF — Franc CFA (UEMOA) ». A country the
+/// table does not know now starts on the US dollar, the most common money
+/// to price in across borders — never on the franc CFA by accident.
+String currencyOfCountry(String iso) => currencyOfCountryOrNull(iso) ?? 'USD';
 
 /// The towns offered as one tap wherever a city is asked (the « où »
 /// screen of a new business, the shopper's « Ma ville »): the person's own

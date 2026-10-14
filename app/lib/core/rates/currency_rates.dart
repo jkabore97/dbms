@@ -1,4 +1,8 @@
+import 'dart:math' as math;
+
 import 'package:intl/intl.dart';
+
+import '../format/currencies.dart';
 
 /// The owner's exchange rates (039), and the little arithmetic around them.
 ///
@@ -29,18 +33,13 @@ class CurrencyRate {
       rate == 0 ? 0 : double.parse((total / rate).toStringAsFixed(2));
 }
 
-/// The currencies the picker offers, named in French. A code not listed can
-/// still be typed — the list is a convenience, not a wall.
-const knownCurrencies = <String, String>{
-  'USD': 'Dollar américain',
-  'EUR': 'Euro',
-  'GHS': 'Cedi ghanéen',
-  'NGN': 'Naira nigérian',
-  'GBP': 'Livre sterling',
-  'CAD': 'Dollar canadien',
-  'XAF': 'Franc CFA (CEMAC)',
-  'MAD': 'Dirham marocain',
-  'CNY': 'Yuan chinois',
+/// The currencies the picker offers, named in French (translated by
+/// context.tr where shown). A code not listed can still be typed — the list
+/// is a convenience, not a wall. Since 144 every currency of
+/// currencies.dart, so a business in reais can take dollars and the other
+/// way round.
+final knownCurrencies = <String, String>{
+  for (final c in worldCurrencies.values) c.code: c.fr,
 };
 
 /// The CFA franc's fixed peg to the euro — the one rate that is law rather
@@ -48,19 +47,27 @@ const knownCurrencies = <String, String>{
 /// owner may still prefer their bank's effective rate.
 const double eurXofPeg = 655.957;
 
-/// Foreign amounts print with their own code and two decimals ("15,38 USD"),
-/// never with the home currency's habits — 15 USD and 15 F must not look alike.
+/// Foreign amounts print with their own code and their own decimals
+/// ("15,38 USD", "9 500 XOF"), never with the home currency's habits — 15
+/// USD and 15 F must not look alike.
 NumberFormat foreignMoneyFormat(String currency) => NumberFormat.currency(
       locale: 'fr_FR',
       symbol: currency,
-      decimalDigits: 2,
+      decimalDigits: currencyDecimals(currency),
     );
 
 /// "1 USD = 600 F" — the one line a rate is ever shown as. Not moneyFormat:
 /// amounts have no centimes here but a *rate* keeps its decimals, or the EUR
 /// peg would print as 656 F and quietly disagree with the arithmetic.
 String rateLabel(String currency, double rate, String homeCurrency) {
-  final symbol = homeCurrency == 'XOF' ? 'F' : homeCurrency;
-  final fmt = NumberFormat('#,##0.###', 'fr_FR');
+  // « F » for either franc CFA (144: XAF as XOF).
+  final symbol = homeCurrency == 'XOF' || homeCurrency == 'XAF' ? 'F' : homeCurrency;
+  // Enough digits for a small rate too (144: 1 XOF = 0,001524 EUR was
+  // « 0,002 »): four significant ones below 1.
+  final fmt = rate > 0 && rate < 1
+      ? (NumberFormat.decimalPattern('fr_FR')
+        ..maximumFractionDigits = 3 - (math.log(rate) / math.ln10).floor()
+        ..minimumFractionDigits = 0)
+      : NumberFormat('#,##0.###', 'fr_FR');
   return '1 $currency = ${fmt.format(rate)} $symbol';
 }

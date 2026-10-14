@@ -66,17 +66,21 @@ class InvoiceFlow extends StatefulWidget {
 }
 
 class _Line {
-  _Line({this.productId, required this.name, double quantity = 1, double? price})
+  _Line({this.productId, required this.name, double quantity = 1, double? price, this.currency})
       : quantity = TextEditingController(text: _plain(quantity)),
         price = TextEditingController(text: price == null ? '' : _plain(price));
 
   final String? productId;
   final String name;
+
+  /// The money of the price (144); null reads it as before.
+  final String? currency;
   final TextEditingController quantity;
   final TextEditingController price;
 
   double get qty => parseAmount(quantity.text) ?? 0;
-  double get unit => parseAmount(price.text) ?? 0;
+  // In the business's money (144): no centimes of a franc.
+  double get unit => parseAmount(price.text, currency: currency) ?? 0;
   double get amount => qty * unit;
   bool get complete => name.trim().isNotEmpty && qty > 0 && unit > 0;
 
@@ -132,7 +136,7 @@ class _InvoiceFlowState extends State<InvoiceFlow> {
       _customer.text = doc.customerName;
       _address.text = doc.customerAddress ?? '';
       for (final l in doc.lines) {
-        _lines.add(_Line(name: l.description, quantity: l.quantity, price: l.unitPrice));
+        _lines.add(_Line(currency: widget.org.currency, name: l.description, quantity: l.quantity, price: l.unitPrice));
       }
       final due = doc.dueOn;
       _due = due == null ? 'now' : 'date:${_day(due)}';
@@ -203,7 +207,7 @@ class _InvoiceFlowState extends State<InvoiceFlow> {
         final l = _lines[at];
         l.quantity.text = _Line._plain(l.qty + 1);
       } else {
-        _lines.add(_Line(
+        _lines.add(_Line(currency: widget.org.currency,
             productId: p.id,
             name: p.name,
             price: p.salePrice > 0 ? p.salePrice : null));
@@ -216,7 +220,7 @@ class _InvoiceFlowState extends State<InvoiceFlow> {
     final name = _typedName.text.trim();
     if (name.isEmpty) return;
     setState(() {
-      _lines.add(_Line(name: name, price: parseAmount(_typedPrice.text)));
+      _lines.add(_Line(currency: widget.org.currency, name: name, price: parseAmount(_typedPrice.text, currency: widget.org.currency)));
       _typedName.clear();
       _typedPrice.clear();
     });
@@ -246,7 +250,7 @@ class _InvoiceFlowState extends State<InvoiceFlow> {
         final lines = a['lines'];
         if (lines is List) {
           for (final raw in lines.whereType<Map>()) {
-            final line = _Line(
+            final line = _Line(currency: widget.org.currency,
                 productId: raw['product'] as String?,
                 name: '${raw['name'] ?? ''}');
             line.quantity.text = '${raw['qty'] ?? '1'}';
@@ -255,7 +259,7 @@ class _InvoiceFlowState extends State<InvoiceFlow> {
           }
         } else if (widget.revisionOf != null) {
           for (final l in widget.revisionOf!.lines) {
-            _lines.add(_Line(name: l.description, quantity: l.quantity, price: l.unitPrice));
+            _lines.add(_Line(currency: widget.org.currency, name: l.description, quantity: l.quantity, price: l.unitPrice));
           }
         }
         _due = (a['due'] as String?) ?? 'days:30';

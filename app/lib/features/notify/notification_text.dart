@@ -19,9 +19,20 @@ import '../help/help_words.dart' show helpSubjectLabel;
 /// push said. On an English phone the line is written here from the kind
 /// and its facts. A row with no facts (written before 099, or a message the
 /// platform typed) reads as the server wrote it.
+/// The bells that carry an amount (144): written from their facts in
+/// every language.
+const _moneyKinds = {
+  'new_order', 'delivery_available', 'courier_cash_received', 'order_paid',
+  'debt_settled', 'vitrine_news',
+};
+
 String notificationLine(BuildContext context, NotificationRow n) {
   final p = n.params;
-  if (context.trLanguage != 'en' || p.isEmpty) return n.message;
+  // 144: a line with an amount is written here in French too, from its
+  // facts — the server's own words for an older row said « 12,000.00 XOF »
+  // or « 1500 F » whatever the money; the app writes it as every screen
+  // does (« 12 000 FCFA », « 12,50 EUR »).
+  if (p.isEmpty || (context.trLanguage != 'en' && !_moneyKinds.contains(n.kind))) return n.message;
   String s(String key) => '${p[key] ?? ''}';
   bool yes(String key) => p[key] == true;
   num? number(String key) {
@@ -44,7 +55,7 @@ String notificationLine(BuildContext context, NotificationRow n) {
   // A booking's slot (125), on Ouagadougou's clock.
   String when(String key) {
     final d = DateTime.tryParse(s(key));
-    return d == null ? '' : bookingWhen(d, 'en', short: true);
+    return d == null ? '' : bookingWhen(d, context.trLanguage, short: true);
   }
 
   switch (n.kind) {

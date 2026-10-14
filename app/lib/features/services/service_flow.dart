@@ -69,7 +69,7 @@ class _ServiceFlowState extends State<ServiceFlow> {
   static const _units = ['heure', 'séance', 'personne', 'jour', 'mois'];
 
   NumberFormat get _money => moneyFormat(widget.org.currency);
-  double? get _priceValue => FlowNumberField.read(_price);
+  double? get _priceValue => FlowNumberField.readAmount(_price, widget.org.currency);
 
   @override
   void dispose() {
@@ -390,7 +390,8 @@ class _ServiceFlowState extends State<ServiceFlow> {
           controller: _price,
           autofocus: false,
           hint: '0',
-          suffix: widget.org.currency == 'XOF' ? 'FCFA' : widget.org.currency,
+          suffix: currencySymbol(widget.org.currency),
+          currency: widget.org.currency,
           onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: 16),

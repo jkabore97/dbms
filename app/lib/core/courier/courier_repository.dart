@@ -153,9 +153,23 @@ class CourierRepository {
   }
 
   /// Today, this week, this month: courses delivered, fees carried, km
-  /// ridden — about this courier alone (062).
+  /// ridden — about this courier alone (062), one row per period and per
+  /// money since 140 (a run in euros is never added to francs). A courier
+  /// with no delivery yet, or a database before 140, reads 062's three
+  /// rows with no money: the screen writes them in the courier's own.
   Future<List<CourierEarnings>> earnings() async {
-    final rows = await _requireClient().rpc('courier_earnings') as List<dynamic>;
+    final client = _requireClient();
+    try {
+      final rows = await client.rpc('courier_earnings_by_currency') as List<dynamic>;
+      if (rows.isNotEmpty) {
+        return rows
+            .map((r) => CourierEarnings.fromRow(Map<String, dynamic>.from(r as Map)))
+            .toList();
+      }
+    } on PostgrestException catch (e) {
+      if (e.code != 'PGRST202' && e.code != '42883') rethrow;
+    }
+    final rows = await client.rpc('courier_earnings') as List<dynamic>;
     return rows
         .map((r) => CourierEarnings.fromRow(Map<String, dynamic>.from(r as Map)))
         .toList();
@@ -235,7 +249,12 @@ class CourierEarnings {
     required this.km,
     this.share = 0,
     double? net,
+    this.currency,
   }) : net = net ?? fees;
+
+  /// The money of these courses (140); null from 062's tally, which said
+  /// none.
+  final String? currency;
 
   /// 'today' | 'week' | 'month'.
   final String period;
@@ -262,6 +281,7 @@ class CourierEarnings {
       km: DeliveryJob._num(row['km']) ?? 0,
       share: share,
       net: DeliveryJob._num(row['net']) ?? (fees - share),
+      currency: row['currency'] as String?,
     );
   }
 

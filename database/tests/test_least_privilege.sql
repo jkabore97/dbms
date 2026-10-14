@@ -127,6 +127,8 @@ begin
                              -- 135: the website's « Continuer avec Apple »
                              -- switch, read by the signed-out sign-in.
                              'sign_in_options',
+                             -- 140: each street card's money (batch 144).
+                             'storefront_currencies',
                              -- 077's pre-request hook runs on every request,
                              -- the street's included; it reads nothing for anon.
                              'two_step_gate')

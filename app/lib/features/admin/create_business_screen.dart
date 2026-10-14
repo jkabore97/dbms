@@ -6,6 +6,9 @@ import '../../core/admin/admin_repository.dart';
 import '../../core/errors.dart' show describeError;
 import '../../core/terms/terms.dart';
 import '../account/terms_gate.dart' show SellerCommitmentsCard;
+import '../../core/format/currencies.dart';
+import '../../core/nav/app_scope.dart';
+import '../../core/onboarding/business_creation.dart' show currencyOfCountry, townCountry;
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import 'package:kaj_app/core/nav/parent_route.dart';
@@ -103,7 +106,14 @@ const _profiles =
 class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
   final _nameController = TextEditingController();
   final _slugController = TextEditingController();
-  final _currencyController = TextEditingController(text: 'XOF');
+
+  /// The money picked by hand (144); null follows [_countryCurrency].
+  String? _pickedCurrency;
+
+  /// The money of the country this is created from — the platform admin's
+  /// own phone's (or the device's region): a business starts in its
+  /// country's money, never in francs CFA by accident. Read once.
+  String? _countryCurrency;
 
   String _profile = 'association';
 
@@ -133,7 +143,6 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
     _nameController.removeListener(_onNameChanged);
     _nameController.dispose();
     _slugController.dispose();
-    _currencyController.dispose();
     super.dispose();
   }
 
@@ -148,7 +157,14 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
 
   String get _name => _nameController.text.trim();
   String get _slug => _slugController.text.trim();
-  String get _currency => _currencyController.text.trim().toUpperCase();
+  String get _currency => _pickedCurrency ?? _countryCurrency ?? 'XOF';
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _countryCurrency ??= currencyOfCountry(
+        townCountry(AppScope.read(context)?.session.identity?.phone));
+  }
 
   bool get _ready =>
       _name.isNotEmpty &&
@@ -270,22 +286,24 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
             }),
             const SizedBox(height: 8),
 
-            SizedBox(
-              width: 160,
-              child: TextField(
-                controller: _currencyController,
-                enabled: !_busy,
-                textCapitalization: TextCapitalization.characters,
-                inputFormatters: [
-                  LengthLimitingTextInputFormatter(3),
-                  FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z]')),
-                ],
-                onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(
-                  labelText: context.tr('Monnaie'),
-                  border: const OutlineInputBorder(),
-                ),
+            // The same picker as « Créer mon activité » and the settings
+            // (144): every money by name, the country's first.
+            DropdownButtonFormField<String>(
+              key: const Key('create-business-currency'),
+              initialValue: _currency,
+              isExpanded: true,
+              decoration: InputDecoration(
+                labelText: context.tr('Monnaie'),
+                border: const OutlineInputBorder(),
               ),
+              items: [
+                for (final c in currencyChoices(_currency))
+                  DropdownMenuItem(
+                      value: c,
+                      child: Text('$c — ${currencyName(c, context.trLanguage)}',
+                          maxLines: 1, overflow: TextOverflow.ellipsis)),
+              ],
+              onChanged: _busy ? null : (c) => setState(() => _pickedCurrency = c),
             ),
 
             if (_asksSeller) ...[

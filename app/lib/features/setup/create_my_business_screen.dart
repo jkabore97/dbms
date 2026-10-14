@@ -12,9 +12,9 @@ import '../../core/l10n/tr.dart';
 import '../../core/onboarding/application_form.dart';
 import '../../core/onboarding/business_creation.dart';
 import '../../core/phone/country_codes.dart';
-import '../../core/rates/currency_rates.dart' show knownCurrencies;
 import '../../core/terms/terms.dart';
 import '../account/terms_gate.dart' show SellerCommitmentsCard;
+import '../../core/format/currencies.dart';
 import '../../core/theme/mara_mark.dart';
 import '../admin/create_business_screen.dart' show CreateBusinessScreen;
 import '../auth/org_picker_screen.dart' show iconForProfile, kindColour, kindInk;
@@ -1068,7 +1068,7 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
     final required = _start?.phoneRequired ?? false;
     final typed = _phone.text.trim();
     final length = typed.isEmpty ? null : _country.lengthProblem(typed);
-    final currencies = <String>{_currency, 'XOF', 'XAF', ...knownCurrencies.keys}.toList();
+    final currencies = currencyChoices(_currency);
     return [
       _title(theme, _ofKind(context.tr('Le numéro de votre boutique'), context.tr('Le numéro de votre ferme'),
               context.tr('Le numéro de votre association')),
@@ -1136,7 +1136,9 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
         ),
         items: [
           for (final c in currencies)
-            DropdownMenuItem(value: c, child: Text('$c — ${_currencyName(c)}')),
+            DropdownMenuItem(
+                value: c,
+                child: Text('$c — ${_currencyName(c)}', maxLines: 1, overflow: TextOverflow.ellipsis)),
         ],
         onChanged: (c) {
           _draft.currency = c == currencyOfCountry(_draft.phoneIso) ? null : c;
@@ -1146,11 +1148,7 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
     ];
   }
 
-  String _currencyName(String code) => switch (code) {
-        'XOF' => context.tr('Franc CFA (UEMOA)'),
-        'GNF' => context.tr('Franc guinéen'),
-        _ => knownCurrencies[code] ?? code,
-      };
+  String _currencyName(String code) => currencyName(code, context.trLanguage);
 
   List<Widget> _questionPage(ThemeData theme, FormQuestion q) {
     final id = _idOf(q);

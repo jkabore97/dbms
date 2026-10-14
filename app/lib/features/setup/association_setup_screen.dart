@@ -7,7 +7,7 @@ import '../../core/admin/setup_steps.dart' show SetupKnown;
 import '../../core/association/books_start.dart';
 import '../../core/auth/models.dart';
 import '../../core/errors.dart';
-import '../../core/format/money.dart' show parseAmount;
+import '../../core/format/money.dart' show currencySymbol, parseAmount;
 import '../../core/invoicing/invoicing_repository.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/phone/country_codes.dart';
@@ -364,8 +364,8 @@ class _AssociationSetupScreenState extends State<AssociationSetupScreen> {
     final books = widget.books;
     final caisseText = _caisse.text.trim();
     final cotisationText = _cotisation.text.trim();
-    final caisse = caisseText.isEmpty ? null : parseAmount(caisseText);
-    final cotisation = cotisationText.isEmpty ? null : parseAmount(cotisationText);
+    final caisse = caisseText.isEmpty ? null : parseAmount(caisseText, currency: widget.org.currency);
+    final cotisation = cotisationText.isEmpty ? null : parseAmount(cotisationText, currency: widget.org.currency);
     if (caisseText.isNotEmpty && (caisse == null || caisse < 0)) {
       setState(() => _error = context.tr('Un montant de 0 ou plus, s\'il vous plaît.'));
       return;
@@ -673,7 +673,7 @@ class _AssociationSetupScreenState extends State<AssociationSetupScreen> {
       };
 
   List<Widget> _caisseStep(ThemeData theme) {
-    final suffix = widget.org.currency == 'XOF' ? 'FCFA' : widget.org.currency;
+    final suffix = currencySymbol(widget.org.currency);
     return [
       Text(context.tr('Combien y a-t-il dans la caisse aujourd\'hui ?'),
           style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),

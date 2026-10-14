@@ -161,7 +161,7 @@ class _AddAnimalsFlowState extends State<_AddAnimalsFlow> {
   String get _speciesLabel =>
       _species == 'autre' ? _other.text.trim() : (_chosen?.label ?? '');
   int get _heads => int.tryParse(_count.text.trim()) ?? 0;
-  double get _price => FlowNumberField.read(_cost) ?? 0;
+  double get _price => FlowNumberField.readAmount(_cost, widget.org.currency) ?? 0;
   NumberFormat get _money => moneyFormat(widget.org.currency);
 
   /// The day the group's age is counted from: 009's flock age and 019's
@@ -426,7 +426,8 @@ class _AddAnimalsFlowState extends State<_AddAnimalsFlow> {
             key: const Key('farm-cost'),
             controller: _cost,
             decimal: false,
-            suffix: widget.org.currency,
+            suffix: currencySymbol(widget.org.currency),
+            currency: widget.org.currency,
             onChanged: (_) => setState(() {}),
           ),
         ),
