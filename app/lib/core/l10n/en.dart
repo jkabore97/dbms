@@ -5069,10 +5069,6 @@ const enStrings = <String, String>{
       'Unlimited',
   'Complet':
       'Full',
-  'Mise en avant offerte':
-      'Free featuring',
-  '1 par mois':
-      '1 a month',
   'Pointages et paie du personnel':
       'Staff time and pay',
   'Accès de l\'équipe : qui voit quoi, qui modifie quoi':
