@@ -12,7 +12,8 @@
 -- a church, a spot asked for and paid, a vitrine dressed on Pro and on
 -- Basic, the delivery numbers and the Wave payout changed, a service
 -- created. And with no rule written, none of the vitrine's switches hides
--- anything for any business.
+-- anything for any business. One answer changes on purpose, set aside
+-- below: since 141 the Basic dressing keeps the layout it was sent.
 -- ============================================================
 \set ON_ERROR_STOP on
 
@@ -39,6 +40,22 @@ begin
      where s.phase = 'after'
        and (s.what like 'storefront_products %' or s.what like 'own products %')
        and jsonb_typeof(s.v) = 'array';
+    -- 141 (batch 146): a Basic business keeps the Pro choices it saves.
+    -- « dress basic » sent « layout: menu »; before 141 that was dropped
+    -- and the row's old layout (« list », from its Pro days) carried over;
+    -- since 141 the « menu » sent is what the row keeps (the street still
+    -- strips it: the vitrines' own answers are compared untouched). In
+    -- that answer only, and only when it is exactly what was sent, the
+    -- layout is read as before.
+    update p110_snap s
+       set v = (s.v - 'layout')
+               || coalesce((select jsonb_build_object('layout', b.v -> 'layout')
+                              from p110_snap b
+                             where b.phase = 'before' and b.what = 'dress basic'
+                               and b.v ? 'layout'), '{}'::jsonb)
+     where s.phase = 'after'
+       and s.what = 'dress basic'
+       and s.v ->> 'layout' = 'menu';
     select string_agg(coalesce(b.what, a.what), '; ' order by coalesce(b.what, a.what)), count(*)
       into v_diff, v_count
       from (select * from p110_snap where phase = 'before') b

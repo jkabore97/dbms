@@ -1070,6 +1070,13 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       overlay: _basket.isEmpty || _inlineShown
           ? null
           : basketBar(floating: true),
+      // « Modifier ma vitrine » (146): its owner (an admin of the business)
+      // looking at their own vitrine, straight to « Personnaliser ma
+      // vitrine ». A visitor never sees it; a basket being tried hides it.
+      floatingActionButton: shop != null && _basket.isEmpty && (_ownOrg?.isAdmin ?? false)
+          ? _EditVitrineButton(
+              onTap: () => context.push(Routes.vitrineSettings(_ownOrg!.id)))
+          : null,
       body: _loading
           ? const ShopSkeleton.shelf()
           : _error != null
@@ -3456,6 +3463,33 @@ class _Stepper extends StatelessWidget {
       ),
     );
   }
+}
+
+/// « Modifier ma vitrine » (146): small, in the corner, for its owner only.
+class _EditVitrineButton extends StatelessWidget {
+  const _EditVitrineButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => MediaQuery.withClampedTextScaling(
+        maxScaleFactor: 1.3,
+        child: FloatingActionButton.extended(
+          key: const Key('vitrine-edit'),
+          heroTag: 'vitrine-edit',
+          onPressed: onTap,
+          backgroundColor: ShopStyle.paper,
+          foregroundColor: ShopStyle.ink,
+          elevation: 2,
+          shape: const StadiumBorder(side: BorderSide(color: Color(0x3314161C))),
+          extendedPadding: const EdgeInsets.symmetric(horizontal: 14),
+          icon: const Icon(Icons.edit_outlined, size: 18),
+          label: Text(
+            context.tr('Modifier ma vitrine'),
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+          ),
+        ),
+      );
 }
 
 /// « Votre vitrine n'est pas encore visible des clients » (140): over its

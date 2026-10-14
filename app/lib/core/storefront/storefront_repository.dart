@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' show Color;
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -634,6 +635,30 @@ class StorefrontStyle {
         if (layout != VitrineLayout.grid) 'layout': layout.name,
         if (schedule != null) 'schedule': schedule!.toJson(),
       };
+
+  /// What set_storefront_style is sent (146): [toJson], with the three Pro
+  /// keys always said — « grid », [] and false included — so 141 keeps a
+  /// Basic business's choices and clears them when they are taken back,
+  /// while a key an older app never sends is carried over. Before 141, and
+  /// on Pro, the server reads them as it always did.
+  Map<String, Object?> toSaveJson() => {
+        ...toJson(),
+        'pinned': pinned,
+        'hide_out_of_stock': hideOutOfStock,
+        'layout': layout.name,
+      };
+
+  /// Whether [other] holds the same Pro choices (146): the layout, the
+  /// articles en tête in their order, and « Masquer les épuisés ».
+  bool sameProChoices(StorefrontStyle other) =>
+      layout == other.layout &&
+      hideOutOfStock == other.hideOutOfStock &&
+      listEquals(pinned, other.pinned);
+
+  /// Any Pro choice made — what a Basic business keeps and the street
+  /// shows only with Mara Pro.
+  bool get hasProChoices =>
+      layout != VitrineLayout.grid || pinned.isNotEmpty || hideOutOfStock;
 
   /// '#RRGGBB' → a colour; anything else → null.
   static Color? colorFromHex(String? hex) {

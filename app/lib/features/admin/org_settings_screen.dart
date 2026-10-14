@@ -55,9 +55,15 @@ class OrgSettingsScreen extends StatefulWidget {
     this.retail,
     this.capture,
     this.initialPart,
+    this.vitrineOnly = false,
   });
 
   final AdminRepository admin;
+
+  /// « Personnaliser ma vitrine » (146, [Routes.vitrineSettings]): the
+  /// Vitrine rubrique on its own page — no index, back leaves it, no
+  /// « Suivant » into the other rubriques.
+  final bool vitrineOnly;
 
   /// The rubrique to open at once ('articles', 'identite', 'vitrine',
   /// 'position'): where the vitrine guide's « Faire maintenant » lands.
@@ -2024,7 +2030,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            if (!widget.vitrineOnly) const SizedBox(height: 12),
+            if (!widget.vitrineOnly)
             FilledButton.icon(
               key: const Key('settings-next-go'),
               onPressed: () => setState(() {
@@ -2354,6 +2361,20 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     final wide = MediaQuery.sizeOf(context).width >= 840;
     // A part the switchboard hid (110), asked by its address: the index.
     final open = _open == _Part.delivery && _hidden('delivery') ? null : _open;
+
+    // « Personnaliser ma vitrine » (146): the one rubrique, on its own page.
+    if (widget.vitrineOnly) {
+      return Scaffold(
+        key: const Key('vitrine-settings'),
+        appBar: AppBar(
+          actions: const [bellRoom],
+          title: Text(context.tr('Personnaliser ma vitrine')),
+        ),
+        body: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : _page(_Part.vitrine, theme),
+      );
+    }
 
     if (_loading) {
       return Scaffold(

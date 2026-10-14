@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/auth/models.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/nav/app_scope.dart';
-import '../../core/nav/router.dart';
 import '../help/help_button.dart';
+import 'vitrine_sheet.dart';
 
 /// « Ma vitrine » (140) on the top bar of the shop's, the farm's and the
-/// association's home, beside « Besoin d'aide »: the business's own vitrine
-/// in one tap, as Plus › MA VITRINE › « Voir ma vitrine » opens it (that
-/// entry stays). A vitrine not yet visible to customers opens all the same,
-/// and says so there (StorefrontScreen's banner for its own people).
+/// association's home, beside « Besoin d'aide »: since 146 the vitrine's
+/// entry point — a sheet ([VitrineSheet]) to see it (as Plus › MA VITRINE ›
+/// « Voir ma vitrine » opens it; that entry stays), customise it, share it
+/// and put it forward. A vitrine not yet visible to customers says so first.
 ///
 /// The storefront and its word; the icon alone when the room is small —
 /// the width over the text scale under 360, as the help button
@@ -36,7 +35,9 @@ class VitrineButton extends StatelessWidget {
     final label = context.tr('Ma vitrine');
     final theme = Theme.of(context);
     final ink = theme.appBarTheme.foregroundColor ?? theme.colorScheme.onSurface;
-    void open() => context.go(Routes.storefront(org.slug!));
+    // The vitrine's entry point (146): see it, customise it, share it,
+    // put it forward — [VitrineSheet].
+    void open() => VitrineSheet.open(context, org);
     if (HelpButton.iconOnly(context)) {
       return IconButton(
         key: const Key('home-vitrine'),

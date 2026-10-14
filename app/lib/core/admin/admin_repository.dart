@@ -1007,8 +1007,24 @@ class AdminRepository {
     final client = _requireClient();
     await client.rpc('set_storefront_style', params: {
       'p_org_id': orgId,
-      'p_style': style.toJson(),
+      // The three Pro keys always said (146): 141 keeps them on Basic.
+      'p_style': style.toSaveJson(),
     });
+  }
+
+  /// Whether the server keeps a Basic business's Pro choices for its
+  /// vitrine (141's storefront_style_keeps_pro): false before 141, with no
+  /// server, or when it cannot be asked — the app then never says « Vos
+  /// choix sont gardés ». The save itself is read back to be sure.
+  Future<bool> storefrontKeepsProChoices() async {
+    final client = _client;
+    if (client == null) return false;
+    try {
+      final v = await client.rpc('storefront_style_keeps_pro');
+      return v == true;
+    } catch (_) {
+      return false;
+    }
   }
 
   /// Places the shop on the vitrine map, or lifts it off with both nulls.

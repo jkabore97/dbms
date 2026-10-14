@@ -2044,8 +2044,6 @@ const enStrings = <String, String>{
       'A name and a price.',
   'Un prénom et un nom de famille sont requis.':
       'A first name and a family name are required.',
-  'Vitrine enregistrée. La présentation « {layout} » vient avec Mara Pro : votre vitrine reste en grille.':
-      'Vitrine saved. The « {layout} » layout comes with Mara Pro: your vitrine stays a grid.',
   'Vitrine enregistrée. Ouvrez-la pour voir le résultat.':
       'Vitrine saved. Open it to see the result.',
   'Vos commandes n\'ont pas pu être chargées. Vérifiez le réseau.':
@@ -7503,4 +7501,53 @@ const enStrings = <String, String>{
       'WhatsApp · 24/7',
   'WhatsApp · réponse sous 48 h':
       'WhatsApp · answer within 48 h',
+  // Batch 146: the vitrine's Pro options on Basic, « Ma vitrine ».
+  '1 article en tête':
+      '1 featured item',
+  '{n} articles en tête':
+      '{n} featured items',
+  'Épuisés masqués':
+      'Sold-out items hidden',
+  'Ces choix viennent avec Mara Pro':
+      'These choices come with Mara Pro',
+  'Sans Pro, votre vitrine reste en grille. Vos choix sont gardés : ils s\'activent dès que vous passez à Pro.':
+      'Without Pro, your vitrine stays a grid. Your choices are kept: they turn on as soon as you go Pro.',
+  'Sans Pro, votre vitrine reste en grille. Pour le moment, ces choix ne peuvent pas être gardés : il faudra les refaire une fois Pro activé.':
+      'Without Pro, your vitrine stays a grid. For now these choices cannot be kept: you will make them again once Pro is on.',
+  'Sans Pro, votre vitrine reste en grille. Vos choix sont gardés : ils font partie de Mara Pro.':
+      'Without Pro, your vitrine stays a grid. Your choices are kept: they are part of Mara Pro.',
+  'Vitrine enregistrée, en grille. Vos choix Pro sont gardés : ils font partie de Mara Pro.':
+      'Vitrine saved, as a grid. Your Pro choices are kept: they are part of Mara Pro.',
+  'Enregistrer sans les options Pro':
+      'Save without the Pro options',
+  'Vitrine enregistrée, en grille. Vos choix Pro sont gardés : ils s\'activent dès que vous passez à Pro.':
+      'Vitrine saved, as a grid. Your Pro choices are kept: they turn on as soon as you go Pro.',
+  'Vitrine enregistrée, en grille. Vos choix Pro n\'ont pas pu être gardés pour le moment.':
+      'Vitrine saved, as a grid. Your Pro choices could not be kept for now.',
+  'Ces options s\'activent avec Mara Pro. Essayez-les : l\'aperçu vous montre le résultat.':
+      'These options turn on with Mara Pro. Try them: the preview shows you the result.',
+  '« Ouvert maintenant »':
+      '« Open now »',
+  'Votre vitrine dit « Ouvert maintenant » ou « Fermé » d\'après vos jours et vos heures.':
+      'Your vitrine says « Open now » or « Closed » from your days and hours.',
+  'Aperçu — avec Mara Pro':
+      'Preview — with Mara Pro',
+  'Personnaliser ma vitrine':
+      'Customise my vitrine',
+  'La page que voient vos clients':
+      'The page your customers see',
+  'Couverture, couleur, phrase, horaires, présentation':
+      'Cover, colour, tagline, hours, layout',
+  'Partager ma vitrine':
+      'Share my vitrine',
+  'Une image pour un statut, ou le lien':
+      'A picture for a status, or the link',
+  'Elle est fermée : ouvrez-la, et vos clients la voient.':
+      'It is closed: open it, and your customers see it.',
+  'Encore {n} article(s) en vente, et elle se montre à tout le monde.':
+      '{n} more item(s) for sale, and it shows to everyone.',
+  'Mettre des articles en vente':
+      'Put items up for sale',
+  'Modifier ma vitrine':
+      'Edit my vitrine',
 };
