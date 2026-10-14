@@ -242,15 +242,15 @@ void main() {
       expect(find.byKey(const Key('share-vitrine')), findsOneWidget);
       expect(find.byKey(const Key('sheet-close')).hitTestable(), findsOneWidget);
 
-      await tester.tap(find.byKey(const Key('share-status')));
+      await tester.tap(find.byKey(const Key('share-image')));
       await tester.pumpAndSettle();
-      expect(find.text('Votre statut'), findsOneWidget);
+      expect(find.text('Votre image'), findsOneWidget);
       expect(find.byKey(const Key('status-close')).hitTestable(), findsOneWidget);
       expectWayBack(tester, reason: 'status preview');
 
       await tester.tap(find.byKey(const Key('status-close')));
       await tester.pumpAndSettle();
-      expect(find.text('Votre statut'), findsNothing);
+      expect(find.text('Votre image'), findsNothing);
       expect(find.byKey(const Key('share-vitrine')), findsNothing, reason: 'the sheet under it closes too');
       expect(find.text('Vitrine'), findsOneWidget);
 
@@ -293,7 +293,7 @@ void main() {
           .style
           ?.color;
       expect(ink(find.byKey(const Key('status-close'))), maraPaper, reason: 'the X on maraBlack');
-      expect(ink(find.text('Votre statut')), maraPaper, reason: 'the title on maraBlack');
+      expect(ink(find.text('Votre image')), maraPaper, reason: 'the title on maraBlack');
     });
 
     testWidgets('every sheet: the « X » beside the handle, above the content, never over it', (tester) async {

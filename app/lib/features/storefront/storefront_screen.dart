@@ -10,14 +10,17 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/auth/models.dart' show OrgSummary;
 import '../../core/auth/whatsapp_phone.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/errors.dart';
 import '../../core/format/money.dart';
+import '../../core/format/money_text.dart';
 import '../../core/nav/router.dart';
 import '../../core/nav/session.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../../core/storefront/visitor_id.dart';
+import '../../core/retail/duration.dart';
 import '../../core/retail/stock_rule.dart';
 import '../../core/shopper/shopper_repository.dart';
 import '../../core/theme/motion.dart';
@@ -27,6 +30,7 @@ import '../shopper/follow_heart.dart';
 import '../shopper/shopper_profile_screen.dart' show addressName;
 import '../../core/orders/booking.dart';
 import 'booking_sheet.dart';
+import 'item_page.dart';
 import 'lazy_photo.dart';
 import 'open_badge.dart';
 import 'order_sign_in_sheet.dart';
@@ -220,7 +224,38 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     super.dispose();
   }
 
+  /// The business whose vitrine this is, when the person holding the phone
+  /// is one of its own people (140); null for everyone else.
+  OrgSummary? get _ownOrg {
+    for (final o in widget.session.orgs) {
+      if (o.slug == widget.slug && _ownPeople(o)) return o;
+    }
+    return null;
+  }
+
+  /// Its own people: not a trainer's look-only access, nor Mara's admin,
+  /// whom my_orgs() gives every business as platform_admin — the rule of
+  /// VitrineButton.shownFor.
+  static bool _ownPeople(OrgSummary o) =>
+      !o.isObserverOnly && !(o.roles.isNotEmpty && o.roles.every((r) => r == 'platform_admin'));
+
+  /// Its own people's vitrine not yet seen by the street (140): closed, or
+  /// short of the articles the street asks (092). Null until known.
+  bool? _hiddenFromStreet;
+
+  Future<void> _checkStreet() async {
+    final own = _ownOrg;
+    if (own == null) return;
+    try {
+      final c = await widget.session.admin.vitrineChecklist(own.id);
+      if (mounted && c != null) setState(() => _hiddenFromStreet = !c.visible);
+    } catch (_) {
+      // Not known: no banner rather than a wrong one.
+    }
+  }
+
   Future<void> _load() async {
+    unawaited(_checkStreet());
     setState(() {
       _loading = true;
       _error = null;
@@ -962,6 +997,45 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       onOrder: _order,
     );
     final shop = _shop;
+    Widget window(PublicShop shop) => NotificationListener<ScrollNotification>(
+              // Measured once the scrolled frame is laid out: during
+              // the notification the page has not moved yet.
+              onNotification: (_) {
+                WidgetsBinding.instance.addPostFrameCallback(
+                  (_) => _checkInline(),
+                );
+                return false;
+              },
+              child: _OrdersClosed(
+                closed: shop.style.ordersClosed,
+                child: _Window(
+                basketCard: _basket.isEmpty
+                    ? null
+                    : KeyedSubtree(
+                        key: _inlineBasket,
+                        child: basketBar(floating: false),
+                      ),
+                shop: shop,
+                visitors: _visitors ?? shop.visitors,
+                heart: FollowHeart(follows: _follows, slug: shop.slug),
+                showcase: _showcase,
+                mine: _isOwn(shop),
+                shelf: _items,
+                items: _visible,
+                totalCount: _items.length,
+                serviceCount: _items.where((i) => i.isService).length,
+                filter: _filter,
+                onFilterChanged: (_) => setState(() {}),
+                capture: widget.capture,
+                basket: _basket,
+                onOpen: _open,
+                onDirectory: _directory,
+                onAdd: _add,
+                onRemove: _remove,
+                onDetails: _details,
+              ),
+              ),
+            );
 
     return ShopPage(
       title: shop?.name ?? context.tr('Vitrine'),
@@ -1006,6 +1080,16 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
                 child: Text(context.tr('Réessayer')),
               ),
             )
+          : shop == null && _ownOrg != null
+          // Its own people, the vitrine closed (140): what to do, not « n'existe pas ».
+          ? ShopNotice(
+              text: context.tr('Votre vitrine n\'est pas encore visible des clients'),
+              action: FilledButton(
+                key: const Key('vitrine-hidden-open'),
+                onPressed: () => context.push(Routes.orgSettings(_ownOrg!.id)),
+                child: Text(context.tr('Ouvrir ou régler la vitrine')),
+              ),
+            )
           : shop == null
           ? ShopNotice(
               text: context.tr('Cette vitrine n\'existe pas, ou n\'est pas ouverte.'),
@@ -1014,43 +1098,14 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
                 child: Text(context.tr('Voir les autres vitrines')),
               ),
             )
-          : NotificationListener<ScrollNotification>(
-              // Measured once the scrolled frame is laid out: during
-              // the notification the page has not moved yet.
-              onNotification: (_) {
-                WidgetsBinding.instance.addPostFrameCallback(
-                  (_) => _checkInline(),
-                );
-                return false;
-              },
-              child: _OrdersClosed(
-                closed: shop.style.ordersClosed,
-                child: _Window(
-                basketCard: _basket.isEmpty
-                    ? null
-                    : KeyedSubtree(
-                        key: _inlineBasket,
-                        child: basketBar(floating: false),
-                      ),
-                shop: shop,
-                visitors: _visitors ?? shop.visitors,
-                heart: FollowHeart(follows: _follows, slug: shop.slug),
-                showcase: _showcase,
-                items: _visible,
-                totalCount: _items.length,
-                serviceCount: _items.where((i) => i.isService).length,
-                filter: _filter,
-                onFilterChanged: (_) => setState(() {}),
-                capture: widget.capture,
-                basket: _basket,
-                onOpen: _open,
-                onDirectory: _directory,
-                onAdd: _add,
-                onRemove: _remove,
-                onDetails: _details,
-              ),
-              ),
-            ),
+          : _hiddenFromStreet == true && _ownOrg != null
+          ? Column(
+              children: [
+                _HiddenBanner(onOpen: () => context.push(Routes.orgSettings(_ownOrg!.id))),
+                Expanded(child: window(shop)),
+              ],
+            )
+          : window(shop),
     );
   }
 
@@ -1090,12 +1145,22 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
               setSheet(() {});
             },
             onOpen: _open,
+            // « Partager » (140): the business's own people, on their own
+            // vitrine — an ad for this one article.
+            onShare: _isOwn(shop)
+                ? () => ShareVitrine.open(context,
+                    shop: shop, items: _items, capture: widget.capture, article: item, mine: true)
+                : null,
           ),
           ),
         ),
       ),
     );
   }
+
+  /// One of the business's own people is looking (140) — [_ownPeople].
+  bool _isOwn(PublicShop shop) =>
+      widget.session.orgs.any((o) => o.id == shop.orgId && _ownPeople(o));
 }
 
 /// The basket, pinned under the page: how many, how much, one button.
@@ -2013,6 +2078,8 @@ class _Window extends StatelessWidget {
     this.visitors,
     this.heart,
     this.showcase = false,
+    this.mine = false,
+    this.shelf = const [],
     required this.items,
     required this.totalCount,
     this.serviceCount = 0,
@@ -2039,6 +2106,13 @@ class _Window extends StatelessWidget {
 
   /// A vitrine d'exemple (094): « Pas à proximité » under the name.
   final bool showcase;
+
+  /// The business's own people look at it (140): « Partager ma boutique ».
+  final bool mine;
+
+  /// Every article of the window, whatever the filter: what « Partager »
+  /// can put on its picture (140).
+  final List<PublicItem> shelf;
   final List<PublicItem> items;
 
   /// How many articles the window really holds — [items] is the filtered
@@ -2454,8 +2528,9 @@ class _Window extends StatelessWidget {
                           onPressed: () => ShareVitrine.open(
                             context,
                             shop: shop,
-                            items: items,
+                            items: shelf.isEmpty ? items : shelf,
                             capture: capture,
+                            mine: mine,
                           ),
                           icon: const Icon(Icons.share_outlined, size: 18),
                           label: Text(context.tr('Partager')),
@@ -2637,8 +2712,9 @@ extension on _Window {
                 cell +
                 _ItemTile.textHeight(
                   context,
-                  description: list.any((i) => i.hasDescription),
+                  description: list.any((i) => cardWords(i) != null),
                   soldOut: list.any((i) => !i.inStock),
+                  preorder: list.any((i) => i.isPreorder),
                 ),
           ),
           itemCount: list.length,
@@ -2848,11 +2924,11 @@ class _ItemRow extends StatelessWidget {
                               ),
                             ),
                           ),
-                        if (item.hasDescription)
+                        if (cardWords(item) case final words?)
                           Padding(
                             padding: const EdgeInsets.only(top: 3),
                             child: Text(
-                              item.description!,
+                              words,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
@@ -2892,6 +2968,23 @@ String priceOf(NumberFormat money, PublicItem item, [String lang = 'fr']) {
 
 /// « Disponible à partir du 15/11 » — a batch or a harvest still to come,
 /// orderable now (083).
+/// The grey words under an item's name on a card: a service's duration
+/// first (« Durée : 1 h », 136's column, or the old first line), then the
+/// shop's words — what the description alone said before 136.
+String? cardWords(PublicItem item) {
+  final w = serviceWords(
+    isService: item.isService,
+    minutes: item.durationMinutes,
+    description: item.description,
+  );
+  final parts = [
+    if (w.duration != null)
+      translate(trCurrent, 'Durée : {duration}', {'duration': w.duration}),
+    ?w.description,
+  ];
+  return parts.isEmpty ? null : parts.join('\n');
+}
+
 String preorderLine(PublicItem item) => translate(trCurrent, 'Disponible à partir du {date}',
     {'date': DateFormat('dd/MM').format(item.availableFrom!)});
 
@@ -2935,6 +3028,7 @@ class _ItemTile extends StatelessWidget {
     BuildContext context, {
     required bool description,
     required bool soldOut,
+    bool preorder = false,
   }) {
     final k = MediaQuery.textScalerOf(context).scale(1);
     var h = 10.0; // gap under the square
@@ -2942,6 +3036,9 @@ class _ItemTile extends StatelessWidget {
     h += 3 + 14 * 1.4 * k; // price
     if (description) h += 4 + 13 * 1.3 * 2 * k;
     if (soldOut) h += 2 + 12 * 1.4 * k;
+    // « Disponible à partir du … » (083), under the price: counted too
+    // (140 — a farm's pre-order tile overflowed by its line).
+    if (preorder) h += 3 + 13 * 1.4 * k;
     return h + 4;
   }
 
@@ -2952,7 +3049,7 @@ class _ItemTile extends StatelessWidget {
       item.name,
       priceOf(money, item, context.trLanguage),
       if (item.isPreorder) preorderLine(item),
-      if (item.hasDescription) item.description!,
+      ?cardWords(item),
       if (!item.inStock) context.tr('épuisé'),
       if (count > 0) context.tr('{count} dans le panier', {'count': count}),
     ].join(', ');
@@ -3050,11 +3147,11 @@ class _ItemTile extends StatelessWidget {
                           ),
                         ),
                       ),
-                    if (item.hasDescription)
+                    if (cardWords(item) case final words?)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
-                          item.description!,
+                          words,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -3361,6 +3458,44 @@ class _Stepper extends StatelessWidget {
   }
 }
 
+/// « Votre vitrine n'est pas encore visible des clients » (140): over its
+/// own people's preview while the street cannot see it yet.
+class _HiddenBanner extends StatelessWidget {
+  const _HiddenBanner({required this.onOpen});
+
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) => Material(
+        key: const Key('vitrine-hidden-banner'),
+        color: const Color(0xFFF6E7C8),
+        child: SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+            child: Row(
+              children: [
+                const Icon(Icons.visibility_off_outlined, color: ShopStyle.ink),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    context.tr('Votre vitrine n\'est pas encore visible des clients'),
+                    style: const TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.w700, color: ShopStyle.ink),
+                  ),
+                ),
+                TextButton(
+                  key: const Key('vitrine-hidden-open'),
+                  onPressed: onOpen,
+                  child: Text(context.tr('Régler')),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+}
+
 /// One article on its own (070): what a shopper wants before deciding —
 /// the photograph large (or the name, large), the price, the shop's own
 /// words, whether there is any, the stepper, and a question to the shop on
@@ -3377,6 +3512,7 @@ class ArticleSheet extends StatelessWidget {
     required this.onRemove,
     required this.onOpen,
     this.phone,
+    this.onShare,
   });
 
   final PublicItem item;
@@ -3389,6 +3525,9 @@ class ArticleSheet extends StatelessWidget {
   final VoidCallback onRemove;
   final Future<void> Function(String url) onOpen;
 
+  /// « Partager » (140), for the business's own people; null hides it.
+  final VoidCallback? onShare;
+
   @override
   Widget build(BuildContext context) {
     final money = moneyFormat(currency);
@@ -3399,9 +3538,25 @@ class ArticleSheet extends StatelessWidget {
           {'shop': shopName, 'item': item.name}),
     );
     final accent = Theme.of(context).colorScheme.primary;
+    // 136: every photo, the shop's words without a service's « Durée : »
+    // line (said beside « Sur rendez-vous » instead).
+    final photos = item.photos;
+    final words = serviceWords(
+      isService: item.isService,
+      minutes: item.durationMinutes,
+      description: item.description,
+    );
+    final buy = item.inStock && !_OrdersClosed.of(context);
+    // The page scrolls; the basket's button stays at its foot (136).
     return SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+      Flexible(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        key: const Key('item-page-scroll'),
+        padding: EdgeInsets.fromLTRB(20, 0, 20, buy ? 12 : 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -3410,24 +3565,29 @@ class ArticleSheet extends StatelessWidget {
               constraints: const BoxConstraints(maxHeight: 360),
               child: AspectRatio(
                 // A photograph gets room; a name on a wash needs little.
-                aspectRatio: item.photoKey == null ? 3 : 1.25,
+                aspectRatio: photos.isEmpty ? 3 : 1.25,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Opacity(
                     opacity: item.inStock ? 1 : 0.5,
-                    child: item.photoKey == null
+                    child: photos.isEmpty
                         ? NoPhotoPanel(
                             name: item.name,
                             accent: accent == ShopStyle.ink ? null : accent,
                           )
                         : ColoredBox(
                             color: ShopStyle.stone,
-                            child: _Photo(
-                              photoKey: item.photoKey,
-                              capture: capture,
-                              label: context.tr('Photo de {name}', {
-                                'name': item.name,
-                              }),
+                            child: ItemCarousel(
+                              photos: photos,
+                              name: item.name,
+                              photo: (context, key, fit) => _Photo(
+                                photoKey: key,
+                                capture: capture,
+                                fit: fit,
+                                label: context.tr('Photo de {name}', {
+                                  'name': item.name,
+                                }),
+                              ),
                             ),
                           ),
                   ),
@@ -3450,8 +3610,10 @@ class ArticleSheet extends StatelessWidget {
               runSpacing: 2,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Text(
+                // Whole on one line (133): shrinks rather than breaks.
+                MoneyText(
                   priceOf(money, item, context.trLanguage),
+                  textKey: const Key('item-price'),
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -3462,27 +3624,66 @@ class ArticleSheet extends StatelessWidget {
                   item.isPreorder
                       ? preorderLine(item)
                       : item.isService
-                      ? context.tr('Sur rendez-vous')
+                      ? (words.duration == null
+                          ? context.tr('Sur rendez-vous')
+                          : context.tr('Sur rendez-vous · Durée : {duration}',
+                              {'duration': words.duration}))
                       : item.inStock
                       ? context.tr('En stock')
                       : context.tr('Épuisé'),
+                  key: const Key('item-status'),
                   style: const TextStyle(fontSize: 14, color: ShopStyle.mist),
                 ),
               ],
             ),
-            if (item.hasDescription) ...[
-              const SizedBox(height: 12),
+            if (words.description case final text?) ...[
+              const SizedBox(height: 20),
               Text(
-                item.description!,
+                context.tr('Description'),
                 style: const TextStyle(
-                  fontSize: 15,
-                  height: 1.45,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
                   color: ShopStyle.ink,
                 ),
               ),
+              const SizedBox(height: 6),
+              ItemDescription(text: text),
             ],
-            const SizedBox(height: 20),
-            if (item.inStock && !_OrdersClosed.of(context))
+            if (ask != null) ...[
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => onOpen(ask),
+                  icon: const Icon(Icons.chat_outlined, size: 18),
+                  label: Text(context.tr('Poser une question sur WhatsApp')),
+                ),
+              ),
+            ],
+            if (onShare != null) ...[
+              const SizedBox(height: 4),
+              Center(
+                child: TextButton.icon(
+                  key: const Key('article-share'),
+                  onPressed: onShare,
+                  icon: const Icon(Icons.share_outlined, size: 18),
+                  label: Text(context.tr('Partager')),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+      ),
+      if (buy)
+        Container(
+          key: const Key('item-page-pinned'),
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
+          decoration: const BoxDecoration(
+            color: ShopStyle.paper,
+            border: Border(top: BorderSide(color: ShopStyle.line)),
+          ),
+          child:
               count == 0
                   ? SizedBox(
                       width: double.infinity,
@@ -3521,19 +3722,8 @@ class ArticleSheet extends StatelessWidget {
                         ),
                       ],
                     ),
-            if (ask != null) ...[
-              const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () => onOpen(ask),
-                  icon: const Icon(Icons.chat_outlined, size: 18),
-                  label: Text(context.tr('Poser une question sur WhatsApp')),
-                ),
-              ),
-            ],
-          ],
         ),
+        ],
       ),
     );
   }

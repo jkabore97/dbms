@@ -57,7 +57,8 @@ void main() {
     ]);
   });
 
-  testWidgets('three ways out: status, a contact, the link', (tester) async {
+  // 140: two choices — « Une image » and « Le lien » — and « Copier le lien ».
+  testWidgets('two ways out: a picture, the link; and the copy', (tester) async {
     await tester.pumpWidget(MaterialApp(
       home: Builder(
         builder: (context) => Scaffold(
@@ -71,11 +72,11 @@ void main() {
     ));
     await tester.tap(find.text('go'));
     await tester.pumpAndSettle();
-    expect(find.text('Partager Tony Pizza'), findsOneWidget);
-    expect(find.byKey(const Key('share-status')), findsOneWidget);
-    expect(find.byKey(const Key('share-contact')), findsOneWidget);
+    expect(find.text('Partager cette boutique'), findsOneWidget);
+    expect(find.text('Tony Pizza'), findsOneWidget);
+    expect(find.byKey(const Key('share-image')), findsOneWidget);
+    expect(find.byKey(const Key('share-link')), findsOneWidget);
     expect(find.byKey(const Key('share-copy')), findsOneWidget);
-    expect(find.text('https://marakaj.com/s/tony-pizza'), findsOneWidget);
   });
 
   testWidgets('the status picture: name, line, prices, where to order',

@@ -792,7 +792,9 @@ declare
         'help_hours_open', 'help_hours_close', 'help_escalate_minutes', 'help_late_minutes',
         'help_daily_limit', 'help_whatsapp_template', 'admin_help_notify',
         -- 135: read by sign_in_options(), which the website's sign-in asks.
-        'apple_web_signin'];
+        'apple_web_signin',
+        -- 136: read by item_photo_limit(), which the item's gallery asks.
+        'max_item_photos_pro'];
     v_dead text;
     v_missing text;
 begin

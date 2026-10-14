@@ -413,17 +413,24 @@ void main() {
           expect(find.byKey(const Key('help-pro-button')), findsOneWidget);
           expect(find.byKey(const Key('help-free-button')), findsNothing);
           expect(find.text(org.name), findsOneWidget, reason: 'the business keeps its name');
-          // On a phone the label is on two lines, never cut.
-          expect(find.text('Besoin\nd\'aide'), findsOneWidget);
+          if (width >= HelpButton.wordsWidth) {
+            // On a phone the label is on two lines, never cut.
+            expect(find.text('Besoin\nd\'aide'), findsOneWidget);
+          } else {
+            // 140: « Ma vitrine » shares the bar — both icons under 360.
+            expect(find.descendant(of: find.byKey(const Key('help-pro-button')), matching: find.byType(Text)),
+                findsNothing);
+            expect(find.byTooltip('Besoin d\'aide'), findsOneWidget);
+          }
           expect(tester.takeException(), isNull);
         });
       }
 
       // Review of 136: at 320 px with large text the pill took the room of
-      // the business's name (« Group / eme… »): its icon alone there, the
-      // words in the tooltip.
+      // the business's name (« Group / eme… »). Since 140 (« Ma vitrine » on
+      // the bar) the help leaves it there for Compte › Aide.
       for (final free in [false, true]) {
-        testWidgets('${org.profile} ${free ? 'free' : 'Pro'} at 320 px, text ×1.3: the icon alone, the name its room',
+        testWidgets('${org.profile} ${free ? 'free' : 'Pro'} at 320 px, text ×1.3: help in Compte, the name its room',
             (tester) async {
           await _phone(tester, width: 320);
           tester.platformDispatcher.textScaleFactorTestValue = 1.3;
@@ -432,6 +439,27 @@ void main() {
               free ? _as(org, plan: 'free') : org, db, free ? _Help(state: _freeState) : _Help())));
           await _settle(tester);
           final key = Key(free ? 'help-free-button' : 'help-pro-button');
+          expect(find.byKey(key), findsNothing);
+          expect(find.byTooltip('Ma vitrine'), findsOneWidget);
+          expect(find.text(org.name), findsOneWidget);
+          expect(tester.takeException(), isNull);
+        });
+      }
+
+      // 136's guarantee kept where « Ma vitrine » is not on the bar (no
+      // vitrine address yet): the help stays, its icon alone.
+      for (final free in [false, true]) {
+        testWidgets('${org.profile} ${free ? 'free' : 'Pro'} at 320 px, text ×1.3, no vitrine: the icon alone',
+            (tester) async {
+          await _phone(tester, width: 320);
+          tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+          addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+          final bare = OrgSummary(
+              id: org.id, name: org.name, profile: org.profile, plan: free ? 'free' : org.plan, roles: org.roles);
+          await tester.pumpWidget(_app(_home(bare, db, free ? _Help(state: _freeState) : _Help())));
+          await _settle(tester);
+          final key = Key(free ? 'help-free-button' : 'help-pro-button');
+          expect(find.byTooltip('Ma vitrine'), findsNothing);
           expect(find.byKey(key), findsOneWidget);
           expect(find.descendant(of: find.byKey(key), matching: find.byType(Text)), findsNothing);
           expect(find.byTooltip(free ? 'Aide' : 'Besoin d\'aide'), findsOneWidget);
@@ -440,6 +468,20 @@ void main() {
           expect(tester.takeException(), isNull);
         });
       }
+
+      // A request on (140): beside « Ma vitrine » the help stays, its dot
+      // in sight.
+      testWidgets('${org.profile} Pro at 320 px, text ×1.3, a request on: the help stays', (tester) async {
+        await _phone(tester, width: 320);
+        tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        await tester.pumpWidget(_app(_home(org, db, _Help(state: _proState(request: _req())))));
+        await _settle(tester);
+        expect(find.byTooltip('Ma vitrine'), findsOneWidget);
+        expect(find.byKey(const Key('help-pro-button')), findsOneWidget);
+        expect(find.text(org.name), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      });
 
       testWidgets('${org.profile} free: « Aide »', (tester) async {
         await _phone(tester);

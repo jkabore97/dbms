@@ -7,6 +7,7 @@ import '../../core/errors.dart';
 import '../../core/format/money.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/nav/router.dart';
+import '../../core/retail/duration.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
 import '../../core/theme/kaj_card.dart';
@@ -15,6 +16,7 @@ import '../../core/nav/app_scope.dart';
 import '../capture/capture_action.dart';
 import '../common/step_flow.dart';
 import 'service_flow.dart';
+import '../retail/item_details.dart';
 import '../retail/photo_quota.dart';
 import '../retail/product_photo.dart';
 import '../retail/publish_all_banner.dart';
@@ -23,6 +25,7 @@ import '../common/keyboard_sheet.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
 import '../../core/theme/app_bar_title.dart';
 import '../home/place_sections.dart';
+import '../storefront/share_vitrine.dart' show ShareArticleButton;
 
 /// « Mes services » (098): what a business does rather than sells — a
 /// haircut, a lesson, a room for the evening, a repair — with its price, on
@@ -251,16 +254,30 @@ class _ServicesScreenState extends State<ServicesScreen> {
                     subtitle: Text(
                       servicePriceLine(p, money, context.trLanguage),
                     ),
-                    trailing: Icon(
-                      p.isPublished
-                          ? Icons.storefront
-                          : Icons.visibility_off_outlined,
-                      color: p.isPublished
-                          ? maraGreen
-                          : theme.colorScheme.onSurfaceVariant,
-                      semanticLabel: p.isPublished
-                          ? context.tr('Sur la vitrine')
-                          : context.tr('Pas sur la vitrine'),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // « Partager » on the row (140): a service is
+                        // shared as often as it is edited.
+                        if (ShareArticleButton.offered(widget.org, p))
+                          ShareArticleButton(
+                              org: widget.org,
+                              product: p,
+                              photoKey: _photos[p.id],
+                              capture: widget.capture,
+                              compact: true),
+                        Icon(
+                          p.isPublished
+                              ? Icons.storefront
+                              : Icons.visibility_off_outlined,
+                          color: p.isPublished
+                              ? maraGreen
+                              : theme.colorScheme.onSurfaceVariant,
+                          semanticLabel: p.isPublished
+                              ? context.tr('Sur la vitrine')
+                              : context.tr('Pas sur la vitrine'),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -390,14 +407,44 @@ class _ServiceSheetState extends State<ServiceSheet> {
         : _plain(widget.service.salePrice),
   );
   late final _unit = TextEditingController(text: widget.service.unit ?? '');
-  late final _description = TextEditingController(
-    text: widget.service.description ?? '',
+  /// The words, without the « Durée : … » line a service written before
+  /// 136 opens with: that is the duration's own field now.
+  late final _words = serviceWords(
+    isService: true,
+    minutes: widget.service.durationMinutes,
+    description: widget.service.description,
   );
+  /// How long it takes (136): the column, or the old first line read.
+  late final int? _minutesRead = widget.service.durationMinutes ??
+      durationMinutesOf(_words.duration);
+
+  /// The words without the old « Durée : » line only when that line was
+  /// read in minutes (it is the duration's field now); a « Durée : 3
+  /// séances » nobody can read stays in the words, as 136 keeps it.
+  late final _description = TextEditingController(
+    text: !widget.retail.itemPhotosMissing && _minutesRead != null
+        ? _words.description ?? ''
+        : widget.service.description ?? '',
+  );
+
+  late int? _minutes = _minutesRead;
+  late final int? _minutesWere = widget.service.durationMinutes;
   late bool _from = widget.service.priceFrom;
   late bool _published = widget.service.isPublished;
 
   PickedPhoto? _photo;
   bool _busy = false;
+
+  /// The service has a photo on the server (the strip may add or take it).
+  late bool _hasPhoto = widget.photoKey != null;
+
+  /// The photos' row (136) could not be read: the older photo tile again.
+  bool _stripFailed = false;
+
+  /// The row is the photo control (136): the tile beside the name only
+  /// without it.
+  bool get _strip =>
+      !_stripFailed && photoStripOffered(widget.retail, widget.capture);
   String? _error;
 
   static String _plain(double v) =>
@@ -452,6 +499,11 @@ class _ServiceSheetState extends State<ServiceSheet> {
         isService: true,
         priceFrom: _from,
       );
+      // The duration's own field (136), sent only when it changed (or read
+      // from the old « Durée : » line, to move it into its column).
+      if (!widget.retail.itemPhotosMissing && _minutes != _minutesWere) {
+        await widget.retail.setServiceDuration(id, _minutes, description: _description.text);
+      }
       final capture = widget.capture;
       final photo = _photo;
       if (photo != null && capture != null) {
@@ -550,6 +602,8 @@ class _ServiceSheetState extends State<ServiceSheet> {
             const SizedBox(height: 16),
             Row(
               children: [
+                // With 136 the photos' row below is the one photo control.
+                if (!_strip) ...[
                 InkWell(
                   key: const Key('service-photo'),
                   borderRadius: BorderRadius.circular(12),
@@ -574,6 +628,7 @@ class _ServiceSheetState extends State<ServiceSheet> {
                   ),
                 ),
                 const SizedBox(width: 14),
+                ],
                 Expanded(
                   child: TextField(
                     key: const Key('service-name'),
@@ -589,7 +644,18 @@ class _ServiceSheetState extends State<ServiceSheet> {
                 ),
               ],
             ),
-            PhotoCounter(org: widget.org, hasPhoto: widget.photoKey != null),
+            // Its photos (136), the cover first: more than one with Mara Pro.
+            if (_strip)
+              ItemPhotoStrip(
+                org: widget.org,
+                retail: widget.retail,
+                capture: widget.capture!,
+                productId: widget.service.id,
+                name: widget.service.name,
+                onChanged: (g) => setState(() => _hasPhoto = g.photos.isNotEmpty),
+                onUnavailable: () => setState(() => _stripFailed = true),
+              ),
+            PhotoCounter(org: widget.org, hasPhoto: _hasPhoto),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -653,18 +719,25 @@ class _ServiceSheetState extends State<ServiceSheet> {
                 ),
               ),
             ),
-            const SizedBox(height: 4),
-            TextField(
+            if (!widget.retail.itemPhotosMissing) ...[
+              const SizedBox(height: 8),
+              Text(context.tr('Durée (facultatif)'), style: theme.textTheme.titleSmall),
+              const SizedBox(height: 8),
+              DurationPicker(
+                key: const Key('service-duration'),
+                minutes: _minutes,
+                enabled: !_busy,
+                onChanged: (m) => setState(() => _minutes = m),
+              ),
+            ],
+            const SizedBox(height: 12),
+            DescriptionField(
               key: const Key('service-description'),
               controller: _description,
               enabled: !_busy,
-              maxLength: 300,
-              maxLines: 2,
-              decoration: InputDecoration(
-                labelText: context.tr('En deux mots (facultatif)'),
-                hintText: context.tr('Durée, ce qui est compris, où.'),
-                border: const OutlineInputBorder(),
-              ),
+              maxLength: widget.retail.descriptionMax,
+              label: context.tr('Description (facultatif)'),
+              example: describeExample(context, widget.org, service: true),
             ),
             SwitchListTile(
               key: const Key('service-published'),
@@ -673,6 +746,13 @@ class _ServiceSheetState extends State<ServiceSheet> {
               onChanged: _busy ? null : (v) => setState(() => _published = v),
               title: Text(context.tr('Sur la vitrine')),
             ),
+            // « Partager » (140): an image of this service alone, or its link.
+            if (ShareArticleButton.offered(widget.org, widget.service))
+              ShareArticleButton(
+                  org: widget.org,
+                  product: widget.service,
+                  photoKey: widget.photoKey,
+                  capture: widget.capture),
             if (_error != null) ...[
               const SizedBox(height: 4),
               Text(_error!, style: TextStyle(color: theme.colorScheme.error)),

@@ -86,6 +86,18 @@
                 <data android:scheme="bf.kaj.app" android:host="login-callback"/>
             </intent-filter>
         </activity>
+        <!-- The status picture (140), handed to WhatsApp or a Facebook story
+             by a content:// address of the app's cache (MainActivity's
+             bf.kaj.app/status channel; res/xml/status_paths.xml). -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.status"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/status_paths" />
+        </provider>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
@@ -101,6 +113,15 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- The status picture's direct ways out (140): Android 11 and later
+             hide other apps unless they are named here. -->
+        <package android:name="com.whatsapp" />
+        <package android:name="com.whatsapp.w4b" />
+        <package android:name="com.facebook.katana" />
+        <intent>
+            <action android:name="com.facebook.stories.ADD_TO_STORY" />
+            <data android:mimeType="image/*" />
         </intent>
     </queries>
 </manifest>

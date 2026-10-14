@@ -5,24 +5,27 @@ import '../../core/capture/capture_repository.dart';
 import '../../core/format/money.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/nav/app_scope.dart';
+import '../../core/retail/duration.dart';
 import '../../core/retail/retail_repository.dart';
 import '../capture/capture_action.dart';
 import '../common/step_flow.dart';
+import '../retail/item_details.dart';
 import '../retail/photo_quota.dart';
 
 /// « Service », one entry at a time (115) — the shop's, the farm's and the
 /// association's (098's « Mes services »): a photo (taken, chosen, or
 /// « Choisir dans Photos », 114) → the name → the price, or « à partir
-/// de » → how long it takes (optional) → on the vitrine or not → the
-/// summary → « Enregistrer » → « C'est fait », « Ajouter un autre service ».
+/// de » → how long it takes (optional) → « Décrivez-le en quelques mots »
+/// (optional, 136) → on the vitrine or not → the summary → « Enregistrer »
+/// → « C'est fait », « Ajouter un autre service ».
 ///
 /// A service is a product row with `is_service` (098), written as the
 /// sheet it replaces wrote it: ensure_product() as a service (the server
 /// refuses a name an article holds), then its price, « à partir de »,
-/// unit and vitrine. The duration has no column of its own: it opens the
-/// service's description (« Durée : 1 h »), the words the vitrine already
-/// shows under its name — the sheet's own hint told people to write it
-/// there. Online, as the sheet was.
+/// unit and vitrine. The duration is its own column since 136
+/// (duration_minutes, « Durée : 1 h » on the vitrine); before 136 it opens
+/// the description as it always did (« Durée : 1 h », then the words).
+/// Online, as the sheet was.
 class ServiceFlow extends StatefulWidget {
   const ServiceFlow({
     super.key,
@@ -45,48 +48,44 @@ class _ServiceFlowState extends State<ServiceFlow> {
   final _flow = StepFlowController();
   final _name = TextEditingController();
   final _price = TextEditingController();
-  final _otherDuration = TextEditingController();
+  final _description = TextEditingController();
   String _unit = '';
   bool _from = false;
-  String? _duration;
+  int? _minutes;
   bool _published = true;
   PickedPhoto? _photo;
   String _savedName = '';
   bool _photoWaits = false;
 
+  /// The description or the duration refused while the rest was saved.
+  bool _descriptionLost = false;
+
+  /// The words' room: before 136 (or not yet known) « Durée : 1 h » and its
+  /// line break open the same 300 characters.
+  int get _describeMax => widget.retail.descriptionMax -
+      (widget.retail.itemPhotosLive ? 0 : RetailRepository.legacyDurationPrefix(_minutes));
+
   /// What a service is counted by, one tap each (as the sheet's).
   static const _units = ['heure', 'séance', 'personne', 'jour', 'mois'];
 
-  /// How long, one tap each; « Autre » is typed.
-  static const _durations = ['15 min', '30 min', '1 h', '2 h', 'une demi-journée', 'une journée'];
-
   NumberFormat get _money => moneyFormat(widget.org.currency);
   double? get _priceValue => FlowNumberField.read(_price);
-
-  String? get _durationText {
-    if (_duration == null) return null;
-    if (_duration == 'other') {
-      final t = _otherDuration.text.trim();
-      return t.isEmpty ? null : t;
-    }
-    return _duration;
-  }
 
   @override
   void dispose() {
     _name.dispose();
     _price.dispose();
-    _otherDuration.dispose();
+    _description.dispose();
     super.dispose();
   }
 
   void _reset() {
     _name.clear();
     _price.clear();
-    _otherDuration.clear();
+    _description.clear();
     _unit = '';
     _from = false;
-    _duration = null;
+    _minutes = null;
     _published = true;
     _photo = null;
   }
@@ -96,8 +95,8 @@ class _ServiceFlowState extends State<ServiceFlow> {
         'price': _price.text,
         'unit': _unit,
         'from': _from,
-        'duration': _duration,
-        'other': _otherDuration.text,
+        'minutes': _minutes,
+        'description': _description.text,
         'published': _published,
       };
 
@@ -108,9 +107,12 @@ class _ServiceFlowState extends State<ServiceFlow> {
       _price.text = '${a['price'] ?? ''}';
       _unit = '${a['unit'] ?? ''}';
       _from = a['from'] == true;
-      final d = a['duration'];
-      _duration = d is String ? d : null;
-      _otherDuration.text = '${a['other'] ?? ''}';
+      final m = a['minutes'];
+      // A draft from before 136 kept the words (« 1 h », « Autre » typed).
+      _minutes = m is int
+          ? m
+          : durationMinutesOf(a['duration'] == 'other' ? '${a['other'] ?? ''}' : '${a['duration'] ?? ''}');
+      _description.text = '${a['description'] ?? ''}';
       _published = a['published'] != false;
     });
   }
@@ -137,18 +139,28 @@ class _ServiceFlowState extends State<ServiceFlow> {
       salePrice: price,
       isService: true,
     );
-    final duration = _durationText;
+    final words = _description.text.trim();
     await widget.retail.updateProduct(
       id,
       name: name,
       salePrice: price,
       unit: _unit,
       isPublished: _published,
-      // In the vitrine's language, as the durations offered are.
-      description: duration == null ? null : 'Durée : $duration',
       isService: true,
       priceFrom: _from,
     );
+    // The words, and the duration — its own column since 136, before it the
+    // description's first line: their own writes, so that a refusal never
+    // takes the name, the price and the vitrine with it.
+    _descriptionLost = false;
+    try {
+      if (words.isNotEmpty) await widget.retail.updateProduct(id, description: words);
+      if (_minutes != null) {
+        await widget.retail.setServiceDuration(id, _minutes, description: words);
+      }
+    } catch (_) {
+      _descriptionLost = true;
+    }
     final photo = _photo;
     final capture = widget.capture;
     _photoWaits = false;
@@ -214,8 +226,31 @@ class _ServiceFlowState extends State<ServiceFlow> {
           title: context.tr('Combien de temps ?'),
           help: context.tr('Écrit sous son nom, sur la vitrine.'),
           optional: true,
-          isValid: () => _duration != 'other' || _otherDuration.text.trim().isNotEmpty,
-          builder: _durationStep,
+          isEmpty: () => _minutes == null,
+          builder: (_) => DurationPicker(
+            key: const Key('service-flow-duration'),
+            minutes: _minutes,
+            onChanged: (m) {
+              setState(() => _minutes = m);
+              _flow.keep();
+            },
+          ),
+        ),
+        FlowStep(
+          id: 'describe',
+          title: context.tr('Décrivez-le en quelques mots'),
+          help: context.tr('Ce que le client lit avant de réserver, sur la vitrine.'),
+          optional: true,
+          isValid: () => descriptionLength(_description.text) <= _describeMax,
+          isEmpty: () => _description.text.trim().isEmpty,
+          builder: (_) => DescriptionField(
+            key: const Key('service-flow-description'),
+            controller: _description,
+            autofocus: true,
+            maxLength: _describeMax,
+            example: describeExample(context, widget.org, service: true),
+            onChanged: (_) => setState(() {}),
+          ),
         ),
         FlowStep(
           id: 'vitrine',
@@ -238,8 +273,10 @@ class _ServiceFlowState extends State<ServiceFlow> {
         FlowSummaryRow(context.tr('Service'), _name.text.trim(), step: 'name', bold: true),
         if (_photo != null) FlowSummaryRow(context.tr('Photo'), context.tr('Oui'), step: 'photo'),
         FlowSummaryRow(context.tr('Prix'), _priceLine(), step: 'price'),
-        if (_durationText != null)
-          FlowSummaryRow(context.tr('Durée'), _durationText!, step: 'duration'),
+        if (_minutes != null)
+          FlowSummaryRow(context.tr('Durée'), formatDuration(_minutes!), step: 'duration'),
+        if (_description.text.trim().isNotEmpty)
+          FlowSummaryRow(context.tr('Description'), _description.text.trim(), step: 'describe'),
         FlowSummaryRow(context.tr('Sur la vitrine'),
             _published ? context.tr('Oui') : context.tr('Non'),
             step: 'vitrine'),
@@ -247,9 +284,13 @@ class _ServiceFlowState extends State<ServiceFlow> {
       onSave: _record,
       done: (_) => FlowDone(
         message: context.tr('{name} ajouté', {'name': _savedName}),
-        details: _photoWaits
+        details: _photoWaits || _descriptionLost
             ? Text(
-                context.tr('Photo gardée, en attente de réseau. Une fois envoyée, liez-la à l\'article depuis Documents.'),
+                [
+                  if (_descriptionLost) context.tr('La description n\'a pas été enregistrée : modifiez l\'article pour l\'écrire à nouveau.'),
+                  if (_photoWaits)
+                    context.tr('Photo gardée, en attente de réseau. Une fois envoyée, liez-la à l\'article depuis Documents.'),
+                ].join('\n'),
                 textAlign: TextAlign.center)
             : null,
         actions: [
@@ -371,50 +412,6 @@ class _ServiceFlowState extends State<ServiceFlow> {
               ),
           ],
         ),
-      ],
-    );
-  }
-
-  Widget _durationStep(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final d in _durations)
-              ChoiceChip(
-                key: ValueKey('service-flow-duration-$d'),
-                label: Text(context.tr(d), style: const TextStyle(fontSize: 16)),
-                selected: _duration == d,
-                onSelected: (on) {
-                  setState(() => _duration = on ? d : null);
-                  _flow.keep();
-                },
-              ),
-            ChoiceChip(
-              key: const ValueKey('service-flow-duration-other'),
-              label: Text(context.tr('Autre'), style: const TextStyle(fontSize: 16)),
-              selected: _duration == 'other',
-              onSelected: (on) => setState(() => _duration = on ? 'other' : null),
-            ),
-          ],
-        ),
-        if (_duration == 'other') ...[
-          const SizedBox(height: 12),
-          TextField(
-            key: const Key('service-flow-duration-text'),
-            controller: _otherDuration,
-            autofocus: true,
-            maxLength: 40,
-            onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
-              hintText: context.tr('45 min, 3 séances…'),
-              border: const OutlineInputBorder(),
-            ),
-          ),
-        ],
       ],
     );
   }

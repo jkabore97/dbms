@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'item_details.dart';
 import '../../core/theme/kaj_card.dart';
 import 'dart:typed_data';
 
@@ -32,6 +33,7 @@ import '../common/keyboard_sheet.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
 import '../../core/theme/app_bar_title.dart';
 import '../home/place_sections.dart';
+import '../storefront/share_vitrine.dart' show ShareArticleButton;
 
 /// The shelves: what the shop sells, what it has, what it is worth.
 ///
@@ -193,6 +195,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
         org: widget.org,
         product: product,
         capture: widget.capture,
+        photoKey: _photos[product.id],
         // The archive button belongs to the person who answers for the
         // business; the server refuses everyone else anyway.
         canArchive: widget.org.isAdmin,
@@ -759,12 +762,17 @@ class _EditProductSheet extends StatefulWidget {
     required this.org,
     required this.product,
     this.capture,
+    this.photoKey,
     this.canArchive = false,
   });
 
   final RetailRepository retail;
   final OrgSummary org;
   final Product product;
+
+  /// Its photograph's key, for « Partager »'s picture when the vitrine
+  /// cannot be read (closed, not yet visible) — 140.
+  final String? photoKey;
 
   /// For the article's photograph. Null hides the photo section, the same
   /// courtesy as the scan button: no camera, no dead button.
@@ -825,6 +833,13 @@ class _EditProductSheetState extends State<_EditProductSheet> {
   /// The article has a photo on the server: changing it takes no new place
   /// among the ten a Basic business keeps (100).
   bool _hasPhoto = false;
+
+  /// The photos' row (136) could not be read: the older button again.
+  bool _stripFailed = false;
+
+  /// The row is the photo control (136): the button below only without it.
+  bool get _strip =>
+      !_stripFailed && photoStripOffered(widget.retail, widget.capture);
 
   static String _plain(double v) =>
       v == v.roundToDouble() ? v.round().toString() : '$v';
@@ -1132,7 +1147,20 @@ class _EditProductSheetState extends State<_EditProductSheet> {
             // what the vitrine, the à-la-une strip and the search all show.
             // Offered only in a build that knows where to send it: a button
             // that queues a photo nothing will ever send is a broken button.
-            if (widget.capture != null && widget.capture!.isConfigured) ...[
+            // With 136 its photos' row is the one control (the cover first).
+            if (_strip) ...[
+              ItemPhotoStrip(
+                org: widget.org,
+                retail: widget.retail,
+                capture: widget.capture!,
+                productId: widget.product.id,
+                name: widget.product.name,
+                onChanged: (g) => setState(() => _hasPhoto = g.photos.isNotEmpty),
+                onUnavailable: () => setState(() => _stripFailed = true),
+              ),
+              PhotoCounter(org: widget.org, hasPhoto: _hasPhoto),
+              const SizedBox(height: 4),
+            ] else if (widget.capture != null && widget.capture!.isConfigured) ...[
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -1203,6 +1231,13 @@ class _EditProductSheetState extends State<_EditProductSheet> {
               subtitle: Text(
                   context.tr('Visible du public, avec sa photo et son prix, si la vitrine de la boutique est ouverte.')),
             ),
+            // « Partager » (140): an image of this article alone, or its link.
+            if (ShareArticleButton.offered(widget.org, widget.product))
+              ShareArticleButton(
+                  org: widget.org,
+                  product: widget.product,
+                  photoKey: widget.photoKey,
+                  capture: widget.capture),
             // A spot on the street for this article (071), for the person
             // who pays for it; the sheet checks photo, price and stock.
             // Not in the iPhone app, which sells no spot (125).
@@ -1228,21 +1263,17 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                   label: Text(context.tr('Mettre cet article en avant')),
                 ),
               ),
-            // What the shopkeeper would say across the counter, under the
-            // name on the vitrine. Two sentences at most (300 characters,
-            // the database's own limit); a tile that scrolls is a tile
-            // nobody reads.
+            // What the shopkeeper would say across the counter: the
+            // vitrine's item page shows it whole, « Lire la suite » past six
+            // lines — 1,000 characters since 136 (300 before).
             const SizedBox(height: 8),
-            TextField(
+            DescriptionField(
+              key: const Key('product-description'),
               controller: _description,
               enabled: !_busy,
-              maxLines: 3,
-              maxLength: 300,
-              decoration: InputDecoration(
-                labelText: context.tr('Description pour la vitrine (facultatif)'),
-                hintText: context.tr('Taille, goût, origine — ce que le client demande au comptoir.'),
-                border: const OutlineInputBorder(),
-              ),
+              maxLength: widget.retail.descriptionMax,
+              label: context.tr('Description pour la vitrine (facultatif)'),
+              example: describeExample(context, widget.org),
             ),
             if (widget.canArchive) ...[
               const SizedBox(height: 8),

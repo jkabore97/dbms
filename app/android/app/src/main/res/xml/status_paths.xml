@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The one folder another app may read, by a granted content:// address:
+     the status picture of the moment (140, MainActivity.statusFile). -->
+<paths>
+    <cache-path name="status" path="status/" />
+</paths>

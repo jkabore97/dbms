@@ -5,6 +5,7 @@ import '../rates/currency_rates.dart';
 import '../orders/orders.dart';
 import '../storefront/storefront_repository.dart' show VitrineSchedule;
 import '../db/local_db.dart';
+import 'duration.dart';
 import 'models.dart';
 
 /// The shop's reads and writes.
@@ -242,6 +243,28 @@ class RetailRepository {
   /// stock » (writing it would fail), and every article is followed.
   bool stockTrackingMissing = false;
 
+  /// True once [products] (or a save) found a database before 136, with no
+  /// `duration_minutes` column: no photo after the first is offered, a
+  /// service's duration goes into its description as before (« Durée :
+  /// 1 h »), and a description keeps 064's 300 characters.
+  bool get itemPhotosMissing => _itemPhotosMissing;
+  set itemPhotosMissing(bool missing) {
+    _itemPhotosMissing = missing;
+    _itemPhotosKnown = true;
+  }
+
+  bool _itemPhotosMissing = false;
+  bool _itemPhotosKnown = false;
+
+  /// 136 is known to be there: a read or a door answered with it. Until
+  /// then nothing is promised that an older database would refuse.
+  bool get itemPhotosLive => _itemPhotosKnown && !_itemPhotosMissing;
+
+  /// How long a description may be, in characters as Postgres counts them
+  /// (code points, char_length): 1,000 once 136 is known to be there, 300
+  /// (064's) before — or while nothing has been read yet.
+  int get descriptionMax => itemPhotosLive ? 1000 : 300;
+
   Future<List<Product>> products(String orgId, {bool activeOnly = true}) async {
     // is_published was missing from this list for a while: the edit sheet
     // then read every article as "not on the vitrine", showed the switch
@@ -250,7 +273,21 @@ class RetailRepository {
     // sheet can write back.
     const columns = 'id, name, barcode, serial, cost_price, sale_price, '
         'quantity, expires_on, low_stock_at, is_ingredient, is_published';
-    // « Suivre le stock » (131) first; a database before it answers 42703
+    // The service's duration (136) first; a database before it answers
+    // 42703 and the duration stays in the description, as before.
+    try {
+      final rows = await _products(orgId,
+          '$columns, description, unit, available_from, is_service, price_from, stock_tracked, duration_minutes',
+          activeOnly: activeOnly);
+      servicesMissing = false;
+      stockTrackingMissing = false;
+      itemPhotosMissing = false;
+      return rows;
+    } on PostgrestException catch (error) {
+      if (error.code != '42703') rethrow;
+      itemPhotosMissing = true;
+    }
+    // « Suivre le stock » (131) next; a database before it answers 42703
     // and the article is read as followed, as every article was.
     try {
       final rows = await _products(orgId,
@@ -757,15 +794,9 @@ class RetailRepository {
     bool? stockTracked,
   }) async {
     final client = _requireClient();
-    // `.select()` turns a silent no-op into a fact we can check. A PostgREST
-    // update that matches no row — because RLS refused it, or the id is not in
-    // this org — returns success with an empty list, and that is exactly how
-    // "editing an article did nothing, with no error" reached the shop floor
-    // once. If nothing came back, the edit did not land: say so, loudly,
-    // rather than popping the sheet as if it had.
-    final rows = await client
-        .from('products')
-        .update({
+    final List<dynamic> rows;
+    try {
+      rows = await _updateProductRow(client, productId, {
           if (name != null && name.trim().isNotEmpty) 'name': name.trim(),
           'sale_price': ?salePrice,
           'cost_price': ?costPrice,
@@ -794,14 +825,115 @@ class RetailRepository {
           // « Suivre le stock » (131): sent only when the form changed it,
           // so an edit on a database before 131 still saves.
           'stock_tracked': ?stockTracked,
-        })
-        .eq('id', productId)
-        .select('id');
-    if ((rows as List).isEmpty) {
+        });
+    } on PostgrestException catch (e) {
+      // 23514 on the description's length: 064's 300 characters still hold
+      // — a database before 136. Said once, every field keeps 300 after.
+      if (e.code == '23514' && '${e.message} ${e.details}'.contains('products_description_length')) {
+        itemPhotosMissing = true;
+      }
+      rethrow;
+    }
+    if (rows.isEmpty) {
       throw StateError(
         "La modification n'a pas été enregistrée. Vérifiez que vous avez le "
         'droit de modifier les articles de cette boutique.',
       );
+    }
+  }
+
+  Future<List<dynamic>> _updateProductRow(
+      SupabaseClient client, String productId, Map<String, Object?> values) async {
+    // `.select()` turns a silent no-op into a fact we can check. A PostgREST
+    // update that matches no row — because RLS refused it, or the id is not in
+    // this org — returns success with an empty list, and that is exactly how
+    // "editing an article did nothing, with no error" reached the shop floor
+    // once. If nothing came back, the edit did not land: say so, loudly,
+    // rather than popping the sheet as if it had.
+    final rows = await client
+        .from('products')
+        .update(values)
+        .eq('id', productId)
+        .select('id');
+    return rows as List;
+  }
+
+  /// A service's duration (136), [minutes] null to clear it. Before 136
+  /// there is no column: the duration opens the description as the service
+  /// flow always wrote it (« Durée : 1 h »), [description] after it — the
+  /// words the screen holds now.
+  Future<void> setServiceDuration(String productId, int? minutes,
+      {String? description}) async {
+    if (!itemPhotosMissing) {
+      try {
+        final client = _requireClient();
+        await client
+            .from('products')
+            .update({'duration_minutes': minutes})
+            .eq('id', productId)
+            .select('id');
+        itemPhotosMissing = false;
+        return;
+      } on PostgrestException catch (e) {
+        // PGRST204 / 42703: no such column — a database before 136.
+        if (e.code != 'PGRST204' && e.code != '42703') rethrow;
+        itemPhotosMissing = true;
+      }
+    }
+    if (minutes == null) return;
+    await updateProduct(productId,
+        description: legacyDurationDescription(minutes, description));
+  }
+
+  /// « Durée : 1 h » and the words after it — the description a database
+  /// before 136 carries a service's duration in.
+  /// How many characters « Durée : 1 h » and its line break take before
+  /// the words, on a database before 136 (0 without a duration).
+  static int legacyDurationPrefix(int? minutes) =>
+      minutes == null ? 0 : legacyDurationDescription(minutes, null).runes.length + 1;
+
+  static String legacyDurationDescription(int minutes, String? description) {
+    final rest = description?.trim() ?? '';
+    final line = 'Durée : ${formatDuration(minutes, plain: true)}';
+    return rest.isEmpty ? line : '$line\n$rest';
+  }
+
+  // ----------------------------------------------------------------
+  // An item's photos (136): the gallery, in order, the first its cover
+  // ----------------------------------------------------------------
+
+  /// The item's photos in order and how many it may hold (1 on Basic).
+  /// Null on a database before 136 (and [itemPhotosMissing] set).
+  Future<ItemGallery?> gallery(String productId) =>
+      _gallery('product_gallery', {'p_product_id': productId});
+
+  /// One more photo, last: [documentId] is a photo the business already
+  /// has (sent through the uploads Worker first). Refused by the server on
+  /// Basic and past max_item_photos_pro.
+  Future<ItemGallery?> addPhoto(String productId, String documentId) =>
+      _gallery('product_photo_add', {'p_product_id': productId, 'p_document_id': documentId});
+
+  /// The photos in a new order, every one once; the first is the cover.
+  Future<ItemGallery?> orderPhotos(String productId, List<String> documentIds) =>
+      _gallery('product_photos_order', {'p_product_id': productId, 'p_document_ids': documentIds});
+
+  /// One photo off the item; it stays in Photos.
+  Future<ItemGallery?> removePhoto(String productId, String documentId) =>
+      _gallery('product_photo_remove', {'p_product_id': productId, 'p_document_id': documentId});
+
+  Future<ItemGallery?> _gallery(String fn, Map<String, Object?> params) async {
+    final client = _requireClient();
+    try {
+      final v = await client.rpc(fn, params: params);
+      itemPhotosMissing = false;
+      _photoKeysHeard.clear();
+      return v is Map ? ItemGallery.fromJson(Map<String, dynamic>.from(v)) : null;
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST202' || e.code == '42883') {
+        itemPhotosMissing = true;
+        return null;
+      }
+      rethrow;
     }
   }
 

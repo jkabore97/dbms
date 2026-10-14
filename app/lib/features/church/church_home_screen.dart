@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/help/help_repository.dart';
 import '../help/help_button.dart';
+import '../home/vitrine_button.dart';
 
 import 'trust_screen.dart';
 import '../../core/theme/kaj_card.dart';
@@ -333,6 +334,8 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
               ),
             ),
           // « Besoin d'aide » (Pro) or « Aide » (136), after the name.
+          // « Ma vitrine » (140), one tap from the home.
+          if (widget.org != null) VitrineButton(org: widget.org!),
           if (widget.org != null)
             HelpButton(org: widget.org!, help: widget.help, screen: context.tr('Accueil')),
           if (widget.accountAction != null) widget.accountAction!,

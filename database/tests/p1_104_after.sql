@@ -19,6 +19,22 @@ declare
     v_count int;
 begin
     n := p1_take('after');
+    -- 136 (batch 141): the shelf grew photo_keys and duration_minutes. An
+    -- item with no second photo (photo_keys null or its one photo) and no
+    -- duration must read exactly as before: those two keys are set aside
+    -- there, and only there — a photo or a duration more is a change.
+    update p1_snap s
+       set v = (select coalesce(jsonb_agg(e order by e::text), '[]'::jsonb)
+                  from (select x
+                               - case when coalesce(x -> 'photo_keys', 'null'::jsonb) = 'null'::jsonb
+                                        or x -> 'photo_keys' = jsonb_build_array(x -> 'photo_key')
+                                      then 'photo_keys' else '' end
+                               - case when coalesce(x -> 'duration_minutes', 'null'::jsonb) = 'null'::jsonb
+                                      then 'duration_minutes' else '' end as e
+                          from jsonb_array_elements(s.v) x) z)
+     where s.phase = 'after'
+       and (s.what like 'storefront_products %' or s.what like 'own products %')
+       and jsonb_typeof(s.v) = 'array';
     select string_agg(coalesce(b.what, a.what), '; ' order by coalesce(b.what, a.what)), count(*)
       into v_diff, v_count
       from (select * from p1_snap where phase = 'before') b

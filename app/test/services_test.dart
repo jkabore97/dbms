@@ -561,6 +561,7 @@ void main() {
       await tester.pump();
       await _next(tester);
       await _next(tester); // no duration
+      await _next(tester); // 136: no description
       await _next(tester); // on the vitrine
       await tester.tap(find.byKey(const Key('flow-save')));
       await tester.pumpAndSettle();
@@ -614,6 +615,7 @@ void main() {
       await tester.pump();
       await _next(tester);
       await _next(tester);
+      await _next(tester); // 136: no description
       await _next(tester);
       await tester.tap(find.byKey(const Key('flow-save')));
       await tester.pumpAndSettle();

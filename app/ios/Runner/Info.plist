@@ -48,6 +48,13 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- The status picture (140): whether Facebook's stories and WhatsApp
+	     are on the phone (canOpenURL needs them named). -->
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>facebook-stories</string>
+		<string>whatsapp</string>
+	</array>
 	<!-- Why Mara asks, in French here (the development language) and in
 	     fr.lproj / en.lproj InfoPlist.strings. -->
 	<key>NSCameraUsageDescription</key>
@@ -55,7 +62,7 @@
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Mara ouvre vos photos pour y choisir celle d'un article, de votre logo ou d'un reçu.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Mara enregistre dans vos photos l'image d'une facture ou d'un résumé que vous partagez.</string>
+	<string>Mara enregistre dans vos photos les images que vous partagez : votre statut, une facture, un résumé.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Mara utilise votre position pour montrer les boutiques et les livraisons près de vous.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

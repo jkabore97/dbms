@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/help/help_repository.dart';
 import '../help/help_button.dart';
+import '../home/vitrine_button.dart';
 import '../../core/format/money.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/notify/alert_tone.dart';
@@ -389,6 +390,8 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
         title: AppBarTitle(widget.org.name),
         actions: [
           // « Besoin d'aide » (Pro) or « Aide » (136), after the name.
+          // « Ma vitrine » (140), one tap from the home.
+          VitrineButton(org: widget.org),
           HelpButton(org: widget.org, help: widget.help, screen: Strings.of(context).sale),
           if (widget.accountAction != null) widget.accountAction!,
           bellRoom,

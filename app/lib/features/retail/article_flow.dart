@@ -14,6 +14,7 @@ import '../capture/capture_action.dart';
 import '../common/step_flow.dart';
 import '../farm/farm_flows.dart';
 import 'convert_dialog.dart';
+import 'item_details.dart';
 import 'photo_quota.dart';
 
 /// « Ajouter un article », one entry at a time (115) — for the shop and,
@@ -21,7 +22,8 @@ import 'photo_quota.dart';
 /// autre » starts again, « Terminé » goes back.
 ///
 /// Photo (taken, chosen, or « Choisir dans Photos », 114) → name → selling
-/// price → buying price (optional) → how many, and by what → the low-stock
+/// price → « Décrivez-le en quelques mots » (optional, 136) → buying
+/// price (optional) → how many, and by what → the low-stock
 /// alert (optional) → « Sur la vitrine ? » → « Utilisé en production ? » →
 /// (the shop) expiry and serial number, (the farm) « pas encore prêt » →
 /// the summary → « Enregistrer ».
@@ -137,6 +139,7 @@ class _ArticleFlowState extends State<ArticleFlow> {
   final _quantity = TextEditingController();
   final _low = TextEditingController();
   final _serial = TextEditingController();
+  final _description = TextEditingController();
   String _unit = '';
   bool? _published;
   late bool _isIngredient = widget.ingredient;
@@ -155,6 +158,9 @@ class _ArticleFlowState extends State<ArticleFlow> {
 
   String _savedName = '';
   bool _photoWaits = false;
+
+  /// The description refused while the rest was saved (136).
+  bool _descriptionLost = false;
 
   bool get _farm => widget.farm;
 
@@ -211,6 +217,7 @@ class _ArticleFlowState extends State<ArticleFlow> {
         widget.initialQuantity == null ? '' : stockQty(widget.initialQuantity!);
     _low.clear();
     _serial.clear();
+    _description.clear();
     _unit = '';
     _published = null;
     _isIngredient = widget.ingredient;
@@ -233,7 +240,7 @@ class _ArticleFlowState extends State<ArticleFlow> {
 
   @override
   void dispose() {
-    for (final c in [_name, _price, _cost, _quantity, _low, _serial]) {
+    for (final c in [_name, _price, _cost, _quantity, _low, _serial, _description]) {
       c.dispose();
     }
     super.dispose();
@@ -255,6 +262,7 @@ class _ArticleFlowState extends State<ArticleFlow> {
         'ingredient': _isIngredient,
         'tracked': _tracked,
         'serial': _serial.text,
+        'description': _description.text,
         'expires': _expiresOn?.toIso8601String(),
         'available': _availableFrom?.toIso8601String(),
       };
@@ -278,6 +286,7 @@ class _ArticleFlowState extends State<ArticleFlow> {
       final tracked = a['tracked'];
       if (tracked is bool) _tracked = tracked;
       _serial.text = '${a['serial'] ?? ''}';
+      _description.text = '${a['description'] ?? ''}';
       _expiresOn = DateTime.tryParse('${a['expires'] ?? ''}');
       _availableFrom = DateTime.tryParse('${a['available'] ?? ''}');
     });
@@ -343,6 +352,17 @@ class _ArticleFlowState extends State<ArticleFlow> {
       );
     } else if (handCount) {
       await retail.updateProduct(id, quantity: existing.quantity + qty);
+    }
+    // « Décrivez-le » (136): its own write, sent only when written (the
+    // column is 064's, so an older database takes it too), so that a
+    // refusal never takes the unit, the count and the vitrine with it.
+    _descriptionLost = false;
+    if (existing == null && _description.text.trim().isNotEmpty) {
+      try {
+        await retail.updateProduct(id, description: _description.text);
+      } catch (_) {
+        _descriptionLost = true;
+      }
     }
     final photo = _photo;
     final capture = widget.capture;
@@ -471,6 +491,23 @@ class _ArticleFlowState extends State<ArticleFlow> {
           ),
         ),
         FlowStep(
+          id: 'describe',
+          title: context.tr('Décrivez-le en quelques mots'),
+          help: context.tr('Ce que le client lit avant de commander, sur la vitrine.'),
+          optional: true,
+          shown: () => sell && existing == null,
+          isValid: () => descriptionLength(_description.text) <= widget.retail.descriptionMax,
+          isEmpty: () => _description.text.trim().isEmpty,
+          builder: (_) => DescriptionField(
+            key: const Key('article-description'),
+            controller: _description,
+            autofocus: true,
+            maxLength: widget.retail.descriptionMax,
+            example: describeExample(context, widget.org),
+            onChanged: (_) => setState(() {}),
+          ),
+        ),
+        FlowStep(
           id: 'cost',
           title: context.tr('Prix d\'achat ?'),
           help: _farm
@@ -565,9 +602,13 @@ class _ArticleFlowState extends State<ArticleFlow> {
       onSave: _record,
       done: (_) => FlowDone(
         message: context.tr('{name} ajouté', {'name': _savedName}),
-        details: _photoWaits
+        details: _photoWaits || _descriptionLost
             ? Text(
-                context.tr('Photo gardée, en attente de réseau. Une fois envoyée, liez-la à l\'article depuis Documents.'),
+                [
+                  if (_descriptionLost) context.tr('La description n\'a pas été enregistrée : modifiez l\'article pour l\'écrire à nouveau.'),
+                  if (_photoWaits)
+                    context.tr('Photo gardée, en attente de réseau. Une fois envoyée, liez-la à l\'article depuis Documents.'),
+                ].join('\n'),
                 textAlign: TextAlign.center)
             : null,
         actions: [
@@ -862,6 +903,8 @@ class _ArticleFlowState extends State<ArticleFlow> {
         if (existing == null)
           FlowSummaryRow(context.tr('Prix de vente'), _money.format(_num(_price) ?? 0),
               step: 'price'),
+        if (existing == null && _description.text.trim().isNotEmpty)
+          FlowSummaryRow(context.tr('Description'), _description.text.trim(), step: 'describe'),
         if (_num(_cost) != null)
           FlowSummaryRow(context.tr('Prix d\'achat'), _money.format(_num(_cost)!),
               step: 'cost'),
