@@ -44,9 +44,11 @@ insert into auth.users (id, phone, raw_user_meta_data) values
     (:other, '+22643000003', '{"full_name": "Étrangère"}'),
     (:plat,  '+22643000004', '{"full_name": "Plateforme"}');
 update profiles set is_platform_admin = true where id = :plat;
-insert into orgs (id, name, slug, profile, default_currency, storefront_enabled, plan, plan_until) values
-    (:shop, 'Boutique Vue', 'vue-43', 'retail', 'XOF', true, 'free', null),
-    (:pro,  'Boutique Pro', 'pro-43', 'retail', 'XOF', true, 'pro', current_date + 30);
+-- Placed in Ouagadougou: since 144 a spot is shown around its business,
+-- and a business with no pin cannot ask for one.
+insert into orgs (id, name, slug, profile, default_currency, storefront_enabled, plan, plan_until, lat, lng) values
+    (:shop, 'Boutique Vue', 'vue-43', 'retail', 'XOF', true, 'free', null, 12.3714, -1.5197),
+    (:pro,  'Boutique Pro', 'pro-43', 'retail', 'XOF', true, 'pro', current_date + 30, 12.3720, -1.5190);
 insert into memberships (org_id, user_id, role, scope_kind, scope_id, visibility) values
     (:shop, :owner, 'owner',    'org', :shop, 'full'),
     (:shop, :clerk, 'employee', 'org', :shop, 'full'),
@@ -156,7 +158,7 @@ create temp table t_spot on commit drop as
 select request_promotion('43000000-0000-0000-0000-000000000001',
                          '43aaaaaa-0000-0000-0000-000000000001', 7) as id;
 do $$ begin
-    if exists (select 1 from storefront_featured() where name = 'Pagne') then
+    if exists (select 1 from storefront_featured(12.3714, -1.5197) where name = 'Pagne') then
         raise exception 'FAIL: an unpaid spot is on the street';
     end if;
     begin
@@ -176,10 +178,10 @@ end $$;
 select decide_promotion((select id from t_spot), true);
 set local role anon;
 do $$ begin
-    if (select name from storefront_featured() limit 1) <> 'Pagne' then
+    if (select name from storefront_featured(12.3714, -1.5197) limit 1) <> 'Pagne' then
         raise exception 'FAIL: the paid spot is not first in À la une';
     end if;
-    if not exists (select 1 from storefront_featured() where name = 'Bissap') then
+    if not exists (select 1 from storefront_featured(12.3714, -1.5197) where name = 'Bissap') then
         raise exception 'FAIL: the hand-set article fell out of À la une';
     end if;
     raise notice 'PASS: paid + approved → first in À la une, hand-set kept';
@@ -256,7 +258,7 @@ insert into storefront_visits (day, org_id, product_id, seen, opened) values
     (current_date,     '43000000-0000-0000-0000-000000000001', null, 0, 12);
 set local role anon;
 do $$ begin
-    if not exists (select 1 from storefront_spotlights() where slug = 'vue-43') then
+    if not exists (select 1 from storefront_spotlights(12.3714, -1.5197) where slug = 'vue-43') then
         raise exception 'FAIL: the shop spot is not in the spotlights';
     end if;
 end $$;

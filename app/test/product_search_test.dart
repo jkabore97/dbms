@@ -38,7 +38,7 @@ class _SearchableStreet extends StorefrontRepository {
       ];
 
   @override
-  Future<List<FeaturedItem>> featured() async => const [];
+  Future<List<FeaturedItem>> featured({double? lat, double? lng}) async => const [];
 
   @override
   Future<List<ProductHit>> searchProducts(String query,

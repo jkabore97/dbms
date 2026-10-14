@@ -7,6 +7,7 @@ import '../../core/auth/auth_repository.dart';
 import '../../core/format/money.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import 'spots_card.dart' show SpotChangeDialog;
 
 /// The paid spots on the welcome page — "à la une".
 ///
@@ -101,6 +102,62 @@ class _FeaturedScreenState extends State<FeaturedScreen> {
     }
   }
 
+  /// The platform's hand on any spot (144): another item, journaled, the
+  /// business told.
+  Future<void> _change(PlatformPromotion ask) async {
+    PromotionOptions options;
+    try {
+      options = await widget.admin.promotionOptions(ask.id);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AuthRepository.describeError(error))));
+      return;
+    }
+    if (!mounted) return;
+    final picked = await showDialog<String>(
+      context: context,
+      builder: (context) => SpotChangeDialog(
+        options: options,
+        line: context.tr('Changé par la plateforme : les dates et le prix restent, l\'entreprise est prévenue, c\'est inscrit au journal.'),
+      ),
+    );
+    if (picked == null || !mounted) return;
+    await _act(ask, () => widget.admin.platformChangePromotionProduct(ask.id, picked));
+  }
+
+  Future<void> _stop(PlatformPromotion ask) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        key: const Key('console-spot-stop-dialog'),
+        scrollable: true,
+        title: Text(context.tr('Arrêter la mise en avant ?')),
+        content: Text(context.tr('Elle s\'arrête tout de suite (programmée, elle n\'aura pas lieu). Un remboursement passe par « à rembourser ». L\'entreprise est prévenue, c\'est inscrit au journal.')),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(context.tr('Continuer'))),
+          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(context.tr('Arrêter'))),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    await _act(ask, () => widget.admin.platformStopPromotion(ask.id));
+  }
+
+  Future<void> _act(PlatformPromotion ask, Future<void> Function() run) async {
+    setState(() => _busyId = ask.id);
+    try {
+      await run();
+      await _load();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AuthRepository.describeError(error))));
+    } finally {
+      if (mounted) setState(() => _busyId = null);
+    }
+  }
+
   List<Widget> _askSection(ThemeData theme) {
     if (_asks.isEmpty) return const [];
     final date = DateFormat('d MMM', intlLocale());
@@ -137,6 +194,28 @@ class _FeaturedScreenState extends State<FeaturedScreen> {
                   },
                   if ((a.note ?? '').isNotEmpty) '« ${a.note} »',
                 ].join(' · ')),
+                // 144: the platform changes the item or stops any spot.
+                if (a.kind == 'article' || a.status == 'approved')
+                  Wrap(
+                    alignment: WrapAlignment.end,
+                    spacing: 4,
+                    children: [
+                      if (a.kind == 'article')
+                        TextButton.icon(
+                          key: Key('console-spot-change-${a.id}'),
+                          onPressed: _busyId != null ? null : () => _change(a),
+                          icon: const Icon(Icons.swap_horiz, size: 18),
+                          label: Text(context.tr('Changer l\'article')),
+                        ),
+                      if (a.status == 'approved')
+                        TextButton.icon(
+                          key: Key('console-spot-stop-${a.id}'),
+                          onPressed: _busyId != null ? null : () => _stop(a),
+                          icon: const Icon(Icons.stop_circle_outlined, size: 18),
+                          label: Text(context.tr('Arrêter')),
+                        ),
+                    ],
+                  ),
                 if (a.waiting)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,

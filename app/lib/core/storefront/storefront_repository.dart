@@ -309,12 +309,30 @@ class StorefrontRepository {
   }
 
   /// The articles à la une (054): the paid spots on the welcome page.
-  Future<List<FeaturedItem>> featured() async {
-    final rows =
-        await _requireClient().rpc('storefront_featured') as List<dynamic>;
+  ///
+  /// Since 144 a spot shows only around its business: with the shopper's
+  /// position (« près de moi ») the server is told where they are; without
+  /// it the server uses a signed-in shopper's saved delivery pin, or shows
+  /// no spot (Mara's own picks stay). A database before 144 has no door
+  /// with a position: asked again without one, it answers as before.
+  Future<List<FeaturedItem>> featured({double? lat, double? lng}) async {
+    final rows = await _here('storefront_featured', lat, lng);
     return rows
         .map((r) => FeaturedItem.fromRow(Map<String, dynamic>.from(r as Map)))
         .toList();
+  }
+
+  /// A street reader asked from [lat], [lng] when known (144), else with
+  /// no position — and with none on a database before 144.
+  Future<List<dynamic>> _here(String fn, double? lat, double? lng) async {
+    final client = _requireClient();
+    if (lat == null || lng == null) return await client.rpc(fn) as List<dynamic>;
+    try {
+      return await client.rpc(fn, params: {'p_lat': lat, 'p_lng': lng}) as List<dynamic>;
+    } on PostgrestException catch (e) {
+      if (e.code != 'PGRST202' && e.code != '42883') rethrow;
+      return await client.rpc(fn) as List<dynamic>;
+    }
   }
 
   /// One search across every window (059): the published articles of open
@@ -426,10 +444,10 @@ class StorefrontRepository {
 
   /// The shops paying for the top of the directory right now (071). Empty
   /// on a database before 071, or with no signal: the list is still the list.
-  Future<Set<String>> spotlights() async {
+  /// Since 144 only the shops around the shopper ([featured]'s rule).
+  Future<Set<String>> spotlights({double? lat, double? lng}) async {
     try {
-      final rows =
-          await _requireClient().rpc('storefront_spotlights') as List<dynamic>;
+      final rows = await _here('storefront_spotlights', lat, lng);
       return {for (final r in rows) '${(r as Map)['slug']}'};
     } catch (_) {
       return const {};

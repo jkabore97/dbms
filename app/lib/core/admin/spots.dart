@@ -297,3 +297,91 @@ class PlatformToday {
       (money['spots'] ?? 0).toDouble() +
       (money['delivery_cut'] ?? 0).toDouble();
 }
+
+/// The places around a business (144's spot_area_status): a spot shows
+/// only to shoppers within [areaKm] of it, and at most [places] of the
+/// same kind run at once in its area. Null from a database before 144.
+class SpotArea {
+  const SpotArea({
+    required this.positioned,
+    this.areaKm = 30,
+    this.places = 8,
+    this.taken = 0,
+    this.free = 8,
+    this.nextAt,
+  });
+
+  factory SpotArea.fromJson(Map<String, dynamic> j) => SpotArea(
+        positioned: j['positioned'] == true,
+        areaKm: _d(j['area_km']),
+        places: _i(j['places']),
+        taken: _i(j['taken']),
+        free: _i(j['free']),
+        nextAt: _t(j['next_at']),
+      );
+
+  /// The business is on the map: without it no spot can be bought.
+  final bool positioned;
+  final double areaKm;
+  final int places;
+  final int taken;
+  final int free;
+
+  /// Full: when the next place frees (the queue's own date).
+  final DateTime? nextAt;
+
+  bool get full => positioned && free <= 0;
+}
+
+/// What a business may do with one of its spots now (144's
+/// promotion_options), and the items it may change to.
+class PromotionOptions {
+  const PromotionOptions({
+    this.canCancel = false,
+    this.canChange = false,
+    this.canStop = false,
+    this.changed = false,
+    this.changeUntil,
+    this.items = const [],
+  });
+
+  factory PromotionOptions.fromJson(Map<String, dynamic> j) => PromotionOptions(
+        canCancel: j['can_cancel'] == true,
+        canChange: j['can_change'] == true,
+        canStop: j['can_stop'] == true,
+        changed: j['changed'] == true,
+        changeUntil: _t(j['change_until']),
+        items: [
+          if (j['items'] is List)
+            for (final e in j['items'] as List)
+              if (e is Map) (id: '${e['id']}', name: '${e['name'] ?? ''}', service: e['service'] == true),
+        ],
+      );
+
+  final bool canCancel;
+  final bool canChange;
+  final bool canStop;
+
+  /// Its one change is already made.
+  final bool changed;
+
+  /// A running spot's change closes then (24 h after it started).
+  final DateTime? changeUntil;
+  final List<({String id, String name, bool service})> items;
+}
+
+/// Which fixes the card offers for [p] (144). The server decides; this
+/// only chooses which buttons show.
+({bool cancel, bool change, bool stop}) spotFixes(Promotion p, [DateTime? now]) {
+  final at = now ?? DateTime.now();
+  final started = p.startsAt != null && !p.startsAt!.isAfter(at);
+  final running = p.status == 'approved' && started && p.endsAt != null && p.endsAt!.isAfter(at);
+  final queued = p.status == 'approved' && p.startsAt != null && p.startsAt!.isAfter(at);
+  final inWindow = running && at.isBefore(p.startsAt!.add(const Duration(hours: 24)));
+  return (
+    cancel: p.status == 'requested',
+    change: !p.isShop &&
+        (p.status == 'requested' || p.status == 'paid_claimed' || queued || inWindow),
+    stop: running,
+  );
+}

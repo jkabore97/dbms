@@ -35,7 +35,7 @@ class _SlowStreet extends StorefrontRepository {
       directoryGate.future;
 
   @override
-  Future<List<FeaturedItem>> featured() async => const [];
+  Future<List<FeaturedItem>> featured({double? lat, double? lng}) async => const [];
 
   @override
   Future<PublicShop?> shop(String slug) => shopGate.future;

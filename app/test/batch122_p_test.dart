@@ -113,9 +113,9 @@ class _Street extends StorefrontRepository {
   @override
   Future<List<DirectoryEntry>> directory({double? lat, double? lng}) async => entries;
   @override
-  Future<List<FeaturedItem>> featured() async => const [];
+  Future<List<FeaturedItem>> featured({double? lat, double? lng}) async => const [];
   @override
-  Future<Set<String>> spotlights() async => const {};
+  Future<Set<String>> spotlights({double? lat, double? lng}) async => const {};
   @override
   Future<Set<String>> showcaseSlugs() async => const {};
   @override

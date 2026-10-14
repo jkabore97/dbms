@@ -903,6 +903,10 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch140.sql
+      - name: "Prove « Mettre en avant » by area — Dakar and Ouagadougou each hold 8 article spots and 8 vitrine spots at once, independently; the 9th in Dakar waits for Dakar's first end (card settle) and Ouagadougou's 9th too (the platform's « Valider ») while Ouagadougou's 8th and Abidjan's first start at once; a shopper near Dakar sees Dakar's spots only, near Ouagadougou Ouagadougou's only, in Abidjan neither, with no location (signed out, off the Earth, no saved pin, the older app's door) none, signed in the home pin's, Mara's pick for all; a shop, a farm and an association with no pin refused with « La position de ma boutique / ferme / association », spot_ineligible 'position', a payment for it refused and recorded; the sheet's places free this week and the date when full, the owner's and the platform's alone; installing 144 over running and queued spots changes none; spot_area_km 5 to 200 km, journaled; the street's doors anon's, next_spot_start and the helpers nobody's, no path on the street-wide queue; run twice the same (144)"
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch144.sql
 
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each
