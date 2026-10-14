@@ -254,6 +254,14 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     }
   }
 
+  /// Its owner off to its settings, then back: the vitrine read again, so
+  /// what was just changed — opened, customised, articles added — shows
+  /// without leaving the page.
+  Future<void> _editOwn(String location) async {
+    await context.push(location);
+    if (mounted) await _load();
+  }
+
   Future<void> _load() async {
     unawaited(_checkStreet());
     setState(() {
@@ -1075,7 +1083,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       // vitrine ». A visitor never sees it; a basket being tried hides it.
       floatingActionButton: shop != null && _basket.isEmpty && (_ownOrg?.isAdmin ?? false)
           ? _EditVitrineButton(
-              onTap: () => context.push(Routes.vitrineSettings(_ownOrg!.id)))
+              onTap: () => _editOwn(Routes.vitrineSettings(_ownOrg!.id)))
           : null,
       body: _loading
           ? const ShopSkeleton.shelf()
@@ -1093,7 +1101,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
               text: context.tr('Votre vitrine n\'est pas encore visible des clients'),
               action: FilledButton(
                 key: const Key('vitrine-hidden-open'),
-                onPressed: () => context.push(Routes.orgSettings(_ownOrg!.id)),
+                onPressed: () => _editOwn(Routes.orgSettings(_ownOrg!.id)),
                 child: Text(context.tr('Ouvrir ou régler la vitrine')),
               ),
             )
@@ -1108,7 +1116,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
           : _hiddenFromStreet == true && _ownOrg != null
           ? Column(
               children: [
-                _HiddenBanner(onOpen: () => context.push(Routes.orgSettings(_ownOrg!.id))),
+                _HiddenBanner(onOpen: () => _editOwn(Routes.orgSettings(_ownOrg!.id))),
                 Expanded(child: window(shop)),
               ],
             )

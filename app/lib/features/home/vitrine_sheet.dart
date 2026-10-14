@@ -52,8 +52,9 @@ class VitrineSheet extends StatefulWidget {
       sellsDigitalInApp &&
       !(AppScope.maybeOf(context)?.session.accessFor(org.id).isHidden('spots') ?? false);
 
-  /// Opens the sheet over [context] and does what was picked.
-  static Future<void> open(BuildContext context, OrgSummary org) async {
+  /// Opens the sheet over [context] and does what was picked; the pick is
+  /// returned (null when the sheet was closed), after it is done.
+  static Future<VitrineAction?> open(BuildContext context, OrgSummary org) async {
     final scope = AppScope.maybeOf(context);
     Future<VitrineChecklist?>? checklist;
     if (scope != null) {
@@ -70,8 +71,9 @@ class VitrineSheet extends StatefulWidget {
         canPromote: _promotable(context, org),
       ),
     );
-    if (action == null || !context.mounted) return;
+    if (action == null || !context.mounted) return action;
     await act(context, org, action);
+    return action;
   }
 
   /// What each line does, from the context that opened the sheet.

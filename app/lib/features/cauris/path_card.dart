@@ -453,17 +453,21 @@ class PathGate {
   /// The way into a tool from a menu: open, or the lock with « lecture
   /// seule » beside it — what was kept is always readable.
   static Future<void> open(BuildContext context, OrgSummary org,
-          String feature, VoidCallback go) =>
-      guard(context, org, feature, go, view: go);
+          String feature, VoidCallback go, {Future<void> Function()? afterPath}) =>
+      guard(context, org, feature, go, view: go, afterPath: afterPath);
 
   /// Opens the tool, or — while it is still ahead — the lock: the picture,
   /// the goal, the steps it waits for, and the way there (Mon chemin).
   /// [view] is offered beside it so a business that already kept records
   /// reads them (« lecture seule »); leave it null where the act is to
   /// create. [load] reads the path; the app's own unless a test gives one.
+  /// Back from Mon chemin the gates are read again, then [afterPath] (the
+  /// home's own reload), so a step done there shows without a refresh.
   static Future<void> guard(BuildContext context, OrgSummary org,
       String feature, VoidCallback go,
-      {VoidCallback? view, Future<PathState?> Function()? load}) async {
+      {VoidCallback? view,
+      Future<PathState?> Function()? load,
+      Future<void> Function()? afterPath}) async {
     final progress = _progress(context, org);
     if (progress == null || !progress.locks(feature)) {
       go();
@@ -479,10 +483,13 @@ class PathGate {
         org: org,
         feature: feature,
         load: load ?? () => CaurisRepository(client).pathState(org.id),
-        onPath: () {
+        onPath: () async {
           Navigator.of(sheet).pop();
-          context.push(Routes.inside(org.id,
+          final session = AppScope.read(context)?.session;
+          await context.push(Routes.inside(org.id,
               feature == 'second_business' ? 'kaj-pro' : 'chemin'));
+          await session?.reloadFeatures(org.id);
+          if (context.mounted) await afterPath?.call();
         },
         onView: view == null
             ? null
