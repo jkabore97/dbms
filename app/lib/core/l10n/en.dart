@@ -7953,4 +7953,14 @@ const enStrings = <String, String>{
       'No cents in {money}',
   'Au plus {n} chiffres après la virgule':
       'At most {n} digits after the decimal point',
+  // 143: « Mettre en avant » for a service too.
+  'Article ou service': 'Item or service',
+  'Rien de prêt : mettez sur la vitrine un article (avec du stock) ou un service, avec une photo et un prix.':
+      'Nothing ready: put an item (with stock) or a service on the vitrine, with a photo and a price.',
+  'L\'article ou le service apparaît en tête de « À la une » sur la page d\'accueil, marqué « Sponsorisé », pendant 7 jours. Il lui faut une photo et un prix, et du stock pour un article.':
+      'The item or service appears at the top of « À la une » on the home page, marked « Sponsored », for 7 days. It needs a photo and a price, and stock for an item.',
+  'Un service en tête de « À la une », ou votre vitrine en haut de la liste des vitrines, pour 7 jours.':
+      'A service at the top of « À la une », or your vitrine at the top of the list of vitrines, for 7 days.',
+  'Un article ou un service en tête de « À la une » sur la page d\'accueil, ou toute la vitrine en haut de la liste, pour 7 jours.':
+      'An item or a service at the top of « À la une » on the home page, or the whole vitrine at the top of the list, for 7 days.',
 };

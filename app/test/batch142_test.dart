@@ -386,6 +386,31 @@ void main() {
       expect(admin.asked, ['shop:7']);
     });
 
+    testWidgets('143: a service can be « à la une », for a shop and an association', (tester) async {
+      await _size(tester, 390, 1000);
+      // A service has no stock (quantity 0, stock followed): it is offered
+      // all the same, as « À la une » shows it.
+      final withService = _Retail(const [
+        Product(id: 'p-coupe', name: 'Coupe et coiffage', salePrice: 5000, quantity: 0, isPublished: true, isService: true),
+      ]);
+      final admin = _Admin();
+      await _open(tester, _opener(_shop, admin: admin, retail: withService));
+      expect(find.text('Article ou service'), findsWidgets);
+      expect(find.textContaining('Rien de prêt'), findsNothing, reason: 'the service is ready');
+      expect(find.textContaining('Coupe et coiffage'), findsOneWidget);
+      await _scrollTo(tester, find.byKey(const Key('spot-go')));
+      await tester.tap(find.byKey(const Key('spot-go')));
+      await tester.pumpAndSettle();
+      expect(admin.asked, ['p-coupe:7'], reason: 'the service itself is asked « à la une » for 7 days');
+
+      await tester.pumpWidget(const SizedBox());
+      await _open(tester, _opener(_assoc, admin: _Admin(), retail: withService, vitrineOnly: true));
+      await tester.tap(find.text('Article ou service'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Coupe et coiffage'), findsOneWidget,
+          reason: 'an association promotes one of its services');
+    });
+
     testWidgets('a farm and an association name their own vitrine product', (tester) async {
       await _size(tester, 390, 1000);
       await _open(tester, _opener(_farm, admin: _Admin(), retail: _farmItems));
@@ -395,7 +420,14 @@ void main() {
       await tester.pumpWidget(const SizedBox());
       await _open(tester, _opener(_assoc, admin: _Admin(), retail: null, vitrineOnly: true));
       expect(find.text('L\'association à la une, 7 jours'), findsOneWidget);
-      expect(find.byKey(const Key('spot-what')), findsNothing, reason: 'an association buys its vitrine only');
+      // 143: an association's services can be « à la une » too; its
+      // vitrine stays the first choice.
+      expect(find.byKey(const Key('spot-what')), findsOneWidget,
+          reason: 'an association chooses a service or its vitrine');
+      expect(
+          tester.widget<SegmentedButton<bool>>(find.byKey(const Key('spot-what'))).selected,
+          {true},
+          reason: 'the vitrine is the first choice for an association');
     });
   });
 
