@@ -66,3 +66,33 @@ create table auth.mfa_factors (
     status      text not null default 'unverified',
     created_at  timestamptz not null default now()
 );
+
+-- 142: every account a test makes has accepted Mara's documents at their
+-- current versions, as a person who passed the app's gate has — so the
+-- suites written before 142 keep testing what they test, not the gate.
+-- Never on a real database (this file never runs there). test_batch142
+-- turns it off (set test.terms_stub = 'off') to prove the server's own
+-- refusals. Written to run before 142 exists: it does nothing until then.
+create or replace function auth.zz_stub_terms_accepted()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+begin
+    if coalesce(current_setting('test.terms_stub', true), '') <> 'off'
+       and to_regclass('public.terms_acceptances') is not null
+       and to_regprocedure('public.terms_version(text)') is not null then
+        execute 'insert into public.terms_acceptances (user_id, document, version)
+                 select $1, d, public.terms_version(d)
+                   from unnest(array[''terms'', ''privacy'', ''seller'', ''courier'']) d
+                 on conflict do nothing'
+          using new.id;
+    end if;
+    return new;
+end;
+$$;
+
+create trigger zz_stub_terms_accepted
+after insert on auth.users
+for each row execute function auth.zz_stub_terms_accepted();

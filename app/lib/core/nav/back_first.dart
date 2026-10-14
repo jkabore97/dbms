@@ -129,8 +129,15 @@ class BackFirst with WidgetsBindingObserver {
   /// with an action is closed here; then the page — popped by the router
   /// when there is one under it (a PopScope still heard), else its parent,
   /// else the question.
+  /// Something drawn over the whole router (147's terms gate, main.dart):
+  /// asked first; true or false is its answer to the back, null that it is
+  /// not shown (the back is the router's as below).
+  Future<bool?> Function()? cover;
+
   @override
   Future<bool> didPopRoute() async {
+    final over = await cover?.call();
+    if (over != null) return over;
     if (popupOpen) return false;
     if (_closeSnackBar()) return true;
     final router = _router;

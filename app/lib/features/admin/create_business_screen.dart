@@ -3,6 +3,9 @@ import '../../core/theme/kaj_card.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/admin/admin_repository.dart';
+import '../../core/errors.dart' show describeError;
+import '../../core/terms/terms.dart';
+import '../account/terms_gate.dart' show SellerCommitmentsCard;
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import 'package:kaj_app/core/nav/parent_route.dart';
@@ -23,9 +26,12 @@ import 'package:kaj_app/core/nav/parent_route.dart';
 /// Everybody else creates their own business in CreateMyBusinessScreen
 /// (111), which reaches the same server path (org_create_core).
 class CreateBusinessScreen extends StatefulWidget {
-  const CreateBusinessScreen({super.key, required this.admin});
+  const CreateBusinessScreen({super.key, required this.admin, this.terms});
 
   final AdminRepository admin;
+
+  /// The seller's commitments (142): the app's unless a test gives one.
+  final TermsController? terms;
 
   /// Lowercases, strips accents, and hyphenates — the name as typed turned
   /// into something that can live in a hostname.
@@ -109,6 +115,13 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
   bool _busy = false;
   String? _error;
 
+  /// « J'accepte les engagements du vendeur » (142): the platform admin who
+  /// creates a business here is its owner, and create_org asks them too.
+  bool _seller = false;
+
+  bool get _asksSeller =>
+      (widget.terms ?? TermsScope.maybeOf(context))?.needs(TermsDoc.seller) ?? false;
+
   @override
   void initState() {
     super.initState();
@@ -140,7 +153,8 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
   bool get _ready =>
       _name.isNotEmpty &&
       CreateBusinessScreen.slugProblem(_slug) == null &&
-      _currency.length == 3;
+      _currency.length == 3 &&
+      (!_asksSeller || _seller);
 
   Future<void> _create() async {
     setState(() {
@@ -149,6 +163,9 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
     });
 
     try {
+      if (_asksSeller) {
+        await (widget.terms ?? TermsScope.read(context))?.accept(const [TermsDoc.seller]);
+      }
       final orgId = await widget.admin.createOrg(
         name: _name,
         slug: _slug,
@@ -174,7 +191,9 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
     if (text.contains('Only a platform admin')) {
       return context.tr('Ce compte n\'a pas le droit de créer une activité.');
     }
-    return text;
+    // Anything else in the person's words, never PostgREST's raw text
+    // (147: the seller's commitments refused, said and translated).
+    return describeError(error);
   }
 
   @override
@@ -268,6 +287,14 @@ class _CreateBusinessScreenState extends State<CreateBusinessScreen> {
                 ),
               ),
             ),
+
+            if (_asksSeller) ...[
+              const SizedBox(height: 20),
+              SellerCommitmentsCard(
+                checked: _seller,
+                onChanged: _busy ? null : (v) => setState(() => _seller = v),
+              ),
+            ],
 
             if (_error != null) ...[
               const SizedBox(height: 20),

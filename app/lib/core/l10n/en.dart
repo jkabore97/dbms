@@ -6435,12 +6435,12 @@ const enStrings = <String, String>{
       'Your name and phone number, your date of birth if you give it (it is never required), the data you enter in the app, and the photos you take for your receipts and deliveries.',
   '# Connexion avec Google':
       '# Signing in with Google',
-  'Si vous vous connectez avec Google, nous recevons de Google votre nom, votre adresse e-mail et votre photo de profil. Ils servent uniquement à vous identifier et à afficher votre nom dans l\'application. Nous ne lisons rien d\'autre de votre compte Google et ne transmettons ces informations à personne.':
-      'If you sign in with Google, we receive from Google your name, your email address and your profile photo. They are used only to identify you and to show your name in the app. We read nothing else from your Google account and pass this information on to no one.',
+  'Si vous vous connectez avec Google, nous recevons de Google votre nom, votre adresse e-mail et votre photo de profil. Ils servent uniquement à vous identifier et à afficher votre nom dans l\'application. Nous ne lisons rien d\'autre de votre compte Google ; votre nom ne va qu\'aux personnes que décrit « Qui voit vos informations ».':
+      'If you sign in with Google, we receive from Google your name, your email address and your profile photo. They are used only to identify you and to show your name in the app. We read nothing else from your Google account; your name goes only to the people described under “Who sees your information”.',
   '# Connexion avec Apple':
       '# Signing in with Apple',
-  'Si vous vous connectez avec Apple (sur iPhone), nous recevons d\'Apple une adresse e-mail — la vôtre, ou une adresse relais privée qu\'Apple crée pour vous — et, la première fois seulement, votre nom. Ils servent uniquement à vous identifier. Nous ne transmettons ces informations à personne.':
-      'If you sign in with Apple (on iPhone), we receive from Apple an email address — your own, or a private relay address Apple creates for you — and, the first time only, your name. They are used only to identify you. We pass this information on to no one.',
+  'Si vous vous connectez avec Apple (sur iPhone), nous recevons d\'Apple une adresse e-mail — la vôtre, ou une adresse relais privée qu\'Apple crée pour vous — et, la première fois seulement, votre nom. Ils servent uniquement à vous identifier ; votre nom ne va qu\'aux personnes que décrit « Qui voit vos informations ».':
+      'If you sign in with Apple (on iPhone), we receive from Apple an email address — your own, or a private relay address Apple creates for you — and, the first time only, your name. They are used only to identify you; your name goes only to the people described under “Who sees your information”.',
   '# Comment elles sont utilisées':
       '# How it is used',
   'Uniquement pour vous fournir le service : afficher vos livres, vos rapports et vos stocks à vous et aux personnes que vous autorisez. Nous ne vendons pas vos données et ne les partageons pas à des fins publicitaires.':
@@ -6471,18 +6471,8 @@ const enStrings = <String, String>{
       '# Contact',
   'Pour toute question sur vos données, ou pour demander leur correction ou leur suppression, écrivez à hello@kaj-consulting.com, ou contactez le support depuis l\'écran Compte › Aide. Mara est édité par KAJ Consulting LLC.':
       'For any question about your data, or to ask for it to be corrected or deleted, write to hello@kaj-consulting.com, or contact support from the Compte › Aide screen. Mara is published by KAJ Consulting LLC.',
-  'En utilisant Mara, vous acceptez ces conditions.':
-      'By using Mara, you accept these terms.',
   '# Votre compte':
       '# Your account',
-  'Vous êtes responsable de l\'exactitude des informations que vous saisissez et de la confidentialité de votre code (PIN). Ne partagez pas votre accès avec une personne qui ne devrait pas voir vos données.':
-      'You are responsible for the accuracy of the information you enter and for keeping your code (PIN) confidential. Do not share your access with a person who should not see your data.',
-  '# Utilisation correcte':
-      '# Proper use',
-  'Mara est un outil de gestion pour votre activité. N\'utilisez pas l\'application pour enregistrer des activités illégales ou pour nuire à autrui.':
-      'Mara is a management tool for your business. Do not use the app to record illegal activities or to harm others.',
-  '# Disponibilité':
-      '# Availability',
   'Nous faisons de notre mieux pour que le service reste disponible, mais nous ne pouvons pas le garantir sans interruption. L\'application continue de fonctionner hors ligne et synchronise dès que la connexion revient.':
       'We do our best to keep the service available, but we cannot guarantee it without interruption. The app keeps working offline and synchronises as soon as the connection returns.',
   '# Responsabilité':
@@ -6495,8 +6485,6 @@ const enStrings = <String, String>{
       'Mara Pro is a subscription, monthly or yearly, for one business: it applies to the business it was taken for. Taken in the iPhone or Android app, it is billed and managed by the App Store or Google Play: the price is the one the store shows, payment is charged to your store account when the purchase is confirmed, the subscription renews automatically unless it is cancelled at least 24 hours before the end of the current period, and it is cancelled in your store account settings, according to its rules.',
   '# Modifications':
       '# Changes',
-  'Ces conditions peuvent évoluer. Les changements importants vous seront signalés dans l\'application.':
-      'These terms may change. Important changes will be announced to you in the app.',
   // 133 (UI audit B-3): a small phone's folded bar actions.
   'Plus d\'actions': 'More actions',
   // 133 (UI audit X-1): a programming error, said plainly.
@@ -7702,4 +7690,247 @@ const enStrings = <String, String>{
       'Nothing to refund.',
   'Remboursé':
       'Refunded',
+  // 147 (142): the Conditions d'utilisation, version 2, the privacy
+  // policy's new paragraphs, the gate's summary, the seller's
+  // commitments and the courier's charter's two new lines — French
+  // binds, this is its faithful English (legal_screens.dart).
+  'Version 2 — en vigueur le 14 octobre 2026.':
+      'Version 2 — in force from 14 October 2026.',
+  'Ces conditions s\'appliquent à toute personne qui utilise Mara : l\'application, le site marakaj.com et les vitrines. En créant un compte, ou en continuant à utiliser Mara, vous les acceptez.':
+      'These terms apply to everyone who uses Mara: the app, the marakaj.com website and the vitrines. By creating an account, or by continuing to use Mara, you accept them.',
+  '# Qui exploite Mara':
+      '# Who runs Mara',
+  'Mara (« propulsé par Kaj ») est un service exploité par KAJ Consulting LLC, une société des États-Unis. Dans ces conditions, « Mara » et « nous » désignent KAJ Consulting LLC ; « vous » désigne la personne qui utilise Mara.':
+      'Mara (“powered by Kaj”) is a service run by KAJ Consulting LLC, a United States company. In these terms, “Mara” and “we” mean KAJ Consulting LLC; “you” means the person using Mara.',
+  '# Le rôle de Mara':
+      '# Mara\'s role',
+  'Mara est une plateforme et un intermédiaire : elle aide des entreprises (boutiques, fermes, associations) à tenir leurs comptes, à montrer leurs articles et à recevoir des commandes, et elle les met en relation avec des clients et des livreurs.':
+      'Mara is a platform and an intermediary: it helps businesses (shops, farms, associations) keep their accounts, show their items and receive orders, and it puts them in touch with customers and couriers.',
+  'Chaque entreprise est le vendeur. Elle seule répond de ses articles et de ses services, de ses prix, de ses livraisons, de ses reçus, de ses impôts et de ses taxes. Mara n\'est pas partie à la vente entre une entreprise et son client : Mara n\'achète pas, ne revend pas et ne garantit pas ce qui est vendu.':
+      'Each business is the seller. It alone answers for its goods and services, its prices, its deliveries, its receipts, its taxes and duties. Mara is not a party to the sale between a business and its customer: Mara does not buy, resell or guarantee what is sold.',
+  'Vous donnez des informations vraies et à jour : votre nom, votre numéro de téléphone. Un compte appartient à une seule personne : ne le prêtez pas, ne le vendez pas, et n\'ouvrez pas de compte au nom de quelqu\'un d\'autre.':
+      'You give true and up-to-date information: your name, your phone number. An account belongs to one person only: do not lend it, do not sell it, and do not open an account in someone else\'s name.',
+  'Âge minimum : 16 ans pour commander ; 18 ans pour ouvrir une entreprise ou devenir livreur. Avant 18 ans, utilisez Mara avec l\'accord d\'un parent ou d\'un tuteur.':
+      'Minimum age: 16 to order; 18 to open a business or become a courier. Under 18, use Mara with the agreement of a parent or guardian.',
+  'Gardez secrets votre mot de passe, votre code (PIN) et les codes que vous recevez par SMS ou WhatsApp : Mara ne vous les demandera jamais. Ce qui est fait avec votre compte est réputé fait par vous ; si quelqu\'un d\'autre y a accès, prévenez-nous tout de suite.':
+      'Keep your password, your code (PIN) and the codes you receive by SMS or WhatsApp secret: Mara will never ask you for them. What is done with your account is taken to be done by you; if someone else has access to it, tell us at once.',
+  'Mara peut vous demander de vérifier votre numéro de téléphone (un code envoyé sur WhatsApp), notamment avant de commander, de créer une entreprise ou de devenir livreur.':
+      'Mara may ask you to verify your phone number (a code sent on WhatsApp), in particular before you order, create a business or become a courier.',
+  '# Les entreprises':
+      '# Businesses',
+  'Une entreprise sur Mara doit exister vraiment et avoir une activité légale là où elle vend. La personne qui la crée en répond, et accepte les « Engagements du vendeur », qui résument cette partie.':
+      'A business on Mara must really exist and carry on a lawful activity where it sells. The person who creates it answers for it, and accepts the “Seller\'s commitments”, which sum up this part.',
+  'Vous publiez seulement des photos et des textes qui sont à vous, ou que vous avez le droit d\'utiliser. Vos prix, vos stocks et vos délais sont exacts et tenus à jour. Une commande acceptée est honorée ; si ce n\'est pas possible, vous prévenez le client tout de suite et vous l\'annulez dans Mara.':
+      'You publish only photos and texts that are yours, or that you have the right to use. Your prices, your stock and your lead times are accurate and kept up to date. An accepted order is honoured; if that is not possible, you tell the customer at once and cancel it in Mara.',
+  'Il est interdit de vendre ou de proposer sur Mara : armes, munitions et explosifs ; drogues ; médicaments sans l\'autorisation que la loi exige ; contrefaçons ; objets volés ou d\'origine douteuse ; contenus pour adultes et services sexuels ; animaux sauvages vivants, espèces protégées et leurs parties ; produits dangereux (produits chimiques, pesticides interdits, gaz) ; faux documents ; montages financiers (« doublement d\'argent », ventes pyramidales, loteries ou prêts sans autorisation) ; et tout ce que la loi du pays interdit.':
+      'It is forbidden to sell or offer on Mara: weapons, ammunition and explosives; drugs; medicines without the authorisation the law requires; counterfeits; stolen goods or goods of doubtful origin; adult content and sexual services; live wild animals, protected species and their parts; hazardous goods (chemicals, banned pesticides, gas); false documents; financial schemes (“money doubling”, pyramid selling, lotteries or loans without authorisation); and anything the law of the country forbids.',
+  'Il est interdit de se faire passer pour une marque, une entreprise ou une personne, d\'utiliser leur nom ou leur logo sans en avoir le droit, ou de copier la vitrine d\'une autre entreprise.':
+      'It is forbidden to pass yourself off as a brand, a business or a person, to use their name or logo without the right to, or to copy another business\'s vitrine.',
+  'Pour une commande passée sur Mara, ne demandez jamais au client de payer autrement que par les moyens convenus dans la commande (par exemple sur un autre numéro, ou un acompte en dehors de Mara).':
+      'For an order placed on Mara, never ask the customer to pay other than by the means agreed in the order (for example to another number, or a deposit outside Mara).',
+  'Mara peut vérifier l\'identité d\'une personne ou l\'existence d\'une entreprise, et demander des pièces : pièce d\'identité, registre de commerce, autorisation, justificatif d\'adresse. Sans réponse, ou si les pièces ne suffisent pas, Mara peut limiter, suspendre ou fermer l\'entreprise.':
+      'Mara may check a person\'s identity or a business\'s existence, and ask for documents: an identity document, a trade register entry, a licence, a proof of address. Without an answer, or if the documents are not enough, Mara may limit, suspend or close the business.',
+  '# Les clients':
+      '# Customers',
+  'Vous commandez de bonne foi, pour vous ou pour quelqu\'un qui vous l\'a demandé. Vous êtes présent, ou joignable, pour recevoir la commande et la payer comme convenu. Les fausses commandes, les commandes pour rire et les commandes passées pour nuire à une entreprise sont interdites.':
+      'You order in good faith, for yourself or for someone who asked you to. You are there, or reachable, to receive the order and pay for it as agreed. Fake orders, prank orders and orders placed to harm a business are forbidden.',
+  'Une réclamation sur un article (qualité, quantité, retour, remboursement) se règle d\'abord avec l\'entreprise, qui en répond. Si cela ne s\'arrange pas, signalez-le à Mara.':
+      'A complaint about an item (quality, quantity, return, refund) is settled first with the business, which answers for it. If it is not resolved, report it to Mara.',
+  '# Les paiements':
+      '# Payments',
+  'En espèces : le client paie l\'entreprise, ou son livreur, à la remise. Cet argent ne passe pas par Mara, qui n\'en répond pas.':
+      'In cash: the customer pays the business, or its courier, on delivery or collection. This money does not go through Mara, which does not answer for it.',
+  'Par Wave ou par carte, quand l\'entreprise le propose : le client paie en ligne, par Mara et son prestataire de paiement, puis Mara reverse le montant à l\'entreprise, moins la commission annoncée. Un remboursement est décidé par l\'entreprise, sauf erreur de Mara.':
+      'By Wave or by card, when the business offers it: the customer pays online, through Mara and its payment provider, then Mara pays the amount to the business, less the announced commission. A refund is decided by the business, unless Mara made the error.',
+  'Mara Pro et « Mettre en avant » sont des services numériques que Mara vend aux entreprises. Ils se paient dans l\'application (Google Play ou App Store), par carte (Stripe) ou par les autres moyens que Mara indique. Achetés sur Google Play ou l\'App Store, ils suivent les règles de remboursement du store.':
+      'Mara Pro and “Mettre en avant” are digital services Mara sells to businesses. They are paid for in the app (Google Play or the App Store), by card (Stripe) or by the other means Mara indicates. Bought on Google Play or the App Store, they follow the store\'s refund rules.',
+  'Une mise en avant déjà montrée, même en partie, n\'est pas remboursée, sauf si la loi l\'exige ou si Mara n\'a pas pu la montrer.':
+      'A promotion already shown, even in part, is not refunded, unless the law requires it or Mara could not show it.',
+  '# Les livreurs':
+      '# Couriers',
+  'Les livreurs sont indépendants : ils ne sont employés ni par Mara ni par les entreprises. Avant d\'être acceptés, ils acceptent la charte du livreur.':
+      'Couriers are independent: they are employed neither by Mara nor by the businesses. Before being accepted, they accept the courier\'s charter.',
+  'L\'argent encaissé à la porte appartient à l\'entreprise : le livreur le lui remet le jour même, sans rien garder d\'autre que ce que Mara affiche comme lui revenant.':
+      'The money collected at the door belongs to the business: the courier hands it over the same day, keeping nothing but what Mara shows as theirs.',
+  'Le code de livraison prouve que la commande a été remise. Le client le donne au livreur à la remise, et seulement à ce moment-là : ne le donnez jamais avant d\'avoir reçu votre commande. Un livreur ne le demande jamais à l\'avance.':
+      'The delivery code proves that the order was handed over. The customer gives it to the courier on delivery, and only then: never give it before you have received your order. A courier never asks for it in advance.',
+  '# Cauris, ligues, prix et parrainage':
+      '# Cauris, leagues, prizes and referrals',
+  'Les cauris sont des points de Mara. Ils n\'ont aucune valeur en argent : ils ne s\'achètent pas, ne se vendent pas, ne s\'échangent pas contre de l\'argent et ne se transfèrent pas.':
+      'Cauris are Mara\'s points. They have no cash value: they cannot be bought, sold, exchanged for money or transferred.',
+  'Mara peut annuler des cauris, un classement, un prix ou un parrainage obtenus par la fraude : faux comptes ou comptes multiples, fausses commandes, commandes entre proches pour gagner des points, ou tout autre contournement des règles. Ces règles peuvent changer ; l\'application montre toujours celles du moment.':
+      'Mara may cancel cauris, a ranking, a prize or a referral obtained by fraud: fake or multiple accounts, fake orders, orders between relatives to earn points, or any other way around the rules. These rules may change; the app always shows the current ones.',
+  '# Formateurs et aide':
+      '# Trainers and help',
+  'Un formateur Mara ne voit les données d\'une entreprise qu\'avec l\'accord de son propriétaire ou d\'un administrateur, en lecture seule et pour une durée limitée. Il ne peut rien modifier ni rien vendre au nom de l\'entreprise.':
+      'A Mara trainer sees a business\'s data only with the agreement of its owner or an administrator, read-only and for a limited time. They cannot change anything or sell anything in the business\'s name.',
+  '# Les droits de Mara':
+      '# Mara\'s rights',
+  'Mara peut retirer un contenu (photo, texte, article) contraire à ces conditions ou à la loi.':
+      'Mara may remove content (a photo, a text, an item) contrary to these terms or to the law.',
+  'Mara peut suspendre ou fermer une entreprise ou un compte qui ne respecte pas ces conditions. En cas de fraude, de risque pour d\'autres personnes ou de plainte sérieuse, Mara peut le faire tout de suite ; sinon, Mara prévient d\'abord et dit pourquoi, quand c\'est possible.':
+      'Mara may suspend or close a business or an account that does not respect these terms. In case of fraud, of a risk to other people or of a serious complaint, Mara may do so at once; otherwise Mara warns first and says why, when possible.',
+  'Mara garde les informations dont la loi exige ou permet la conservation pour régler un litige ou prouver une fraude (commandes, paiements, signalements, échanges avec l\'aide), y compris après la fermeture d\'une entreprise ou d\'un compte.':
+      'Mara keeps the information the law requires or allows it to keep to settle a dispute or prove a fraud (orders, payments, reports, exchanges with the help desk), including after a business or an account is closed.',
+  'Mara coopère avec les autorités : sur une demande légale, ou pour protéger une personne, Mara peut leur transmettre les informations utiles.':
+      'Mara cooperates with the authorities: on a lawful request, or to protect a person, Mara may pass the relevant information on to them.',
+  '# Signaler un problème':
+      '# Reporting a problem',
+  'Une vitrine, un article, une commande ou une personne vous semble frauduleux ? Touchez « Signaler un problème » sur la vitrine, ou écrivez à {email}. Mara examine chaque signalement.':
+      'Does a vitrine, an item, an order or a person look fraudulent to you? Tap “Signaler un problème” on the vitrine, or write to {email}. Mara reviews every report.',
+  'Mara ne garantit aucune vente, aucun nombre de visiteurs et aucun revenu. Mara ne répond pas des articles, des services, des prix ni du comportement des entreprises, des clients ou des livreurs, ni des pertes indirectes (manque à gagner, perte de clientèle).':
+      'Mara guarantees no sale, no number of visitors and no income. Mara does not answer for the goods, services or prices, nor for the conduct of businesses, customers or couriers, nor for indirect losses (loss of profit, loss of customers).',
+  'Si la responsabilité de Mara est engagée, elle est limitée, dans la mesure où la loi le permet, à ce que vous avez payé à Mara pendant les 12 derniers mois. Rien dans ces conditions ne vous retire un droit que la loi vous donne et qu\'un contrat ne peut pas écarter.':
+      'If Mara is liable, its liability is limited, to the extent the law allows, to what you paid Mara over the last 12 months. Nothing in these terms takes away a right the law gives you that a contract cannot set aside.',
+  '# Vos données':
+      '# Your data',
+  'Ce que Mara fait de vos données est expliqué dans la Politique de confidentialité, qui fait partie de ces conditions.':
+      'What Mara does with your data is explained in the Privacy Policy, which is part of these terms.',
+  'Mara peut modifier ces conditions. Une nouvelle version porte un nouveau numéro et une nouvelle date ; l\'application vous la montre, avec ce qui a changé, et vous demande de l\'accepter pour continuer à utiliser Mara. Si vous ne l\'acceptez pas, vous pouvez supprimer votre compte.':
+      'Mara may change these terms. A new version carries a new number and a new date; the app shows it to you, with what changed, and asks you to accept it to keep using Mara. If you do not accept it, you can delete your account.',
+  '# Droit applicable et litiges':
+      '# Governing law and disputes',
+  '[à valider par un avocat] Le droit qui s\'applique à ces conditions et le tribunal compétent en cas de litige seront précisés ici. En cas de désaccord, écrivez-nous d\'abord à {email} : nous cherchons toujours une solution amiable.':
+      '[to be confirmed by a lawyer] The law that governs these terms and the court with jurisdiction over a dispute will be stated here. In case of disagreement, write to us first at {email}: we always look for an amicable solution.',
+  '# Langue et contact':
+      '# Language and contact',
+  'Ces conditions sont écrites en français, et la version française fait foi ; la traduction anglaise est donnée pour information. Pour toute question : {email}, ou l\'aide de l\'application (Compte › Aide, ou Mon profil › Aide).':
+      'These terms are written in French, and the French version is binding; the English translation is given for information. For any question: {email}, or the app\'s help (Compte › Aide, or Mon profil › Aide).',
+  '# Vérifications contre la fraude':
+      '# Checks against fraud',
+  'Pour protéger les clients et les entreprises, Mara peut vérifier votre numéro de téléphone (un code envoyé sur WhatsApp) et, pour une entreprise ou un livreur, demander une pièce d\'identité ou des documents sur l\'activité. Ces pièces servent seulement à cette vérification ; seule l\'équipe Mara les voit.':
+      'To protect customers and businesses, Mara may verify your phone number (a code sent on WhatsApp) and, for a business or a courier, ask for an identity document or documents about the activity. These documents are used only for that check; only the Mara team sees them.',
+  '# Ce que Mara garde':
+      '# What Mara keeps',
+  'Mara garde la trace de votre acceptation des conditions (le document, sa version, la date, l\'application utilisée) tant que votre compte existe. Mara garde aussi les informations que la loi exige ou permet de conserver pour régler un litige ou prouver une fraude, et peut les transmettre aux autorités sur une demande légale.':
+      'Mara keeps a record of your acceptance of the terms (the document, its version, the date, the app used) for as long as your account exists. Mara also keeps the information the law requires or allows it to keep to settle a dispute or prove a fraud, and may pass it on to the authorities on a lawful request.',
+  'Mara est une plateforme exploitée par KAJ Consulting LLC : chaque entreprise vend elle-même et répond de ses articles, de ses prix et de ses livraisons.':
+      'Mara is a platform run by KAJ Consulting LLC: each business sells for itself and answers for its items, its prices and its deliveries.',
+  'Un compte par personne, avec des informations vraies. Gardez secrets votre mot de passe et vos codes : Mara ne les demande jamais.':
+      'One account per person, with true information. Keep your password and your codes secret: Mara never asks for them.',
+  'Interdits : la fraude, les fausses commandes, les articles illégaux, contrefaits ou volés, et se faire passer pour quelqu\'un d\'autre.':
+      'Forbidden: fraud, fake orders, illegal, counterfeit or stolen goods, and passing yourself off as someone else.',
+  'Payez une commande seulement par les moyens convenus dans Mara, et ne donnez le code de livraison qu\'à la remise.':
+      'Pay for an order only by the means agreed in Mara, and give the delivery code only on delivery.',
+  'Les cauris n\'ont pas de valeur en argent ; ceux gagnés par la fraude sont annulés.':
+      'Cauris have no cash value; those earned by fraud are cancelled.',
+  'Mara peut vérifier une identité, retirer un contenu et suspendre un compte en cas de fraude ou de plainte.':
+      'Mara may check an identity, remove content and suspend an account in case of fraud or a complaint.',
+  'Mon activité existe vraiment et elle est légale.':
+      'My business really exists and is lawful.',
+  'Je ne vends rien d\'interdit : ni armes, ni drogues, ni médicaments sans autorisation, ni contrefaçons, ni objets volés.':
+      'I sell nothing forbidden: no weapons, no drugs, no medicines without authorisation, no counterfeits, no stolen goods.',
+  'Mes photos, mes prix et mes stocks sont vrais et à jour.':
+      'My photos, my prices and my stock are true and up to date.',
+  'J\'honore les commandes que j\'accepte, et je préviens le client en cas de problème.':
+      'I honour the orders I accept, and I tell the customer if there is a problem.',
+  'Je ne demande jamais de payer en dehors des moyens convenus dans la commande.':
+      'I never ask to be paid outside the means agreed in the order.',
+  'Mara peut vérifier mon identité et me demander des pièces ; en cas de fraude, mon activité peut être fermée.':
+      'Mara may check my identity and ask me for documents; in case of fraud, my business may be closed.',
+  'Je travaille à mon compte : je ne suis employé ni par Mara ni par la boutique.':
+      'I work on my own account: I am employed neither by Mara nor by the shop.',
+  'Je ne marque une commande livrée qu\'avec le code que le client me donne à la remise ; je ne le demande jamais à l\'avance.':
+      'I mark an order delivered only with the code the customer gives me on delivery; I never ask for it in advance.',
+  // 147 (142): the gate, the seller's commitments, the console's terms
+  // page and the person's fiche, and the server's refusals.
+  'Nos conditions ont changé':
+      'Our terms have changed',
+  'Avant de continuer':
+      'Before you continue',
+  'Lisez ce qui change, puis acceptez la nouvelle version pour continuer à utiliser Mara.':
+      'Read what changes, then accept the new version to keep using Mara.',
+  'Mara protège ses clients et ses entreprises contre la fraude. Lisez l\'essentiel, puis acceptez pour continuer.':
+      'Mara protects its customers and its businesses against fraud. Read the key points, then accept to continue.',
+  'L\'essentiel':
+      'The key points',
+  'J\'ai lu et j\'accepte les Conditions d\'utilisation et la Politique de confidentialité':
+      'I have read and accept the Terms of Use and the Privacy Policy',
+  'Lire les Conditions d\'utilisation':
+      'Read the Terms of Use',
+  'Lire la Politique de confidentialité':
+      'Read the Privacy Policy',
+  'Engagements du vendeur':
+      'Seller\'s commitments',
+  'Vous tenez une activité sur Mara : vous vous engagez à ceci.':
+      'You run a business on Mara: you commit to the following.',
+  'Avant de créer votre activité, vous vous engagez à ceci :':
+      'Before creating your business, you commit to the following:',
+  'J\'accepte les engagements du vendeur':
+      'I accept the seller\'s commitments',
+  'Vous livrez avec Mara : la charte a changé.':
+      'You deliver with Mara: the charter has changed.',
+  'Version {n} du {date}':
+      'Version {n} of {date}',
+  'Ce qui change : {changes}':
+      'What changes: {changes}',
+  'Conditions acceptées':
+      'Terms accepted',
+  'Aucune acceptation enregistrée.':
+      'No acceptance recorded.',
+  '{doc} · version {n}':
+      '{doc} · version {n}',
+  'ancienne version':
+      'earlier version',
+  'Site web':
+      'Website',
+  'Demander à tout le monde d\'accepter à nouveau ?':
+      'Ask everyone to accept again?',
+  'Tout le monde devra accepter à nouveau : {docs}, à sa prochaine ouverture de Mara. Pendant {n} jours, le serveur laisse encore passer les comptes déjà là ; ensuite, il refuse leurs commandes et leurs créations tant qu\'ils n\'ont pas accepté.':
+      'Everyone will have to accept again: {docs}, the next time they open Mara. For {n} days the server still lets the existing accounts through; after that it refuses their orders and creations until they have accepted.',
+  'Nouvelle version publiée : tout le monde sera invité à l\'accepter.':
+      'New version published: everyone will be asked to accept it.',
+  'Les acceptations arrivent avec la migration 142 : en attendant, personne n\'est interrogé.':
+      'Acceptances come with migration 142: until then, nobody is asked.',
+  'Chaque personne accepte ces documents dans l\'application avant de continuer ; le serveur refuse une commande, une création d\'activité ou une demande de livreur sans eux.':
+      'Everyone accepts these documents in the app before continuing; the server refuses an order, a business creation or a courier application without them.',
+  'Version {n}, depuis le {date}':
+      'Version {n}, since {date}',
+  '{a} personnes l\'ont acceptée, sur {p} comptes':
+      '{a} people accepted it, out of {p} accounts',
+  'Comptes déjà là laissés passer jusqu\'au {date}':
+      'Existing accounts let through until {date}',
+  'Nouvelle version…':
+      'New version…',
+  'Changez d\'abord le texte dans l\'application et sur le site : une nouvelle version ne change pas les mots, elle demande seulement à tout le monde de les accepter à nouveau.':
+      'Change the text in the app and on the website first: a new version does not change the words, it only asks everyone to accept them again.',
+  'Nouvelle version':
+      'New version',
+  'Ce qui change, en une phrase':
+      'What changes, in one sentence',
+  'La même phrase en anglais (facultatif)':
+      'The same sentence in English (optional)',
+  'Jours pendant lesquels les comptes déjà là passent encore (0 à 90)':
+      'Days during which existing accounts are still let through (0 to 90)',
+  'De 0 à 90 jours.':
+      'From 0 to 90 days.',
+  'Acceptez d\'abord les Conditions d\'utilisation de Mara pour commander (mettez l\'application à jour si elle ne vous les montre pas).':
+      'First accept Mara\'s Terms of Use to order (update the app if it does not show them to you).',
+  'Acceptez d\'abord les engagements du vendeur pour créer une activité (mettez l\'application à jour si elle ne vous les montre pas).':
+      'First accept the seller\'s commitments to create a business (update the app if it does not show them to you).',
+  'Acceptez d\'abord la charte du livreur pour envoyer votre demande (mettez l\'application à jour si elle ne vous la montre pas).':
+      'First accept the courier\'s charter to send your application (update the app if it does not show it to you).',
+  'Ces conditions ont changé entre-temps : relisez-les, puis acceptez-les à nouveau.':
+      'These terms changed in the meantime: read them again, then accept them again.',
+  'Document inconnu.':
+      'Unknown document.',
+  'Connectez-vous pour accepter les conditions.':
+      'Sign in to accept the terms.',
+  'Choisissez au moins un document.':
+      'Choose at least one document.',
+  'Dites en une phrase ce qui a changé.':
+      'Say in one sentence what changed.',
+  'Une phrase de 200 caractères au plus.':
+      'A sentence of 200 characters at most.',
+  'Un délai de 0 à 90 jours.':
+      'A period of 0 to 90 days.',
+  // 147 (the fraud audit): who receives a customer's name, number and address.
+  '# Qui voit vos informations':
+      '# Who sees your information',
+  'Quand vous commandez ou réservez, l\'entreprise reçoit ce qu\'il lui faut pour vous servir : votre nom, votre numéro de téléphone (celui que WhatsApp a vérifié, quand Mara le demande), votre adresse et le point de livraison sur la carte, et votre message. Les membres de l\'entreprise qui gèrent les commandes les voient, et elle les garde dans ses comptes, comme une boutique garde ses ventes.':
+      'When you order or book, the business receives what it needs to serve you: your name, your phone number (the one WhatsApp verified, when Mara asks for it), your address and the delivery point on the map, and your message. The business\'s members who handle orders see them, and it keeps them in its accounts, as a shop keeps its sales.',
+  'Pour une livraison, les livreurs proches voient l\'adresse et le point de livraison, sans votre nom ni votre numéro ; le livreur qui prend la course reçoit ensuite votre nom et votre numéro, pour vous joindre pendant la livraison, et s\'engage par sa charte à ne pas s\'en servir pour autre chose.':
+      'For a delivery, nearby couriers see the address and the delivery point, without your name or number; the courier who takes the job then receives your name and number, to reach you during the delivery, and commits in their charter not to use them for anything else.',
+  'Un formateur Mara ne voit les données d\'une entreprise qu\'à sa demande, en lecture seule et pour un temps limité. En dehors de ces cas et des prestataires ci-dessous, Mara ne transmet vos informations à personne, sauf sur une demande légale des autorités.':
+      'A Mara trainer sees a business\'s data only at its request, read-only and for a limited time. Apart from these cases and the service providers below, Mara passes your information on to no one, except on a lawful request from the authorities.',
 };

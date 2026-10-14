@@ -49,6 +49,7 @@ export '../../features/courier/job_map_screen.dart';
 export '../../features/admin/courier_review_screen.dart';
 export '../../features/orders/shop_orders_screen.dart';
 export '../../features/admin/platform_people_screen.dart';
+export '../../features/admin/terms_admin_screen.dart';
 export '../../features/admin/platform_audit_screen.dart';
 export '../../features/analytics/owner_analytics_screen.dart';
 export '../../features/analytics/farm_analytics_screen.dart';

@@ -270,6 +270,8 @@ const settingCards = <SettingCard>[
   ], links: [
     ('Actions de Mara', Routes.consoleJournal),
     ('Activité', Routes.consoleAudit),
+    // 142 (batch 147): the documents everyone accepts, and a new version.
+    ('Conditions d\'utilisation', Routes.consoleTerms),
   ]),
 ];
 
@@ -349,6 +351,7 @@ String settingLinkLabel(BuildContext context, String fr) => switch (fr) {
       'Parcours de création' => context.tr('Parcours de création'),
       'Actions de Mara' => context.tr('Actions de Mara'),
       'Activité' => context.tr('Activité'),
+      'Conditions d\'utilisation' => context.tr('Conditions d\'utilisation'),
       _ => fr,
     };
 

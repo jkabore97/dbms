@@ -239,6 +239,11 @@ commit;
 
 \echo ''
 \echo '--- TEST 4: récupérée, livrée, and the bells ---'
+-- The code the shopper gives at the door: read here, as the courier no
+-- longer reads the order's row (142).
+create temporary table t_code29 as
+    select handover_code as code from orders where id = (select id from t_job29);
+grant select on t_code29 to authenticated;
 begin;
 set local role authenticated;
 set local "request.jwt.claim.sub" = :moto1;
@@ -255,7 +260,7 @@ begin
     end;
     perform courier_mark(v_id, 'in_transit');
     -- 073: the door needs the shopper's code.
-    perform courier_deliver(v_id, (select handover_code from orders where id = v_id));
+    perform courier_deliver(v_id, (select code from t_code29));
     if (select count(*) from courier_deliveries() d
          where d.status = 'delivered') <> 1 then
         raise exception 'FAIL: the courier''s own list does not show the delivered job';

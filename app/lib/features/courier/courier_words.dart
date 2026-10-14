@@ -103,16 +103,22 @@ String courierEventLabel(BuildContext context, CourierEvent e) => switch (e.kind
 String courierDate(BuildContext context, DateTime at) =>
     DateFormat('d MMM y · HH:mm', Localizations.localeOf(context).toString()).format(at);
 
-/// The driver charter (version 1), accepted before sending. The version
-/// is the server's (courier_rules().charter_version): a new text is a new
-/// version, in 112's courier_rules and here together.
+/// The driver charter, accepted before sending — version 2 since 142
+/// (batch 147): 112's seven lines, and that the courier works on their own
+/// account and marks a delivery only with the customer's code. The version
+/// is the server's (courier_rules().charter_version, 142's courier
+/// document): a new text is a new version, in terms_versions and here
+/// together; ticking it is the courier's acceptance (142's trigger), and an
+/// approved courier accepts a new one at the gate (terms_gate.dart).
 List<String> courierCharter(BuildContext context) => [
+      context.tr('Je travaille à mon compte : je ne suis employé ni par Mara ni par la boutique.'),
       context.tr('Je livre ce que la boutique m\'a confié, sans l\'ouvrir ni rien en retirer.'),
       context.tr('J\'encaisse le montant exact affiché dans Mara et je remets à la boutique ce qui lui revient, le jour même.'),
       context.tr('Je respecte le client : je suis poli et à l\'heure, et je ne garde ni son numéro ni son adresse pour autre chose que sa livraison.'),
       context.tr('Je respecte le code de la route, je porte un casque à moto et je ne livre jamais après avoir bu de l\'alcool.'),
       context.tr('Je préviens la boutique et le client en cas de retard ou de problème.'),
       context.tr('Mon compte livreur est personnel : je ne le prête à personne.'),
+      context.tr('Je ne marque une commande livrée qu\'avec le code que le client me donne à la remise ; je ne le demande jamais à l\'avance.'),
       context.tr('Un manquement à cette charte peut suspendre mon accès livreur.'),
     ];
 
