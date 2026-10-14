@@ -49,7 +49,11 @@ void main() {
     final a = _Actions();
     var opened = false;
     await tester.pumpWidget(MaterialApp(
-        home: SetupScreen(org: _org, actions: a, onDone: () => opened = true)));
+        home: SetupScreen(
+            org: _org,
+            actions: a,
+            onDone: () => opened = true,
+            mapTiles: false)));
     await settle(tester);
 
     expect(find.text('Votre boutique'), findsOneWidget);

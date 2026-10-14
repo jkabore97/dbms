@@ -7550,4 +7550,19 @@ const enStrings = <String, String>{
       'Put items up for sale',
   'Modifier ma vitrine':
       'Edit my vitrine',
+  // Batch 145: the position's map, the pin moved with a finger.
+  'Pas encore de position : touchez la carte à l\'endroit de la porte pour y placer le repère.':
+      'No position yet: tap the map where the door is to place the pin there.',
+  'Faites glisser le repère jusqu\'à la porte, ou touchez la carte à cet endroit.':
+      'Drag the pin to the door, or tap the map at that spot.',
+  'Deux doigts (ou la souris) déplacent la carte ; pincez ou utilisez + et − pour zoomer.':
+      'Two fingers (or the mouse) move the map; pinch or use + and − to zoom.',
+  'Cette position est loin de la zone de votre monnaie. Si le téléphone n\'était pas sur place, faites glisser le repère au bon endroit ou collez le lien Google Maps.':
+      'This position is far from your currency\'s area. If the phone was not on site, drag the pin to the right place or paste the Google Maps link.',
+  'Zoomer':
+      'Zoom in',
+  'Dézoomer':
+      'Zoom out',
+  'Centrer sur ma position':
+      'Centre on my position',
 };

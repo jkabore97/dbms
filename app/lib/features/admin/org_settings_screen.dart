@@ -17,7 +17,8 @@ import '../capture/capture_action.dart';
 import '../retail/product_photo.dart';
 import '../common/owned_controller.dart';
 import '../home/business_frame.dart' show UnsavedInput;
-import 'pin_preview.dart';
+import 'pin_picker.dart';
+import 'pin_preview.dart' show pinLooksMisplaced;
 import 'spots_card.dart';
 import 'vitrine_plus_card.dart';
 import '../../core/storefront/storefront_repository.dart';
@@ -56,6 +57,7 @@ class OrgSettingsScreen extends StatefulWidget {
     this.capture,
     this.initialPart,
     this.vitrineOnly = false,
+    this.mapTiles = true,
   });
 
   final AdminRepository admin;
@@ -64,6 +66,9 @@ class OrgSettingsScreen extends StatefulWidget {
   /// Vitrine rubrique on its own page — no index, back leaves it, no
   /// « Suivant » into the other rubriques.
   final bool vitrineOnly;
+  /// The position's map draws OpenStreetMap's tiles; off in widget tests,
+  /// which have no network.
+  final bool mapTiles;
 
   /// The rubrique to open at once ('articles', 'identite', 'vitrine',
   /// 'position'): where the vitrine guide's « Faire maintenant » lands.
@@ -163,7 +168,10 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     final lng = double.tryParse(
       _lngController.text.trim().replaceAll(',', '.'),
     );
-    if (lat == null || lng == null) return null;
+    // « NaN » parses, and passes every comparison below (145).
+    if (lat == null || lng == null || !lat.isFinite || !lng.isFinite) {
+      return null;
+    }
     if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
     return (lat, lng);
   }
@@ -327,6 +335,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       lng = double.tryParse(lngText);
       if (lat == null ||
           lng == null ||
+          !lat.isFinite ||
+          !lng.isFinite ||
           lat < -90 ||
           lat > 90 ||
           lng < -180 ||
@@ -679,6 +689,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         _lngController.text = position.longitude.toStringAsFixed(6);
       });
     } catch (_) {
+      if (!mounted) return;
       messenger.showSnackBar(
         SnackBar(
           content: Text(
@@ -1754,41 +1765,66 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       ),
     ),
     const SizedBox(height: 10),
-    Row(
-      children: [
-        Expanded(
-          child: TextField(
-            controller: _latController,
-            onChanged: (_) => setState(() {}),
-            enabled: !_saving && !_locating,
-            keyboardType: const TextInputType.numberWithOptions(
-              decimal: true,
-              signed: true,
-            ),
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              labelText: context.tr('Latitude'),
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: TextField(
-            controller: _lngController,
-            onChanged: (_) => setState(() {}),
-            enabled: !_saving && !_locating,
-            keyboardType: const TextInputType.numberWithOptions(
-              decimal: true,
-              signed: true,
-            ),
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              labelText: context.tr('Longitude'),
-            ),
-          ),
-        ),
-      ],
+    // The pin, moved with a finger to the door (145): the fields below
+    // follow it live, and typing in them moves it. « Enregistrer » saves.
+    PinPicker(
+      lat: _pin?.$1,
+      lng: _pin?.$2,
+      currency: _currency,
+      phone: _phoneController.text.trim().isEmpty
+          ? null
+          : _phoneController.text.trim(),
+      enabled: !_saving && !_locating,
+      tiles: widget.mapTiles,
+      locating: _locating,
+      onLocate: _useMyPosition,
+      onMove: (lat, lng) => setState(() {
+        _latController.text = lat.toStringAsFixed(6);
+        _lngController.text = lng.toStringAsFixed(6);
+      }),
     ),
+    const SizedBox(height: 12),
+    // Six decimals do not fit two side by side on a small phone with
+    // large text (145): one under the other there.
+    LayoutBuilder(builder: (context, box) {
+      final lat = TextField(
+        key: const Key('position-lat'),
+        controller: _latController,
+        onChanged: (_) => setState(() {}),
+        enabled: !_saving && !_locating,
+        keyboardType: const TextInputType.numberWithOptions(
+          decimal: true,
+          signed: true,
+        ),
+        decoration: InputDecoration(
+          border: const OutlineInputBorder(),
+          labelText: context.tr('Latitude'),
+        ),
+      );
+      final lng = TextField(
+        key: const Key('position-lng'),
+        controller: _lngController,
+        onChanged: (_) => setState(() {}),
+        enabled: !_saving && !_locating,
+        keyboardType: const TextInputType.numberWithOptions(
+          decimal: true,
+          signed: true,
+        ),
+        decoration: InputDecoration(
+          border: const OutlineInputBorder(),
+          labelText: context.tr('Longitude'),
+        ),
+      );
+      final narrow =
+          box.maxWidth / MediaQuery.textScalerOf(context).scale(1) < 260;
+      return narrow
+          ? Column(children: [lat, const SizedBox(height: 10), lng])
+          : Row(children: [
+              Expanded(child: lat),
+              const SizedBox(width: 10),
+              Expanded(child: lng),
+            ]);
+    }),
     const SizedBox(height: 8),
     Wrap(
       spacing: 8,
@@ -1812,19 +1848,6 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         ),
       ],
     ),
-    // The pin, seen before saving (package 3).
-    if (_pin != null) ...[
-      const SizedBox(height: 12),
-      PinPreview(
-        lat: _pin!.$1,
-        lng: _pin!.$2,
-        currency: _currency,
-        onMove: (lat, lng) => setState(() {
-          _latController.text = lat.toStringAsFixed(6);
-          _lngController.text = lng.toStringAsFixed(6);
-        }),
-      ),
-    ],
   ];
 
   List<Widget> _platform(ThemeData theme) => [
