@@ -1,55 +1,72 @@
 import 'package:flutter/material.dart';
 
+import '../../core/auth/models.dart';
+import '../../core/help/help_repository.dart' show helpRef;
 import '../../core/l10n/tr.dart';
 
-/// « Besoin d'aide » (136): the subjects a kind of business asks about —
-/// seven chips each, « Autre » last. The server takes any of them (133).
-List<String> helpSubjectsFor(String profile) => switch (profile) {
-  'farm' => const [
-    'bandes',
-    'stock',
-    'ventes',
-    'factures',
-    'vitrine',
-    'equipe',
-    'autre',
-  ],
-  'association' || 'church' => const [
-    'contributions',
-    'rapports',
-    'membres',
-    'factures',
-    'vitrine',
-    'equipe',
-    'autre',
-  ],
-  _ => const [
-    'ventes',
-    'stock',
-    'factures',
-    'vitrine',
-    'commandes',
-    'equipe',
-    'autre',
-  ],
+/// « Demander un formateur » (143): what a request is about. Every kind
+/// gets the same eight, « Autre » last; a farm adds its batches and its
+/// stock, an association its members, its dues and its events. The keys are
+/// 133's where one fitted (ventes is the till and the sales, equipe the
+/// account and the team, bandes the batches and harvests, contributions
+/// the dues) and three new ones (catalogue, livraison, evenements, 138).
+/// The server takes any of them.
+List<String> helpSubjectsFor(String profile) => [
+  'catalogue',
+  'vitrine',
+  'ventes',
+  'factures',
+  'livraison',
+  'rapports',
+  'equipe',
+  if (profile == 'farm') ...const ['bandes', 'stock'],
+  if (profile == 'association' || profile == 'church')
+    ...const ['membres', 'contributions', 'evenements'],
+  'autre',
+];
+
+/// A subject's words. [profile] says whose: a farm's « stock » is its own
+/// (« Stock de la ferme »), a shop's older requests' plain « Stock ».
+String helpSubjectLabel(
+  BuildContext context,
+  String subject, {
+  String? profile,
+}) => switch (subject) {
+  'catalogue' => context.tr('Articles / Catalogue'),
+  'vitrine' => context.tr('Vitrine'),
+  'ventes' => context.tr('Caisse / Ventes'),
+  'factures' => context.tr('Factures'),
+  'livraison' => context.tr('Livraison'),
+  'rapports' => context.tr('Rapports'),
+  'equipe' => context.tr('Compte / Équipe'),
+  'bandes' => context.tr('Bandes / Récoltes'),
+  'stock' =>
+    profile == 'farm' ? context.tr('Stock de la ferme') : context.tr('Stock'),
+  'membres' => context.tr('Membres'),
+  'contributions' => context.tr('Cotisations'),
+  'evenements' => context.tr('Événements'),
+  'commandes' => context.tr('Commandes'),
+  _ => context.tr('Autre'),
 };
 
-String helpSubjectLabel(BuildContext context, String subject) =>
-    switch (subject) {
-      'ventes' => context.tr('Ventes'),
-      'stock' => context.tr('Stock'),
-      'factures' => context.tr('Factures'),
-      'vitrine' => context.tr('Vitrine'),
-      'commandes' => context.tr('Commandes'),
-      'equipe' => context.tr('Équipe'),
-      'bandes' => context.tr('Bandes'),
-      'contributions' => context.tr('Contributions'),
-      'rapports' => context.tr('Rapports'),
-      'membres' => context.tr('Membres'),
-      _ => context.tr('Autre'),
-    };
+/// Each subject's icon, for the flow's big choices.
+IconData helpSubjectIcon(String subject) => switch (subject) {
+  'catalogue' => Icons.inventory_2_outlined,
+  'vitrine' => Icons.storefront_outlined,
+  'ventes' => Icons.point_of_sale_outlined,
+  'factures' => Icons.receipt_long_outlined,
+  'livraison' => Icons.local_shipping_outlined,
+  'rapports' => Icons.bar_chart_outlined,
+  'equipe' => Icons.groups_outlined,
+  'bandes' => Icons.grass_outlined,
+  'stock' => Icons.warehouse_outlined,
+  'membres' => Icons.people_outline,
+  'contributions' => Icons.volunteer_activism_outlined,
+  'evenements' => Icons.event_outlined,
+  _ => Icons.help_outline,
+};
 
-/// How to be helped, in the sheet's order.
+/// How to be helped, in the flow's order.
 const helpContacts = ['whatsapp', 'call', 'visit'];
 
 String helpContactLabel(BuildContext context, String contact) =>
@@ -71,6 +88,49 @@ String helpKindLabel(BuildContext context, String profile) => switch (profile) {
   _ => context.tr('Boutique'),
 };
 
+/// The first message of a WhatsApp to Mara (143), in the person's language,
+/// so whoever answers knows who writes before reading a word:
+///
+///     [PRO] Bonjour Mara, j'ai besoin d'aide.
+///     Entreprise : Ferme Horizon Vert (Ferme · Pro)
+///     Réf. : 3F2A91C0
+///     Page : Aide
+///
+/// « [PRO] » only for a Pro business; the reference is [helpRef] — the
+/// command center's search finds it. [page] is where the person came from.
+String helpWhatsAppText(
+  BuildContext context,
+  OrgSummary org, {
+  required bool pro,
+  String? page,
+  String? ref,
+}) {
+  final lines = [
+    '${pro ? '[PRO] ' : ''}${context.tr('Bonjour Mara, j\'ai besoin d\'aide.')}',
+    context.tr('Entreprise : {name} ({kind} · {plan})', {
+      'name': org.name.trim(),
+      'kind': helpKindLabel(context, org.profile),
+      'plan': pro ? 'Pro' : 'Basic',
+    }),
+    context.tr('Réf. : {ref}', {'ref': ref ?? helpRef(org.id)}),
+    if (page != null && page.trim().isNotEmpty)
+      context.tr('Page : {page}', {'page': page.trim()}),
+  ];
+  return lines.join('\n');
+}
+
+/// The subject of an e-mail to Mara: the same name and reference.
+String helpEmailSubject(
+  BuildContext context,
+  OrgSummary org, {
+  required bool pro,
+  String? ref,
+}) => context.tr('Aide Mara — {name} · Réf. {ref}{pro}', {
+  'name': org.name.trim(),
+  'ref': ref ?? helpRef(org.id),
+  'pro': pro ? ' · PRO' : '',
+});
+
 /// « 07:00 » on Ouagadougou's clock (UTC all year).
 String helpClock(DateTime t) {
   final u = t.toUtc();
@@ -80,6 +140,25 @@ String helpClock(DateTime t) {
 /// « 7:00–21:00 ».
 String helpHoursText(int open, int close) =>
     '${open.toString().padLeft(2, '0')}:00–${close.toString().padLeft(2, '0')}:00';
+
+/// « mer. 15/10 · 10:00 » — a chosen time, on Ouagadougou's clock.
+String helpWhen(BuildContext context, DateTime t, {DateTime? now}) {
+  final u = t.toUtc();
+  final n = (now ?? DateTime.now()).toUtc();
+  final days = DateTime.utc(
+    u.year,
+    u.month,
+    u.day,
+  ).difference(DateTime.utc(n.year, n.month, n.day)).inDays;
+  final clock = helpClock(t);
+  if (days == 0) return context.tr('aujourd\'hui à {time}', {'time': clock});
+  if (days == 1) return context.tr('demain à {time}', {'time': clock});
+  return context.tr('le {d} à {time}', {
+    'd':
+        '${u.day.toString().padLeft(2, '0')}/${u.month.toString().padLeft(2, '0')}',
+    'time': clock,
+  });
+}
 
 /// When a request made now, out of the hours, is answered: « Un formateur
 /// vous répondra demain à partir de 7 h » (or « aujourd'hui », before the

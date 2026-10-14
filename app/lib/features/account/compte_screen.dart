@@ -451,7 +451,9 @@ class CompteScreen extends StatelessWidget {
               // « Aide Mara » (126): the hours, WhatsApp once the platform
               // set a number, the e-mail always — the same for a shop, a
               // farm and an association.
-              const SupportCard(framed: false),
+              // 143: the plan's words — « Réponse sous 48 h » on Basic,
+              // never « 24 h/24 » — and the WhatsApp naming the business.
+              SupportCard(framed: false, org: org, page: context.tr('Compte')),
               // 136: the business's help page — the trainers' « Besoin
               // d'aide » for a Pro business, the guides and Mara's contacts
               // for a free one — as on the home's top bar.
@@ -479,7 +481,7 @@ class CompteScreen extends StatelessWidget {
               _Tile(
                 icon: Icons.help_outline,
                 title: context.tr('Questions fréquentes'),
-                onTap: () => context.push(Routes.faq),
+                onTap: () => context.push('${Routes.faq}?org=${org.id}'),
               ),
             ],
           ),

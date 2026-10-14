@@ -394,7 +394,7 @@ class _RequestCard extends StatelessWidget {
             children: [
               _Tag(badge, fg, bg),
               _Tag(
-                helpSubjectLabel(context, r.subject),
+                helpSubjectLabel(context, r.subject, profile: r.profile),
                 theme.colorScheme.onSurface,
                 theme.colorScheme.surfaceContainerHighest,
               ),
@@ -430,6 +430,20 @@ class _RequestCard extends StatelessWidget {
             Text(
               '« ${r.message} »',
               style: theme.textTheme.bodyMedium?.copyWith(color: ink),
+            ),
+          ],
+          // 143: the time the business chose (« Quand ? »).
+          if (r.preferredAt != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              context.tr('Souhaité {when}', {
+                'when': helpWhen(context, r.preferredAt!),
+              }),
+              key: Key('help-inbox-when-${r.id}'),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: ink,
+              ),
             ),
           ],
           if (done && r.rating != null) ...[

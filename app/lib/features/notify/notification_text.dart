@@ -463,8 +463,13 @@ String? notificationTarget(
           : Routes.trainerInbox;
     case 'help_escalated':
       return Routes.consoleHelp;
+    // 143: the business's requests, that one opened.
     case 'help_taken' || 'help_visit' || 'help_resolved':
-      return org == null ? null : inside('aide');
+      if (org == null) return null;
+      final id = p['request_id'];
+      return id is String && RegExp(r'^[0-9a-f-]{36}$').hasMatch(id)
+          ? inside('aide/demandes?demande=$id')
+          : inside('aide/demandes');
     case 'courier_refused' || 'courier_photo':
       return Routes.becomeCourier;
     case 'courier_application':

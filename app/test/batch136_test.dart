@@ -6,15 +6,18 @@
 //      133, « Demandes » for a trainer, nothing for a platform admin or an
 //      observer who is no trainer — the business's name kept beside it, in
 //      French and in English, at 390 px and 320 px;
-//   2. the sheet: the kind's own subjects, a subject needed, the contact
-//      chosen, the number asked when the account has none, the screen sent,
-//      the hours said out of them, nothing left today;
-//   3. the status: waiting (and when an answer comes), taken (WhatsApp and
-//      call, « Autoriser l'accès 48 h » only for a trainer not of the
-//      business and only for an admin), the access live and its « Retirer »,
-//      « C'est réglé ? », « Fermer la demande » with a thumb; the free page:
-//      FAQ, guides, Mara's contacts « réponse sous 48 h », « Signaler un
-//      problème », « Avec Mara Pro »;
+//   2. the request (143: the step-by-step « Demander un formateur » that
+//      replaced 136's sheet): the kind's own subjects, a subject needed,
+//      the contact chosen, the number asked when the account has none, the
+//      screen sent, the hours said out of them, nothing left today;
+//   3. the status (143: under « Mes demandes »): waiting (and when an
+//      answer comes), taken (WhatsApp and call, « Autoriser l'accès 48 h »
+//      only for a trainer not of the business and only for an admin), the
+//      access live and its « Retirer », « C'est réglé ? », « Fermer la
+//      demande » with a thumb; the free page: FAQ, guides, Mara's contacts
+//      « réponse sous 48 h », « Signaler un problème » — and, since 143, no
+//      « Avec Mara Pro » card (the once-a-day pop-up and the FAQ banner,
+//      batch143_test);
 //   4. the trainer's inbox: « Je m'en occupe », WhatsApp / call / resolved
 //      with a note, the visit's two answers, « Ouvrir l'activité (lecture
 //      seule) » only with a live access, on/off duty, nothing for others;
@@ -46,7 +49,11 @@ import 'package:kaj_app/features/farm/farm_home_screen.dart';
 import 'package:kaj_app/features/help/help_button.dart';
 import 'package:kaj_app/features/help/help_console_screen.dart';
 import 'package:kaj_app/features/help/help_screen.dart';
-import 'package:kaj_app/features/help/help_sheet.dart';
+import 'package:kaj_app/features/account/support.dart';
+import 'package:kaj_app/features/common/step_flow.dart';
+import 'package:kaj_app/features/help/help_contact.dart';
+import 'package:kaj_app/features/help/help_request_flow.dart';
+import 'package:kaj_app/features/help/help_requests_screen.dart';
 import 'package:kaj_app/features/help/help_words.dart';
 import 'package:kaj_app/features/help/trainer_inbox_screen.dart';
 import 'package:kaj_app/features/notify/notification_text.dart';
@@ -155,6 +162,10 @@ class _Help extends HelpRepository {
     String? message,
     String? phone,
     String? photoDocumentId,
+    DateTime? preferredAt,
+    String? subjectWords,
+    String? whenWords,
+    int server = HelpState.current,
     Map<String, String> context = const {},
   }) async {
     created = {
@@ -318,10 +329,21 @@ GoRouter _router(Widget Function() home, OrgSummary org, _Help help, {String? at
         path: '/o/:orgId',
         builder: (_, _) => home(),
         routes: [
-          GoRoute(path: 'aide', builder: (_, _) {
-            went?.add('aide');
-            return HelpScreen(org: org, help: help);
-          }),
+          GoRoute(
+              path: 'aide',
+              builder: (_, _) {
+                went?.add('aide');
+                return HelpScreen(org: org, help: help);
+              },
+              routes: [
+                GoRoute(
+                    path: 'demandes',
+                    builder: (_, state) {
+                      went?.add('demandes');
+                      return HelpRequestsScreen(
+                          org: org, help: help, focus: state.uri.queryParameters['demande']);
+                    }),
+              ]),
           for (final r in const ['chemin', 'kaj-pro'])
             GoRoute(path: r, builder: (_, _) {
               went?.add(r);
@@ -398,6 +420,9 @@ void main() {
   late LocalDb db;
   setUp(() async {
     HelpButton.reset();
+    HelpContact.reset();
+    HelpContact.debugStore = MemoryHelpPrefs();
+    Support.reset();
     db = await LocalDb.open(path: inMemoryDatabasePath);
   });
   tearDown(() => db.close());
@@ -525,16 +550,29 @@ void main() {
       expect(find.byKey(const Key('help-pro-button')), findsNothing);
     });
 
-    testWidgets('an observer who is no trainer, and a platform admin: no button', (tester) async {
+    testWidgets('an observer who is no trainer, and a platform admin in someone else\'s business: no button',
+        (tester) async {
       await _phone(tester);
       await tester.pumpWidget(_app(_home(_as(_shopPro, roles: ['observer']), db, _Help())));
       await _settle(tester);
       expect(find.byKey(const Key('help-trainer-button')), findsNothing);
       expect(find.byKey(const Key('help-pro-button')), findsNothing);
-      await tester.pumpWidget(_app(_home(_as(_farmPro, roles: ['platform_admin']), db, _Help())));
+      // help_state says « not available »: no membership of theirs here.
+      await tester.pumpWidget(_app(_home(_as(_farmPro, roles: ['platform_admin']), db,
+          _Help(state: const HelpState(available: false)))));
       await _settle(tester);
       expect(find.byKey(const Key('help-pro-button')), findsNothing);
       expect(find.byKey(const Key('help-free-button')), findsNothing);
+    });
+
+    // 143's fix: my_orgs() gives a platform admin « platform_admin » in
+    // their own business too; 136 hid the button there for good.
+    testWidgets('a platform admin in their OWN business: the button, as its owner has it', (tester) async {
+      await _phone(tester);
+      await tester.pumpWidget(_app(_home(_as(_farmPro, roles: ['platform_admin'], plan: 'free'), db,
+          _Help(state: _freeState))));
+      await _settle(tester);
+      expect(find.byKey(const Key('help-free-button')), findsOneWidget);
     });
 
     testWidgets('English: « Need help » and « Help »', (tester) async {
@@ -548,7 +586,7 @@ void main() {
       expect(find.text('Help'), findsOneWidget);
     });
 
-    testWidgets('the free button opens the free « Aide » page; the Pro one with a request its status',
+    testWidgets('the free button opens the free « Aide » page; the Pro one its page, the request under « Mes demandes »',
         (tester) async {
       await _phone(tester);
       final went = <String>[];
@@ -569,96 +607,110 @@ void main() {
       await tester.tap(find.byKey(const Key('help-pro-button')));
       await _settle(tester);
       expect(went, contains('aide'));
+      expect(find.byKey(const Key('help-ask')), findsOneWidget);
+      await tester.ensureVisible(find.byKey(const Key('help-my-requests')));
+      await tester.tap(find.byKey(const Key('help-my-requests')));
+      await _settle(tester);
+      expect(went, contains('demandes'));
+      await tester.tap(find.byKey(const Key('help-request-req-1')));
+      await _settle(tester);
       expect(find.byKey(const Key('help-request-card')), findsOneWidget);
     });
   });
 
   // -------------------------------------------------------------------------
-  group('2. the sheet', () {
-    for (final (org, first, last) in [
-      (_shopPro, 'Ventes', 'Commandes'),
-      (_farmPro, 'Bandes', 'Équipe'),
-      (_assocPro, 'Contributions', 'Rapports'),
+  group('2. the request (143: the flow that replaced the sheet)', () {
+    Future<void> flow(WidgetTester tester, OrgSummary org, HelpState state, _Help help,
+        {String? phone = '22670000000'}) async {
+      await _phone(tester);
+      await tester.pumpWidget(_app(HelpRequestFlow(
+          org: org, state: state, help: help, phone: phone, store: MemoryFlowStore(), screen: 'Vente')));
+      await _settle(tester);
+    }
+
+    for (final (org, first, own) in [
+      (_shopPro, 'Articles / Catalogue', 'Caisse / Ventes'),
+      (_farmPro, 'Articles / Catalogue', 'Bandes / Récoltes'),
+      (_assocPro, 'Articles / Catalogue', 'Cotisations'),
     ]) {
-      testWidgets('${org.profile}: its own subjects, seven of them', (tester) async {
-        await _phone(tester);
-        await tester.pumpWidget(_app(Scaffold(
-            body: HelpRequestSheet(org: org, state: _proState(), help: _Help(), phone: '22670000000'))));
-        await _settle(tester);
-        expect(helpSubjectsFor(org.profile), hasLength(7));
+      testWidgets('${org.profile}: its own subjects, « Autre » last', (tester) async {
+        await flow(tester, org, _proState(), _Help());
+        final subjects = helpSubjectsFor(org.profile);
+        expect(subjects.last, 'autre');
+        expect(subjects, hasLength(switch (org.profile) { 'farm' => 10, 'association' => 11, _ => 8 }));
         expect(find.text(first), findsOneWidget);
-        expect(find.text(last), findsOneWidget);
+        await tester.scrollUntilVisible(find.text(own), 200);
+        expect(find.text(own), findsOneWidget);
+        await tester.scrollUntilVisible(find.text('Autre'), 200);
         expect(find.text('Autre'), findsOneWidget);
       });
     }
 
-    testWidgets('a subject is needed; the number is asked; sent with the home\'s screen', (tester) async {
-      await _phone(tester);
+    testWidgets('a subject is needed; the number is asked; sent with the screen', (tester) async {
       final help = _Help();
-      final went = <String>[];
-      await tester.pumpWidget(_routed(_router(() => _home(_shopPro, db, help), _shopPro, help, went: went)));
-      await _settle(tester);
-      await tester.tap(find.byKey(const Key('help-pro-button')));
-      await _settle(tester);
-      expect(find.byKey(const Key('help-sheet-title')), findsOneWidget);
-      expect(find.text('Réponse en quelques minutes, 07:00–21:00'), findsOneWidget);
-      await tester.ensureVisible(find.byKey(const Key('help-send')));
-      await tester.tap(find.byKey(const Key('help-send')));
-      await _settle(tester);
-      expect(find.text('Choisissez de quoi il s\'agit.'), findsOneWidget);
-      expect(help.created, isNull);
-
-      await tester.tap(find.byKey(const Key('help-subject-stock')));
-      await tester.enterText(find.byKey(const Key('help-message')), 'Le stock ne baisse pas');
-      await tester.ensureVisible(find.byKey(const Key('help-contact-visit')));
-      await tester.tap(find.byKey(const Key('help-contact-visit')));
+      await flow(tester, _shopPro, _proState(), help, phone: null);
+      final next = find.byKey(const Key('flow-next'));
+      expect(tester.widget<FilledButton>(next).onPressed, isNull, reason: 'a subject is needed');
+      await tester.tap(find.byKey(const Key('flow-option-catalogue')));
       await tester.pump();
-      // No account number in this harness: asked.
-      await tester.ensureVisible(find.byKey(const Key('help-phone')));
+      await tester.tap(next);
+      await _settle(tester);
+      await tester.enterText(find.byKey(const Key('help-message')), 'Le stock ne baisse pas');
+      await tester.pump();
+      await tester.tap(next);
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('flow-option-visit')));
+      await tester.pump();
+      // No account number: asked, and « Suivant » waits for it.
+      expect(tester.widget<FilledButton>(next).onPressed, isNull);
       await tester.enterText(find.byKey(const Key('help-phone')), '+226 70 12 34 56');
-      await tester.ensureVisible(find.byKey(const Key('help-send')));
-      await tester.tap(find.byKey(const Key('help-send')));
+      await tester.pump();
+      await tester.tap(next);
+      await _settle(tester);
+      await tester.tap(next); // « Maintenant »
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('flow-save')));
       await _settle(tester);
       expect(help.created, {
         'org': _shopPro.id,
-        'subject': 'stock',
+        'subject': 'catalogue',
         'contact': 'visit',
         'message': 'Le stock ne baisse pas',
         'phone': '22670123456',
         'screen': 'Vente',
       });
-      expect(went, contains('aide'), reason: 'sent: the status');
-      expect(find.byKey(const Key('help-request-card')), findsOneWidget);
+      expect(find.byKey(const Key('flow-done')), findsOneWidget);
     });
 
-    testWidgets('out of the hours: kept, and said when a trainer answers', (tester) async {
-      await _phone(tester);
-      await tester.pumpWidget(_app(Scaffold(
-          body: HelpRequestSheet(
-              org: _shopPro, state: _proState(inHours: false), help: _Help(), phone: '22670000000'))));
+    testWidgets('out of the hours: the Aide page says when a trainer answers', (tester) async {
+      await _phone(tester, height: 1200);
+      final help = _Help(state: _proState(inHours: false));
+      await tester.pumpWidget(_routed(_router(() => const SizedBox(), _shopPro, help, at: '/o/${_shopPro.id}/aide')));
       await _settle(tester);
       expect(find.textContaining('Un formateur vous répondra demain à partir de 7 h'), findsOneWidget);
-      expect(find.textContaining('Votre demande est gardée.'), findsOneWidget);
-      expect(find.byKey(const Key('help-phone-known')), findsOneWidget);
     });
 
-    testWidgets('nothing left today: the send is off and says why', (tester) async {
-      await _phone(tester);
-      await tester.pumpWidget(_app(Scaffold(
-          body: HelpRequestSheet(org: _shopPro, state: _proState(left: 0), help: _Help(), phone: '22670000000'))));
+    testWidgets('nothing left today: « Nouvelle demande » is off and says why', (tester) async {
+      await _phone(tester, height: 1200);
+      final help = _Help(state: _proState(left: 0, request: _req(status: 'closed')));
+      await tester.pumpWidget(
+          _routed(_router(() => const SizedBox(), _shopPro, help, at: '/o/${_shopPro.id}/aide/demandes')));
       await _settle(tester);
-      final send = tester.widget<FilledButton>(find.byKey(const Key('help-send')));
-      expect(send.onPressed, isNull);
-      expect(find.byKey(const Key('help-sheet-error')), findsOneWidget);
+      final add = tester.widget<FilledButton>(find.byKey(const Key('help-new-request')));
+      expect(add.onPressed, isNull);
+      expect(find.byKey(const Key('help-none-left')), findsOneWidget);
     });
   });
 
   // -------------------------------------------------------------------------
   group('3. the status, and the free page', () {
+    // 143: a request's status is its own page under « Mes demandes »
+    // (?demande= opens it, as a bell does).
     Future<_Help> open(WidgetTester tester, HelpState s, {OrgSummary org = _shopPro}) async {
       await _phone(tester, height: 1200);
       final help = _Help(state: s);
-      await tester.pumpWidget(_routed(_router(() => const SizedBox(), org, help, at: '/o/${org.id}/aide')));
+      await tester.pumpWidget(_routed(
+          _router(() => const SizedBox(), org, help, at: '/o/${org.id}/aide/demandes?demande=req-1')));
       await _settle(tester);
       return help;
     }
@@ -754,15 +806,22 @@ void main() {
     });
 
     testWidgets('no request yet: the button and the hours, the basics under them', (tester) async {
-      await open(tester, _proState());
-      expect(find.byKey(const Key('help-no-request')), findsOneWidget);
+      await _phone(tester, height: 1200);
+      final help = _Help(state: _proState());
+      await tester.pumpWidget(_routed(_router(() => const SizedBox(), _shopPro, help, at: '/o/${_shopPro.id}/aide')));
+      await _settle(tester);
+      expect(find.byKey(const Key('help-trainer-card')), findsOneWidget);
       expect(find.byKey(const Key('help-ask')), findsOneWidget);
+      expect(find.text('Réponse en quelques minutes, 07:00–21:00'), findsOneWidget);
+      expect(find.byKey(const Key('help-my-requests')), findsNothing, reason: 'none yet');
       expect(find.byKey(const Key('help-faq')), findsOneWidget);
       expect(find.byKey(const Key('help-pro-invite')), findsNothing, reason: 'Pro already');
     });
 
-    testWidgets('the free page (mockup 7): FAQ, guides, Mara « réponse sous 48 h », report, Pro', (tester) async {
+    testWidgets('the free page (mockup 7, 143): FAQ, guides, Mara « réponse sous 48 h », report — no Pro card',
+        (tester) async {
       final went = <String>[];
+      Support.reset(const SupportContacts(email: Support.defaultEmail, whatsapp: '22670000099', hours: Support.defaultHours));
       await _phone(tester, height: 1200);
       final help = _Help(state: _freeState);
       final org = _as(_shopPro, plan: 'free');
@@ -773,9 +832,14 @@ void main() {
       expect(find.byKey(const Key('help-guides')), findsOneWidget);
       expect(find.byKey(const Key('help-write-mara')), findsOneWidget);
       expect(find.textContaining('réponse sous 48 h'), findsOneWidget);
+      expect(find.byKey(const Key('help-48h')), findsOneWidget);
+      expect(find.byKey(const Key('help-247')), findsNothing);
+      expect(find.textContaining('24/7'), findsNothing);
+      expect(find.textContaining('24 h/24'), findsNothing);
       expect(find.byKey(const Key('help-mara-email')), findsOneWidget);
       expect(find.byKey(const Key('help-report')), findsOneWidget);
-      expect(find.byKey(const Key('help-pro-invite')), findsOneWidget);
+      // 143: the card gave way to the pop-up and the FAQ banner.
+      expect(find.byKey(const Key('help-pro-invite')), findsNothing);
       // No trainer queue for a free business.
       expect(find.byKey(const Key('help-ask')), findsNothing);
       await tester.tap(find.byKey(const Key('help-guides')));
@@ -783,10 +847,15 @@ void main() {
       expect(went, contains('chemin'));
     });
 
-    testWidgets('a Pro business on a database without 133: the basics, no Pro invitation', (tester) async {
-      await open(tester, HelpState.missing);
+    testWidgets('a Pro business on a database without 133: the basics, no Pro invitation, no trainer', (tester) async {
+      await _phone(tester, height: 1200);
+      final help = _Help(state: HelpState.missing);
+      await tester.pumpWidget(_routed(_router(() => const SizedBox(), _shopPro, help, at: '/o/${_shopPro.id}/aide')));
+      await _settle(tester);
       expect(find.byKey(const Key('help-faq')), findsOneWidget);
       expect(find.byKey(const Key('help-pro-invite')), findsNothing);
+      // No 133, no trainers' queue: « Demander un formateur » is not offered.
+      expect(find.byKey(const Key('help-ask')), findsNothing);
     });
   });
 
@@ -969,7 +1038,10 @@ void main() {
           '${Routes.trainerInbox}?demande=$id');
       expect(notificationTarget(row('help_access', org: 'o1', params: {'to': 'me', 'request_id': 'x/../y'})),
           Routes.trainerInbox);
-      expect(notificationTarget(row('help_taken', org: 'o1', params: {'to': 'shop'})), '/o/o1/aide');
+      // 143: the business's requests, the one the bell is about opened.
+      expect(notificationTarget(row('help_taken', org: 'o1', params: {'to': 'shop'})), '/o/o1/aide/demandes');
+      expect(notificationTarget(row('help_resolved', org: 'o1', params: {'to': 'shop', 'request_id': id})),
+          '/o/o1/aide/demandes?demande=$id');
       expect(notificationTarget(row('help_escalated', params: {'to': 'platform'})), Routes.consoleHelp);
     });
 

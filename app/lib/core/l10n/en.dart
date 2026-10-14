@@ -6878,8 +6878,8 @@ const enStrings = <String, String>{
       'A trainer helps you',
   'Votre demande est gardée.':
       'Your request is kept.',
-  'Demande à toute heure · réponse sous 48 h au plus':
-      'Ask at any hour · answer within 48 h at most',
+  'Réponse rapide, 24 h/24':
+      'A quick answer, 24 hours a day',
   'Réponse en quelques minutes, {hours}':
       'An answer within minutes, {hours}',
   'C\'est à propos de…':
@@ -7321,4 +7321,181 @@ const enStrings = <String, String>{
       'Tap up to 4 services, in the order they will appear.',
   'Un seul service (annonce)':
       'One service only (ad)',
+  // ---- 143: the help, Basic and Pro (migration 138) ----
+  'Ce qu\'il vous faut':
+      'What you need',
+  'Demande d\'aide envoyée':
+      'Help request sent',
+  'Obtenez une réponse plus rapide et un meilleur accompagnement avec Mara Pro':
+      'Get a faster answer and better support with Mara Pro',
+  'Demandez au propriétaire de passer à Pro':
+      'Ask the owner to switch to Pro',
+  'Une aide plus rapide, un formateur, avec Mara Pro':
+      'Faster help, a trainer, with Mara Pro',
+  'Articles / Catalogue':
+      'Items / Catalogue',
+  'Caisse / Ventes':
+      'Till / Sales',
+  'Compte / Équipe':
+      'Account / Team',
+  'Bandes / Récoltes':
+      'Batches / Harvests',
+  'Stock de la ferme':
+      'Farm stock',
+  'Cotisations':
+      'Dues',
+  'Bonjour Mara, j\'ai besoin d\'aide.':
+      'Hello Mara, I need help.',
+  'Entreprise : {name} ({kind} · {plan})':
+      'Business: {name} ({kind} · {plan})',
+  'Réf. : {ref}':
+      'Ref.: {ref}',
+  'Page : {page}':
+      'Page: {page}',
+  'Aide Mara — {name} · Réf. {ref}{pro}':
+      'Mara help — {name} · Ref. {ref}{pro}',
+  'aujourd\'hui à {time}':
+      'today at {time}',
+  'demain à {time}':
+      'tomorrow at {time}',
+  'le {d} à {time}':
+      'on {d} at {time}',
+  'Aucune en cours':
+      'None in progress',
+  'Demander un formateur':
+      'Ask for a trainer',
+  'Mes demandes':
+      'My requests',
+  'Réponse sous 48 h':
+      'Answer within 48 h',
+  'WhatsApp 24 h/24, 7 j/7, avec Mara Pro':
+      'WhatsApp 24/7, with Mara Pro',
+  'Écrire un e-mail':
+      'Write an e-mail',
+  'Nouvelle demande':
+      'New request',
+  'Prise en charge par {name}':
+      'Taken by {name}',
+  'Reçue · {when}':
+      'Received · {when}',
+  'Résolue':
+      'Resolved',
+  'Souhaité {when}':
+      'Wanted {when}',
+  'Ajouter une photo ou une capture':
+      'Add a photo or a screenshot',
+  'C\'est à propos de quoi ?':
+      'What is it about?',
+  'Comment':
+      'How',
+  'Comment vous aider ?':
+      'How can we help?',
+  'Demain':
+      'Tomorrow',
+  'Dès qu\'un formateur est libre':
+      'As soon as a trainer is free',
+  'Décrivez ce qu\'il vous faut':
+      'Describe what you need',
+  'Heure de Ouagadougou.':
+      'Ouagadougou time.',
+  'L\'heure':
+      'The time',
+  'La photo n\'a pas pu être envoyée ; la demande est partie sans elle.':
+      'The photo could not be sent; the request went without it.',
+  'Le formateur vient vous voir':
+      'The trainer comes to see you',
+  'Le formateur vous appelle':
+      'The trainer calls you',
+  'Le formateur vous écrit':
+      'The trainer writes to you',
+  'Le jour':
+      'The day',
+  'Maintenant':
+      'Now',
+  'Par un appel':
+      'By a call',
+  'Par une visite':
+      'By a visit',
+  'Quand':
+      'When',
+  'Quand ?':
+      'When?',
+  'Quelques mots suffisent. Une photo ou une capture d\'écran aide aussi.':
+      'A few words are enough. A photo or a screenshot helps too.',
+  'Sur WhatsApp':
+      'On WhatsApp',
+  'Un formateur vous contactera {when}.':
+      'A trainer will contact you {when}.',
+  'Vérifiez et envoyez':
+      'Check and send',
+  'lun.':
+      'Mon',
+  'mar.':
+      'Tue',
+  'mer.':
+      'Wed',
+  'jeu.':
+      'Thu',
+  'ven.':
+      'Fri',
+  'sam.':
+      'Sat',
+  'dim.':
+      'Sun',
+  '« Je n\'arrive pas à annuler une vente… »':
+      '“I can\'t cancel a sale…”',
+  'À propos de':
+      'About',
+  'À un moment choisi':
+      'At a time I choose',
+  'Pas de numéro sur son profil':
+      'No number on their profile',
+  'Un formateur se choisit dans Personnes : ouvrez la fiche de la personne, « Formateur Mara ».':
+      'Trainers are chosen in People: open the person\'s card, “Mara trainer”.',
+  'Aide les entreprises Mara Pro qui le demandent.':
+      'Helps the Mara Pro businesses that ask.',
+  'Cette personne ne recevra plus de demandes d\'aide ; ses accès en lecture seule s\'arrêtent.':
+      'This person will no longer receive help requests; their read-only accesses end.',
+  'Cette personne recevra les demandes d\'aide des entreprises Mara Pro, dans l\'app et sur WhatsApp, au numéro de son profil.':
+      'This person will receive the help requests of Mara Pro businesses, in the app and on WhatsApp, at the number on their profile.',
+  'Faire de {label} un formateur Mara ?':
+      'Make {label} a Mara trainer?',
+  'Formateur Mara':
+      'Mara trainer',
+  'Formateur ajouté':
+      'Trainer added',
+  'Cette personne ne recevra plus de demandes d\'aide ; ses accès en lecture seule s\'arrêtent, et elle ne verra plus l\'entreprise qui lui est confiée.':
+      'This person will no longer receive help requests; their read-only accesses end, and they will no longer see the business assigned to them.',
+  'Cette personne ne recevra plus de demandes d\'aide ; ses accès en lecture seule s\'arrêtent, et elle ne verra plus les {n} entreprises qui lui sont confiées.':
+      'This person will no longer receive help requests; their read-only accesses end, and they will no longer see the {n} businesses assigned to them.',
+  // 138's server sentences (describeError → translate), and the app's own
+  // when the server is older.
+  'Choisissez un moment dans les 14 jours qui viennent.':
+      'Choose a time within the next 14 days.',
+  'Choisissez un jour et une heure, s\'il vous plaît.':
+      'Choose a day and a time, please.',
+  'Seule l\'équipe Mara choisit les formateurs.':
+      'Only the Mara team chooses the trainers.',
+  'Formateur : oui ou non.':
+      'Trainer: yes or no.',
+  'Ce compte n\'existe pas.':
+      'This account does not exist.',
+  'Ce compte n\'a pas de numéro : il pourra devenir formateur une fois le serveur à jour.':
+      'This account has no number: it can become a trainer once the server is up to date.',
+  'Formateur retiré':
+      'Trainer removed',
+  'Joint au {phone}':
+      'Reached at {phone}',
+  'Pas de numéro sur son profil : les demandes ne pourront pas le joindre par WhatsApp ni par appel. Ajoutez-en un à son compte.':
+      'No number on their profile: requests cannot reach them by WhatsApp or by a call. Add one to their account.',
+  'Reçoit les demandes d\'aide des entreprises Mara Pro.':
+      'Receives the help requests of Mara Pro businesses.',
+  '{label} n\'est plus formateur ?':
+      'Remove {label} from the trainers?',
+  'Une question, un souci ? Réponse sous 48 h.':
+      'A question, a problem? Answer within 48 h.',
+  'WhatsApp · 24/7':
+      'WhatsApp · 24/7',
+  'WhatsApp · réponse sous 48 h':
+      'WhatsApp · answer within 48 h',
 };

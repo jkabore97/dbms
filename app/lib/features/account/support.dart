@@ -5,6 +5,8 @@ import 'package:kaj_app/core/errors.dart' show isSchemaOutOfDate;
 import 'package:kaj_app/core/l10n/tr.dart';
 import 'package:kaj_app/core/nav/app_scope.dart';
 import 'package:kaj_app/core/theme/kaj_card.dart';
+import 'package:kaj_app/core/auth/models.dart';
+import 'package:kaj_app/features/help/help_contact.dart';
 
 /// How to reach the people who run Mara (« Aide Mara », 126): the
 /// platform's e-mail, its WhatsApp number and the hours it answers, set in
@@ -125,10 +127,14 @@ class Support {
     );
   }
 
-  /// Opens a new e-mail to the platform's address.
-  static Future<void> openEmail(BuildContext context) => _launch(
+  /// Opens a new e-mail to the platform's address. [subject]: a business's
+  /// name and reference (143), « Aide Mara » otherwise.
+  static Future<void> openEmail(BuildContext context, {String? subject}) => _launch(
         context,
-        Uri(scheme: 'mailto', path: contacts.value.email, query: 'subject=${Uri.encodeComponent('Aide Mara')}'),
+        Uri(
+            scheme: 'mailto',
+            path: contacts.value.email,
+            query: 'subject=${Uri.encodeComponent(subject ?? 'Aide Mara')}'),
         context.tr('Aucune application d\'e-mail : écrivez à {email}.', {'email': contacts.value.email}),
       );
 
@@ -149,11 +155,23 @@ class Support {
 /// Business Compte › Aide (a shop, a farm, an association), the shopper's
 /// profile › Aide, and the help page (/aide) all show this one. Asks
 /// support_contacts() itself, once for the whole app.
+///
+/// Inside a business ([org], 143) it is the plan's: a Basic business reads
+/// « Réponse sous 48 h » — never the platform's « 24 h/24, 7 j/7 », which
+/// is Pro's — and its WhatsApp goes through [HelpContact] (the day's word
+/// about Pro, the message naming the business); a Pro business reads the
+/// hours with « 24/7 ». Without a business (a shopper, signed out): as 126.
 class SupportCard extends StatefulWidget {
-  const SupportCard({super.key, this.framed = true});
+  const SupportCard({super.key, this.framed = true, this.org, this.page});
 
   /// In a card of its own; false inside a list that already frames it.
   final bool framed;
+
+  /// The business the person writes from, or null.
+  final OrgSummary? org;
+
+  /// Where the card is, for the WhatsApp message (« Compte », « FAQ »).
+  final String? page;
 
   @override
   State<SupportCard> createState() => _SupportCardState();
@@ -164,11 +182,13 @@ class _SupportCardState extends State<SupportCard> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     Support.warm(AppScope.maybeOf(context)?.auth.client);
+    if (widget.org != null && !widget.org!.isPro) HelpContact.warm(context);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final org = widget.org;
     return ValueListenableBuilder<SupportContacts>(
       valueListenable: Support.contacts,
       builder: (context, c, _) {
@@ -190,8 +210,10 @@ class _SupportCardState extends State<SupportCard> {
               ),
               const SizedBox(height: 6),
               Text(
-                context.tr('Une question, un souci ? Nous répondons {hours}.',
-                    {'hours': Support.hoursText(context, c.hours)}),
+                org != null && !org.isPro
+                    ? context.tr('Une question, un souci ? Réponse sous 48 h.')
+                    : context.tr('Une question, un souci ? Nous répondons {hours}.',
+                        {'hours': Support.hoursText(context, c.hours)}),
                 key: const Key('support-hours'),
                 style: theme.textTheme.bodyMedium,
               ),
@@ -203,13 +225,22 @@ class _SupportCardState extends State<SupportCard> {
                   if (c.whatsapp != null)
                     FilledButton.icon(
                       key: const Key('support-whatsapp'),
-                      onPressed: () => Support.openWhatsApp(context),
+                      onPressed: () => org == null
+                          ? Support.openWhatsApp(context)
+                          : HelpContact.whatsApp(context, org,
+                              pro: org.isPro, page: widget.page),
                       icon: const Icon(Icons.chat_outlined, size: 18),
-                      label: Text(context.tr('WhatsApp')),
+                      label: Text(org == null
+                          ? context.tr('WhatsApp')
+                          : org.isPro
+                              ? context.tr('WhatsApp · 24/7')
+                              : context.tr('WhatsApp · réponse sous 48 h')),
                     ),
                   OutlinedButton.icon(
                     key: const Key('support-email'),
-                    onPressed: () => Support.openEmail(context),
+                    onPressed: () => org == null
+                        ? Support.openEmail(context)
+                        : HelpContact.email(context, org, pro: org.isPro),
                     icon: const Icon(Icons.mail_outline, size: 18),
                     label: Text(context.tr('E-mail')),
                   ),

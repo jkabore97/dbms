@@ -11,22 +11,30 @@ import '../../core/nav/look_only.dart';
 import '../../core/nav/router.dart';
 import '../../core/theme/mara_mark.dart';
 import '../home/vitrine_button.dart';
-import 'help_sheet.dart';
 import 'help_words.dart';
 
 /// « Besoin d'aide » (batch 136) on the top bar of every home — the shop's,
 /// the farm's and the association's — where the mockup draws it, after the
 /// business's name:
 ///
-///   * a Pro business's member: the caramel « Besoin d'aide » — the sheet
-///     (subject, a few words, a photo, how to be helped) or, with a request
-///     on, its status;
-///   * a free business (or a database without 133): « Aide » — the guides,
-///     the FAQ, Mara's WhatsApp and e-mail (126), « Réponse sous 48 h »;
+///   * a Pro business's member: the caramel « Besoin d'aide » — the « Aide »
+///     page (143: WhatsApp 24/7, « Demander un formateur », its requests);
+///     a dot while a request is on;
+///   * a free business (or a database without 133): « Aide » — the page's
+///     Basic side: WhatsApp « Réponse sous 48 h », the FAQ, the guides;
 ///   * a trainer in a business they help (an observer): « Demandes », the
 ///     inbox, with how many wait;
-///   * a platform admin in someone's business, or an observer who is no
-///     trainer: nothing (the button is the business's own people's).
+///   * a platform admin in someone else's business, or an observer who is
+///     no trainer: nothing (the button is the business's own people's).
+///
+/// A platform admin's OWN business (143's fix): my_orgs() gives a platform
+/// admin the single role platform_admin in every business — their own
+/// owner membership included — so 136 took them for a visitor everywhere:
+/// no button, help_state never asked, and on their own Basic business the
+/// one help they reached was Compte's (« 24 h/24 », no word about Pro).
+/// help_state's « available » (help_can_ask: a real membership, not an
+/// observer's) is what tells their own business from another's; the
+/// button waits for it.
 ///
 /// The first frame guesses from the cached plan (Pro or not) and never
 /// waits; help_state() corrects it — on a phone with no signal the guess
@@ -100,10 +108,10 @@ class _HelpButtonState extends State<HelpButton> {
 
   bool get _observer => widget.org.isObserverOnly;
 
-  /// A platform admin in a business: my_orgs() gives them the
-  /// platform_admin role there, never a membership — the help is the
-  /// business's own people's, and their bar is crowded already (the
-  /// « Admin » pill, the pending chip).
+  /// A platform admin: my_orgs() gives them the platform_admin role in
+  /// every business, their own included. Whether this one is theirs is
+  /// help_state's « available » (a real membership); until it says so, no
+  /// button — their bar is crowded already (the « Admin » pill).
   bool get _platformOnly =>
       (widget.org.roles.isNotEmpty &&
           widget.org.roles.every((r) => r == 'platform_admin')) ||
@@ -145,7 +153,7 @@ class _HelpButtonState extends State<HelpButton> {
 
   Future<void> _reload() async {
     final repo = _repo;
-    if (repo == null || !repo.isConfigured || _platformOnly) return;
+    if (repo == null || !repo.isConfigured) return;
     try {
       if (_observer) {
         final inbox = await repo.inbox();
@@ -167,30 +175,21 @@ class _HelpButtonState extends State<HelpButton> {
       await context.push(Routes.trainerInbox);
       return _reload();
     }
-    final s = _state;
-    final pro = s == null ? org.isPro : s.trainers;
-    if (pro && s != null && s.request == null) {
-      final sent = await showHelpSheet(
-        context,
-        org: org,
-        state: s,
-        help: _repo!,
-        screen: widget.screen,
-      );
-      if (!mounted) return;
-      if (sent != null) {
-        HelpButton.changed.value++;
-        await context.push(Routes.inside(org.id, 'aide'));
-      }
-    } else {
-      await context.push(Routes.inside(org.id, 'aide'));
-    }
+    // 143: the « Aide » page, Pro and Basic alike — WhatsApp, « Demander
+    // un formateur » (Pro), the FAQ.
+    await context.push(Routes.inside(org.id, 'aide'));
     if (mounted) unawaited(_reload());
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_platformOnly && !LookOnly.of(context)) return const SizedBox.shrink();
+    // A platform admin: only in a business that is really theirs (143) —
+    // help_state's word; a database without 133 (HelpState.missing says
+    // « available » to everybody) cannot tell, so no button there.
+    final own = _state != null && _state!.installed && _state!.available;
+    if (_platformOnly && !LookOnly.of(context) && !own) {
+      return const SizedBox.shrink();
+    }
     if (_observer) {
       final inbox = _inbox;
       if (inbox == null || !inbox.trainer) return const SizedBox.shrink();
@@ -203,12 +202,14 @@ class _HelpButtonState extends State<HelpButton> {
     // « Ma vitrine » on the bar it keeps its place, its icon alone (136).
     if (HelpButton.inAccount(context) &&
         VitrineButton.shownFor(context, widget.org) &&
-        s?.request == null) {
+        (s?.active.isEmpty ?? true)) {
       return const SizedBox.shrink();
     }
+    // The caramel button promises a trainer: the server's trainers' queue
+    // (a database without 133 has none — the basic « Aide »).
     final pro = s == null ? widget.org.isPro : s.trainers;
     return pro
-        ? _ProPill(onTap: _tap, active: s?.request != null)
+        ? _ProPill(onTap: _tap, active: s?.active.isNotEmpty ?? false)
         : _FreePill(onTap: _tap);
   }
 }

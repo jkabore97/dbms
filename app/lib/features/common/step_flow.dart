@@ -880,6 +880,11 @@ class _StepFlowState extends State<StepFlow> with WidgetsBindingObserver {
                         // step goes on below the screen (122).
                         child: ScrollHint(child: FocusedFieldInView(
                          child: ListView(
+                          // Its own list per step: each opens at its top,
+                          // its question in view, never where the step
+                          // before was left scrolled (143).
+                          key: ValueKey(
+                              'flow-list-${_phase.name}-${step?.id ?? ''}'),
                           padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
                           children: [
                             if (_resumed && _phase != _Phase.done) ...[
