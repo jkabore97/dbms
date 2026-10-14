@@ -316,7 +316,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
             ),
           // « Besoin d'aide » (Pro) or « Aide » (136), after the name.
           // « Ma vitrine » (140), one tap from the home.
-          VitrineButton(org: widget.org),
+          VitrineButton(org: widget.org, onChanged: _refresh),
           HelpButton(org: widget.org, help: widget.help, screen: context.tr('Accueil')),
           if (widget.accountAction != null) widget.accountAction!,
           bellRoom,
@@ -634,7 +634,8 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
             label: s.photos,
             route: 'photos',
             group: PlusGroup.vitrine,
-            onTap: () => context.push(Routes.inside(id, 'photos')),
+            // Back from the photos, the path reads its photo step again.
+            onTap: () => _push(Routes.inside(id, 'photos')),
           ),
         if (widget.org.isAdmin)
           HomeDestination(
@@ -651,7 +652,8 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
             route: 'production',
             group: PlusGroup.vitrine,
             onTap: () => PathGate.open(context, widget.org, 'production',
-                () => context.push(Routes.inside(id, 'production'))),
+                () => _push(Routes.inside(id, 'production')),
+                afterPath: _refresh),
           ),
         // MON ÉQUIPE.
         if (widget.staff != null && widget.org.isAdmin)

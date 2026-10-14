@@ -391,7 +391,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
         actions: [
           // « Besoin d'aide » (Pro) or « Aide » (136), after the name.
           // « Ma vitrine » (140), one tap from the home.
-          VitrineButton(org: widget.org),
+          VitrineButton(org: widget.org, onChanged: _load),
           HelpButton(org: widget.org, help: widget.help, screen: Strings.of(context).sale),
           if (widget.accountAction != null) widget.accountAction!,
           bellRoom,
@@ -850,7 +850,8 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
             route: 'production',
             group: PlusGroup.vitrine,
             onTap: () => PathGate.open(context, widget.org, 'production',
-                () => _openThenReload('production')),
+                () => _openThenReload('production'),
+                afterPath: _load),
           ),
         // MON ÉQUIPE: the business's people (100) and its administration
         // (108), for whoever runs it.

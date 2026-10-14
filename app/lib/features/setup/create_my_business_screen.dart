@@ -596,7 +596,12 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
                     minimumSize: const Size.fromHeight(48),
                     backgroundColor: maraCaramel,
                     foregroundColor: maraDeep),
-                onPressed: () => context.push(Routes.inside(owned, 'kaj-pro')),
+                // Back from Pro, the start read again: Pro taken, the
+                // second business opens without leaving the page.
+                onPressed: () async {
+                  await context.push(Routes.inside(owned, 'kaj-pro'));
+                  if (mounted) await _load();
+                },
                 icon: const Icon(Icons.workspace_premium),
                 label: Text(context.tr('Passer à Pro')),
               ),

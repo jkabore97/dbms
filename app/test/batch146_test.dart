@@ -669,7 +669,7 @@ void main() {
   group('4. « Ma vitrine »', () {
     Future<List<String>> openSheet(WidgetTester tester, OrgSummary org,
         {VitrineChecklist? checklist, Locale locale = const Locale('fr'), Size size = const Size(390, 844),
-        double scale = 1.0}) async {
+        double scale = 1.0, Future<void> Function()? onChanged}) async {
       await _size(tester, size, scale: scale);
       final went = <String>[];
       final admin = _Admin(checklist: checklist);
@@ -677,7 +677,8 @@ void main() {
       final router = GoRouter(initialLocation: '/o/${org.id}', routes: [
         GoRoute(
             path: '/o/:orgId',
-            builder: (_, _) => Scaffold(appBar: AppBar(actions: [VitrineButton(org: org)])),
+            builder: (_, _) => Scaffold(
+                appBar: AppBar(actions: [VitrineButton(org: org, onChanged: onChanged)])),
             routes: [
               GoRoute(
                   path: 'administration/parametres/vitrine',
@@ -716,6 +717,28 @@ void main() {
     }
 
     for (final org in _kinds) {
+      testWidgets('${org.profile}: back from « Personnaliser », the home reads itself again', (tester) async {
+        var reloads = 0;
+        final went = await openSheet(tester, org, onChanged: () async => reloads++);
+        await tester.tap(find.byKey(const Key('vitrine-sheet-customise')));
+        await _settle(tester);
+        expect(find.text('personnaliser'), findsOneWidget);
+        expect(went, isNotEmpty);
+        expect(reloads, 0, reason: 'not before coming back');
+        GoRouter.of(tester.element(find.text('personnaliser'))).pop();
+        await _settle(tester);
+        expect(reloads, 1);
+      });
+
+      testWidgets('${org.profile}: the sheet closed with nothing picked reloads nothing', (tester) async {
+        var reloads = 0;
+        await openSheet(tester, org, onChanged: () async => reloads++);
+        await tester.tapAt(const Offset(10, 10));
+        await _settle(tester);
+        expect(find.byKey(const Key('vitrine-sheet')), findsNothing);
+        expect(reloads, 0);
+      });
+
       testWidgets('${org.profile}, the owner: four lines, each with its icon and its line', (tester) async {
         await openSheet(tester, org);
         for (final k in const ['view', 'customise', 'share', 'promote']) {

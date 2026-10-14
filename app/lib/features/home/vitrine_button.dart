@@ -19,9 +19,14 @@ import 'vitrine_sheet.dart';
 /// access (an observer), nor for Mara's admin in someone's business, whose
 /// bar carries « Admin » already — both keep Plus's entry.
 class VitrineButton extends StatelessWidget {
-  const VitrineButton({super.key, required this.org});
+  const VitrineButton({super.key, required this.org, this.onChanged});
 
   final OrgSummary org;
+
+  /// Called when the person comes back from what they picked in the sheet
+  /// (the vitrine customised, articles added…): the home reads its path
+  /// and its gates again, so the next step shows without a refresh.
+  final Future<void> Function()? onChanged;
 
   static bool shownFor(BuildContext context, OrgSummary org) {
     if ((org.slug ?? '').isEmpty || org.isObserverOnly) return false;
@@ -37,7 +42,13 @@ class VitrineButton extends StatelessWidget {
     final ink = theme.appBarTheme.foregroundColor ?? theme.colorScheme.onSurface;
     // The vitrine's entry point (146): see it, customise it, share it,
     // put it forward — [VitrineSheet].
-    void open() => VitrineSheet.open(context, org);
+    Future<void> open() async {
+      final session = AppScope.maybeOf(context)?.session;
+      final picked = await VitrineSheet.open(context, org);
+      if (picked == null || picked == VitrineAction.view) return;
+      await session?.reloadFeatures(org.id);
+      if (context.mounted) await onChanged?.call();
+    }
     if (HelpButton.iconOnly(context)) {
       return IconButton(
         key: const Key('home-vitrine'),
