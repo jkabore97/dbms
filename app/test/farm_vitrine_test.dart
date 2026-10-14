@@ -169,6 +169,7 @@ void main() {
     await tester.enterText(find.byKey(const Key('article-price')), '2500');
     await tester.pump();
     await next();
+    await next(); // 136: no description
     await next(); // no buying price: grown, not bought
     await tester.enterText(find.byKey(const Key('article-quantity')), '12');
     await tester.tap(find.byKey(const ValueKey('article-unit-plateau')));

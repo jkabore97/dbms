@@ -240,6 +240,9 @@ void main() {
       await tester.pump();
       await tester.tap(find.byKey(const Key('flow-next')));
       await tester.pumpAndSettle();
+      // 136: « Décrivez-le en quelques mots », skipped.
+      await tester.tap(find.byKey(const Key('flow-next')));
+      await tester.pumpAndSettle();
       // The shop's buying price (optional): on to the count.
       while (find.byKey(const Key('article-cost')).evaluate().isNotEmpty) {
         await tester.tap(find.byKey(const Key('flow-next')));

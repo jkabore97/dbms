@@ -1522,11 +1522,13 @@ class VitrineChecklist {
     this.unpublished = 0,
     this.withPhoto = 0,
     this.minItems = 1,
+    this.open = true,
   });
 
   factory VitrineChecklist.fromJson(Map<String, dynamic> j) {
     int n(Object? v) => v is num ? v.toInt() : int.tryParse('$v') ?? 0;
     return VitrineChecklist(
+      open: j['open'] != false,
       published: n(j['published']),
       unpublished: n(j['unpublished']),
       withPhoto: n(j['with_photo']),
@@ -1536,6 +1538,13 @@ class VitrineChecklist {
 
   /// Items on sale before the public sees the vitrine (092).
   final int minItems;
+
+  /// « Ouvrir la vitrine » is on (052's storefront_enabled).
+  final bool open;
+
+  /// What the street sees (092's storefront_open): open, and enough on
+  /// sale. Its own people see it before then (140's banner says so).
+  bool get visible => open && published >= minItems;
 
   final int published;
   final int unpublished;

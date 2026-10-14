@@ -550,8 +550,12 @@ void main() {
               StatusPreview(card: _own.card(), name: 'a.png', text: 'A', memory: _Memory()),
               locale: locale));
           await tester.pump();
+          await tester.pump();
           expect(tester.takeException(), isNull);
-          expect(find.byKey(const Key('status-share')).hitTestable(), findsOneWidget);
+          // 140: four ways out at the foot instead of the one share.
+          for (final t in StatusTarget.values) {
+            expect(find.byKey(Key('status-out-${t.name}')).hitTestable(), findsOneWidget, reason: t.name);
+          }
           expect(find.byKey(const Key('status-surprise')).hitTestable(), findsOneWidget);
           for (final d in StatusDesign.values) {
             expect(find.byKey(Key('status-design-${d.name}')).hitTestable(), findsOneWidget, reason: d.name);

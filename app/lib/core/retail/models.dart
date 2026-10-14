@@ -27,6 +27,7 @@ class Product {
     this.isService = false,
     this.priceFrom = false,
     this.stockTracked = true,
+    this.durationMinutes,
   });
 
   final String id;
@@ -76,6 +77,11 @@ class Product {
   /// « épuisé », and orders and sales move nothing. True before 131.
   final bool stockTracked;
 
+  /// How long a service takes, in minutes (136); null when not said — or
+  /// on a database before 136, where the service flow wrote it into the
+  /// description as « Durée : 1 h » (see duration.dart's legacyDuration).
+  final int? durationMinutes;
+
   /// Whether its count means something: goods, followed.
   bool get counted => !isService && stockTracked;
 
@@ -120,8 +126,42 @@ class Product {
       priceFrom: row['price_from'] == true,
       // Absent before 131: every article is followed.
       stockTracked: row['stock_tracked'] != false,
+      // Absent before 136: not said in minutes.
+      durationMinutes: (row['duration_minutes'] as num?)?.toInt(),
     );
   }
+}
+
+/// One photo of an item's gallery (136): the document it is, its key.
+class GalleryPhoto {
+  const GalleryPhoto({required this.documentId, required this.photoKey});
+
+  final String documentId;
+  final String photoKey;
+}
+
+/// An item's photos in order — the first is its cover — and how many it
+/// may hold: 1 on Basic, max_item_photos_pro (5) on Mara Pro (136).
+class ItemGallery {
+  const ItemGallery({required this.photos, required this.limit});
+
+  final List<GalleryPhoto> photos;
+  final int limit;
+
+  /// Room for one more photo.
+  bool get hasRoom => photos.length < limit;
+
+  /// Basic: one photo an item; a second is Mara Pro's.
+  bool get coverOnly => limit <= 1;
+
+  factory ItemGallery.fromJson(Map<String, dynamic> j) => ItemGallery(
+        photos: [
+          for (final p in (j['photos'] as List? ?? const []))
+            if (p is Map && p['document_id'] != null && p['photo_key'] != null)
+              GalleryPhoto(documentId: '${p['document_id']}', photoKey: '${p['photo_key']}'),
+        ],
+        limit: (j['limit'] as num?)?.toInt() ?? 1,
+      );
 }
 
 /// A product close enough to its expiry date to be worth acting on, and what

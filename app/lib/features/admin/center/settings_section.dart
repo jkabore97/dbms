@@ -170,6 +170,9 @@ const platformSettingDefs = <SettingDef>[
   // 135 (batch 139): « Continuer avec Apple » on the website — off until
   // the Services ID is made and Supabase's Apple « Client IDs » list it.
   SettingDef('apple_web_signin', 'signin', SettingType.flag),
+  // 136 (batch 141): the photos an item shows and holds on Mara Pro (1 to
+  // 20); Basic keeps one, its cover.
+  SettingDef('max_item_photos_pro', 'pro', SettingType.count),
 ];
 
 /// One of Réglages' eight cards (135): its address, its icon, and the
@@ -198,6 +201,7 @@ const settingCards = <SettingCard>[
   SettingCard('pro', Icons.workspace_premium_outlined, [
     ('prices', ['pro_price_month', 'pro_price_year', 'pro_currency']),
     ('tools', ['pro_features']),
+    ('with_pro', ['max_item_photos_pro']),
     ('free', [
       'free_max_staff', 'free_max_invoices_month', 'free_max_photos', 'free_photo_items',
       'free_history_months', 'vitrine_free_basics',
@@ -301,6 +305,7 @@ String settingPartLabel(BuildContext context, String part) => switch (part) {
       'prices' => context.tr('Prix'),
       'tools' => context.tr('Outils réservés à Pro'),
       'free' => context.tr('Sans Pro'),
+      'with_pro' => context.tr('Avec Pro'),
       'street' => context.tr('Pour paraître dans la rue'),
       'spots' => context.tr('Mises en avant'),
       'orders' => context.tr('Commandes'),
@@ -393,6 +398,7 @@ String settingLabel(BuildContext context, String key) => switch (key) {
       'store_review_orgs' => context.tr(
           'Entreprises de ce compte de test (identifiants ; vide : toutes)'),
       'pro_features' => context.tr('Outils réservés à Mara Pro'),
+      'max_item_photos_pro' => context.tr('Photos par article avec Pro (1 à 20)'),
       'free_max_staff' => context.tr('Personnes dans l\'équipe'),
       'free_max_invoices_month' => context.tr('Factures par mois'),
       'free_max_photos' => context.tr('Photos en tout'),
@@ -496,6 +502,8 @@ const rangedSettings = {
   'help_daily_limit': (1, 50),
   // 134: a booking's cancel, 0 to 168 hours before (a trigger refuses the rest).
   'booking_cancel_hours': (0, 168),
+  // 136: the photos an item holds on Pro (a trigger refuses the rest).
+  'max_item_photos_pro': (1, 20),
 };
 
 /// A help number as typed or pasted, letters and digits only (126): the

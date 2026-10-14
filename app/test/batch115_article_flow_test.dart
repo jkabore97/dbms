@@ -191,6 +191,7 @@ void main() {
     await tester.enterText(find.byKey(const Key('article-price')), '450');
     await tester.pump();
     await next(tester);
+    await next(tester); // 136: « Décrivez-le en quelques mots », skipped
     expect(question(tester), 'Prix d\'achat ?');
     expect(find.text('(facultatif)'), findsOneWidget);
     await tester.enterText(find.byKey(const Key('article-cost')), '300');
@@ -297,7 +298,7 @@ void main() {
         []);
     await tester.enterText(find.byKey(const Key('article-name')), 'Lait');
     await tester.pump();
-    for (var i = 0; i < 8; i++) {
+    for (var i = 0; i < 9; i++) { // 136: one step more (the description)
       if (find.byKey(const Key('flow-next')).evaluate().isEmpty) break;
       if (question(tester) == 'Prix de vente ?') {
         await tester.enterText(find.byKey(const Key('article-price')), '500');
@@ -437,6 +438,7 @@ void main() {
       await tester.enterText(find.byKey(const Key('article-price')), '2500');
       await tester.pump();
       await next(tester);
+      await next(tester); // 136: « Décrivez-le en quelques mots », skipped
       expect(find.textContaining('ce que vous produisez n\'en a pas'), findsOneWidget);
       await next(tester);
       await tester.enterText(find.byKey(const Key('article-quantity')), '30');
@@ -471,6 +473,7 @@ void main() {
       await tester.enterText(find.byKey(const Key('article-price')), '800');
       await tester.pump();
       await next(tester);
+      await next(tester); // 136: « Décrivez-le en quelques mots », skipped
       await tester.enterText(find.byKey(const Key('article-cost')), '500');
       await tester.pump();
       await next(tester);

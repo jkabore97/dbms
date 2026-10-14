@@ -7161,4 +7161,166 @@ const enStrings = <String, String>{
       'Sign in with Apple on the website',
   'La fenêtre d\'Apple n\'a pas pu s\'ouvrir. Touchez à nouveau « Continuer avec Apple » ; si rien ne s\'ouvre, autorisez les fenêtres pour ce site.':
       'Apple\'s window could not open. Tap “Continue with Apple” again; if nothing opens, allow pop-ups for this site.',
+  'Avec Mara Pro, un article montre plusieurs photos : vos clients les font défiler sur la vitrine avant de commander. Sans Pro, un article garde une photo.':
+      'With Mara Pro, an item shows several photos: your customers swipe through them on the vitrine before ordering. Without Pro, an item keeps one photo.',
+  'Avec Pro':
+      'With Pro',
+  'Ce que le client lit avant de commander, sur la vitrine.':
+      'What the customer reads on the vitrine before ordering.',
+  'Ce que le client lit avant de réserver, sur la vitrine.':
+      'What the customer reads on the vitrine before booking.',
+  'Coton, taille M à XL, lavable en machine':
+      'Cotton, sizes M to XL, machine washable',
+  'Coupe, shampoing et coiffage, environ 45 min':
+      'Cut, shampoo and styling, about 45 min',
+  'Description (facultatif)':
+      'Description (optional)',
+  'Description':
+      'Description',
+  'Durée (facultatif)':
+      'Duration (optional)',
+  'Découvrir Mara Pro':
+      'Discover Mara Pro',
+  'Décrivez-le en quelques mots':
+      'Describe it in a few words',
+  'En minutes':
+      'In minutes',
+  'Par exemple : {example}':
+      'For example: {example}',
+  'Pas plus de {n} photos par article.':
+      'No more than {n} photos per item.',
+  'Photo {n}':
+      'Photo {n}',
+  'Photo {n}, la couverture':
+      'Photo {n}, the cover',
+  'Photo {n} sur {count}':
+      'Photo {n} of {count}',
+  'Photos de l\'article · {n} / {limit}':
+      'Item photos · {n} / {limit}',
+  'Photos de l\'article':
+      'Item photos',
+  'Photos par article avec Pro (1 à 20)':
+      'Photos per item with Pro (1 to 20)',
+  'Plusieurs photos par article':
+      'Several photos per item',
+  'Plusieurs photos par article avec Mara Pro.':
+      'Several photos per item with Mara Pro.',
+  'Poulets élevés en plein air, 45 jours, environ 1,8 kg':
+      'Free-range chickens, 45 days, about 1.8 kg',
+  'Salle de 80 places, chaises et sono comprises':
+      'Hall for 80 people, chairs and sound system included',
+  'Retirer cette photo ?':
+      'Remove this photo?',
+  'Elle quitte l\'article et la vitrine, et reste dans vos Photos.':
+      'It leaves the item and the vitrine, and stays in your Photos.',
+  'Mettre en premier':
+      'Put first',
+  'La première photo est celle de la vitrine et de la recherche.':
+      'The first photo is the one the vitrine and the search show.',
+  'Appui long pour déplacer ; la première est la couverture.':
+      'Long-press to move; the first is the cover.',
+  'Lire la suite':
+      'Read more',
+  'Réduire':
+      'Show less',
+  'Sur rendez-vous · Durée : {duration}':
+      'By appointment · Duration: {duration}',
+  'Photo suivante':
+      'Next photo',
+  'Photo précédente':
+      'Previous photo',
+  'Remplacer la photo':
+      'Replace the photo',
+  'Durée : {duration}':
+      'Duration: {duration}',
+  'De 1 à 10 080 minutes (7 jours).':
+      'From 1 to 10,080 minutes (7 days).',
+  'La description n\'a pas été enregistrée : modifiez l\'article pour l\'écrire à nouveau.':
+      'The description was not saved: edit the item to write it again.',
+  // 140: « Partager » — the picture's articles, one as an ad, its ways out;
+  // « Ma vitrine » on the home's bar.
+  'Articles du statut':
+      'Items on the picture',
+  'Automatique':
+      'Automatic',
+  '4 articles au plus : retirez-en un d\'abord.':
+      '4 items at most: remove one first.',
+  'Une annonce pour un seul article : touchez celui à montrer.':
+      'An ad for one item: tap the one to show.',
+  'Touchez jusqu\'à 4 articles, dans l\'ordre où ils paraîtront.':
+      'Tap up to 4 items, in the order they will appear.',
+  'Choix automatique':
+      'Automatic choice',
+  'Un seul produit (annonce)':
+      'One item only (ad)',
+  'Chercher…':
+      'Search…',
+  'Un article épuisé paraît « Épuisé » sur l\'image.':
+      'A sold-out item shows “Sold out” on the picture.',
+  'Rien ne répond à cette recherche.':
+      'Nothing matches this search.',
+  'Partager ce service':
+      'Share this service',
+  'Partager ce produit':
+      'Share this item',
+  'Partager ma ferme':
+      'Share my farm',
+  'Partager mon association':
+      'Share my association',
+  'Partager ma boutique':
+      'Share my shop',
+  'Partager cette ferme':
+      'Share this farm',
+  'Partager cette association':
+      'Share this association',
+  'Partager cette boutique':
+      'Share this shop',
+  'chez {name}':
+      'at {name}',
+  'Voir et réserver :':
+      'See it and book:',
+  'Voir et commander :':
+      'See it and order:',
+  'Une image':
+      'A picture',
+  'pour un statut ou une story':
+      'for a status or a story',
+  'Le lien':
+      'The link',
+  'à envoyer à quelqu\'un':
+      'to send to someone',
+  'Votre image':
+      'Your picture',
+  'Image téléchargée.':
+      'Picture downloaded.',
+  'Image enregistrée dans vos photos.':
+      'Picture saved to your photos.',
+  'Annonce : {name}':
+      'Ad: {name}',
+  'Facebook':
+      'Facebook',
+  'Partager…':
+      'Share…',
+  'Autres…':
+      'Others…',
+  'Choisissez WhatsApp':
+      'Choose WhatsApp',
+  'Votre vitrine n\'est pas encore visible des clients':
+      'Your vitrine is not visible to customers yet',
+  'Régler':
+      'Set up',
+  'Articles et services':
+      'Items and services',
+  'Votre vitrine n\'est pas encore visible : vos clients ne la verront pas.':
+      'Your vitrine is not visible yet: your customers will not see it.',
+  'Services du statut':
+      'Services on the picture',
+  '4 services au plus : retirez-en un d\'abord.':
+      '4 services at most: remove one first.',
+  'Une annonce pour un seul service : touchez celui à montrer.':
+      'An ad for one service: tap the one to show.',
+  'Touchez jusqu\'à 4 services, dans l\'ordre où ils paraîtront.':
+      'Tap up to 4 services, in the order they will appear.',
+  'Un seul service (annonce)':
+      'One service only (ad)',
 };

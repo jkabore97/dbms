@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/help/help_repository.dart';
 import '../help/help_button.dart';
+import '../home/vitrine_button.dart';
 import '../../core/theme/kaj_card.dart';
 import '../../core/format/money.dart';
 
@@ -314,6 +315,8 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
               ),
             ),
           // « Besoin d'aide » (Pro) or « Aide » (136), after the name.
+          // « Ma vitrine » (140), one tap from the home.
+          VitrineButton(org: widget.org),
           HelpButton(org: widget.org, help: widget.help, screen: context.tr('Accueil')),
           if (widget.accountAction != null) widget.accountAction!,
           bellRoom,

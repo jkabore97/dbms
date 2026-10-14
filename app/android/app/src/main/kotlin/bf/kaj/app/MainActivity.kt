@@ -97,6 +97,114 @@ class MainActivity : FlutterFragmentActivity() {
                     else -> result.notImplemented()
                 }
             }
+        // The status picture's ways out (140, status_out_io.dart): straight
+        // to WhatsApp, to a Facebook story, into the photos. Each answers
+        // false when it cannot, and the app opens the system sheet instead.
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "bf.kaj.app/status")
+            .setMethodCallHandler { call, result ->
+                val bytes = call.argument<ByteArray>("bytes")
+                if (bytes == null) {
+                    result.success(false)
+                    return@setMethodCallHandler
+                }
+                when (call.method) {
+                    "whatsapp" -> result.success(
+                        sendToWhatsApp(bytes, call.argument<String>("name"), call.argument<String>("text"))
+                    )
+                    "facebook" -> result.success(
+                        facebookStory(bytes, call.argument<String>("appId") ?: "")
+                    )
+                    "save" -> result.success(saveToPhotos(bytes, call.argument<String>("name")))
+                    else -> result.notImplemented()
+                }
+            }
+    }
+
+    // The picture as a file of the app's cache, shared through its own
+    // FileProvider (res/xml/status_paths.xml): another app reads it by a
+    // content:// address it is granted, never by a path.
+    private fun statusFile(bytes: ByteArray, name: String?): Uri {
+        val dir = java.io.File(cacheDir, "status")
+        dir.mkdirs()
+        val safe = (name ?: "mara.png").replace(Regex("[^A-Za-z0-9._-]"), "-")
+        val file = java.io.File(dir, safe)
+        file.writeBytes(bytes)
+        return androidx.core.content.FileProvider.getUriForFile(this, "$packageName.status", file)
+    }
+
+    private fun sendToWhatsApp(bytes: ByteArray, name: String?, text: String?): Boolean {
+        val uri = try {
+            statusFile(bytes, name)
+        } catch (e: Exception) {
+            return false
+        }
+        for (pkg in listOf("com.whatsapp", "com.whatsapp.w4b")) {
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "image/png"
+                setPackage(pkg)
+                putExtra(Intent.EXTRA_STREAM, uri)
+                if (!text.isNullOrEmpty()) putExtra(Intent.EXTRA_TEXT, text)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            try {
+                startActivity(intent)
+                return true
+            } catch (e: Exception) {
+                // Not on this phone: the next WhatsApp.
+            }
+        }
+        return false
+    }
+
+    // Facebook's « Sharing to Stories » for Android: the picture as the
+    // story's background, named by the app's (public) Facebook App ID.
+    // An empty ID, or no app to take the intent: false, and the app opens
+    // the system sheet. What Facebook does once open is its own.
+    private fun facebookStory(bytes: ByteArray, appId: String): Boolean {
+        if (appId.isEmpty()) return false
+        val uri = try {
+            statusFile(bytes, "mara-story.png")
+        } catch (e: Exception) {
+            return false
+        }
+        val intent = Intent("com.facebook.stories.ADD_TO_STORY").apply {
+            setDataAndType(uri, "image/png")
+            putExtra("com.facebook.platform.extra.APPLICATION_ID", appId)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        return try {
+            grantUriPermission("com.facebook.katana", uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            if (packageManager.resolveActivity(intent, 0) == null) return false
+            startActivity(intent)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    // Into Pictures/Mara through MediaStore: no permission from Android 10
+    // on. Older phones would need a storage right Mara does not ask for —
+    // false, and the app opens the system sheet, which can save.
+    private fun saveToPhotos(bytes: ByteArray, name: String?): Boolean {
+        if (Build.VERSION.SDK_INT < 29) return false
+        return try {
+            val values = android.content.ContentValues().apply {
+                put(android.provider.MediaStore.Images.Media.DISPLAY_NAME, name ?: "mara.png")
+                put(android.provider.MediaStore.Images.Media.MIME_TYPE, "image/png")
+                put(android.provider.MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Mara")
+                put(android.provider.MediaStore.Images.Media.IS_PENDING, 1)
+            }
+            val resolver = contentResolver
+            val uri = resolver.insert(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+                ?: return false
+            resolver.openOutputStream(uri)?.use { it.write(bytes) } ?: return false
+            values.clear()
+            values.put(android.provider.MediaStore.Images.Media.IS_PENDING, 0)
+            resolver.update(uri, values, null, null)
+            true
+        } catch (e: Exception) {
+            false
+        }
     }
 
     // "granted", "prompt" (the system's question can still be shown) or

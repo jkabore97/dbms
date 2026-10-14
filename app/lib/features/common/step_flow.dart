@@ -129,6 +129,7 @@ class FlowStep {
     this.isValid,
     this.shown,
     this.optional = false,
+    this.isEmpty,
   });
 
   /// Stable: the draft remembers the step by it, tests find it by
@@ -153,6 +154,10 @@ class FlowStep {
 
   /// « (facultatif) » under the question; « Suivant » works empty.
   final bool optional;
+
+  /// An optional step left empty: its button says « Passer » (136's
+  /// description). Null: always « Suivant ».
+  final bool Function()? isEmpty;
 }
 
 /// What « C'est fait » says and offers.
@@ -815,10 +820,12 @@ class _StepFlowState extends State<StepFlow> with WidgetsBindingObserver {
         ),
       );
     } else {
+      final skip = step != null && step.optional && (step.isEmpty?.call() ?? false);
       button = FilledButton(
         key: const Key('flow-next'),
         onPressed: valid ? _next : null,
-        child: Text(context.tr('Suivant'), style: const TextStyle(fontSize: 18)),
+        child: Text(skip ? context.tr('Passer') : context.tr('Suivant'),
+            style: const TextStyle(fontSize: 18)),
       );
     }
 

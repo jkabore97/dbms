@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../retail/item_details.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -24,6 +25,7 @@ import '../common/keyboard_sheet.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
 import '../../core/theme/app_bar_title.dart';
 import '../home/place_sections.dart';
+import '../storefront/share_vitrine.dart' show ShareArticleButton;
 
 /// What the farm sells on its vitrine (083): « À vendre ».
 ///
@@ -139,6 +141,7 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
         capture: widget.capture,
         product: product,
         hasPhoto: _photos.containsKey(product.id),
+        photoKey: _photos[product.id],
       ),
     );
     if (saved == true) await _load();
@@ -344,6 +347,7 @@ class ForSaleSheet extends StatefulWidget {
     this.capture,
     required this.product,
     this.hasPhoto = false,
+    this.photoKey,
   });
 
   final OrgSummary org;
@@ -352,6 +356,10 @@ class ForSaleSheet extends StatefulWidget {
   /// The article has a photo already: a new one takes no new place (100).
   final bool hasPhoto;
   final CaptureRepository? capture;
+
+  /// Its photograph's key, for « Partager »'s picture when the vitrine
+  /// cannot be read (closed, not yet visible) — 140.
+  final String? photoKey;
 
   /// What is edited. A new one is the « Ajouter un produit » flow (115).
   final Product product;
@@ -390,6 +398,17 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
   bool get _trackingOffered => !widget.retail.stockTrackingMissing;
 
   PickedPhoto? _photo;
+
+  /// The item has a photo on the server (the strip may add or take it).
+  late bool _hasPhoto = widget.hasPhoto;
+
+  /// The photos' row (136) could not be read: the older photo tile again.
+  bool _stripFailed = false;
+
+  /// The row is the photo control (136): the tile beside the name only
+  /// without it.
+  bool get _strip =>
+      !_stripFailed && photoStripOffered(widget.retail, widget.capture);
   bool _busy = false;
   String? _error;
 
@@ -535,6 +554,8 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
             const SizedBox(height: 16),
             Row(
               children: [
+                // With 136 the photos' row below is the one photo control.
+                if (!_strip) ...[
                 InkWell(
                   key: const Key('for-sale-photo'),
                   borderRadius: BorderRadius.circular(12),
@@ -552,6 +573,7 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
                   ),
                 ),
                 const SizedBox(width: 14),
+                ],
                 Expanded(
                   child: TextField(
                     key: const Key('for-sale-name'),
@@ -569,7 +591,18 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
                 ),
               ],
             ),
-            PhotoCounter(org: widget.org, hasPhoto: widget.hasPhoto),
+            // Its photos (136), the cover first: more than one with Mara Pro.
+            if (_strip)
+              ItemPhotoStrip(
+                org: widget.org,
+                retail: widget.retail,
+                capture: widget.capture!,
+                productId: widget.product.id,
+                name: widget.product.name,
+                onChanged: (g) => setState(() => _hasPhoto = g.photos.isNotEmpty),
+                onUnavailable: () => setState(() => _stripFailed = true),
+              ),
+            PhotoCounter(org: widget.org, hasPhoto: _hasPhoto),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -664,18 +697,14 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
                   : context.tr('Disponible à partir du {date}',
                       {'date': DateFormat('dd/MM/yyyy').format(_availableFrom!)})),
             ),
-            TextField(
+            const SizedBox(height: 8),
+            DescriptionField(
+              key: const Key('for-sale-description'),
               controller: _description,
               enabled: !_busy,
-              maxLength: 300,
-              maxLines: 2,
-              decoration: InputDecoration(
-                labelText: context.tr('En deux mots (facultatif)'),
-                hintText: _association
-                    ? context.tr('Le t-shirt de l\'association, taille unique.')
-                    : context.tr('Poulets fermiers de 2 kg, nourris au maïs.'),
-                border: const OutlineInputBorder(),
-              ),
+              maxLength: widget.retail.descriptionMax,
+              label: context.tr('Description (facultatif)'),
+              example: describeExample(context, widget.org),
             ),
             // Not offered while Mara keeps the farm's products off its
             // vitrine (110); the choice already made is kept.
@@ -692,6 +721,13 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
                   _busy ? null : (v) => setState(() => _published = v),
               title: Text(context.tr('Sur la vitrine')),
             ),
+            // « Partager » (140): an image of this one alone, or its link.
+            if (ShareArticleButton.offered(widget.org, widget.product))
+              ShareArticleButton(
+                  org: widget.org,
+                  product: widget.product,
+                  photoKey: widget.photoKey,
+                  capture: widget.capture),
             ...[
               const SizedBox(height: 8),
               TextButton(

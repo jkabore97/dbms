@@ -10,6 +10,7 @@ import '../../core/nav/app_scope.dart';
 import '../../core/nav/look_only.dart';
 import '../../core/nav/router.dart';
 import '../../core/theme/mara_mark.dart';
+import '../home/vitrine_button.dart';
 import 'help_sheet.dart';
 import 'help_words.dart';
 
@@ -62,13 +63,23 @@ class HelpButton extends StatefulWidget {
   /// by the phone's text scale — the button is its icon alone, its words in
   /// the tooltip and for a screen reader (review of 136: at 320 px with
   /// large text the pill left the business's name a few letters, cut inside
-  /// a word — « Group / eme… »). 320 px at normal size keeps its words.
-  static const wordsWidth = 300.0;
+  /// a word — « Group / eme… »). Since 140 « Ma vitrine » shares the bar,
+  /// and both are icons below about 360 (380: at 360 a long name kept its
+  /// last word only cut, « Bâti… »).
+  static const wordsWidth = 380.0;
 
-  static bool iconOnly(BuildContext context) =>
-      MediaQuery.sizeOf(context).width /
-          MediaQuery.textScalerOf(context).scale(1) <
-      wordsWidth;
+  /// Below this one (140) the help leaves the bar for Compte › Aide, where
+  /// it always was too, when « Ma vitrine » is on the bar: the business's
+  /// name keeps its room beside it, the bell and the account. A request
+  /// on keeps it there, its dot in sight.
+  static const barWidth = 300.0;
+
+  static double _room(BuildContext context) =>
+      MediaQuery.sizeOf(context).width / MediaQuery.textScalerOf(context).scale(1);
+
+  static bool iconOnly(BuildContext context) => _room(context) < wordsWidth;
+
+  static bool inAccount(BuildContext context) => _room(context) < barWidth;
 
   /// Whether the button takes room on a phone's bar here (136): a home
   /// then says its own extras briefly (the pending writes' number alone,
@@ -187,6 +198,14 @@ class _HelpButtonState extends State<HelpButton> {
     }
     final s = _state;
     if (s != null && !s.available) return const SizedBox.shrink();
+    // A very small room beside « Ma vitrine » (140): Compte › Aide holds
+    // it — unless a request is on, whose dot must stay in sight. Without
+    // « Ma vitrine » on the bar it keeps its place, its icon alone (136).
+    if (HelpButton.inAccount(context) &&
+        VitrineButton.shownFor(context, widget.org) &&
+        s?.request == null) {
+      return const SizedBox.shrink();
+    }
     final pro = s == null ? widget.org.isPro : s.trainers;
     return pro
         ? _ProPill(onTap: _tap, active: s?.request != null)

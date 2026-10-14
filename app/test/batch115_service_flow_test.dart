@@ -14,6 +14,11 @@ class _Books extends RetailRepository {
   _Books() : super(null);
   final created = <String>[];
   final saved = <Map<String, Object?>>[];
+  final durations = <String>[];
+
+  @override
+  Future<void> setServiceDuration(String productId, int? minutes, {String? description}) async =>
+      durations.add('$productId $minutes $description');
 
   @override
   Future<List<Product>> products(String orgId, {bool activeOnly = true}) async => const [];
@@ -101,24 +106,37 @@ void main() {
       await tester.pump();
       await next(tester);
       expect(find.text('Combien de temps ?'), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('service-flow-duration-2 h')));
+      await tester.tap(find.byKey(const ValueKey('duration-120')));
       await tester.pump();
+      await next(tester);
+      expect(find.text('Décrivez-le en quelques mots'), findsOneWidget);
+      expect(find.text('Passer'), findsOneWidget, reason: 'empty: « Passer »');
+      await tester.enterText(find.byKey(const Key('service-flow-description')), 'Fil et tissu fournis');
+      await tester.pump();
+      expect(find.text('Suivant'), findsOneWidget);
       await next(tester);
       await tester.tap(find.byKey(const Key('flow-option-false')));
       await tester.pumpAndSettle();
       await next(tester);
       expect(find.textContaining('À partir de'), findsOneWidget);
-      expect(find.text('2 h'), findsOneWidget);
+      expect(find.text('2\u00a0h'), findsOneWidget);
       await tester.tap(find.byKey(const Key('flow-save')));
       await tester.pumpAndSettle();
       expect(books.created, ['Cours de couture service=true price=2000.0']);
-      expect(books.saved.single, {
-        'unit': 'séance',
-        'published': false,
-        'description': 'Durée : 2 h',
-        'service': true,
-        'from': true,
-      });
+      expect(books.saved, [
+        {
+          'unit': 'séance',
+          'published': false,
+          'description': null,
+          'service': true,
+          'from': true,
+        },
+        // The words their own write (136): a refusal never takes the name,
+        // the price and the vitrine with it.
+        {'unit': null, 'published': null, 'description': 'Fil et tissu fournis', 'service': null, 'from': null},
+      ]);
+      expect(books.durations, ['s-1 120 Fil et tissu fournis'],
+          reason: 'its own field since 136, not the description');
       expect(find.text('Cours de couture ajouté'), findsOneWidget);
       await tester.tap(find.byKey(const Key('service-another')));
       await tester.pumpAndSettle();
@@ -145,10 +163,12 @@ void main() {
     await tester.pump();
     await next(tester);
     await next(tester);
+    await next(tester); // 136: no description
     await next(tester);
     await tester.tap(find.byKey(const Key('flow-save')));
     await tester.pumpAndSettle();
     expect(books.saved.single['description'], isNull);
+    expect(books.durations, isEmpty);
     expect(books.saved.single['published'], isTrue, reason: 'on the vitrine by default, as before');
   });
 }

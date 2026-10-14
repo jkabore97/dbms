@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../core/format/money.dart';
@@ -32,7 +33,8 @@ class StatusCard extends StatelessWidget {
 
   final PublicShop shop;
 
-  /// Up to four articles, photographed first ([pick]).
+  /// Up to four articles, photographed first ([pick]), or the ones the
+  /// business chose (140); one is an ad for it, in every design.
   final List<PublicItem> items;
   final Uint8List? cover;
   final Map<String, Uint8List> photos;
@@ -64,11 +66,17 @@ class StatusCard extends StatelessWidget {
         palette?.id ?? defaultChoice.paletteId,
       );
 
-  StatusCard copyWith({StatusDesign? design, StatusPalette? palette}) => StatusCard(
+  StatusCard copyWith({
+    StatusDesign? design,
+    StatusPalette? palette,
+    List<PublicItem>? items,
+    Map<String, Uint8List>? photos,
+  }) =>
+      StatusCard(
         shop: shop,
-        items: items,
+        items: items ?? this.items,
         cover: cover,
-        photos: photos,
+        photos: photos ?? this.photos,
         design: design ?? this.design,
         palette: palette ?? this.palette,
       );
@@ -107,10 +115,22 @@ class StatusCard extends StatelessWidget {
 
 /// One article as the picture says it.
 class _Item {
-  const _Item(this.name, this.price, this.photo);
+  const _Item(this.name, this.price, this.photo, {this.note, this.soldOut = false, this.description});
   final String name;
   final String price;
   final Uint8List? photo;
+
+  /// « Épuisé », or the day a pre-order will be there; null otherwise.
+  final String? note;
+
+  /// Chosen though out of stock (140): the picture says « Épuisé ».
+  final bool soldOut;
+
+  /// What the business wrote about it, for an ad of one article (140).
+  final String? description;
+
+  /// The price as a list or a grid writes it: « Épuisé » after it when so.
+  String get shown => soldOut && note != null ? '$price · $note' : price;
 }
 
 /// Everything a design writes, in the reader's language and the kind's own
@@ -129,7 +149,11 @@ class _Content {
     required this.url,
     required this.items,
     required this.cover,
+    this.adRibbon = '',
   });
+
+  /// The ribbon over an ad of one article: what it is now.
+  final String adRibbon;
 
   final String name;
   final String? line;
@@ -144,6 +168,9 @@ class _Content {
   final Uint8List? cover;
 
   String get shortUrl => url.replaceFirst(RegExp(r'^https?://'), '');
+
+  /// One article only (140): an ad for it, in every design.
+  bool get ad => items.length == 1;
 
   /// The kind and what the shelf holds, for a kicker: « FERME · À VENDRE ».
   String get kicker =>
@@ -191,12 +218,39 @@ class _Content {
       empty: context.tr('Découvrez notre vitrine'),
       url: publicShopUrl(shop.slug),
       cover: card.cover,
+      adRibbon: _adRibbon(context, card, services: services, farm: farm, association: association),
       items: [
         for (final i in card.items)
-          _Item(i.name.trim(), priceOf(money, i, lang), card.photos[i.id]),
+          _Item(
+            i.name.trim(),
+            priceOf(money, i, lang),
+            card.photos[i.id],
+            soldOut: !i.inStock,
+            note: !i.inStock
+                ? context.tr('Épuisé')
+                : i.isPreorder
+                    ? context.tr('Disponible à partir du {date}',
+                        {'date': DateFormat('dd/MM').format(i.availableFrom!)})
+                    : null,
+            description: i.hasDescription ? i.description!.trim() : null,
+          ),
       ],
     );
   }
+}
+
+/// The ribbon of an ad (140): « Épuisé », « En précommande », « Sur
+/// rendez-vous », a farm's « Disponible », « À découvrir », « À la une ».
+String _adRibbon(BuildContext context, StatusCard card,
+    {required bool services, required bool farm, required bool association}) {
+  final one = card.items.length == 1 ? card.items.first : null;
+  if (one == null) return '';
+  if (!one.inStock) return context.tr('Épuisé');
+  if (one.isPreorder) return context.tr('En précommande');
+  if (services) return context.tr('Sur rendez-vous');
+  if (farm) return context.tr('Disponible');
+  if (association) return context.tr('À découvrir');
+  return context.tr('À la une');
 }
 
 // ---------------------------------------------------------------------------
@@ -486,6 +540,82 @@ Widget _kicker(String text, Color color, {double size = 30}) => Text(text,
     style: TextStyle(
         color: color, fontSize: size, fontWeight: FontWeight.w800, letterSpacing: size * 0.18));
 
+/// An article with no photograph, in an ad (140): its initials on rings.
+class _AdPlate extends StatelessWidget {
+  const _AdPlate(this.name, this.p, {this.size = 340});
+
+  final String name;
+  final StatusPalette p;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => Stack(
+        fit: StackFit.expand,
+        children: [
+          ColoredBox(color: p.surface),
+          CustomPaint(painter: _Rings(p.ink.withValues(alpha: 0.08), Alignment.center)),
+          Center(child: _Monogram(name, p, size: size)),
+        ],
+      );
+}
+
+/// The ribbon of an ad, as a pill: « ÉPUISÉ », « À LA UNE »…
+Widget _pill(String text, Color ground, Color ink, {double size = 30}) => Container(
+      padding: EdgeInsets.symmetric(horizontal: size * 0.9, vertical: size * 0.42),
+      decoration: BoxDecoration(color: ground, borderRadius: BorderRadius.circular(size * 2)),
+      child: Text(text.toUpperCase(),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+              color: ink, fontSize: size, fontWeight: FontWeight.w900, letterSpacing: size * 0.12)),
+    );
+
+/// The words of an ad (140), in the order a passer-by reads them: whose it
+/// is, what it is, what the business says of it, its price, whether it is
+/// there — each as large as it fits.
+class _AdWords extends StatelessWidget {
+  const _AdWords(this.c, this.i, this.p,
+      {this.ribbon});
+
+  final _Content c;
+  final _Item i;
+  final StatusPalette p;
+
+  /// What the design's own ribbon already says: not said twice.
+  final String? ribbon;
+
+  @override
+  Widget build(BuildContext context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _kicker(c.name.toUpperCase(), p.accentOnGround),
+          const SizedBox(height: 14),
+          _FitText(i.name,
+              max: 92,
+              min: 50,
+              style: TextStyle(color: p.ink, height: 1.04, fontWeight: FontWeight.w900, letterSpacing: -1)),
+          if (i.description != null) ...[
+            const SizedBox(height: 12),
+            Text(i.description!,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: p.soft, fontSize: 36, height: 1.25, fontWeight: FontWeight.w500)),
+          ],
+          const SizedBox(height: 14),
+          _FitText(i.price,
+              max: 116,
+              min: 52,
+              maxLines: 1,
+              style: TextStyle(color: p.accentOnGround, fontWeight: FontWeight.w900, letterSpacing: -2)),
+          if (i.note != null && i.note != ribbon) ...[
+            const SizedBox(height: 18),
+            _pill(i.note!, i.soldOut ? p.ink : p.accent, i.soldOut ? p.ground : p.onAccent),
+          ],
+        ],
+      );
+}
+
 // ---------------------------------------------------------------------------
 // 1. Vitrine — the shop's photo, its name, four articles two by two
 // ---------------------------------------------------------------------------
@@ -498,7 +628,7 @@ class _Vitrine extends StatelessWidget {
   Widget _tile(_Item i) => ClipRRect(
         borderRadius: BorderRadius.circular(28),
         child: i.photo == null
-            ? _NamePlate(i.name, p, max: 50, price: i.price)
+            ? _NamePlate(i.name, p, max: 50, price: i.shown)
             : Stack(
                 fit: StackFit.expand,
                 children: [
@@ -524,7 +654,7 @@ class _Vitrine extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
                                   color: maraPaper, fontSize: 32, fontWeight: FontWeight.w700)),
-                          _FitText(i.price,
+                          _FitText(i.shown,
                               max: 34,
                               min: 22,
                               maxLines: 1,
@@ -538,8 +668,52 @@ class _Vitrine extends StatelessWidget {
               ),
       );
 
+  /// One article (140): its photograph over most of the screen, fading
+  /// into the ground, then its name, its price, and the plate.
+  Widget _ad(_Item i) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (i.photo != null) _photo(i.photo!) else _AdPlate(i.name, p),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [p.ground.withValues(alpha: 0), p.ground.withValues(alpha: 0), p.ground],
+                      stops: const [0, 0.7, 1],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 72,
+                  right: 72,
+                  top: 140,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: _pill(c.adRibbon, p.ground.withValues(alpha: 0.92), p.accentOnGround, size: 28),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(72, 16, 72, 0),
+            child: _AdWords(c, i, p, ribbon: c.adRibbon),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(72, 40, 72, 110),
+            child: _Footer(c, p, plate: true, qr: 170),
+          ),
+        ],
+      );
+
   @override
   Widget build(BuildContext context) {
+    if (c.ad) return _ad(c.items.first);
     final items = c.items;
     final hero = c.hero;
     Widget row(List<_Item> pair) => Expanded(
@@ -678,7 +852,7 @@ class _Grille extends StatelessWidget {
               style: TextStyle(
                   color: p.onSurface, fontSize: wide ? 40 : 32, height: 1.15, fontWeight: FontWeight.w700)),
           const SizedBox(height: 6),
-          _FitText(i.price,
+          _FitText(i.shown,
               max: wide ? 44 : 34,
               min: 22,
               maxLines: 1,
@@ -709,6 +883,77 @@ class _Grille extends StatelessWidget {
     );
   }
 
+  /// One article (140): the whole page's card, its photograph large, its
+  /// name, its words and its price under it, its state on the photograph.
+  Widget _adCard(_Item i) => Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(color: p.surface, borderRadius: BorderRadius.circular(30)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (i.photo != null)
+                    _photo(i.photo!)
+                  else
+                    ColoredBox(
+                      color: Color.lerp(p.surface, p.accent, 0.16)!,
+                      child: Center(
+                        child: Text(_Monogram.initials(i.name),
+                            style: TextStyle(
+                                color: p.onSurface.withValues(alpha: 0.85),
+                                fontSize: 220,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -4)),
+                      ),
+                    ),
+                  if (i.note != null)
+                    Positioned(
+                      left: 28,
+                      top: 28,
+                      right: 28,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: _pill(i.note!, i.soldOut ? maraBlack : p.accent,
+                            i.soldOut ? maraPaper : p.onAccent),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(34, 26, 34, 30),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _FitText(i.name,
+                      max: 60,
+                      min: 36,
+                      style: TextStyle(color: p.onSurface, height: 1.1, fontWeight: FontWeight.w800)),
+                  if (i.description != null) ...[
+                    const SizedBox(height: 8),
+                    Text(i.description!,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            color: p.onSurface.withValues(alpha: 0.8), fontSize: 32, height: 1.25)),
+                  ],
+                  const SizedBox(height: 10),
+                  _FitText(i.price,
+                      max: 84,
+                      min: 40,
+                      maxLines: 1,
+                      style: TextStyle(color: p.priceOnSurface, fontWeight: FontWeight.w900, letterSpacing: -1)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     final items = c.items.take(4).toList();
@@ -717,7 +962,7 @@ class _Grille extends StatelessWidget {
     if (items.isEmpty) {
       grid = _EmptyShelf(c, p);
     } else if (items.length == 1) {
-      grid = _card(items[0], wide: true);
+      grid = _adCard(items[0]);
     } else if (items.length == 2) {
       grid = Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Expanded(child: _card(items[0], wide: true)),
@@ -792,7 +1037,9 @@ class _Vedette extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final star = c.items.firstOrNull;
-    final picture = star?.photo ?? c.hero;
+    // An ad (140) shows the article's own photograph, never the shop's
+    // cover under its name: none, and its initials stand there.
+    final picture = star?.photo ?? (c.ad ? null : c.hero);
     final title = star?.name ?? c.name;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -803,6 +1050,8 @@ class _Vedette extends StatelessWidget {
             children: [
               if (picture != null)
                 _photo(picture)
+              else if (c.ad)
+                _AdPlate(star!.name, p, size: 360)
               else ...[
                 ColoredBox(color: p.surface),
                 CustomPaint(painter: _Rings(p.ink.withValues(alpha: 0.08), Alignment.center)),
@@ -837,12 +1086,26 @@ class _Vedette extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _kicker((star == null ? c.kind : c.section).toUpperCase(), p.accentOnGround),
+              _kicker(
+                  (star == null
+                          ? c.kind
+                          : c.ad
+                              ? star.note ?? c.adRibbon
+                              : c.section)
+                      .toUpperCase(),
+                  p.accentOnGround),
               const SizedBox(height: 14),
               _FitText(title,
                   max: 88,
                   min: 52,
                   style: TextStyle(color: p.ink, height: 1.05, fontWeight: FontWeight.w900)),
+              if (c.ad && star!.description != null) ...[
+                const SizedBox(height: 10),
+                Text(star.description!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: p.soft, fontSize: 36, height: 1.25, fontWeight: FontWeight.w500)),
+              ],
               if (star != null) ...[
                 const SizedBox(height: 6),
                 _FitText(star.price,
@@ -911,6 +1174,80 @@ class _Affiche extends StatelessWidget {
   final _Content c;
   final StatusPalette p;
 
+  /// One article (140): a poster for it — whose it is, its photograph in
+  /// a band, its name huge, its price as large, the address.
+  Widget _ad(_Item i) => Padding(
+        padding: const EdgeInsets.fromLTRB(80, 150, 80, 110),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(children: [
+              Container(width: 56, height: 8, color: p.accentOnGround),
+              const SizedBox(width: 22),
+              // « Ferme · Ferme Horizon Vert » says « ferme » twice: once.
+              Expanded(
+                  child: _kicker(
+                      (c.name.toLowerCase().contains(c.kind.toLowerCase()) ? c.name : '${c.kind} · ${c.name}')
+                          .toUpperCase(),
+                      p.accentOnGround,
+                      size: 32)),
+            ]),
+            const SizedBox(height: 40),
+            // With a photograph it takes the room the name leaves; without,
+            // the name is the poster.
+            if (i.photo != null) ...[
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(36),
+                  child: SizedBox.expand(child: _photo(i.photo!)),
+                ),
+              ),
+              const SizedBox(height: 36),
+              _FitText(i.name,
+                  max: 120,
+                  min: 64,
+                  maxLines: 2,
+                  style: TextStyle(color: p.ink, height: 0.98, fontWeight: FontWeight.w900, letterSpacing: -3)),
+            ] else
+              Expanded(
+                child: Align(
+                  alignment: Alignment.bottomLeft,
+                  child: _FitText(i.name,
+                      max: 190,
+                      min: 64,
+                      maxLines: 4,
+                      style: TextStyle(
+                          color: p.ink, height: 0.98, fontWeight: FontWeight.w900, letterSpacing: -3)),
+                ),
+              ),
+            if (i.description != null) ...[
+              const SizedBox(height: 24),
+              Text(i.description!,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: p.soft, fontSize: 42, height: 1.22, fontWeight: FontWeight.w500)),
+            ],
+            const SizedBox(height: 36),
+            Container(height: 6, color: p.accentOnGround),
+            const SizedBox(height: 24),
+            _FitText(i.price,
+                max: 130,
+                min: 56,
+                maxLines: 1,
+                style: TextStyle(color: p.accentOnGround, fontWeight: FontWeight.w900, letterSpacing: -2)),
+            if (i.note != null) ...[
+              const SizedBox(height: 18),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: _pill(i.note!, i.soldOut ? p.ink : p.accent, i.soldOut ? p.ground : p.onAccent),
+              ),
+            ],
+            const SizedBox(height: 44),
+            _Footer(c, p, qr: 170),
+          ],
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     final items = c.items.take(4).toList();
@@ -936,6 +1273,7 @@ class _Affiche extends StatelessWidget {
                 border: Border.all(color: p.accent.withValues(alpha: 0.5), width: 4)),
           ),
         ),
+        if (c.ad) _ad(c.items.first) else
         Padding(
           padding: const EdgeInsets.fromLTRB(80, 150, 80, 110),
           child: Column(
@@ -991,7 +1329,7 @@ class _Affiche extends StatelessWidget {
                         const SizedBox(width: 28),
                         ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 480),
-                          child: _FitText(items[k].price,
+                          child: _FitText(items[k].shown,
                               max: 42,
                               min: 30,
                               maxLines: 2,
@@ -1067,7 +1405,7 @@ class _Bandeau extends StatelessWidget {
                     style: TextStyle(
                         color: p.onSurface, fontSize: 40, height: 1.15, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 8),
-                _FitText(i.price,
+                _FitText(i.shown,
                     max: 46,
                     min: 30,
                     maxLines: 1,
@@ -1079,6 +1417,61 @@ class _Bandeau extends StatelessWidget {
       ),
     );
   }
+
+  /// One article (140): a single card under the banner — its photograph
+  /// large, its name and price beside the ribbon's word for it.
+  Widget _adCard(_Item i) => Container(
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(color: p.surface, borderRadius: BorderRadius.circular(34)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: i.photo != null
+                    ? _photo(i.photo!)
+                    : ColoredBox(
+                        color: p.accent,
+                        child: Center(
+                          child: Text(_Monogram.initials(i.name),
+                              style: TextStyle(
+                                  color: p.onAccent, fontSize: 200, fontWeight: FontWeight.w900)),
+                        ),
+                      ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 24, 12, 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _FitText(i.name,
+                      max: 60,
+                      min: 36,
+                      style: TextStyle(color: p.onSurface, height: 1.1, fontWeight: FontWeight.w800)),
+                  if (i.description != null) ...[
+                    const SizedBox(height: 8),
+                    Text(i.description!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            color: p.onSurface.withValues(alpha: 0.8), fontSize: 32, height: 1.25)),
+                  ],
+                  const SizedBox(height: 8),
+                  _FitText(
+                      i.note != null && i.note != c.adRibbon ? '${i.price} · ${i.note}' : i.price,
+                      max: 76,
+                      min: 36,
+                      maxLines: 1,
+                      style: TextStyle(color: p.priceOnSurface, fontWeight: FontWeight.w900)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -1104,7 +1497,7 @@ class _Bandeau extends StatelessWidget {
                     ),
                     const SizedBox(width: 22),
                     Flexible(
-                      child: Text(c.ribbon.toUpperCase(),
+                      child: Text((c.ad ? c.adRibbon : c.ribbon).toUpperCase(),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -1136,6 +1529,8 @@ class _Bandeau extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 64),
             child: items.isEmpty
                 ? _EmptyShelf(c, p)
+                : c.ad
+                ? _adCard(items.first)
                 : LayoutBuilder(builder: (context, box) {
                     const gap = 24.0;
                     final h = math.min(270.0, (box.maxHeight - gap * (items.length - 1)) / items.length);

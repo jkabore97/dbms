@@ -983,12 +983,26 @@ class PublicItem {
     this.isService = false,
     this.priceFrom = false,
     this.stockLeft,
+    this.photoKeys = const [],
+    this.durationMinutes,
   });
 
   final String id;
   final String name;
   final double price;
   final bool inStock;
+
+  /// Every photo the street is shown, in order, the cover first (136);
+  /// empty before 136 — [photos] then holds the one [photoKey].
+  final List<String> photoKeys;
+
+  /// A service's duration in minutes (136); null when not said, or on a
+  /// database before 136 (then read off the description, [serviceWords]).
+  final int? durationMinutes;
+
+  /// The photos to show: the gallery, or the one photo, or none.
+  List<String> get photos =>
+      photoKeys.isNotEmpty ? photoKeys : [?photoKey];
 
   /// How many a basket may hold; null when there is no count to keep (a
   /// service, a pre-order, a database before 101).
@@ -1046,6 +1060,12 @@ class PublicItem {
           ? null
           : DateTime.tryParse('${row['available_from']}'),
       stockLeft: service ? null : (row['stock_left'] as num?)?.toDouble(),
+      // Absent before 136: the one photo, no duration of its own.
+      photoKeys: [
+        for (final k in (row['photo_keys'] as List? ?? const []))
+          if (k is String && k.isNotEmpty) k,
+      ],
+      durationMinutes: (row['duration_minutes'] as num?)?.toInt(),
     );
   }
 }
@@ -1061,6 +1081,8 @@ String foldSearchText(String text) {
     'ó': 'o', 'ô': 'o', 'ö': 'o', 'õ': 'o',
     'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
     'ç': 'c', 'ñ': 'n',
+    // Ligatures (140): « oeufs » finds « Œufs frais ».
+    'œ': 'oe', 'æ': 'ae',
   };
   final lower = text.toLowerCase();
   final out = StringBuffer();

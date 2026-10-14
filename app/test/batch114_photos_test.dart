@@ -285,6 +285,7 @@ void main() {
       await tester.pump();
       await next();
       await next();
+      await next(); // 136: no description
       await next();
       await tester.tap(find.byKey(const Key('flow-save')));
       await settle(tester);

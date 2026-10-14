@@ -875,6 +875,10 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch135.sql
+      - name: "Prove an item can be read and seen before ordering — a description of 1,000 characters, a service's duration read off « Durée : … » (emptied only when exactly that), several photos per item: Basic the cover alone, Mara Pro up to max_item_photos_pro (5, 1 to 20), the order the cover everywhere (the vitrine, the search, the previews, À la une, the Articles page), a photo removed unfiled, an older app's photo the new cover; the street reads photo_keys of a published item only; RLS, 127's cross-business guard, invoker doors, pinned definers, nothing for anon; shop, farm and association; run twice the same (136)"
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch136.sql
 
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each
