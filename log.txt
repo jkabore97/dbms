@@ -1,0 +1,9 @@
+ok Iapetus__tf_10_r100_u1.wav
+ok Iapetus__tf_10_r100_u2.wav
+ok Iapetus__tf_10_r100_u3.wav
+ok Iapetus__tg_10_r100_u1.wav
+ok Iapetus__tg_10_r100_u2.wav
+ok Iapetus__th_10_r100_u1.wav
+ok Iapetus__tg_10_r100_u3.wav
+ok Iapetus__th_10_r100_u2.wav
+ok Iapetus__th_10_r100_u3.wav

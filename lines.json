@@ -1,0 +1,56 @@
+[
+ {
+  "file": "Iapetus__tf_10_r100_u1.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Un plateau d’oeufs en vente, avec son prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__tf_10_r100_u2.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Un plateau d’oeufs en vente, avec son prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__tf_10_r100_u3.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Un plateau d’oeufs en vente, avec son prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__tg_10_r100_u1.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Vos œufs en vente, au plateau, avec leur prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__tg_10_r100_u2.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Vos œufs en vente, au plateau, avec leur prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__tg_10_r100_u3.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Vos œufs en vente, au plateau, avec leur prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__th_10_r100_u1.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Des oeufs frais en vente, au plateau, avec leur prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__th_10_r100_u2.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Des oeufs frais en vente, au plateau, avec leur prix.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__th_10_r100_u3.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Des oeufs frais en vente, au plateau, avec leur prix.",
+  "speakingRate": 1.0
+ }
+]
