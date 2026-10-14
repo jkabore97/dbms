@@ -1240,8 +1240,9 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                   capture: widget.capture),
             // A spot on the street for this article (071), for the person
             // who pays for it; the sheet checks photo, price and stock.
-            // Not in the iPhone app, which sells no spot (125).
-            if (sellsDigitalInApp &&
+            // Every build since 142: the iPhone app through Apple's
+            // in-app purchase (spotChannel).
+            if (sellsSpotsInApp &&
                 widget.org.isAdmin &&
                 widget.product.isPublished &&
                 AppScope.maybeOf(context) != null)
@@ -1256,7 +1257,7 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                               orgId: widget.org.id,
                               admin: scope.admin,
                               retail: widget.retail,
-                              isPro: widget.org.isPro,
+                              org: widget.org,
                               productId: widget.product.id);
                         },
                   icon: const Icon(Icons.campaign_outlined),

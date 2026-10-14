@@ -130,6 +130,18 @@ class _TodoSectionState extends State<TodoSection> {
               ? context.tr('dont {n} « J\'ai payé »', {'n': t['spots_paid']})
               : context.tr('demandées par les boutiques'),
           urgent: true),
+      // 139: a store payment of a spot that programmed nothing.
+      _Count('spot_refunds', context.tr('Paiements de mise en avant à rembourser'),
+          Icons.currency_exchange, () async {
+        await showMaraSheet<void>(
+          context: context,
+          isScrollControlled: true,
+          useSafeArea: true,
+          showDragHandle: true,
+          builder: (_) => SpotRefundsSheet(center: widget.center),
+        );
+        if (mounted) await _load();
+      }, hint: context.tr('dans Play Console ou auprès d\'Apple'), urgent: true),
       // 136: the other open help requests — taken, or not late yet.
       _Count('help_open', context.tr('Demandes d\'aide ouvertes'), Icons.support_agent_outlined,
           () => context.go(Routes.consoleHelp),
@@ -301,6 +313,107 @@ class _TodoSectionState extends State<TodoSection> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// The spot payments to refund by hand (139): what, whose, how much, why,
+/// and « Remboursé » once done in Play Console or by Apple.
+class SpotRefundsSheet extends StatefulWidget {
+  const SpotRefundsSheet({super.key, required this.center});
+
+  final CommandCenterRepository center;
+
+  @override
+  State<SpotRefundsSheet> createState() => _SpotRefundsSheetState();
+}
+
+class _SpotRefundsSheetState extends State<SpotRefundsSheet> {
+  List<SpotRefundRow>? _rows;
+  String? _error;
+  final _busy = <String>{};
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final rows = await widget.center.spotRefunds();
+      if (mounted) setState(() => _rows = rows);
+    } catch (e) {
+      if (mounted) setState(() => _error = describeError(e));
+    }
+  }
+
+  Future<void> _done(SpotRefundRow r) async {
+    if (_busy.contains(r.id)) return;
+    setState(() => _busy.add(r.id));
+    try {
+      await widget.center.spotRefundDone(r.id);
+      await _load();
+    } catch (e) {
+      if (mounted) setState(() => _error = describeError(e));
+    } finally {
+      if (mounted) setState(() => _busy.remove(r.id));
+    }
+  }
+
+  String _why(BuildContext context, String? reason) => switch (reason) {
+        'no spot' => context.tr('la mise en avant n\'existe plus'),
+        'refused' => context.tr('mise en avant refusée'),
+        'vitrine' => context.tr('vitrine fermée'),
+        'feature' => context.tr('fonction masquée pour l\'activité'),
+        'article' => context.tr('article plus prêt (photo, prix, stock)'),
+        _ => context.tr('autre produit'),
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final rows = _rows;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+      child: Column(
+        key: const Key('spot-refunds-sheet'),
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(context.tr('Paiements de mise en avant à rembourser'), style: theme.textTheme.titleLarge),
+          const SizedBox(height: 4),
+          Text(context.tr('Payés dans une boutique, ils n\'ont rien programmé. Remboursez-les dans Play Console (Commandes) ou demandez-le à Apple, puis touchez « Remboursé ».'),
+              style: theme.textTheme.bodySmall),
+          const SizedBox(height: 8),
+          if (_error != null) Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+          if (rows == null && _error == null) const Center(child: CircularProgressIndicator()),
+          if (rows != null && rows.isEmpty) Text(context.tr('Rien à rembourser.')),
+          if (rows != null)
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  for (final r in rows)
+                    ListTile(
+                      key: Key('spot-refund-${r.id}'),
+                      contentPadding: EdgeInsets.zero,
+                      title: Text('${r.orgName ?? '—'} · ${r.channel == 'apple' ? 'App Store' : r.channel == 'google' ? 'Google Play' : context.tr('carte')}'),
+                      subtitle: Text([
+                        if (r.amount != null) '${r.amount!.toStringAsFixed(r.amount! == r.amount!.roundToDouble() ? 0 : 2)} ${r.currency ?? ''}',
+                        _why(context, r.reason),
+                        if (r.externalId != null) r.externalId!,
+                      ].join(' · '), maxLines: 3, overflow: TextOverflow.ellipsis),
+                      trailing: TextButton(
+                        onPressed: _busy.contains(r.id) ? null : () => _done(r),
+                        child: Text(context.tr('Remboursé')),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

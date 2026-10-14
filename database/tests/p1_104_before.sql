@@ -135,10 +135,11 @@ begin
             -- The paywall's numbers, as each member's app reads them.
             -- (121's two new keys aside: the card's dollars, shown only
             -- under the card button — added, not changed; and 128's
-            -- store_billing_on, a new switch, off.)
+            -- store_billing_on, a new switch, off; and 139's pro_zones, the
+            -- Pro prices per zone, added — the FCFA prices unchanged.)
             || jsonb_build_object('terms ' || m.user_id || ' ' || m.org_id,
                                   plan_terms() - 'stripe_usd_month' - 'stripe_usd_year'
-                                               - 'store_billing_on')
+                                               - 'store_billing_on' - 'pro_zones')
             -- A member sees their own vitrine even below the minimum.
             || jsonb_build_object('own vitrine ' || m.user_id || ' ' || m.org_id,
                                   to_jsonb(storefront_open(m.slug)));

@@ -52,6 +52,63 @@ String storeRefusalText(BuildContext context, StoreVerifyRefused e, String store
       _ => context.tr('Le paiement est fait, mais Mara n\'a pas encore pu le vérifier. Gardez une connexion et touchez « Restaurer mes achats » : rien ne sera prélevé deux fois.'),
     };
 
+/// Where a spot's store purchase stands (142).
+enum SpotNoticeState { checking, pending, done, cancelled, refused }
+
+/// What the store listener has to say about a spot's purchase, for the
+/// spot sheet that asked for it ([promotionId]) or a snackbar.
+class SpotNotice {
+  const SpotNotice(this.promotionId, this.state, this.text, {this.verdict});
+
+  /// The spot it is about, when the purchase says (null: any sheet).
+  final String? promotionId;
+  final SpotNoticeState state;
+  final String Function(BuildContext context) text;
+
+  /// The Worker's yes, for [SpotNoticeState.done].
+  final SpotVerdict? verdict;
+
+  bool isFor(String? promotion) => promotionId == null || promotion == null || promotionId == promotion;
+}
+
+/// The Worker's refusals of a spot's purchase that no retry will change
+/// (142): Apple's transaction is then finished; Google's is left
+/// unacknowledged, and Google refunds it.
+const spotRefusalsForGood = {
+  'wrong_spot', 'wrong_org', 'no_spot', 'replayed', 'product', 'bundle', 'transaction',
+  'token', 'sandbox', 'platform', 'spot', 'cancelled', 'revoked', 'refused', 'ineligible',
+};
+
+/// A spot's refusal, in the reader's language.
+String spotRefusalText(BuildContext context, StoreVerifyRefused e, String store) => switch (e.code) {
+      'wrong_spot' || 'replayed' => context.tr('Cet achat a déjà servi à une autre mise en avant.'),
+      'wrong_org' => context.tr('Cet achat a été fait pour une autre entreprise.'),
+      'no_spot' => context.tr('Cette mise en avant n\'existe plus : Mara rembourse le paiement.'),
+      'product' || 'bundle' => context.tr('Cet achat n\'est pas cette mise en avant.'),
+      'transaction' || 'token' || 'platform' || 'spot' => context.tr('Cet achat n\'a pas pu être lu par Mara.'),
+      'sandbox' => context.tr('Achat de test refusé : un achat fait avec un compte de test ne programme une mise en avant que pour les comptes de test de Mara.'),
+      'cancelled' => context.tr('Achat annulé : rien n\'a été prélevé.'),
+      'revoked' => context.tr('Cet achat a été remboursé : la mise en avant n\'est pas programmée.'),
+      'refused' => context.tr('Cette mise en avant a été refusée par Mara : le paiement sera remboursé.'),
+      'ineligible' => context.tr('Cette mise en avant ne peut plus être programmée (vitrine fermée, ou article sans photo, prix ou stock) : le paiement sera remboursé.'),
+      'pending' => context.tr('Achat en attente : {store} doit encore le confirmer. La mise en avant sera programmée dès qu\'il sera confirmé.', {'store': store}),
+      'not_admin' => context.tr('Seul un administrateur de l\'entreprise peut la mettre en avant.'),
+      'session' => context.tr('Votre session a expiré : reconnectez-vous, puis touchez « Vérifier un achat déjà payé ». Rien ne sera prélevé deux fois.'),
+      _ => context.tr('Le paiement est fait, mais Mara n\'a pas encore pu le vérifier. Gardez une connexion et touchez « Vérifier un achat déjà payé » : rien ne sera prélevé deux fois.'),
+    };
+
+/// A spot's purchase the store itself refused, in the reader's language
+/// (Google's « itemAlreadyOwned »: an earlier spot not consumed yet).
+String spotStoreErrorText(BuildContext context, String? code, String? message, String store) {
+  if (storeCancelled(code, message)) return context.tr('Achat annulé : rien n\'a été prélevé.');
+  final all = '${code ?? ''} ${message ?? ''}';
+  final why = storeErrorCode(code, message);
+  final line = all.contains('itemAlreadyOwned') || all.contains('alreadyOwned')
+      ? context.tr('Un achat précédent de cette mise en avant n\'est pas encore vérifié : touchez « Vérifier un achat déjà payé ».')
+      : context.tr('L\'achat n\'a pas pu se faire : {store} n\'a rien prélevé. Réessayez dans un moment.', {'store': store});
+  return why == null ? line : '$line\n${context.tr('({store} : {code})', {'store': store, 'code': why})}';
+}
+
 /// Every purchase the store reports, from the app's start (review S3) —
 /// not only while the Pro page is open: Ask to Buy approved later, a
 /// payment that was pending, Play's purchasesUpdated after the page was
@@ -69,6 +126,7 @@ class StoreWatcher {
   StoreWatcher({
     required this.billing,
     required this.verify,
+    this.verifySpot,
     this.onPro,
     this.log,
     this.outside,
@@ -79,6 +137,19 @@ class StoreWatcher {
   /// The Worker's /store/verify (WavePay.verifyStore, with the purchase's
   /// own business).
   final Future<StoreVerdict> Function(StorePurchase purchase) verify;
+
+  /// The Worker's /store/spot-verify (142, WavePay.verifySpot): a spot's
+  /// purchase is verified there, never as Mara Pro. Null: a spot's
+  /// purchase is left open for the store to hand back.
+  final Future<SpotVerdict> Function(StorePurchase purchase)? verifySpot;
+
+  /// What the last spot purchase came to (142), for the spot sheet.
+  final spotNotice = ValueNotifier<SpotNotice?>(null);
+
+  /// Spot sheets open (they draw [spotNotice] themselves).
+  int _spotSheets = 0;
+  void attachSpot() => _spotSheets++;
+  void detachSpot() => _spotSheets = _spotSheets > 0 ? _spotSheets - 1 : 0;
 
   /// A business is on Pro now: read the session again.
   VoidCallback? onPro;
@@ -122,6 +193,27 @@ class StoreWatcher {
     unawaited(_sub?.cancel());
     _sub = null;
     notice.dispose();
+    spotNotice.dispose();
+  }
+
+  bool _recovered = false;
+
+  /// Once per run, signed in (142): a spot paid but never verified — the
+  /// connection or the app died after the store took the payment — is
+  /// verified now. Google keeps it unconsumed (and refunds it after three
+  /// days if Mara never acknowledges it); Apple hands its unfinished
+  /// transactions back on its own when the listener starts.
+  Future<void> recoverSpots({bool again = false}) async {
+    if ((_recovered && !again) || verifySpot == null) return;
+    final spots = billing;
+    if (spots is! SpotStoreBilling) return;
+    _recovered = true;
+    try {
+      final left = await (spots as SpotStoreBilling).unfinishedSpots();
+      if (left.isNotEmpty) await handle(left);
+    } catch (_) {
+      _recovered = false;
+    }
   }
 
   /// A Pro page of [orgId] is open and draws its notices itself.
@@ -138,6 +230,10 @@ class StoreWatcher {
   Future<void> handle(List<StorePurchase> list) async {
     for (final p in list) {
       heard++;
+      if (p.isSpot) {
+        await _spot(p);
+        continue;
+      }
       switch (p.status) {
         case StorePurchaseStatus.pending:
           _say(StoreNotice((context) => context.tr('Achat en attente : {store} doit encore le confirmer (accord parental, paiement en cours). Mara Pro s\'activera dès qu\'il sera confirmé.', {'store': _store}), orgId: p.orgId));
@@ -164,6 +260,63 @@ class StoreWatcher {
     try {
       await billing.complete(p);
     } catch (_) {}
+  }
+
+  void _saySpot(SpotNotice n) {
+    spotNotice.value = n;
+    if (_spotSheets == 0) {
+      outside?.call(StoreNotice(n.text, good: n.state == SpotNoticeState.done));
+    }
+  }
+
+  /// A spot bought in the store (142). Google's purchase is never
+  /// completed here: the Worker acknowledges and consumes it once the spot
+  /// is programmed, and one refused for good is left unacknowledged, so
+  /// Google refunds it within three days. Apple's is finished on the
+  /// Worker's yes, or on a refusal for good (Apple keeps handing back an
+  /// unfinished transaction).
+  Future<void> _spot(StorePurchase p) async {
+    final id = p.spotId;
+    final apple = billing.platform == 'apple';
+    switch (p.status) {
+      case StorePurchaseStatus.pending:
+        _saySpot(SpotNotice(id, SpotNoticeState.pending, (context) => context.tr('Achat en attente : {store} doit encore le confirmer. La mise en avant sera programmée dès qu\'il sera confirmé.', {'store': _store})));
+        return;
+      case StorePurchaseStatus.canceled:
+        if (apple) await _complete(p);
+        _saySpot(SpotNotice(id, SpotNoticeState.cancelled, (context) => context.tr('Achat annulé : rien n\'a été prélevé.')));
+        return;
+      case StorePurchaseStatus.error:
+        if (apple) await _complete(p);
+        if (!storeCancelled(p.errorCode, p.errorMessage)) {
+          log?.call(storeErrorLine(billing.platform, p.productId, p.errorCode, p.errorMessage, p.errorDetails));
+        }
+        _saySpot(SpotNotice(id, storeCancelled(p.errorCode, p.errorMessage) ? SpotNoticeState.cancelled : SpotNoticeState.refused,
+            (context) => spotStoreErrorText(context, p.errorCode, p.errorMessage, _store)));
+        return;
+      case StorePurchaseStatus.purchased:
+      case StorePurchaseStatus.restored:
+        break;
+    }
+    final verify = verifySpot;
+    if (verify == null) return;
+    _saySpot(SpotNotice(id, SpotNoticeState.checking, (context) => context.tr('Vérification de l\'achat auprès de {store}…', {'store': _store})));
+    try {
+      final verdict = await verify(p);
+      if (apple) await _complete(p);
+      _saySpot(SpotNotice(verdict.promotionId ?? id, SpotNoticeState.done,
+          (context) => context.tr('Merci ! Votre mise en avant est payée et programmée.'),
+          verdict: verdict));
+    } on StoreVerifyRefused catch (e) {
+      final forGood = spotRefusalsForGood.contains(e.code);
+      log?.call('store spot refused (${e.code.isEmpty ? e.status : e.code}, '
+          '${forGood ? 'finished' : 'left open'}) ${billing.platform} ${p.productId}');
+      if (forGood && apple) await _complete(p);
+      _saySpot(SpotNotice(id, e.code == 'pending' ? SpotNoticeState.pending : SpotNoticeState.refused,
+          (context) => spotRefusalText(context, e, _store)));
+    } catch (_) {
+      _saySpot(SpotNotice(id, SpotNoticeState.refused, (context) => context.tr('Le paiement est fait, mais Mara n\'a pas encore pu le vérifier. Gardez une connexion et touchez « Vérifier un achat déjà payé » : rien ne sera prélevé deux fois.')));
+    }
   }
 
   Future<void> _verify(StorePurchase p) async {

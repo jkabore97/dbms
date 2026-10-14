@@ -7,6 +7,7 @@ import 'package:kaj_app/core/auth/auth_repository.dart';
 import 'package:kaj_app/core/capture/capture_repository.dart';
 import 'package:kaj_app/core/db/local_db.dart';
 import 'package:kaj_app/core/format/money.dart';
+import 'package:kaj_app/core/pay/price_zone.dart';
 import 'package:kaj_app/core/nav/session.dart';
 import 'package:kaj_app/core/retail/models.dart';
 import 'package:kaj_app/core/retail/retail_repository.dart';
@@ -179,7 +180,7 @@ void main() {
     expect(find.text('Pagne · ${_f(5000)}'), findsOneWidget);
     expect(find.textContaining('Caché'), findsNothing);
     expect(find.textContaining('Vide'), findsNothing);
-    expect(find.text('Prix : ${_f(1000)}'), findsOneWidget);
+    expect(find.text('Prix : ${zonePriceText(1000, 'XOF')}'), findsOneWidget);
 
     await tester.tap(find.text('Continuer vers le paiement'));
     await tester.pumpAndSettle();
@@ -197,8 +198,7 @@ void main() {
     expect(find.text('En attente de paiement'), findsOneWidget);
   });
 
-  testWidgets('the whole shop for 30 days is priced as such; Pro is told '
-      'its 7-day article spot is included', (tester) async {
+  testWidgets('7 days only, no 30-day choice; Pro pays like everyone (142)', (tester) async {
     tester.view.physicalSize = const Size(390, 1400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -207,7 +207,7 @@ void main() {
         body: Builder(
           builder: (context) => TextButton(
             onPressed: () => SpotSheet.open(context,
-                orgId: 'o1', admin: _Admin(), retail: _Retail(), isPro: true),
+                orgId: 'o1', admin: _Admin(), retail: _Retail()),
             child: const Text('go'),
           ),
         ),
@@ -215,14 +215,14 @@ void main() {
     ));
     await tester.tap(find.text('go'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Offert'), findsOneWidget);
-
-    await tester.tap(find.text('La vitrine'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('30 jours'));
-    await tester.pumpAndSettle();
-    expect(find.text('Prix : ${_f(8000)}'), findsOneWidget);
     expect(find.textContaining('Offert'), findsNothing);
+    expect(find.text('30 jours'), findsNothing);
+    expect(find.text('Un article à la une, 7 jours'), findsOneWidget);
+
+    await tester.tap(find.text('La boutique'));
+    await tester.pumpAndSettle();
+    expect(find.text('La boutique à la une, 7 jours'), findsOneWidget);
+    expect(find.text('Prix : ${zonePriceText(2500, 'XOF')}'), findsOneWidget);
   });
 
   testWidgets('a vitrine already featured says so and until when, '
@@ -245,7 +245,7 @@ void main() {
         body: Builder(
           builder: (context) => TextButton(
             onPressed: () => SpotSheet.open(context,
-                orgId: 'o1', admin: admin, retail: _Retail(), isPro: true),
+                orgId: 'o1', admin: admin, retail: _Retail()),
             child: const Text('go'),
           ),
         ),
@@ -255,7 +255,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('spot-existing')), findsNothing,
         reason: 'an article is still free to ask for');
-    await tester.tap(find.text('La vitrine'));
+    await tester.tap(find.text('La boutique'));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('spot-existing')), findsOneWidget);
     expect(find.textContaining('Déjà en avant jusqu'), findsOneWidget);
@@ -286,7 +286,7 @@ void main() {
     ));
     await tester.tap(find.text('go'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('La vitrine'));
+    await tester.tap(find.text('La boutique'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('spot-resume-pay')));
     await tester.pumpAndSettle();

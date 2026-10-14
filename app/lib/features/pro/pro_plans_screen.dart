@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/access/plan_terms.dart';
+import '../../core/pay/price_zone.dart';
 import '../../core/access/store_rules.dart';
 import '../../core/admin/admin_repository.dart';
 import '../../core/auth/models.dart';
@@ -234,7 +235,9 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
                   _Header(
                     proPrice: org.isPro || !sells
                         ? null
-                        : '${_money(price)} / ${_period == 'year' ? context.tr('an') : context.tr('mois')}',
+                        // The business's zone price (139), in its zone's
+                        // currency — what the card charges; FCFA before.
+                        : '${t.proZones.isEmpty ? _money(price) : zonePriceText(t.proPriceFor(org.currency, year: _period == 'year').amount, t.proPriceFor(org.currency, year: _period == 'year').currency, language: context.trLanguage)} / ${_period == 'year' ? context.tr('an') : context.tr('mois')}',
                   ),
                   for (final (title, rows) in rowsFor(t, costs: _costs)) ...[
                     const SizedBox(height: 18),

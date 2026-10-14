@@ -3,7 +3,7 @@
 --
 -- The claims: nothing starts while the platform's switch is off; only an
 -- administrator of the business starts, and the amount is the console's
--- Pro price (in dollars at the platform's rate since 121), never the caller's; plan_terms() says whether
+-- Pro price (in dollars at the platform's rate in 121, the zone's own price and currency since 139), never the caller's; plan_terms() says whether
 -- the card is open; Stripe's word that a subscription is active makes the
 -- business Pro to the end of the paid period, a second delivery changes
 -- nothing, a renewal moves the date on, a cancellation leaves what was
@@ -82,16 +82,17 @@ begin
     if not (plan_terms() ->> 'stripe_on')::boolean then
         raise exception 'FAIL: plan_terms does not say the card is open';
     end if;
-    -- Since 121 the card is charged in dollars: the console's FCFA price
-    -- at stripe_xof_per_usd (600 seeded), in cents.
+    -- 121 charged dollars converted at stripe_xof_per_usd; since 139 the
+    -- card charges the zone's own price in its own currency: a business
+    -- in FCFA pays the console's FCFA price, zero-decimal at Stripe.
     b := stripe_begin('52000000-0000-0000-0000-000000000001', 'year');
-    if (b ->> 'amount')::numeric <> 5000 or b ->> 'currency' <> 'usd'
+    if (b ->> 'amount')::numeric <> 30000 or b ->> 'currency' <> 'xof'
        or (b ->> 'price')::numeric <> 30000 or b ->> 'price_currency' <> 'XOF'
        or b ->> 'period' <> 'year' or b ->> 'org_name' <> 'Boutique Carte'
        or b ->> 'email' <> 'awa52@example.com' then
         raise exception 'FAIL: the start is not the console''s price: %', b;
     end if;
-    if (stripe_begin('52000000-0000-0000-0000-000000000001', 'month') ->> 'amount')::numeric <> 500 then
+    if (stripe_begin('52000000-0000-0000-0000-000000000001', 'month') ->> 'amount')::numeric <> 3000 then
         raise exception 'FAIL: the month is not the console''s month';
     end if;
     begin
@@ -100,7 +101,7 @@ begin
     exception when others then
         if sqlerrm not like 'Période inconnue%' then raise; end if;
     end;
-    raise notice 'PASS: 30 000 F a year ($50.00), 3 000 F a month ($5.00), nothing else';
+    raise notice 'PASS: 30 000 F a year, 3 000 F a month, charged in FCFA (139), nothing else';
 end $$;
 rollback;
 

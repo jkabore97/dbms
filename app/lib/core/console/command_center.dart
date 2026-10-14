@@ -42,7 +42,28 @@ class CommandCenterRepository {
       final h = await _requireClient().rpc('help_todo_counts');
       if (h is Map) counts.addAll(Map<String, dynamic>.from(h));
     } catch (_) {}
+    // 139: spot payments the stores took that programmed nothing (the
+    // spot gone, refused, no longer eligible) — to refund by hand. Only
+    // where 139 is.
+    try {
+      final r = await _requireClient().rpc('spot_refunds_todo');
+      if (r is Map) counts.addAll(Map<String, dynamic>.from(r));
+    } catch (_) {}
     return PlatformTodo.fromJson(counts);
+  }
+
+  /// Those payments, oldest first (139's platform_spot_refunds).
+  Future<List<SpotRefundRow>> spotRefunds() async {
+    final v = await _requireClient().rpc('platform_spot_refunds');
+    return [
+      for (final r in (v is List ? v : const []))
+        if (r is Map) SpotRefundRow.fromJson(Map<String, dynamic>.from(r)),
+    ];
+  }
+
+  /// One of them refunded in Play Console or by Apple (journaled).
+  Future<void> spotRefundDone(String id) async {
+    await _requireClient().rpc('platform_spot_refund_done', params: {'p_id': id});
   }
 
   /// « Activités créées » (111): the businesses people created, and the
@@ -216,13 +237,15 @@ class PlatformTodo {
 
   /// What waits on the platform, « À faire »'s « À traiter » in one number.
   int get waiting =>
-      this['new_7'] + this['pro_paid'] + this['spots_paid'] + this['spots_asked'] +
+      this['new_7'] + this['pro_paid'] + this['spots_paid'] + this['spots_asked'] + this['spot_refunds'] +
       this['couriers'] + this['orders_stuck'] + this['payouts_failed'] + this['silent_30'] +
       this['features_lapsed'] + this['reports_open'] + this['help_late'] + this['help_open'];
 
   /// A counter this server has: the help's two (136) only where 133 is,
   /// every other one always.
-  bool has(String key) => !key.startsWith('help_') || counts.containsKey(key);
+  /// 139's spot refunds only where 139 is.
+  bool has(String key) =>
+      (!key.startsWith('help_') && key != 'spot_refunds') || counts.containsKey(key);
 
   /// One of « Aujourd'hui »'s fourteen counters (135): the spots are the
   /// paid ones and the asked ones together, as « À faire » drew them.
@@ -262,11 +285,55 @@ class PlatformTodo {
 /// the other open ones with the couriers and the new businesses; only on
 /// a server with 133 ([PlatformTodo.has]).
 const todoUrgency = <List<String>>[
-  ['orders_stuck', 'help_late', 'reports_open', 'payouts_failed', 'pro_paid', 'spots'],
+  ['orders_stuck', 'help_late', 'reports_open', 'payouts_failed', 'pro_paid', 'spots', 'spot_refunds'],
   ['help_open', 'couriers', 'new_7'],
   ['silent_30', 'features_lapsed'],
   ['plans_ending', 'unlocks_ending', 'promos_ending', 'spots_ending', 'rules_ending'],
 ];
+
+/// A spot's store payment that programmed nothing, to refund (139).
+class SpotRefundRow {
+  const SpotRefundRow({
+    required this.id,
+    required this.channel,
+    this.externalId,
+    this.orgName,
+    this.kind,
+    this.amount,
+    this.currency,
+    this.reason,
+    this.at,
+  });
+
+  factory SpotRefundRow.fromJson(Map<String, dynamic> j) => SpotRefundRow(
+        id: '${j['id']}',
+        channel: '${j['channel'] ?? ''}',
+        externalId: _text(j['external_id']),
+        orgName: _text(j['org_name']),
+        kind: _text(j['kind']),
+        amount: _num(j['amount']),
+        currency: _text(j['currency']),
+        reason: _text(j['reason']),
+        at: _date(j['created_at']),
+      );
+
+  final String id;
+
+  /// 'google', 'apple' (or 'stripe' when its automatic refund failed).
+  final String channel;
+
+  /// The store's id: Google's order is found by it in Play Console,
+  /// Apple's transaction in App Store Connect.
+  final String? externalId;
+  final String? orgName;
+  final String? kind;
+  final double? amount;
+  final String? currency;
+
+  /// spot_settle's: 'no spot', 'refused', 'vitrine', 'feature', 'article', 'product'.
+  final String? reason;
+  final DateTime? at;
+}
 
 /// One row behind a count: a business, and what is about it.
 class TodoRow {

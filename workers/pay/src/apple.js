@@ -24,6 +24,8 @@ import { verifyAppleJws } from "./x509.js";
 const callFetch = (input, init) => fetch(input, init);
 
 export const APPLE_PRODUCTS = ["bf.kaj.app.pro.monthly", "bf.kaj.app.pro.yearly"];
+/// The two consumable spots (139), never Mara Pro.
+export const APPLE_SPOT_PRODUCT_IDS = ["bf.kaj.app.spot.article7", "bf.kaj.app.spot.shop7"];
 const HOSTS = {
   production: "https://api.storekit.itunes.apple.com",
   sandbox: "https://api.storekit-sandbox.itunes.apple.com",
@@ -58,7 +60,9 @@ export async function appleToken(env, now = Date.now()) {
   }, env.APPLE_IAP_PRIVATE_KEY);
 }
 
-async function appleGet(env, path, io) {
+/// One App Store Server API call, production first then the sandbox
+/// (exported for the spots, 139: src/spots.js).
+export async function appleGet(env, path, io) {
   const token = await appleToken(env, io.now?.());
   let last = null;
   for (const environment of ["production", "sandbox"]) {
@@ -170,6 +174,24 @@ export async function appleNotification(env, body, verify = {}) {
   }
   if (!data.signedTransactionInfo) return { ignored: payload.notificationType || "", payload };
   const tx = await verifyAppleJws(data.signedTransactionInfo, verify);
+  // A spot (139) is a consumable, not Mara Pro: its notifications change
+  // no subscription — a spot is programmed by /store/spot-verify alone.
+  // A REFUND (or REVOKE) of one, signed by Apple and carrying the
+  // transaction's revocationDate, is handed to the store door as
+  // spotRefund: the payment is written refunded and its spot ends
+  // (spot_refund). Anything else about a spot (CONSUMPTION_REQUEST…) is
+  // answered 200 and changes nothing.
+  if (tx.bundleId === appleBundle(env) && APPLE_SPOT_PRODUCT_IDS.includes(tx.productId)) {
+    const type = payload.notificationType || "";
+    if ((type === "REFUND" || type === "REVOKE") && tx.revocationDate && tx.transactionId) {
+      return {
+        ignored: `spot ${type}`,
+        spotRefund: { transactionId: String(tx.transactionId), reason: `apple ${type}` },
+        payload,
+      };
+    }
+    return { ignored: `spot ${type}`.trim(), payload };
+  }
   checkAppleTransaction(env, tx);
   const renewal = data.signedRenewalInfo ? await verifyAppleJws(data.signedRenewalInfo, verify) : null;
   let status = data.status;

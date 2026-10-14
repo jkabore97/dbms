@@ -7,6 +7,7 @@ import '../../core/access/plan_terms.dart';
 import '../../core/access/store_rules.dart';
 import '../../core/errors.dart';
 import '../../core/nav/app_scope.dart';
+import '../../core/pay/price_zone.dart';
 import '../../core/pay/wave_pay.dart';
 import '../../core/theme/kaj_theme.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -14,12 +15,13 @@ import 'package:kaj_app/core/l10n/tr.dart';
 /// « S'abonner par carte » — Kaj Pro as a Stripe subscription (082).
 ///
 /// Drawn only when the app was built with the Worker (PAY_URL) and the
-/// platform has switched the card on (plan_terms().stripe_on). The price on
-/// the button is the platform's, in FCFA; Stripe charges it in dollars
-/// (121), converted by the database at the platform's rate — the line under
-/// the button says the same cents, read from plan_terms(), never computed
-/// here. Stripe's page opens in this tab on the web and comes back to
-/// `/o/<id>/kaj-pro?stripe=ok`.
+/// platform has switched the card on (plan_terms().stripe_on). Since 139
+/// the price on the button is the business's zone price, in the zone's own
+/// currency (FCFA, euros, dollars — plan_terms().pro_zones), and Stripe
+/// charges exactly that: nothing is converted. On a database before 139
+/// the button says the FCFA price and the line under it the dollars Stripe
+/// charged then (121). Stripe's page opens in this tab on the web and
+/// comes back to `/o/<id>/kaj-pro?stripe=ok`.
 class StripeCardButton extends StatefulWidget {
   const StripeCardButton({
     super.key,
@@ -28,11 +30,16 @@ class StripeCardButton extends StatefulWidget {
     required this.period,
     this.pay,
     this.launch,
+    this.currency,
   });
 
   final String orgId;
   final PlanTerms terms;
   final String period;
+
+  /// The business's currency, for its zone (139); the session's when not
+  /// given.
+  final String? currency;
 
   /// Taken from the app scope when not given (tests give one).
   final WavePay? pay;
@@ -84,9 +91,16 @@ class _StripeCardButtonState extends State<StripeCardButton> {
       return const SizedBox.shrink();
     }
     final year = widget.period == 'year';
+    final zoned = widget.terms.proZones.isNotEmpty;
+    final currency = widget.currency ??
+        AppScope.maybeOf(context)?.session.orgById(widget.orgId)?.currency;
+    final zonePrice = widget.terms.proPriceFor(currency, year: year);
+    final zoneText = zonePriceText(zonePrice.amount, zonePrice.currency, language: context.trLanguage);
     final price = NumberFormat.decimalPattern('fr_FR')
         .format(year ? widget.terms.priceYear : widget.terms.priceMonth);
-    final cents = year ? widget.terms.stripeUsdYearCents : widget.terms.stripeUsdMonthCents;
+    final cents = zoned
+        ? null
+        : (year ? widget.terms.stripeUsdYearCents : widget.terms.stripeUsdMonthCents);
     final usd = cents == null
         ? null
         : NumberFormat.currency(locale: 'en_US', symbol: r'$', decimalDigits: 2)
@@ -108,9 +122,13 @@ class _StripeCardButtonState extends State<StripeCardButton> {
                     child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.credit_card),
             label: Text(
-              year
-                  ? context.tr('S\'abonner par carte · {price} F / an', {'price': price})
-                  : context.tr('S\'abonner par carte · {price} F / mois', {'price': price}),
+              zoned
+                  ? (year
+                      ? context.tr('S\'abonner par carte · {price} / an', {'price': zoneText})
+                      : context.tr('S\'abonner par carte · {price} / mois', {'price': zoneText}))
+                  : year
+                      ? context.tr('S\'abonner par carte · {price} F / an', {'price': price})
+                      : context.tr('S\'abonner par carte · {price} F / mois', {'price': price}),
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 16),
             ),

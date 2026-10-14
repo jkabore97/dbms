@@ -35,6 +35,7 @@ import {
   googleAcknowledge, googleConfigured, googleLookup, googleNotification,
 } from "./google.js";
 import { sameSecret } from "./jwt.js";
+import { googleSpotPurchased, spotRefund } from "./spots.js";
 import { SignatureError } from "./x509.js";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -166,6 +167,10 @@ export async function storeVerify(body, userToken, env, io) {
 export async function appleNotify(body, env, io) {
   const note = await appleNotification(env, body, io.verify);
   if (note.test) return { test: true };
+  // A spot's payment refunded by Apple (139): written, and the spot ends.
+  if (note.spotRefund) {
+    return spotRefund(env, io, "apple", note.spotRefund.transactionId, note.spotRefund.reason);
+  }
   if (!note.settlement) return { ignored: note.ignored || "" };
   if (!appleConfigured(env)) throw new StoreError("L'App Store n'est pas encore relié à Mara.", 503, "config");
   let s;
@@ -204,6 +209,23 @@ export async function googleNotify(url, body, env, io) {
   }
   const note = googleNotification(body);
   if (!note || note.test || note.foreign || note.ignored) return { ignored: true, test: Boolean(note?.test) };
+  // A one-time purchase voided (139: a spot refunded, charged back): the
+  // push is the owner's Pub/Sub with the secret; the database knows
+  // whether the token is a spot's, and ends it once.
+  // A spot bought (139), heard without the app: verified and programmed.
+  if (note.oneTime) {
+    if (!googleConfigured(env)) throw new StoreError("Google Play n'est pas encore relié à Mara.", 503, "config");
+    try {
+      return await googleSpotPurchased(env, note.oneTime, io);
+    } catch (error) {
+      if (error instanceof StoreError && error.status < 500) return { ignored: error.code || true };
+      throw error;
+    }
+  }
+  if (note.voided) {
+    return spotRefund(env, io, "google", note.voided.token,
+      `google voided${note.voided.refundType != null ? ` (${note.voided.refundType})` : ""}`);
+  }
   if (!googleConfigured(env)) throw new StoreError("Google Play n'est pas encore relié à Mara.", 503, "config");
   let s;
   try {

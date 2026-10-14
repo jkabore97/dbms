@@ -1625,9 +1625,10 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       // The spots for sale (071), folded on their own. An association
       // buys the whole-vitrine spot only — an article in « À la une »
       // needs stock — and sees here the spots it already asked or paid.
-      // Not drawn when Mara's switchboard hid « Mettre en avant » (110),
-      // nor in the iPhone app, which sells no spot (125).
-      if (!_hidden('spots') && sellsDigitalInApp)
+      // Not drawn when Mara's switchboard hid « Mettre en avant » (110).
+      // Every build sells it since 142: the iPhone app through Apple's
+      // in-app purchase, the Play app through Google Play (spotChannel).
+      if (!_hidden('spots') && sellsSpotsInApp)
       Theme(
         data: theme.copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(

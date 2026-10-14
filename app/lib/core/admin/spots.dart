@@ -3,6 +3,8 @@ library;
 
 import 'package:kaj_app/core/l10n/tr.dart';
 
+import '../pay/price_zone.dart';
+
 double _d(Object? v) => v is num ? v.toDouble() : double.tryParse('$v') ?? 0;
 int _i(Object? v) => v is num ? v.toInt() : int.tryParse('$v') ?? 0;
 DateTime? _t(Object? v) => v == null ? null : DateTime.tryParse('$v')?.toLocal();
@@ -18,6 +20,9 @@ class SpotTerms {
     this.wave = '',
     this.waveName = '',
     this.currency = 'XOF',
+    this.zones = const {},
+    this.stripeOn = false,
+    this.version = 0,
   });
 
   factory SpotTerms.fromJson(Map<String, dynamic> j) => SpotTerms(
@@ -29,6 +34,17 @@ class SpotTerms {
         wave: '${j['wave'] ?? ''}'.trim(),
         waveName: '${j['wave_name'] ?? ''}'.trim(),
         currency: '${j['currency'] ?? 'XOF'}',
+        zones: {
+          if (j['zones'] is Map)
+            for (final e in (j['zones'] as Map).entries)
+              if (e.value is Map)
+                '${e.key}': (
+                  article: _d((e.value as Map)['article']),
+                  shop: _d((e.value as Map)['shop']),
+                ),
+        },
+        stripeOn: j['stripe_on'] == true,
+        version: _i(j['version']),
       );
 
   final double article7;
@@ -40,11 +56,43 @@ class SpotTerms {
   final String waveName;
   final String currency;
 
+  /// The 7-day prices per zone (139): 'XOF', 'EUR', 'USD' → the article's
+  /// and the vitrine's. Empty on a database before 139.
+  final Map<String, ({double article, double shop})> zones;
+
+  /// A spot may be paid by card on the website (139, the platform's
+  /// stripe_on): false on a database before 139.
+  final bool stripeOn;
+
+  /// spot_terms()'s version: 139 once the stores and the card may sell a
+  /// spot (the Worker's spot_settle is there); 0 before.
+  final int version;
+
+  /// The server verifies a store or card payment of a spot (139).
+  bool get paidOnline => version >= 139;
+
   bool get hasWave => wave.isNotEmpty;
+
+  /// A spot lasts 7 days (139): the 30-day prices stay for the spots
+  /// asked before, never offered.
+  static const days = 7;
 
   double price({required bool shop, required int days}) => shop
       ? (days == 30 ? shop30 : shop7)
       : (days == 30 ? article30 : article7);
+
+  /// The 7-day price for a business of [currency], in its zone (139) —
+  /// the XOF numbers on a database before 139, which asks those.
+  double zonePrice(String? currency, {required bool shop}) {
+    final z = zones[zoneKey(priceZoneOf(currency))];
+    if (z == null) return shop ? shop7 : article7;
+    return shop ? z.shop : z.article;
+  }
+
+  /// The currency that price is in: the zone's (XAF for an XAF business);
+  /// the francs before 139.
+  String zoneCurrency(String? currency) =>
+      zones.isEmpty ? 'XOF' : zoneCurrencyOf(currency);
 }
 
 /// One spot a shop asked for, with what it earned while it ran.

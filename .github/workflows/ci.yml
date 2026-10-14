@@ -887,6 +887,10 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch141.sql
+      - name: "Prove « Mettre en avant » for 7 days, paid in the stores and by card, at a price per zone — XOF (an XAF business the same number, in XAF), EUR, USD for the rest; spot_terms keeps the older keys and adds the zones; 7 days only, the zone's price, Pro pays too; a Google, Apple or card payment programs its spot once (7 days, an article in the strip's queue, a vitrine at once), written with channel, amount and currency; the same payment again the same spot, for another spot refused, the other kind refused, a test payment only for a test account, a spot no longer waiting bought after the one running; spot_verify_begin an administrator's; spot_purchases read by the business's admins only, written by the Worker only, kept when the business goes; the card in Stripe's minor units (XOF zero-decimal), an older 30-day spot its francs; Mara Pro by card at the zone's own price, plan_terms' zones and no dollars; a euro or dollar price to the cent; a running 30-day spot untouched; a payment taken back (Apple, Google, Stripe) recorded once and its spot ended, a waiting one cancelled; definers pinned, nothing for anon, spot_settle and spot_refund never authenticated's; shop, farm and association; run twice the same (139)"
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch139.sql
 
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each
@@ -949,6 +953,7 @@ jobs:
       - run: node --check workers/pay/src/index.js
       - run: node --check workers/pay/src/wave.js
       - run: node --check workers/pay/src/stripe.js
+      - run: node --check workers/pay/src/spots.js
       - run: node --test workers/pay/test/*.test.mjs
       # The WhatsApp code Worker (109): the hook's signature, the template
       # sent to the new number, Meta's refusals in words, the code never

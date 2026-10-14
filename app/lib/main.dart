@@ -343,6 +343,7 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
   void _onSession() {
     if (_session.phase == SessionPhase.signedOut) _pushPrompt.signedOut();
     _pushPrompt.phase(signedIn: _signedIn);
+    if (_session.phase == SessionPhase.ready) unawaited(_storeWatcher?.recoverSpots());
     if (_session.phase != SessionPhase.ready || _deviceRegistered) return;
     _deviceRegistered = true;
     unawaited(() async {
@@ -405,6 +406,15 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
         transactionId: p.transactionId,
         token: p.token,
       ),
+      // A spot's purchase (142), verified as a spot: the spot it names.
+      // No price is sent: the Worker takes the store's, or Mara's own.
+      verifySpot: (p) => _wavePay.verifySpot(
+        platform: platform,
+        promotionId: p.spotId,
+        productId: p.productId,
+        transactionId: p.transactionId,
+        token: p.token,
+      ),
       onPro: () => unawaited(_session.refresh(force: true)),
       // Said and kept: the console's log and the crash reporter — a code
       // and a product, never a token.
@@ -417,6 +427,9 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
       ),
     )..start();
     setState(() => _storeWatcher = watcher);
+    // A spot paid while the connection or the app died: verified again once
+    // signed in (Google hands back an unconsumed purchase only when asked).
+    if (_session.phase == SessionPhase.ready) unawaited(watcher.recoverSpots());
   }
 
   /// The phone's language changed while Mara was open: with no choice made

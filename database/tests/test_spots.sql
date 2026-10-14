@@ -6,8 +6,9 @@
 -- is asked by an admin only, for an article on the vitrine with a photo,
 -- a price and stock, never twice at once; it waits for "J'ai payé" and the
 -- platform's yes, then shows in À la une ahead of the hand-set ones; a
--- full strip queues the next spot behind the earliest end; Kaj Pro's
--- monthly spot starts at once and free, once; a shop spot lists the shop
+-- full strip queues the next spot behind the earliest end; since 139 a
+-- spot is 7 days only and Pro pays too (the owner's decision: no free
+-- monthly spot, pro_free_spots_month inert); a shop spot lists the shop
 -- in the spotlights; the report counts the spot's own days; strangers see
 -- no promotions.
 -- ============================================================
@@ -123,17 +124,24 @@ declare v_id uuid;
 begin
     v_id := request_promotion('43000000-0000-0000-0000-000000000001',
                               '43aaaaaa-0000-0000-0000-000000000001', 7);
-    if (select status || ':' || price::int from promotions where id = v_id) <> 'requested:1000' then
-        raise exception 'FAIL: a free shop''s 7-day spot is not requested at 1000 F';
+    if (select status || ':' || price::int from promotions where id = v_id) <> 'requested:5000' then
+        raise exception 'FAIL: a free shop''s 7-day spot is not requested at 5000 F';
     end if;
     begin
         perform request_promotion('43000000-0000-0000-0000-000000000001',
-                                  '43aaaaaa-0000-0000-0000-000000000001', 30);
+                                  '43aaaaaa-0000-0000-0000-000000000001', 7);
         raise exception 'FAIL: the same article was asked twice';
     exception when others then
         if sqlerrm not like 'Cet emplacement%' then raise; end if;
     end;
-    raise notice 'PASS: employee refused, bare article refused, duplicate refused';
+    -- 139: 7 days only.
+    begin
+        perform request_promotion('43000000-0000-0000-0000-000000000001', null, 30);
+        raise exception 'FAIL: a 30-day spot was asked';
+    exception when others then
+        if sqlerrm <> 'Une mise en avant dure 7 jours' then raise; end if;
+    end;
+    raise notice 'PASS: employee refused, bare article refused, duplicate refused, 30 days refused';
 end $$;
 rollback;
 
@@ -208,30 +216,23 @@ end $$;
 rollback;
 
 \echo ''
-\echo '--- TEST 5: Kaj Pro''s monthly spot is free and immediate, once ---'
+\echo '--- TEST 5: Pro pays for its spot too (139), whatever pro_free_spots_month says ---'
 begin;
+update platform_settings set value = '1' where key = 'pro_free_spots_month';
 set local role authenticated;
 set local "request.jwt.claim.sub" = '43434343-0000-0000-0000-000000000001';
 do $$
-declare v promotions%rowtype;
+declare
+    v promotions%rowtype;
+    -- Asked once, then read (a call in the WHERE would run per row).
+    v_id uuid := request_promotion('43000000-0000-0000-0000-000000000002',
+                                   '43aaaaaa-0000-0000-0000-000000000003', 7);
 begin
-    select * into v from promotions
-     where id = request_promotion('43000000-0000-0000-0000-000000000002',
-                                  '43aaaaaa-0000-0000-0000-000000000003', 7);
-    if not v.free or v.status <> 'approved' or v.price <> 0 or v.starts_at > now() then
+    select * into v from promotions where id = v_id;
+    if not found or v.free or v.status <> 'requested' or v.price <> 5000 or v.starts_at is not null then
         raise exception 'FAIL: Pro''s spot is % / % / % F', v.free, v.status, v.price;
     end if;
-end $$;
-reset role;
-update promotions set status = 'cancelled' where org_id = :pro;  -- free the article
-set local role authenticated;
-do $$ begin
-    if (select free from promotions
-         where id = request_promotion('43000000-0000-0000-0000-000000000002',
-                                      '43aaaaaa-0000-0000-0000-000000000003', 7)) then
-        raise exception 'FAIL: a second free spot in one month';
-    end if;
-    raise notice 'PASS: one free 7-day spot a month for Pro';
+    raise notice 'PASS: a Pro shop''s 7-day spot waits for its payment at 5 000 F, like any other';
 end $$;
 rollback;
 
@@ -241,10 +242,10 @@ begin;
 set local role authenticated;
 set local "request.jwt.claim.sub" = '43434343-0000-0000-0000-000000000001';
 create temp table t_s on commit drop as
-select request_promotion('43000000-0000-0000-0000-000000000001', null, 30) as id;
+select request_promotion('43000000-0000-0000-0000-000000000001', null, 7) as id;
 do $$ begin
-    if (select price from promotions where id = (select id from t_s)) <> 8000 then
-        raise exception 'FAIL: a 30-day shop spot is not 8000 F';
+    if (select price from promotions where id = (select id from t_s)) <> 15000 then
+        raise exception 'FAIL: a 7-day shop spot is not 15000 F';
     end if;
 end $$;
 set local "request.jwt.claim.sub" = '43434343-0000-0000-0000-000000000004';

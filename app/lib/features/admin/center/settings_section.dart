@@ -64,12 +64,18 @@ class SettingDef {
 const platformSettingDefs = <SettingDef>[
   SettingDef('pro_price_month', 'pro', SettingType.money),
   SettingDef('pro_price_year', 'pro', SettingType.money),
+  // 139: Mara Pro's price in the euro zone and everywhere else, to the
+  // cent — what the card charges a business of that zone on the website.
+  SettingDef('pro_price_month_eur', 'pro', SettingType.money),
+  SettingDef('pro_price_year_eur', 'pro', SettingType.money),
+  SettingDef('pro_price_month_usd', 'pro', SettingType.money),
+  SettingDef('pro_price_year_usd', 'pro', SettingType.money),
   SettingDef('pro_currency', 'pro', SettingType.currency),
   SettingDef('platform_wave', 'pro', SettingType.text),
   SettingDef('platform_wave_name', 'pro', SettingType.text),
   SettingDef('stripe_on', 'pro', SettingType.flag),
-  // 121: the card is charged in dollars — the FCFA price at this rate.
-  SettingDef('stripe_xof_per_usd', 'pro', SettingType.count),
+  // 121's stripe_xof_per_usd left Réglages with 139: the card charges each
+  // zone's own price in its own currency, nothing is converted.
   // 128: Mara Pro sold through the App Store and Google Play in the store
   // apps — off until both stores answer the payments Worker.
   SettingDef('store_billing_on', 'pro', SettingType.flag),
@@ -93,11 +99,16 @@ const platformSettingDefs = <SettingDef>[
   SettingDef('vitrine_min_items_association', 'street', SettingType.count),
   SettingDef('progress_street_pct', 'street', SettingType.pct),
   SettingDef('spots_max_live', 'street', SettingType.count),
-  SettingDef('pro_free_spots_month', 'street', SettingType.count),
+  // 139: 7 days only, and Pro pays too — the 30-day prices and
+  // pro_free_spots_month stay in the database, inert, out of Réglages.
+  // The FCFA prices (the XOF zone, XAF the same number), then the euro
+  // zone's and everywhere else's, to the cent.
   SettingDef('spot_price_article_7', 'street', SettingType.money),
-  SettingDef('spot_price_article_30', 'street', SettingType.money),
   SettingDef('spot_price_shop_7', 'street', SettingType.money),
-  SettingDef('spot_price_shop_30', 'street', SettingType.money),
+  SettingDef('spot_price_article_7_eur', 'street', SettingType.money),
+  SettingDef('spot_price_shop_7_eur', 'street', SettingType.money),
+  SettingDef('spot_price_article_7_usd', 'street', SettingType.money),
+  SettingDef('spot_price_shop_7_usd', 'street', SettingType.money),
   SettingDef('delivery_base', 'delivery', SettingType.money),
   SettingDef('delivery_per_km', 'delivery', SettingType.money),
   SettingDef('delivery_currency', 'delivery', SettingType.currency),
@@ -199,7 +210,10 @@ class SettingCard {
 /// lost). The sub-headings' names are [settingPartLabel]'s.
 const settingCards = <SettingCard>[
   SettingCard('pro', Icons.workspace_premium_outlined, [
-    ('prices', ['pro_price_month', 'pro_price_year', 'pro_currency']),
+    ('prices', [
+      'pro_price_month', 'pro_price_year', 'pro_price_month_eur', 'pro_price_year_eur',
+      'pro_price_month_usd', 'pro_price_year_usd', 'pro_currency',
+    ]),
     ('tools', ['pro_features']),
     ('with_pro', ['max_item_photos_pro']),
     ('free', [
@@ -210,8 +224,8 @@ const settingCards = <SettingCard>[
   SettingCard('vitrines', Icons.storefront_outlined, [
     ('street', ['vitrine_min_items', 'vitrine_min_items_association', 'progress_street_pct']),
     ('spots', [
-      'spots_max_live', 'pro_free_spots_month', 'spot_price_article_7', 'spot_price_article_30',
-      'spot_price_shop_7', 'spot_price_shop_30',
+      'spots_max_live', 'spot_price_article_7', 'spot_price_shop_7', 'spot_price_article_7_eur',
+      'spot_price_shop_7_eur', 'spot_price_article_7_usd', 'spot_price_shop_7_usd',
     ]),
     ('orders', ['order_phone_verified', 'booking_cancel_hours']),
   ]),
@@ -223,7 +237,7 @@ const settingCards = <SettingCard>[
   ]),
   SettingCard('paiements', Icons.payments_outlined, [
     ('wave', ['wave_checkout', 'wave_card', 'wave_commission_pct', 'platform_wave', 'platform_wave_name']),
-    ('card', ['stripe_on', 'stripe_xof_per_usd']),
+    ('card', ['stripe_on']),
     ('stores', ['store_billing_on', 'store_review_account', 'store_review_orgs']),
   ]),
   SettingCard('cauris', Icons.toll_outlined, [
@@ -384,13 +398,16 @@ String settingGroupLabel(BuildContext context, String group) => switch (group) {
     };
 
 String settingLabel(BuildContext context, String key) => switch (key) {
-      'pro_price_month' => context.tr('Prix de Mara Pro, par mois'),
-      'pro_price_year' => context.tr('Prix de Mara Pro, par an'),
+      'pro_price_month' => context.tr('Prix de Mara Pro, par mois — FCFA (zone franc CFA)'),
+      'pro_price_year' => context.tr('Prix de Mara Pro, par an — FCFA (zone franc CFA)'),
+      'pro_price_month_eur' => context.tr('Prix de Mara Pro, par mois — euros (zone euro)'),
+      'pro_price_year_eur' => context.tr('Prix de Mara Pro, par an — euros (zone euro)'),
+      'pro_price_month_usd' => context.tr('Prix de Mara Pro, par mois — dollars (reste du monde)'),
+      'pro_price_year_usd' => context.tr('Prix de Mara Pro, par an — dollars (reste du monde)'),
       'pro_currency' => context.tr('Monnaie des prix de Mara Pro'),
       'platform_wave' => context.tr('Numéro Wave qui reçoit les paiements Pro'),
       'platform_wave_name' => context.tr('Nom du compte Wave de Mara'),
       'stripe_on' => context.tr('Abonnement par carte (Stripe)'),
-      'stripe_xof_per_usd' => context.tr('Taux pour la carte : FCFA pour 1 \$'),
       'store_billing_on' =>
         context.tr('Abonnement dans les applications (App Store, Google Play)'),
       'store_review_account' =>
@@ -410,11 +427,12 @@ String settingLabel(BuildContext context, String key) => switch (key) {
         context.tr('Articles ou services pour paraître dans la rue (association)'),
       'progress_street_pct' => context.tr('Vitrine remplie à … % pour paraître dans la rue'),
       'spots_max_live' => context.tr('Mises en avant en même temps'),
-      'pro_free_spots_month' => context.tr('Mises en avant offertes chaque mois avec Pro'),
-      'spot_price_article_7' => context.tr('Un article à la une, 7 jours'),
-      'spot_price_article_30' => context.tr('Un article à la une, 30 jours'),
-      'spot_price_shop_7' => context.tr('La boutique à la une, 7 jours'),
-      'spot_price_shop_30' => context.tr('La boutique à la une, 30 jours'),
+      'spot_price_article_7' => context.tr('Un article à la une, 7 jours — FCFA (zone franc CFA)'),
+      'spot_price_shop_7' => context.tr('La boutique à la une, 7 jours — FCFA (zone franc CFA)'),
+      'spot_price_article_7_eur' => context.tr('Un article à la une, 7 jours — euros (zone euro)'),
+      'spot_price_shop_7_eur' => context.tr('La boutique à la une, 7 jours — euros (zone euro)'),
+      'spot_price_article_7_usd' => context.tr('Un article à la une, 7 jours — dollars (reste du monde)'),
+      'spot_price_shop_7_usd' => context.tr('La boutique à la une, 7 jours — dollars (reste du monde)'),
       'delivery_base' => context.tr('Livraison : prise en charge'),
       'delivery_per_km' => context.tr('Livraison : par kilomètre'),
       'delivery_currency' => context.tr('Monnaie des prix de livraison'),
@@ -480,14 +498,54 @@ const decimalSettings = {
   'delivery_max_km',
   'delivery_included_km',
   'wave_commission_pct',
+  // 139: a euro or dollar price, to the cent (two decimals at most, which
+  // the server checks too).
+  ...zonePriceSettings,
 };
+
+/// The euro and dollar prices (139): typed to the cent.
+const zonePriceSettings = {
+  'spot_price_article_7_eur',
+  'spot_price_shop_7_eur',
+  'spot_price_article_7_usd',
+  'spot_price_shop_7_usd',
+  'pro_price_month_eur',
+  'pro_price_year_eur',
+  'pro_price_month_usd',
+  'pro_price_year_usd',
+};
+
+/// A line under a card's sub-heading (139): the spots' and Mara Pro's
+/// prices are the website's; the stores charge their own.
+String? settingPartNote(BuildContext context, String card, String part) =>
+    (card == 'vitrines' && part == 'spots') || (card == 'pro' && part == 'prices')
+        ? context.tr('Sur Android et iPhone, le prix payé est celui de Google Play et de l\'App Store — mettez les mêmes prix dans Play Console et App Store Connect.')
+        : null;
 
 /// The largest number any setting takes (105's platform_set_setting).
 const settingMax = 1000000000;
 
-/// The numbers that are never zero: the card's rate divides every Pro
-/// price (121's platform_set_setting refuses 0) — said here first.
+/// The numbers that are never zero: the card's rate divided every Pro
+/// price (121's platform_set_setting refuses 0) — said here first. Out of
+/// Réglages since 139, kept should it come back.
 const positiveSettings = {'stripe_xof_per_usd'};
+
+/// Mara's prices the card charges (139): never below what Stripe takes —
+/// 300 FCFA, 0,50 € or $0.50 (the server refuses the rest too).
+const cardMinimumSettings = <String, double>{
+  'spot_price_article_7': 300,
+  'spot_price_shop_7': 300,
+  'pro_price_month': 300,
+  'pro_price_year': 300,
+  'spot_price_article_7_eur': 0.5,
+  'spot_price_shop_7_eur': 0.5,
+  'spot_price_article_7_usd': 0.5,
+  'spot_price_shop_7_usd': 0.5,
+  'pro_price_month_eur': 0.5,
+  'pro_price_year_eur': 0.5,
+  'pro_price_month_usd': 0.5,
+  'pro_price_year_usd': 0.5,
+};
 
 /// The numbers with a range of their own: the couriers' radius is 1 to
 /// 100 km (122's platform_set_setting refuses the rest) — said here first.
@@ -526,6 +584,9 @@ String settingValueText(BuildContext context, SettingDef def, Object? v) {
     SettingType.flag01 => (n ?? 0) > 0 ? context.tr('Oui') : context.tr('Non'),
     SettingType.pct => n == null ? '—' : '${f.format(n)} %',
     SettingType.km => n == null ? '—' : '${f.format(n)} km',
+    // A euro or dollar price shows its cents (139): « 4,99 », « 5,00 ».
+    SettingType.money when zonePriceSettings.contains(def.key) =>
+      n == null ? '—' : NumberFormat.decimalPatternDigits(locale: 'fr_FR', decimalDigits: 2).format(n),
     SettingType.money || SettingType.count => n == null ? '—' : f.format(n),
     SettingType.list => v is List
         ? (v.isEmpty ? '—' : v.map((e) => featureName(context, '$e')).join(', '))
@@ -857,6 +918,23 @@ class _SettingsSectionState extends State<SettingsSection> {
           if (keys.any(values.containsKey)) ...[
             _label(context, settingPartLabel(context, part)),
             _rows(context, keys, values),
+            if (settingPartNote(context, card.key, part) case final note?)
+              Padding(
+                key: Key('settings-note-${card.key}-$part'),
+                padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.info_outline, size: 18, color: maraBrown),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(note,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                    ),
+                  ],
+                ),
+              ),
           ],
       ],
     );
@@ -991,6 +1069,10 @@ class _EditDialogState extends State<_EditDialog> {
           problem = decimals
               ? context.tr('Un nombre, zéro ou plus.')
               : context.tr('Un nombre entier, zéro ou plus.');
+        } else if (cardMinimumSettings[def.key] case final min? when n < min) {
+          problem = min >= 1
+              ? context.tr('Au moins 300 FCFA : le paiement par carte (Stripe) ne prend pas moins.')
+              : context.tr('Au moins 0,50 : le paiement par carte (Stripe) ne prend pas moins.');
         } else if (rangedSettings[def.key] case (final lo, final hi)
             when n < lo || n > hi) {
           problem = context.tr('Un nombre de {lo} à {hi}.', {'lo': '$lo', 'hi': '$hi'});
