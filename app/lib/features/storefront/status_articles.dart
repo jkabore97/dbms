@@ -126,6 +126,15 @@ class StatusArticlesSheet extends StatefulWidget {
   static bool servicesOnly(List<PublicItem> catalogue) =>
       catalogue.isNotEmpty && catalogue.every((i) => i.isService);
 
+  /// The word for what is shared: « services » when every chosen one is a
+  /// service (a haircut shared from a shop that also sells goods), else as
+  /// the catalogue is — so a service is never called « article ».
+  static bool speaksServices(List<PublicItem> catalogue, Iterable<String> chosen) {
+    final picked = [for (final i in catalogue) if (chosen.contains(i.id)) i];
+    if (picked.isNotEmpty) return picked.every((i) => i.isService);
+    return servicesOnly(catalogue);
+  }
+
   @override
   State<StatusArticlesSheet> createState() => _StatusArticlesSheetState();
 }
@@ -179,7 +188,7 @@ class _StatusArticlesSheetState extends State<StatusArticlesSheet> {
     final theme = Theme.of(context);
     final money = moneyFormat(widget.currency);
     final chosen = _selection.chosen;
-    final services = StatusArticlesSheet.servicesOnly(widget.catalogue);
+    final services = StatusArticlesSheet.speaksServices(widget.catalogue, chosen);
     // What the picture shows: a chosen one gone from the catalogue since
     // is not counted.
     final counted = chosen.where((id) => widget.catalogue.any((i) => i.id == id)).length;
@@ -189,7 +198,10 @@ class _StatusArticlesSheetState extends State<StatusArticlesSheet> {
         fontWeight: FontWeight.w800, letterSpacing: 1.1, color: theme.colorScheme.onSurfaceVariant);
     return Padding(
       key: const Key('status-articles'),
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      // Clear of the phone's home bar: a bottom sheet's safe area pads
+      // the top only, and « Terminé » sat under the iPhone's line.
+      padding: EdgeInsets.fromLTRB(
+          16, 0, 16, 12 + MediaQuery.viewPaddingOf(context).bottom),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -235,14 +247,32 @@ class _StatusArticlesSheetState extends State<StatusArticlesSheet> {
             children: [
               ChoiceChip(
                 key: const Key('status-articles-auto'),
-                avatar: const Icon(Icons.auto_awesome_outlined, size: 18),
+                // Chosen reads at a glance: ink with white words, no tick
+                // drawn over the icon.
+                showCheckmark: false,
+                selectedColor: theme.colorScheme.primary,
+                labelStyle: _selection.automatic
+                    ? TextStyle(color: theme.colorScheme.onPrimary, fontWeight: FontWeight.w700)
+                    : null,
+                avatar: Icon(Icons.auto_awesome_outlined,
+                    size: 18,
+                    color: _selection.automatic ? theme.colorScheme.onPrimary : null),
                 label: Text(context.tr('Choix automatique')),
                 selected: _selection.automatic,
                 onSelected: (_) => _set(const StatusSelection()),
               ),
               ChoiceChip(
                 key: const Key('status-articles-single'),
-                avatar: const Icon(Icons.campaign_outlined, size: 18),
+                // Chosen reads at a glance: ink with white words, no tick
+                // drawn over the icon.
+                showCheckmark: false,
+                selectedColor: theme.colorScheme.primary,
+                labelStyle: _selection.single
+                    ? TextStyle(color: theme.colorScheme.onPrimary, fontWeight: FontWeight.w700)
+                    : null,
+                avatar: Icon(Icons.campaign_outlined,
+                    size: 18,
+                    color: _selection.single ? theme.colorScheme.onPrimary : null),
                 label: Text(services
                     ? context.tr('Un seul service (annonce)')
                     : context.tr('Un seul produit (annonce)')),

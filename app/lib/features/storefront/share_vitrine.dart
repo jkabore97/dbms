@@ -850,7 +850,7 @@ class _StatusPreviewState extends State<StatusPreview> {
                 onSurprise: () => _choose(_choice.surprise(_palettes, widget.random)),
                 articles: widget.catalogue.isEmpty ? null : _articlesLabel(context),
                 onArticles: widget.catalogue.isEmpty ? null : _articles,
-                servicesOnly: StatusArticlesSheet.servicesOnly(widget.catalogue),
+                servicesOnly: StatusArticlesSheet.speaksServices(widget.catalogue, _selection.chosen),
               ),
               _Foot(
                 targets: _targets,
