@@ -143,8 +143,8 @@ class _SpotsCardState extends State<SpotsCard> {
             const SizedBox(height: 6),
             Text(
               widget.vitrineOnly
-                  ? context.tr('Votre vitrine en haut de la liste des vitrines, pour 7 jours.')
-                  : context.tr('Un article en tête de « À la une » sur la page d\'accueil, ou toute la vitrine en haut de la liste, pour 7 jours.'),
+                  ? context.tr('Un service en tête de « À la une », ou votre vitrine en haut de la liste des vitrines, pour 7 jours.')
+                  : context.tr('Un article ou un service en tête de « À la une » sur la page d\'accueil, ou toute la vitrine en haut de la liste, pour 7 jours.'),
               style: muted,
             ),
             if (_loaded && _spots.isNotEmpty) ...[
@@ -474,9 +474,9 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
                 p.isPublished &&
                 !p.isIngredient &&
                 p.salePrice > 0 &&
-                // Not followed (131): always there, as request_promotion
-                // allows.
-                (p.quantity > 0 || !p.stockTracked))
+                // A service has no stock (143); not followed (131): always
+                // there, as request_promotion allows.
+                (p.isService || p.quantity > 0 || !p.stockTracked))
             .toList()
           ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
         if (_productId == null && _articles.isNotEmpty) {
@@ -831,7 +831,8 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
     // product, it is not offered.
     final storeMissing = _viaStore && !storeLoading && (_storeProduct == null || !_terms.paidOnline);
     return [
-      if (!widget.vitrineOnly) ...[
+      // An association too (143): its services can be « à la une ».
+      ...[
         Text(context.tr('Quoi ?'), style: theme.textTheme.titleSmall),
         const SizedBox(height: 6),
         SegmentedButton<bool>(
@@ -840,7 +841,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
             ButtonSegment(
                 value: false,
                 icon: const Icon(Icons.sell_outlined),
-                label: Text(context.tr('Un article'))),
+                label: Text(context.tr('Article ou service'))),
             ButtonSegment(
                 value: true,
                 icon: const Icon(Icons.storefront_outlined),
@@ -857,7 +858,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Text(
-            context.tr('Aucun article prêt : mettez sur la vitrine un article avec un prix et du stock.'),
+            context.tr('Rien de prêt : mettez sur la vitrine un article (avec du stock) ou un service, avec une photo et un prix.'),
             style: TextStyle(color: theme.colorScheme.error),
           ),
         ),
@@ -868,7 +869,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
               : _articles.first.id,
           isExpanded: true,
           decoration: InputDecoration(
-              labelText: context.tr('Article'), border: const OutlineInputBorder()),
+              labelText: context.tr('Article ou service'), border: const OutlineInputBorder()),
           items: [
             for (final a in _articles)
               DropdownMenuItem(
@@ -888,7 +889,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
       Text(
         shop
             ? context.tr('La vitrine apparaît en tête de la liste des vitrines, marquée « Sponsorisé », pendant 7 jours.')
-            : context.tr('L\'article apparaît en tête de « À la une » sur la page d\'accueil, marqué « Sponsorisé », pendant 7 jours. Il lui faut une photo, un prix et du stock.'),
+            : context.tr('L\'article ou le service apparaît en tête de « À la une » sur la page d\'accueil, marqué « Sponsorisé », pendant 7 jours. Il lui faut une photo et un prix, et du stock pour un article.'),
         style: muted,
       ),
       ..._previewPart(theme),
