@@ -7959,8 +7959,6 @@ const enStrings = <String, String>{
       'Nothing ready: put an item (with stock) or a service on the vitrine, with a photo and a price.',
   'L\'article ou le service apparaît en tête de « À la une » sur la page d\'accueil, marqué « Sponsorisé », pendant 7 jours. Il lui faut une photo et un prix, et du stock pour un article.':
       'The item or service appears at the top of « À la une » on the home page, marked « Sponsored », for 7 days. It needs a photo and a price, and stock for an item.',
-  'Un article ou un service mis en avant doit être sur la vitrine, avec une photo et un prix (et du stock pour un article)':
-      'A featured item or service must be on the vitrine, with a photo and a price (and stock for an item)',
   'Un service en tête de « À la une », ou votre vitrine en haut de la liste des vitrines, pour 7 jours.':
       'A service at the top of « À la une », or your vitrine at the top of the list of vitrines, for 7 days.',
   'Un article ou un service en tête de « À la une » sur la page d\'accueil, ou toute la vitrine en haut de la liste, pour 7 jours.':

@@ -62079,7 +62079,8 @@ notify pgrst, 'reload schema';
 -- always « in stock ». A shop, a farm and an association alike.
 --
 -- request_promotion and spot_ineligible are 139's, copied verbatim but for
--- that one test (and request_promotion's refusal sentence). Same
+-- that one test; the refusal sentence is kept word for word (tests and the
+-- app's translation read it). Same
 -- signatures, so create or replace keeps 139's grants. Re-runnable.
 
 create or replace function request_promotion(
@@ -62120,7 +62121,7 @@ begin
            and coalesce(p.sale_price, 0) > 0
            and (p.is_service or p.quantity > 0 or not p.stock_tracked)
            and exists (select 1 from documents d where d.product_id = p.id)) then
-        raise exception 'Un article ou un service mis en avant doit être sur la vitrine, avec une photo et un prix (et du stock pour un article)';
+        raise exception 'Un article mis en avant doit être sur la vitrine, avec une photo, un prix et du stock';
     end if;
     if exists (select 1 from promotions
                 where org_id = p_org_id
