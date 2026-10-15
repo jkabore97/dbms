@@ -143,6 +143,21 @@ class CourierRepository {
     }
   }
 
+  /// The shops' cash in hand against the cap, money by money (146). Empty
+  /// on a database before 146: the page shows no cap.
+  Future<List<CashCap>> cashCap() async {
+    if (_client == null) return const [];
+    try {
+      final rows = await _requireClient().rpc('courier_cash_status') as List<dynamic>;
+      return rows
+          .map((r) => CashCap.fromRow(Map<String, dynamic>.from(r as Map)))
+          .toList();
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST202' || e.code == '42883') return const [];
+      rethrow;
+    }
+  }
+
   /// The courier's own jobs, running first.
   Future<List<DeliveryJob>> mine() async {
     final rows =
@@ -206,6 +221,27 @@ class CourierReach {
 }
 
 /// A cash order delivered and not yet handed to its shop (073).
+/// The cash a courier carries for the shops, in one money, and the most
+/// they may (146): [cap] null when this money has none.
+class CashCap {
+  const CashCap({required this.currency, required this.held, this.cap});
+
+  factory CashCap.fromRow(Map<String, dynamic> r) => CashCap(
+        currency: '${r['currency'] ?? 'XOF'}',
+        held: DeliveryJob._num(r['held']) ?? 0,
+        cap: DeliveryJob._num(r['cap']),
+      );
+
+  final String currency;
+  final double held;
+  final double? cap;
+
+  /// The server's refusal at « J'accepte » when the cap is reached.
+  static bool isRefusal(String message) =>
+      message.startsWith('Vous portez déjà assez d\'espèces') ||
+      message.startsWith('Cette course dépasse ce qu\'un livreur peut porter');
+}
+
 class CashHeld {
   const CashHeld({
     required this.orderId,

@@ -14,7 +14,10 @@ import '../../core/format/money.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/notify/alert_tone.dart';
 import '../../core/orders/orders.dart';
+import '../../core/retail/fraud_guards.dart';
 import '../../core/retail/retail_repository.dart';
+import '../../core/errors.dart' show describeError;
+import '../common/owned_controller.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../../core/theme/mara_mark.dart';
 import '../storefront/shop_skeleton.dart';
@@ -39,10 +42,13 @@ import '../home/place_sections.dart';
 /// over or delivered, the order records its own sale on the server — the
 /// till must not ring it again, and the list says so.
 class ShopOrdersScreen extends StatefulWidget {
-  const ShopOrdersScreen({super.key, required this.org, required this.retail, this.focusId});
+  const ShopOrdersScreen({super.key, required this.org, required this.retail, this.focusId, this.guards});
 
   final OrgSummary org;
   final RetailRepository retail;
+
+  /// « Bloquer ce client » (146); the retail server's unless a test gives one.
+  final FraudGuardsRepository? guards;
 
   /// The order a notification opened (125: `?commande=<id>`): its next
   /// step opens by itself once the list is read.
@@ -199,6 +205,66 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
     await OrderWalkthrough.open(context,
         org: widget.org, retail: widget.retail, order: order);
     if (mounted) await _load(silent: true);
+  }
+
+  /// « Bloquer ce client » (batch 151): one question, a reason if the
+  /// owner wants one, and the shopper can no longer order here. Never
+  /// told « bloqué »: the vitrine only says it does not take the order
+  /// for now. Undone in Réglages › Clients bloqués.
+  Future<void> _block(ShopOrder order) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (dialog) => OwnedController(
+        builder: (context, controller) => AlertDialog(
+          key: const Key('block-confirm'),
+          scrollable: true,
+          icon: const Icon(Icons.block_outlined),
+          title: Text(context.tr('Bloquer {name} ?', {'name': order.customerName})),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(context.tr(
+                  'Ce client ne pourra plus commander chez vous. Il n\'est pas prévenu : il lit seulement que vous ne prenez pas sa commande pour le moment. Vous pouvez le débloquer dans Réglages › Clients bloqués.')),
+              const SizedBox(height: 12),
+              TextField(
+                key: const Key('block-reason'),
+                controller: controller,
+                maxLength: 200,
+                decoration: InputDecoration(
+                  labelText: context.tr('Pourquoi ? (facultatif, pour vous seul)'),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(context.tr('Annuler')),
+            ),
+            FilledButton(
+              key: const Key('block-yes'),
+              onPressed: () => Navigator.of(context).pop(controller.text),
+              child: Text(context.tr('Bloquer')),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (reason == null || !mounted) return;
+    final done = context.tr('{name} ne peut plus commander chez vous.', {'name': order.customerName});
+    final soon = context.tr('Bloquer un client arrive avec la prochaine mise à jour du serveur.');
+    setState(() => _busyId = order.id);
+    try {
+      await (widget.guards ?? widget.retail.guards).blockCustomer(order.id, reason: reason);
+      messenger.showSnackBar(SnackBar(content: Text(done)));
+    } catch (error) {
+      messenger.showSnackBar(SnackBar(
+          content: Text(isGuardMissing(error) ? soon : describeError(error))));
+    } finally {
+      if (mounted) setState(() => _busyId = null);
+    }
   }
 
   /// "Je livre moi-même" (073): nobody took it; the shop carries it.
@@ -382,6 +448,7 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
                       onSetPaid: _setPaid,
                       clocks: _clocks,
                       onDeliverSelf: _deliverSelf,
+                      onBlock: widget.org.isAdmin ? _block : null,
                       header: closed
                           ? Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -417,6 +484,7 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
                       onSetPaid: _setPaid,
                       clocks: _clocks,
                       onDeliverSelf: _deliverSelf,
+                      onBlock: widget.org.isAdmin ? _block : null,
                     ),
                   ]))),
     );
@@ -443,7 +511,11 @@ class _List extends StatelessWidget {
     this.onDeliverSelf,
     this.header,
     this.note,
+    this.onBlock,
   });
+
+  /// « Bloquer ce client » (batch 151): the business's admins only.
+  final Future<void> Function(ShopOrder)? onBlock;
 
   /// One line above the cards, when there are any.
   final String? note;
@@ -503,6 +575,7 @@ class _List extends StatelessWidget {
             onSetPaid: onSetPaid,
             clock: clocks[o.id],
             onDeliverSelf: onDeliverSelf,
+            onBlock: onBlock,
           ),
       ],
     );
@@ -518,8 +591,10 @@ class _OrderCard extends StatelessWidget {
     required this.onSetPaid,
     this.clock,
     this.onDeliverSelf,
+    this.onBlock,
   });
 
+  final Future<void> Function(ShopOrder)? onBlock;
   final OrderClock? clock;
   final Future<void> Function(ShopOrder)? onDeliverSelf;
 
@@ -573,6 +648,25 @@ class _OrderCard extends StatelessWidget {
                     key: Key('order-status-${order.id}'),
                     label: Text(shopOrderStatusWord(context, order)),
                     visualDensity: VisualDensity.compact,
+                  ),
+                // « Bloquer ce client » (batch 151), in the order's menu.
+                if (onBlock != null)
+                  PopupMenuButton<String>(
+                    key: Key('order-menu-${order.id}'),
+                    tooltip: context.tr('Plus d\'actions'),
+                    icon: const Icon(Icons.more_vert, size: 20),
+                    enabled: !busy,
+                    onSelected: (_) => onBlock!(order),
+                    itemBuilder: (menu) => [
+                      PopupMenuItem(
+                        key: Key('order-block-${order.id}'),
+                        value: 'block',
+                        child: ListTile(
+                          leading: const Icon(Icons.block_outlined),
+                          title: Text(menu.tr('Bloquer ce client')),
+                        ),
+                      ),
+                    ],
                   ),
               ],
             ),

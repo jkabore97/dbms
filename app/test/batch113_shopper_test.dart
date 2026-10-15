@@ -793,6 +793,9 @@ void main() {
       ]);
       expect(find.byKey(const Key('again-open-1')), findsNothing);
       await tester.ensureVisible(find.byKey(const Key('again-done-1')));
+      // 151: the open card is taller (its safety line); the done card
+      // slides in once scrolled to.
+      await settle(tester);
       await tester.tap(find.byKey(const Key('again-done-1')));
       await settle(tester);
       expect(me.reordered, ['done-1']);
@@ -907,8 +910,15 @@ void main() {
         ]);
         await tester.scrollUntilVisible(find.byKey(const Key('group-Aide')), 300,
             scrollable: find.byType(Scrollable).first);
+        // 151: Compte is longer (« Clients bloqués »): the heading off the
+        // screen's edge before it is tapped.
+        await tester.drag(find.byType(Scrollable).first, const Offset(0, -200));
+        await settle(tester);
         await tester.tap(find.byKey(const Key('group-Aide')));
         await settle(tester);
+        // 151: « Clients bloqués » above makes Compte longer: scrolled to.
+        await tester.scrollUntilVisible(find.byKey(const Key('compte-help')), 300,
+            scrollable: find.byType(Scrollable).first);
         // One way to Mara: the Aide page holds WhatsApp and e-mail; Compte
         // only leads there.
         expect(find.byKey(const Key('compte-help')), findsOneWidget);

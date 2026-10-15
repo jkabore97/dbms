@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/courier/courier_repository.dart';
+import '../../core/errors.dart' show describeError;
 import '../../core/format/money.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/notify/notifications_repository.dart';
@@ -85,6 +87,9 @@ class _CourierScreenState extends State<CourierScreen>
 
   /// Cash collected at doors, not yet handed to the shops (073).
   List<CashHeld> _cash = const [];
+
+  /// What the courier carries against the cap (146), money by money.
+  List<CashCap> _cap = const [];
   bool _loading = true;
   bool _busy = false;
   String? _error;
@@ -141,6 +146,7 @@ class _CourierScreenState extends State<CourierScreen>
       var mine = const <DeliveryJob>[];
       var earnings = const <CourierEarnings>[];
       var cash = const <CashHeld>[];
+      var cap = const <CashCap>[];
       if (status == 'approved') {
         final here = _here;
         final results = await Future.wait([
@@ -154,11 +160,13 @@ class _CourierScreenState extends State<CourierScreen>
               .earnings()
               .catchError((_) => const <CourierEarnings>[]),
           widget.courier.cash().catchError((_) => const <CashHeld>[]),
+          widget.courier.cashCap().catchError((_) => const <CashCap>[]),
         ]);
         board = results[0] as List<DeliveryJob>;
         mine = results[1] as List<DeliveryJob>;
         earnings = results[2] as List<CourierEarnings>;
         cash = results[3] as List<CashHeld>;
+        cap = results[4] as List<CashCap>;
       }
       if (!mounted) return;
       setState(() {
@@ -167,6 +175,7 @@ class _CourierScreenState extends State<CourierScreen>
         _mine = mine;
         _earnings = earnings;
         _cash = cash;
+        _cap = cap;
         _loading = false;
       });
       if (status == 'approved' && _here == null && !_locating) {
@@ -425,6 +434,10 @@ class _CourierScreenState extends State<CourierScreen>
                                       earnings: g.value,
                                       currency: g.key),
                                 if (_cash.isNotEmpty) _CashStrip(cash: _cash),
+                                // The cap (146): what is in hand, and the
+                                // most a courier carries at once.
+                                for (final c in _cap)
+                                  if (c.cap != null) _CashCapStrip(cap: c),
                               ],
                             ),
                           ),
@@ -463,7 +476,13 @@ class _CourierScreenState extends State<CourierScreen>
                                             () => widget.courier
                                                 .take(job.orderId),
                                             'Trop tard : un autre livreur '
-                                            "l'a prise."),
+                                            "l'a prise.",
+                                            // The cash cap (146), in its words.
+                                            say: (error) {
+                                              final said = describeError(error);
+                                              final fr = error is PostgrestException ? error.message : '';
+                                              return CashCap.isRefusal(fr) ? said : null;
+                                            }),
                                     child: Text(context.tr('J\'accepte')),
                                   ),
                                 ],
@@ -1108,6 +1127,57 @@ class _CashStrip extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// « Espèces en main : 30 000 FCFA sur 50 000 FCFA » (146): the shops'
+/// money in the courier's hands against the most they may carry, with a
+/// bar; full, it says what to do.
+class _CashCapStrip extends StatelessWidget {
+  const _CashCapStrip({required this.cap});
+
+  final CashCap cap;
+
+  @override
+  Widget build(BuildContext context) {
+    final money = moneyFormat(cap.currency);
+    final limit = cap.cap!;
+    final share = limit <= 0 ? 0.0 : (cap.held / limit).clamp(0.0, 1.0);
+    final full = cap.held >= limit;
+    return Container(
+      key: Key('courier-cash-cap-${cap.currency}'),
+      color: ShopStyle.paper,
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            context.tr('Espèces en main : {held} sur {cap} au plus',
+                {'held': money.format(cap.held), 'cap': money.format(limit)}),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: ShopStyle.ink),
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: share,
+              minHeight: 6,
+              backgroundColor: ShopStyle.line,
+              color: full ? Theme.of(context).colorScheme.error : ShopStyle.ink,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            full
+                ? context.tr('Plafond atteint : remettez l\'argent aux boutiques avant une nouvelle course payée en espèces.')
+                : context.tr('Une course payée en espèces qui dépasserait ce plafond ne peut pas être prise. Les courses déjà payées par Wave ne comptent pas.'),
+            style: TextStyle(
+                fontSize: 13,
+                color: full ? Theme.of(context).colorScheme.error : ShopStyle.mist),
+          ),
+        ],
       ),
     );
   }

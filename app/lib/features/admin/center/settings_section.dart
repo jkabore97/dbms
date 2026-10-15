@@ -187,6 +187,14 @@ const platformSettingDefs = <SettingDef>[
   // 136 (batch 141): the photos an item shows and holds on Mara Pro (1 to
   // 20); Basic keeps one, its cover.
   SettingDef('max_item_photos_pro', 'pro', SettingType.count),
+  // 146 (batch 151): the fraud guards — open orders a shopper may hold at
+  // one business and, before their first finished order, everywhere (0 =
+  // no limit); the cash a courier carries at once and the till gap Mara
+  // looks at, in francs CFA (0 = none).
+  SettingDef('order_open_max_per_shop', 'fraud', SettingType.count),
+  SettingDef('order_first_open_max', 'fraud', SettingType.count),
+  SettingDef('courier_cash_cap', 'fraud', SettingType.money),
+  SettingDef('till_gap_review', 'fraud', SettingType.money),
 ];
 
 /// One of Réglages' eight cards (135): its address, its icon, and the
@@ -270,6 +278,8 @@ const settingCards = <SettingCard>[
   SettingCard('securite', Icons.shield_outlined, [
     ('security', ['admin_two_step']),
     ('signin', ['apple_web_signin']),
+    // 146 (batch 151): « Protections contre la fraude ».
+    ('fraud', ['order_open_max_per_shop', 'order_first_open_max', 'courier_cash_cap', 'till_gap_review']),
   ], links: [
     ('Actions de Mara', Routes.consoleJournal),
     ('Activité', Routes.consoleAudit),
@@ -315,7 +325,7 @@ String settingCardHint(BuildContext context, String card) => switch (card) {
       'cauris' => context.tr('Gains, ligues, prix'),
       'creation' => context.tr('Types d\'activité, parcours'),
       'notifications' => context.tr('Comptes, aide, applications'),
-      'securite' => context.tr('Deux étapes, connexion, actions, activité'),
+      'securite' => context.tr('Deux étapes, connexion, fraude, actions'),
       _ => '',
     };
 
@@ -345,6 +355,7 @@ String settingPartLabel(BuildContext context, String part) => switch (part) {
       'apps' => context.tr('Applications mobiles'),
       'security' => context.tr('Sécurité'),
       'signin' => context.tr('Connexion'),
+      'fraud' => context.tr('Protections contre la fraude'),
       _ => part,
     };
 
@@ -400,6 +411,7 @@ String settingGroupLabel(BuildContext context, String group) => switch (group) {
       'accounts' => context.tr('Nouveaux comptes'),
       'helppro' => context.tr('Aide Pro'),
       'signin' => context.tr('Connexion'),
+      'fraud' => context.tr('Protections contre la fraude'),
       _ => group,
     };
 
@@ -492,6 +504,14 @@ String settingLabel(BuildContext context, String key) => switch (key) {
       'admin_help_notify' =>
         context.tr('Notifier les administrateurs de Mara d\'une demande d\'aide sans réponse'),
       'apple_web_signin' => context.tr('Connexion Apple sur le site'),
+      'order_open_max_per_shop' =>
+        context.tr('Commandes en cours par client dans une même activité (0 : sans limite)'),
+      'order_first_open_max' =>
+        context.tr('Commandes en cours d\'un nouveau compte, avant sa première terminée (0 : sans limite)'),
+      'courier_cash_cap' =>
+        context.tr('Espèces qu\'un livreur porte au plus à la fois — FCFA (0 : sans plafond)'),
+      'till_gap_review' =>
+        context.tr('Écart de caisse signalé à Mara à partir de — FCFA (0 : jamais)'),
       _ => key,
     };
 
@@ -571,6 +591,12 @@ const rangedSettings = {
   'booking_cancel_hours': (0, 168),
   // 136: the photos an item holds on Pro (a trigger refuses the rest).
   'max_item_photos_pro': (1, 20),
+  // 146: the order limits, 0 (off) to 50; the cash cap and the till gap
+  // up to 10 000 000 FCFA (the server also refuses 1 to 999).
+  'order_open_max_per_shop': (0, 50),
+  'order_first_open_max': (0, 50),
+  'courier_cash_cap': (0, 10000000),
+  'till_gap_review': (0, 10000000),
 };
 
 /// A help number as typed or pasted, letters and digits only (126): the

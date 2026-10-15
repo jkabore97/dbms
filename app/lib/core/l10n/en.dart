@@ -8084,4 +8084,177 @@ const enStrings = <String, String>{
   '{n} vitrines masquées sur ce téléphone': '{n} vitrines hidden on this phone',
   'Vitrine signalée : {name}': 'Reported vitrine: {name}',
   'Suspendre…': 'Suspend…',
+  // Batch 151 (146): « Protections contre la fraude ».
+  'Clients bloqués':
+      'Blocked customers',
+  'Ceux qui ne peuvent plus commander chez vous':
+      'Those who can no longer order from you',
+  'Deux étapes, connexion, fraude, actions':
+      'Two-step, sign-in, fraud, actions',
+  'Protections contre la fraude':
+      'Fraud protection',
+  'Commandes en cours par client dans une même activité (0 : sans limite)':
+      'Orders in progress per customer at one business (0: no limit)',
+  'Commandes en cours d\'un nouveau compte, avant sa première terminée (0 : sans limite)':
+      'Orders in progress for a new account, before its first finished one (0: no limit)',
+  'Espèces qu\'un livreur porte au plus à la fois — FCFA (0 : sans plafond)':
+      'Most cash a courier carries at once — FCFA (0: no cap)',
+  'Écart de caisse signalé à Mara à partir de — FCFA (0 : jamais)':
+      'Till gap reported to Mara from — FCFA (0: never)',
+  'À vérifier : fraude':
+      'To review: fraud',
+  'blocages, livreurs au plafond, écarts de caisse':
+      'blocks, couriers at the cap, till gaps',
+  'Espèces en main : {held} sur {cap} au plus':
+      'Cash in hand: {held} of {cap} at most',
+  'Plafond atteint : remettez l\'argent aux boutiques avant une nouvelle course payée en espèces.':
+      'Cap reached: hand the money to the shops before a new cash delivery.',
+  'Une course payée en espèces qui dépasserait ce plafond ne peut pas être prise. Les courses déjà payées par Wave ne comptent pas.':
+      'A cash delivery that would go over this cap cannot be taken. Deliveries already paid by Wave do not count.',
+  'Clôturer la caisse':
+      'Close the till',
+  'Bloquer {name} ?':
+      'Block {name}?',
+  'Ce client ne pourra plus commander chez vous. Il n\'est pas prévenu : il lit seulement que vous ne prenez pas sa commande pour le moment. Vous pouvez le débloquer dans Réglages › Clients bloqués.':
+      'This customer will no longer be able to order from you. They are not told: they only read that you are not taking their order for now. You can unblock them in Settings › Blocked customers.',
+  'Pourquoi ? (facultatif, pour vous seul)':
+      'Why? (optional, for you only)',
+  'Bloquer':
+      'Block',
+  '{name} ne peut plus commander chez vous.':
+      '{name} can no longer order from you.',
+  'Bloquer un client arrive avec la prochaine mise à jour du serveur.':
+      'Blocking a customer comes with the next server update.',
+  'Bloquer ce client':
+      'Block this customer',
+  'Ce que les protections contre la fraude ont relevé':
+      'What the fraud protection found',
+  'Signalements à lire · {n}':
+      'Reports to read · {n}',
+  'vitrines, commandes, paiements signalés par les clients':
+      'vitrines, orders, payments reported by customers',
+  'Livreurs à valider · {n}':
+      'Couriers to approve · {n}',
+  'pièces à regarder, valider ou suspendre':
+      'documents to look at, approve or suspend',
+  'Activités : commandes bloquées ou refusées':
+      'Businesses: blocked or refused orders',
+  'Aucune : moins de 3 clients bloqués en 30 jours et de 5 commandes refusées en 7 jours partout.':
+      'None: fewer than 3 customers blocked in 30 days and 5 orders refused in 7 days everywhere.',
+  '1 client bloqué en 30 j': '1 customer blocked in 30 d',
+  '{n} clients bloqués en 30 j': '{n} customers blocked in 30 d',
+  '1 commande refusée en 7 j': '1 order refused in 7 d',
+  '{n} commandes refusées en 7 j': '{n} orders refused in 7 d',
+  'Livreurs au-delà du plafond d\'espèces':
+      'Couriers over the cash cap',
+  'Aucun plafond n\'est fixé (Réglages › Sécurité).':
+      'No cap is set (Settings › Security).',
+  'Aucun : chaque livreur porte moins de {cap}.':
+      'None: every courier carries less than {cap}.',
+  'Livreur':
+      'Courier',
+  '{held} en main pour {cap} au plus':
+      '{held} in hand for {cap} at most',
+  'Écarts de caisse (7 jours)':
+      'Till gaps (7 days)',
+  'Aucun seuil n\'est fixé (Réglages › Sécurité).':
+      'No threshold is set (Settings › Security).',
+  'Aucun écart de {gap} ou plus.':
+      'No gap of {gap} or more.',
+  'il manque {amount}':
+      '{amount} short',
+  '{amount} en trop':
+      '{amount} over',
+  '{name} peut de nouveau commander chez vous.':
+      '{name} can order from you again.',
+  'Un client bloqué ne peut plus commander chez vous. Il n\'est pas prévenu : votre vitrine lui dit seulement qu\'elle ne prend pas sa commande pour le moment.':
+      'A blocked customer can no longer order from you. They are not told: your vitrine only says it is not taking their order for now.',
+  'Aucun client bloqué. « Bloquer ce client » est dans le menu ⋮ d\'une commande.':
+      'No blocked customers. “Block this customer” is in an order’s ⋮ menu.',
+  'Bloqué le {date}':
+      'Blocked on {date}',
+  'Indiquez les espèces comptées dans la caisse.':
+      'Enter the cash counted in the till.',
+  'Le fonds de caisse est un montant, ou rien.':
+      'The opening float is an amount, or nothing.',
+  'Juste : la caisse tombe juste':
+      'Exact: the till balances',
+  'Il manque {amount}':
+      '{amount} short',
+  'La clôture de caisse arrive avec la prochaine mise à jour du serveur. Vos ventes, elles, sont bien enregistrées.':
+      'Closing the till comes with the next server update. Your sales are recorded as usual.',
+  'Comptez les espèces dans la caisse, sans regarder les ventes. Mara compare ensuite avec ce qui est attendu : le fonds de caisse, plus les ventes en espèces du jour, moins les retours.':
+      'Count the cash in the till without looking at the sales. Mara then compares it with what is expected: the opening float, plus the day’s cash sales, minus returns.',
+  'Espèces comptées dans la caisse':
+      'Cash counted in the till',
+  'Fonds de caisse du matin (facultatif)':
+      'Morning float (optional)',
+  'La monnaie mise dans la caisse à l\'ouverture':
+      'The change put in the till at opening',
+  'Un mot (facultatif)':
+      'A note (optional)',
+  'Clôtures récentes':
+      'Recent closings',
+  'Fonds de caisse':
+      'Opening float',
+  'Ventes en espèces':
+      'Cash sales',
+  'Retours en espèces':
+      'Cash returns',
+  'Attendu':
+      'Expected',
+  'Compté':
+      'Counted',
+  'Enregistré. Le propriétaire voit chaque clôture et son écart.':
+      'Saved. The owner sees every closing and its gap.',
+  'Payez par Wave seulement depuis Mara, une fois la commande acceptée — jamais à un numéro reçu par message ou par appel.':
+      'Pay by Wave only from inside Mara, once the order is accepted — never to a number sent by message or given on a call.',
+  'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez à la livraison, au retrait, ou par Wave dans Mara.':
+      'Never pay in advance to someone you do not know. Pay on delivery, at pickup, or by Wave in Mara.',
+  'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez à la livraison ou au retrait.':
+      'Never pay in advance to someone you do not know. Pay on delivery or at pickup.',
+  'On vous demande de payer avant ? Signalez-le':
+      'Asked to pay first? Report it',
+  'Cette boutique ne prend pas votre commande pour le moment.':
+      'This shop is not taking your order for now.',
+  'Cette ferme ne prend pas votre commande pour le moment.':
+      'This farm is not taking your order for now.',
+  'Cette association ne prend pas votre commande pour le moment.':
+      'This association is not taking your order for now.',
+  'Vous avez déjà plusieurs commandes en cours ici : attendez qu\'une soit terminée pour en passer une autre.':
+      'You already have several orders in progress here: wait until one is finished before placing another.',
+  'Un nouveau compte a peu de commandes en cours à la fois : attendez que l\'une d\'elles soit terminée.':
+      'A new account can have only a few orders in progress at once: wait until one of them is finished.',
+  'Seul le propriétaire ou un administrateur bloque un client':
+      'Only the owner or an administrator can block a customer',
+  'Seul le propriétaire ou un administrateur débloque un client':
+      'Only the owner or an administrator can unblock a customer',
+  'Cette commande n\'a pas de compte client à bloquer':
+      'This order has no customer account to block',
+  'Vous ne pouvez pas vous bloquer vous-même':
+      'You cannot block yourself',
+  'Vous portez déjà assez d\'espèces : remettez l\'argent aux boutiques avant de prendre une autre course payée en espèces.':
+      'You are already carrying enough cash: hand the money to the shops before taking another cash delivery.',
+  'Cette course dépasse ce qu\'un livreur peut porter en espèces : la boutique la livre elle-même.':
+      'This delivery is more cash than a courier may carry: the shop delivers it itself.',
+  'Seul le propriétaire ou un administrateur fait un retour de vente.':
+      'Only the owner or an administrator can record a sale return.',
+  'Vous ne pouvez pas clôturer la caisse de cette activité':
+      'You cannot close the till of this business',
+  'Une association clôture sa journée, pas une caisse':
+      'An association closes its day, not a till',
+  'Choisissez un jour des 31 derniers jours':
+      'Choose a day within the last 31 days',
+  'Indiquez un montant positif':
+      'Enter a positive amount',
+  'De 0 (sans limite) à 50 commandes, s\'il vous plaît.':
+      'From 0 (no limit) to 50 orders, please.',
+  'De 1 000 à 10 000 000 FCFA, ou 0 pour aucun, s\'il vous plaît.':
+      'From 1,000 to 10,000,000 FCFA, or 0 for none, please.',
+  'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez au retrait, ou par Wave dans Mara.':
+      'Never pay in advance to someone you do not know. Pay at pickup, or by Wave in Mara.',
+  'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez au retrait.':
+      'Never pay in advance to someone you do not know. Pay at pickup.',
+  'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez à la livraison, quand vous recevez la commande.':
+      'Never pay in advance to someone you do not know. Pay on delivery, when you receive the order.',
 };

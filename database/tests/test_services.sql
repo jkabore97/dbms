@@ -23,6 +23,11 @@
 -- phone is on the street, as its settings promise.
 -- ============================================================
 \set ON_ERROR_STOP on
+
+-- 146's order limits are test_batch146's; this suite tests other rules,
+-- so they are off while it runs (and back to their defaults at its end).
+update platform_settings set value = '0'
+ where key in ('order_open_max_per_shop', 'order_first_open_max');
 -- The owner's numbers: earlier suites change them for their own fixtures.
 update platform_settings set value = '8' where key = 'vitrine_min_items';
 update platform_settings set value = '1' where key = 'vitrine_min_items_association';
@@ -755,3 +760,7 @@ commit;
 
 \echo ''
 \echo 'test_services: all passed'
+
+-- 146's order limits back to their defaults.
+update platform_settings set value = (case key when 'order_open_max_per_shop' then '3' else '2' end)::jsonb
+ where key in ('order_open_max_per_shop', 'order_first_open_max');

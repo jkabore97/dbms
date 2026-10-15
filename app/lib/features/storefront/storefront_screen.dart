@@ -40,6 +40,7 @@ import 'open_badge.dart';
 import 'order_sign_in_sheet.dart';
 import 'shop_skeleton.dart';
 import 'share_vitrine.dart';
+import 'pay_safety.dart';
 import 'shop_style.dart';
 import 'visitors_badge.dart';
 import 'whatsapp_verify_screen.dart';
@@ -764,6 +765,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
           addresses: _mine?.addresses ?? const [],
           preferredPayment: _mine?.payment ?? 'cash',
           profile: _shop?.profile ?? 'retail',
+          onReport: () => unawaited(_report()),
           onSubmit: _send,
           quote: (lat, lng) =>
               widget.storefront.deliveryCheck(widget.slug, lat: lat, lng: lng),
@@ -1283,6 +1285,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
                 onAdd: _add,
                 onRemove: _remove,
                 onDetails: _details,
+                onReport: _visitorOf(shop) ? () => unawaited(_report()) : null,
               ),
               ),
             );
@@ -1683,7 +1686,12 @@ class OrderSheet extends StatefulWidget {
     this.addresses = const [],
     this.preferredPayment = 'cash',
     this.profile = 'retail',
+    this.onReport,
   });
+
+  /// « Signaler » under the safety line (batch 151): the report sheet
+  /// about this vitrine. Null: the line alone.
+  final VoidCallback? onReport;
 
   /// The seller's kind ('retail', 'farm', 'association'): who « la
   /// boutique » is in the sheet's words (120).
@@ -2353,6 +2361,14 @@ class _OrderSheetState extends State<OrderSheet> {
                     ),
               style: const TextStyle(fontSize: 13, color: ShopStyle.mist),
             ),
+            // « Ne payez jamais d'avance » (batch 151), said for the way
+            // chosen: cash at the door, Wave only from inside Mara.
+            const SizedBox(height: 12),
+            PaySafetyLine(
+              way: _payment == 'wave' ? PayWay.wave : PayWay.cash,
+              at: _fulfilment == 'delivery' ? PayAt.delivery : PayAt.pickup,
+              onReport: widget.onReport,
+            ),
       ],
     );
   }
@@ -2379,7 +2395,11 @@ class _Window extends StatelessWidget {
     required this.onAdd,
     required this.onRemove,
     required this.onDetails,
+    this.onReport,
   });
+
+  /// « Signaler » under the safety line (batch 151), for a visitor.
+  final VoidCallback? onReport;
 
   /// The basket, in the page after the goods, before the footer.
   final Widget? basketCard;
@@ -2823,6 +2843,20 @@ class _Window extends StatelessWidget {
                           label: Text(context.tr('Partager')),
                         ),
                       ],
+                    ),
+                  ],
+                  // « Ne payez jamais d'avance » (batch 151), where a
+                  // visitor is about to call or write: never on the
+                  // business's own vitrine.
+                  if (!mine) ...[
+                    const SizedBox(height: 16),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 560),
+                      child: PaySafetyLine(
+                        alsoWave: shop.waveMerchant != null,
+                        at: shop.delivers ? PayAt.either : PayAt.pickup,
+                        onReport: onReport,
+                      ),
                     ),
                   ],
                 ],

@@ -34,6 +34,7 @@ import 'farm_flows.dart';
 import '../money/expense_flow.dart';
 import '../common/step_flow.dart';
 import '../retail/sale_flow.dart';
+import '../retail/till_close_sheet.dart';
 import '../../core/retail/models.dart';
 import '../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -447,6 +448,25 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
                     )
                   else
                     ..._events.map((e) => _EventTile(event: e)),
+
+                  // « Clôturer la caisse » (batch 151): the farm sells at
+                  // the same till as a shop (« Vente »), so it closes it
+                  // the same way — at the foot of the day, as the
+                  // association closes its own.
+                  if (widget.retail != null && !widget.org.isObserverOnly) ...[
+                    const SizedBox(height: 24),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 52),
+                      child: OutlinedButton.icon(
+                        key: const Key('home-close-till'),
+                        onPressed: () =>
+                            TillCloseSheet.open(context, widget.org, widget.retail!.guards),
+                        icon: const Icon(Icons.lock_clock_outlined),
+                        label: Text(context.tr('Clôturer la caisse'),
+                            style: const TextStyle(fontSize: 16)),
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(height: 120),
                 ],

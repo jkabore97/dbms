@@ -19,7 +19,9 @@ import '../storefront/shop_skeleton.dart';
 import '../pay/wave_buttons.dart';
 import 'booking_words.dart';
 import 'order_tracking_panel.dart';
+import '../storefront/pay_safety.dart';
 import '../storefront/shop_style.dart';
+import '../shopper/report_sheet.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
 /// A customer's orders: what they asked for, where each one stands, and
@@ -340,6 +342,13 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                                             onUnavailable: null,
                                           )
                                         : null,
+                                    // « Ne payez jamais d'avance » (batch 151),
+                                    // while there is still money to hand over.
+                                    safety: !o.isPaid,
+                                    onReport: widget.shopper == null || !widget.shopper!.isConfigured
+                                        ? null
+                                        : () => showReportSheet(context,
+                                            shopper: widget.shopper!, orderId: o.id),
                                     tracking: OrderTrackingPanel(
                                       key: ValueKey('track-${o.id}'),
                                       orderId: o.id,
@@ -390,7 +399,14 @@ class _OrderCard extends StatelessWidget {
     this.onAgain,
     this.cancelTerms,
     this.onCall,
+    this.safety = false,
+    this.onReport,
   });
+
+  /// The safety line (batch 151) on an open order not yet paid, and its
+  /// « Signaler » (the report sheet about this order).
+  final bool safety;
+  final VoidCallback? onReport;
 
   /// Until when a booking may be cancelled (134). Null: not a booking that
   /// can be, or asked of nobody.
@@ -541,6 +557,14 @@ class _OrderCard extends StatelessWidget {
                 style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
           ],
           ?tracking,
+          if (safety) ...[
+            const SizedBox(height: 12),
+            PaySafetyLine(
+              way: order.paymentMethod == 'wave' ? PayWay.wave : PayWay.cash,
+              at: order.fulfilment == 'delivery' ? PayAt.delivery : PayAt.pickup,
+              onReport: onReport,
+            ),
+          ],
           if (wave != null || onPay != null) ...[
             const SizedBox(height: 12),
             _PayArea(

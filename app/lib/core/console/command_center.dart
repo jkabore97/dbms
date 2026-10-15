@@ -49,7 +49,21 @@ class CommandCenterRepository {
       final r = await _requireClient().rpc('spot_refunds_todo');
       if (r is Map) counts.addAll(Map<String, dynamic>.from(r));
     } catch (_) {}
+    // 146 (batch 151): « À vérifier » — the fraud review queue's length.
+    // Only where 146 is.
+    try {
+      final r = await _requireClient().rpc('review_todo_counts');
+      if (r is Map) counts.addAll(Map<String, dynamic>.from(r));
+    } catch (_) {}
     return PlatformTodo.fromJson(counts);
+  }
+
+  /// What needs Mara's look (146's platform_review_queue): businesses with
+  /// many blocked or refused orders, couriers over the cash cap, large till
+  /// gaps, and the counts of what already has its own place.
+  Future<ReviewQueue> reviewQueue() async {
+    final v = await _requireClient().rpc('platform_review_queue');
+    return ReviewQueue.fromJson(v is Map ? Map<String, dynamic>.from(v) : const {});
   }
 
   /// Those payments, oldest first (139's platform_spot_refunds).
@@ -239,13 +253,15 @@ class PlatformTodo {
   int get waiting =>
       this['new_7'] + this['pro_paid'] + this['spots_paid'] + this['spots_asked'] + this['spot_refunds'] +
       this['couriers'] + this['orders_stuck'] + this['payouts_failed'] + this['silent_30'] +
-      this['features_lapsed'] + this['reports_open'] + this['help_late'] + this['help_open'];
+      this['features_lapsed'] + this['reports_open'] + this['help_late'] + this['help_open'] +
+      this['review'];
 
   /// A counter this server has: the help's two (136) only where 133 is,
   /// every other one always.
   /// 139's spot refunds only where 139 is.
   bool has(String key) =>
-      (!key.startsWith('help_') && key != 'spot_refunds') || counts.containsKey(key);
+      (!key.startsWith('help_') && key != 'spot_refunds' && key != 'review') ||
+      counts.containsKey(key);
 
   /// One of « Aujourd'hui »'s fourteen counters (135): the spots are the
   /// paid ones and the asked ones together, as « À faire » drew them.
@@ -285,7 +301,8 @@ class PlatformTodo {
 /// the other open ones with the couriers and the new businesses; only on
 /// a server with 133 ([PlatformTodo.has]).
 const todoUrgency = <List<String>>[
-  ['orders_stuck', 'help_late', 'reports_open', 'payouts_failed', 'pro_paid', 'spots', 'spot_refunds'],
+  // 146: « À vérifier » (the fraud review queue) beside the reports.
+  ['orders_stuck', 'help_late', 'reports_open', 'review', 'payouts_failed', 'pro_paid', 'spots', 'spot_refunds'],
   ['help_open', 'couriers', 'new_7'],
   ['silent_30', 'features_lapsed'],
   ['plans_ending', 'unlocks_ending', 'promos_ending', 'spots_ending', 'rules_ending'],
@@ -624,4 +641,138 @@ class SettingValue {
   final Object? value;
   final DateTime? updatedAt;
   final String? changedBy;
+}
+
+
+/// Mara's review queue (146, batch 151).
+class ReviewQueue {
+  const ReviewQueue({
+    this.businesses = const [],
+    this.couriers = const [],
+    this.tills = const [],
+    this.reportsOpen = 0,
+    this.couriersPending = 0,
+    this.cashCap,
+    this.tillGap,
+  });
+
+  factory ReviewQueue.fromJson(Map<String, dynamic> j) {
+    List<Map<String, dynamic>> rows(String k) => [
+          for (final r in (j[k] is List ? j[k] as List : const []))
+            if (r is Map) Map<String, dynamic>.from(r),
+        ];
+    double? n(Object? v) => v is num ? v.toDouble() : double.tryParse('${v ?? ''}');
+    return ReviewQueue(
+      businesses: [
+        for (final r in rows('businesses'))
+          ReviewBusiness(
+            orgId: '${r['org_id']}',
+            name: '${r['name'] ?? ''}',
+            slug: r['slug'] as String?,
+            profile: (r['profile'] as String?) ?? 'retail',
+            blocks: (n(r['blocks_30']) ?? 0).round(),
+            refused: (n(r['refused_7']) ?? 0).round(),
+          ),
+      ],
+      couriers: [
+        for (final r in rows('couriers'))
+          ReviewCourier(
+            userId: '${r['user_id']}',
+            name: '${r['name'] ?? ''}',
+            phone: r['phone'] as String?,
+            currency: (r['currency'] as String?) ?? 'XOF',
+            held: n(r['held']) ?? 0,
+            cap: n(r['cap']) ?? 0,
+          ),
+      ],
+      tills: [
+        for (final r in rows('tills'))
+          ReviewTill(
+            orgId: '${r['org_id']}',
+            name: '${r['name'] ?? ''}',
+            day: DateTime.tryParse('${r['day']}'),
+            gap: n(r['gap']) ?? 0,
+            expected: n(r['expected']) ?? 0,
+            counted: n(r['counted']) ?? 0,
+            currency: (r['currency'] as String?) ?? 'XOF',
+            closer: r['closer'] as String?,
+          ),
+      ],
+      reportsOpen: (n(j['reports_open']) ?? 0).round(),
+      couriersPending: (n(j['couriers_pending']) ?? 0).round(),
+      cashCap: n(j['cash_cap']),
+      tillGap: n(j['till_gap_review']),
+    );
+  }
+
+  final List<ReviewBusiness> businesses;
+  final List<ReviewCourier> couriers;
+  final List<ReviewTill> tills;
+  final int reportsOpen;
+  final int couriersPending;
+  final double? cashCap;
+  final double? tillGap;
+
+  bool get isEmpty => businesses.isEmpty && couriers.isEmpty && tills.isEmpty;
+}
+
+/// A business with 3 blocks in 30 days or 5 refused orders in 7.
+class ReviewBusiness {
+  const ReviewBusiness({
+    required this.orgId,
+    required this.name,
+    this.slug,
+    this.profile = 'retail',
+    this.blocks = 0,
+    this.refused = 0,
+  });
+
+  final String orgId;
+  final String name;
+  final String? slug;
+  final String profile;
+  final int blocks;
+  final int refused;
+}
+
+/// A courier carrying more shops' cash than the cap.
+class ReviewCourier {
+  const ReviewCourier({
+    required this.userId,
+    required this.name,
+    this.phone,
+    this.currency = 'XOF',
+    required this.held,
+    required this.cap,
+  });
+
+  final String userId;
+  final String name;
+  final String? phone;
+  final String currency;
+  final double held;
+  final double cap;
+}
+
+/// A till closed with a gap at least as large as till_gap_review.
+class ReviewTill {
+  const ReviewTill({
+    required this.orgId,
+    required this.name,
+    this.day,
+    required this.gap,
+    required this.expected,
+    required this.counted,
+    this.currency = 'XOF',
+    this.closer,
+  });
+
+  final String orgId;
+  final String name;
+  final DateTime? day;
+  final double gap;
+  final double expected;
+  final double counted;
+  final String currency;
+  final String? closer;
 }

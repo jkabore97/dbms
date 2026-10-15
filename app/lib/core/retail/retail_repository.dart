@@ -6,6 +6,7 @@ import '../orders/orders.dart';
 import '../storefront/storefront_repository.dart' show VitrineSchedule;
 import '../db/local_db.dart';
 import 'duration.dart';
+import 'fraud_guards.dart';
 import 'models.dart';
 
 /// The shop's reads and writes.
@@ -31,6 +32,10 @@ class RetailRepository {
         _onQueued = onQueued;
 
   final SupabaseClient? _client;
+
+  /// The fraud guards of 146 (batch 151): « Bloquer ce client » and
+  /// « Clôturer la caisse », on the same server.
+  FraudGuardsRepository get guards => FraudGuardsRepository(_client);
 
   /// Where a sale goes when the network does not answer (package 7). Null
   /// in tests and builds without a local database: the till then says
