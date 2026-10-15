@@ -140,6 +140,8 @@ const enStrings = <String, String>{
       'Items',
   'Articles en tête ({length}/6)':
       'Featured items ({length}/6)',
+  'Articles et stock de cet appareil seulement. Ils seront à jour au retour du réseau.':
+      'Items and stock from this device only. They will be up to date when the network is back.',
   'Articles lus':
       'Items read',
   'Articles vendus':
@@ -1354,6 +1356,8 @@ const enStrings = <String, String>{
       'Product',
   'Produits différents':
       'Different products',
+  'Produits et stock de cet appareil seulement. Ils seront à jour au retour du réseau.':
+      'Products and stock from this device only. They will be up to date when the network is back.',
   'Profil':
       'Profile',
   'Proposer « Payer par carte »':

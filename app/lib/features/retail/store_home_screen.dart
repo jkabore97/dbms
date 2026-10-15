@@ -120,6 +120,10 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
   List<ExpiringProduct> _expiring = const [];
   int _pendingOrders = 0;
   List<Product> _products = const [];
+
+  /// [_products] is the list this phone last read: the server did not
+  /// answer. The till says so.
+  bool _productsFromDevice = false;
   double _lossesAvoided = 0;
   int _photosWaiting = 0;
 
@@ -255,6 +259,11 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
     // Each question to the server is bounded: a stalled connection (the
     // request out, no answer, no error) left the home on its progress bar
     // for good, with no word that the network was the reason.
+    //
+    // The shelf falls back on its own: offline or stalled, the till sells
+    // from the catalogue this phone last read rather than from nothing —
+    // whatever became of the day's other questions.
+    Future<({List<Product> products, bool fromDevice})>? askedProducts;
     try {
       // Every question at once (none needs another's answer): on 3G each is
       // a round trip of half a second or more, and the day used to wait for
@@ -264,7 +273,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
       final id = widget.org.id;
       final askedDay = retail.day(id).timeout(_askFor)..ignore();
       final askedExpiring = retail.expiring(id).timeout(_askFor)..ignore();
-      final askedProducts = retail.products(id).timeout(_askFor)..ignore();
+      askedProducts = retail.tillProducts(id, timeout: _askFor)..ignore();
       final askedAvoided = retail.lossesAvoided(id).timeout(_askFor)..ignore();
       // A database one migration behind has no orders; the badge stays
       // quiet rather than failing the home screen.
@@ -303,7 +312,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
 
       final day = await askedDay;
       final expiring = await askedExpiring;
-      final products = await askedProducts;
+      final shelf = await askedProducts;
       final avoided = await askedAvoided;
       final pending = await askedPending;
       final waiting = askedWaiting == null ? 0 : await askedWaiting;
@@ -316,16 +325,25 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
         _day = day;
         _pendingOrders = pending;
         _expiring = expiring;
-        _products = products;
+        _products = shelf.products;
+        _productsFromDevice = shelf.fromDevice;
         _lossesAvoided = avoided;
         _photosWaiting = waiting;
         _loading = false;
       });
     } catch (error) {
+      ({List<Product> products, bool fromDevice})? shelf;
+      try {
+        shelf = await askedProducts;
+      } catch (_) {}
       if (!mounted) return;
       setState(() {
         _loading = false;
         _error = describeError(error);
+        if (shelf != null) {
+          _products = shelf.products;
+          _productsFromDevice = shelf.fromDevice;
+        }
       });
     }
   }
@@ -369,6 +387,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
         currency: widget.org.currency,
         capture: widget.access.canEdit('photos') ? widget.capture : null,
         products: _products,
+        productsFromDevice: _productsFromDevice,
         canCredit: widget.access.canEdit('credits') &&
             !PathGate.locks(context, widget.org, 'credits'),
         // The last answer the device heard when offline (batch 115).

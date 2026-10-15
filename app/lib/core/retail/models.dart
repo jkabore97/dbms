@@ -92,6 +92,21 @@ class Product {
   bool get isLow =>
       counted && lowStockAt != null && quantity <= lowStockAt!;
 
+  /// What the till's copy on the phone keeps of it (LocalDb.cacheProducts),
+  /// in the server's own column names so [Product.fromRow] reads it back.
+  Map<String, Object?> toShelfRow() => {
+        'id': id,
+        'name': name,
+        'barcode': barcode,
+        'sale_price': salePrice,
+        'quantity': quantity,
+        'unit': unit,
+        'is_ingredient': isIngredient,
+        'is_service': isService,
+        'price_from': priceFrom,
+        'stock_tracked': stockTracked,
+      };
+
   factory Product.fromRow(Map<String, dynamic> row) {
     double parse(Object? v) =>
         v == null ? 0 : (v is num ? v.toDouble() : double.tryParse('$v') ?? 0);

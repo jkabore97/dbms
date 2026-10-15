@@ -202,10 +202,14 @@ class _NewCreditFlowState extends State<NewCreditFlow> {
     if (!_sold) {
       String? saleUuid;
       List<Product> products = const [];
+      var fromDevice = false;
       try {
-        products = await widget.retail.products(widget.org.id);
+        final shelf = await widget.retail.tillProducts(widget.org.id);
+        products = shelf.products;
+        fromDevice = shelf.fromDevice;
       } catch (_) {
-        // Offline: the flow still lets a name be typed.
+        // Offline with no list ever read: the flow still lets a name be
+        // typed.
       }
       if (!mounted) return false;
       await StepFlow.push(
@@ -216,6 +220,7 @@ class _NewCreditFlowState extends State<NewCreditFlow> {
           retail: widget.retail,
           currency: widget.org.currency,
           products: products,
+          productsFromDevice: fromDevice,
           initialMethod: 'credit',
           farm: widget.org.profile == 'farm',
           customerName: name,

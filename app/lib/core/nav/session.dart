@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'
@@ -149,7 +150,49 @@ class SessionController extends ChangeNotifier {
           ? OrgAccess.allEdit
           : OrgAccess.admin(proLocked: locked, hidden: hidden);
     }
-    return OrgAccess.forTier(const {}, proLocked: locked, hidden: hidden);
+    // A team member's dial before the server's answer — and instead of it
+    // when there is none: the one this phone last heard for them, else the
+    // server's defaults. Never everything open.
+    return OrgAccess.forTier(_dialKept[orgId] ?? const {},
+        proLocked: locked, hidden: hidden);
+  }
+
+  /// The owner's dial for the person signed in (031), per business, as this
+  /// device last heard it: offline, a cashier whose owner hid the carnet
+  /// does not see the carnet come back. Rewritten on every answer; kept
+  /// under the person's id and tier, and forgotten at sign-out with them
+  /// (LocalDb.clearIdentity).
+  final Map<String, Map<String, String>> _dialKept = {};
+
+  String? _dialKey(String orgId) {
+    final me = _identity?.userId;
+    return me == null ? null : '${LocalDb.personalPrefPrefix}dial:$orgId:$me';
+  }
+
+  Future<Map<String, String>?> _readDial(OrgSummary org) async {
+    final key = _dialKey(org.id);
+    if (key == null) return null;
+    try {
+      final v = await db.readPref(key);
+      if (v == null) return null;
+      final kept = jsonDecode(v) as Map<String, dynamic>;
+      // A role changed since: that tier's dial is not this one.
+      if (kept['tier'] != OrgAccess.tierOf(org.roles)) return null;
+      return {
+        for (final e in (kept['rules'] as Map).entries) '${e.key}': '${e.value}',
+      };
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _keepDial(OrgSummary org, Map<String, String> rules) async {
+    final key = _dialKey(org.id);
+    if (key == null) return;
+    try {
+      await db.writePref(key,
+          jsonEncode({'tier': OrgAccess.tierOf(org.roles), 'rules': rules}));
+    } catch (_) {}
   }
 
   /// What Mara's switchboard hid for this business (104), as its feature
@@ -254,7 +297,7 @@ class SessionController extends ChangeNotifier {
     // (back from Le Chemin, a setup done, an unlock), and on a stalled
     // connection an unbounded question held them for good. A timed-out
     // question is answered as a failed one: the defaults, the device's copy,
-    // and for the dial the same empty answer featureRulesForTier gives offline.
+    // and for the dial the one this phone last heard (else the defaults).
     final terms = _termsLoaded
         ? null
         : admin
@@ -270,7 +313,20 @@ class SessionController extends ChangeNotifier {
         : admin
             .featureRulesForTier(org.id, OrgAccess.tierOf(org.roles))
             .timeout(resolveTimeout)
-            .then((r) => r, onError: (Object _) => const <String, String>{});
+            .then<Map<String, String>?>((r) => r, onError: (Object _) => null);
+    // The dial this phone last heard, read beside the question and drawn as
+    // soon as it lands — a stalled line answers only after the timeout, and
+    // until then the tools the owner hid would show.
+    final keptDial = org.isAdmin || _dialKept.containsKey(org.id)
+        ? null
+        : _readDial(org).then((d) {
+            if (d == null || _dialKept.containsKey(org.id)) return;
+            final before = accessFor(org.id);
+            _dialKept[org.id] = d;
+            if (!_access.containsKey(org.id) && accessFor(org.id) != before) {
+              _emit();
+            }
+          });
     if (terms != null) {
       final t = await terms;
       // Offline, or a database before 066: the defaults stand.
@@ -306,7 +362,19 @@ class SessionController extends ChangeNotifier {
       _waveKept[org.id] = s.waveAllowed;
       unawaited(_keepWave(org.id, s.waveAllowed));
     }
-    final dial = rules == null ? null : await rules;
+    Map<String, String>? dial;
+    if (rules != null) {
+      final heard = await rules;
+      if (heard != null) {
+        dial = heard;
+        _dialKept[org.id] = heard;
+        unawaited(_keepDial(org, heard));
+      } else {
+        // No answer: the phone's copy, never everything open.
+        await keptDial;
+        dial = _dialKept[org.id] ?? const <String, String>{};
+      }
+    }
     OrgAccess accessNow() {
       final locked = _lockedFor(org);
       final hidden = _hiddenFor(org);
@@ -650,6 +718,7 @@ class SessionController extends ChangeNotifier {
         ));
       }
       await db.clearIdentity();
+      _dialKept.clear();
     }
 
     final identity = LocalIdentity(
@@ -784,6 +853,7 @@ class SessionController extends ChangeNotifier {
     _identity = null;
     _orgs = const [];
     _access.clear();
+    _dialKept.clear();
     _lastOrgId = null;
     _notice = null;
     _isPlatformAdmin = false;

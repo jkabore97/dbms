@@ -64,6 +64,7 @@ class SaleFlow extends StatefulWidget {
     this.currency = 'XOF',
     this.capture,
     this.products = const [],
+    this.productsFromDevice = false,
     this.canCredit = true,
     this.allowWave = false,
     this.initialMethod = 'cash',
@@ -128,6 +129,12 @@ class SaleFlow extends StatefulWidget {
   /// What is on the shelves. Empty is not an error — a shop with no
   /// catalogue still sells things.
   final List<Product> products;
+
+  /// [products] is the list this phone last read, the server not answering
+  /// (offline, or stalled): the articles step says so, in a line. Their
+  /// counts are then the server's of that read, less this phone's sales
+  /// sent since; the ones still waiting come off here as always.
+  final bool productsFromDevice;
 
   /// Only for `product_by_barcode()`. Null hides the scan button.
   final CaptureRepository? capture;
@@ -507,7 +514,9 @@ class _SaleFlowState extends State<SaleFlow> {
         }
         continue;
       }
-      if (p.isService) continue;
+      // No count to run out of: a service (098), or an article whose
+      // stock is not followed (131) — the server sells it whatever its 0.
+      if (!p.counted) continue;
       sold[p.id] = (sold[p.id] ?? 0) + line.qty;
       names[p.id] = p.name;
       left[p.id] = _left(p, fresh: fresh);
@@ -797,6 +806,29 @@ class _SaleFlowState extends State<SaleFlow> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // The list is the phone's own (no answer from the server): said in
+        // a line, as the farm's counts are, not as an error — selling works.
+        if (widget.productsFromDevice && _sellable.isNotEmpty)
+          Padding(
+            key: const Key('sale-from-device'),
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Row(
+              children: [
+                Icon(Icons.cloud_off_outlined,
+                    size: 16, color: theme.colorScheme.onSurfaceVariant),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    widget.farm
+                        ? context.tr('Produits et stock de cet appareil seulement. Ils seront à jour au retour du réseau.')
+                        : context.tr('Articles et stock de cet appareil seulement. Ils seront à jour au retour du réseau.'),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                ),
+              ],
+            ),
+          ),
         Row(
           children: [
             if (_sellable.length > 8)
@@ -967,7 +999,7 @@ class _SaleFlowState extends State<SaleFlow> {
     final theme = Theme.of(context);
     final picked = _inBasket(p);
     final left = _left(p);
-    final empty = !p.isService && left <= 0;
+    final empty = p.counted && left <= 0;
     final photo = _photos[p.id];
     return Material(
       color: picked
@@ -1036,7 +1068,7 @@ class _SaleFlowState extends State<SaleFlow> {
                 // Whole on one line, shrunk rather than wrapped out of the
                 // tile (144: « 1 249,99 USD » at 320 px × 1.3).
                 MoneyText(_money.format(p.salePrice), style: theme.textTheme.bodyMedium),
-              if (!p.isService)
+              if (p.counted)
                 Text(
                   empty
                       ? context.tr('Plus en stock')
@@ -1120,7 +1152,7 @@ class _SaleFlowState extends State<SaleFlow> {
               ),
             ],
           ),
-          if (p != null && !p.isService)
+          if (p != null && p.counted)
             Text(context.tr('Reste : {n}', {'n': stockQty(_left(p))}),
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),

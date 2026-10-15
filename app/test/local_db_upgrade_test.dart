@@ -253,4 +253,41 @@ void main() {
     // An entry with no category typed files itself under its own name.
     expect(await db.categoriesFor('org-farm', 'in'), isEmpty);
   });
+
+  test('a v13 device keeps everything, and gains the till\'s catalogue (v14)',
+      () async {
+    final path = await freshPath('upgrade-v13.db');
+    // v13 is today's schema without cached_products: built by the build
+    // that shipped it, taken back to its version, then filled the way a
+    // phone in the field is.
+    final built = await LocalDb.open(path: path);
+    await built.close();
+    final raw = await databaseFactory.openDatabase(path);
+    await raw.execute('DROP TABLE cached_products');
+    await raw.setVersion(13);
+    await raw.insert('outbox', {
+      'client_uuid': 'c-1',
+      'org_id': 'o1',
+      'action': 'record_sale',
+      'payload': '{"p_lines":[{"product_id":"p1","name":"Savon","quantity":1}]}',
+      'created_at': '2026-10-14T09:00:00.000Z',
+    });
+    await raw.insert('cached_orgs', {
+      'org_id': 'o1',
+      'name': 'Boutique',
+      'profile': 'retail',
+    });
+    await raw.insert('device_prefs', {'k': 'hidden_features:o1', 'v': 'tontines'});
+    await raw.close();
+
+    final db = await LocalDb.open(path: path);
+    addTearDown(db.close);
+    expect(await db.pendingSales('o1'), 1);
+    expect((await db.cachedOrgs()).single.name, 'Boutique');
+    expect(await db.readPref('hidden_features:o1'), 'tontines');
+    await db.cacheProducts('o1', [
+      {'id': 'p1', 'name': 'Savon', 'sale_price': 450, 'quantity': 4},
+    ], askedAt: DateTime.now());
+    expect((await db.cachedProducts('o1')).single['quantity'], 4.0);
+  });
 }
