@@ -111,4 +111,52 @@ class OfflineApp {
       if (worker != null) await _ask(worker, 'forget', (_) => true);
     } catch (_) {}
   }
+
+  // ----------------------------------------------------------------
+  // The browser's promise to keep this site's storage
+  // ----------------------------------------------------------------
+  // Unsent sales, the outbox and the photo queue live in IndexedDB (the
+  // sqflite wasm database). A browser may clear a site's storage to make
+  // room, and Safari clears that of a site not visited for seven days —
+  // a shop's phone left a week in a drawer would lose what it had not
+  // sent. navigator.storage.persist() asks the browser to keep it until
+  // the person clears it themselves.
+
+  static web.StorageManager? get _storage {
+    try {
+      final navigator = web.window.navigator;
+      if (!navigator.hasProperty('storage'.toJS).toDart) return null;
+      final storage = navigator.storage;
+      if (!storage.hasProperty('persist'.toJS).toDart) return null;
+      return storage;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Whether the browser already promised to keep it — asked without
+  /// asking the person anything.
+  static Future<bool> get storageKept async {
+    final storage = _storage;
+    if (storage == null) return false;
+    try {
+      return (await storage.persisted().toDart).toDart;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Asks for the promise. The browser decides: Chrome and Safari answer
+  /// on their own (how much the site is used, whether it is on the home
+  /// screen), Firefox may ask the person. Called synchronously from a tap
+  /// where it can be, so the request carries that gesture. Never throws.
+  static Future<bool> keepStorage() async {
+    final storage = _storage;
+    if (storage == null) return false;
+    try {
+      return (await storage.persist().toDart).toDart;
+    } catch (_) {
+      return false;
+    }
+  }
 }

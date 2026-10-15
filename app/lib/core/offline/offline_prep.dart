@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../auth/models.dart';
 import '../db/local_db.dart';
 import '../farm/farm_repository.dart';
@@ -21,11 +23,39 @@ import 'offline_app.dart';
 ///     chart of accounts the entry sheets offer offline, and for a farm its
 ///     stock and flocks.
 ///   * Compte › Préférences › Hors ligne prepares again, or forgets the copy.
+///   * On the web, the browser is asked to keep this site's storage
+///     (navigator.storage.persist(), [keepStorage]): at the tap on
+///     « Télécharger pour hors ligne », and again when a prepared device
+///     opens a business ([keepStorageAtStartup]) — at most once a week,
+///     never once the browser has said yes, and never anywhere but a
+///     browser (Android and iOS keep an app's files).
 class OfflinePrep {
-  OfflinePrep({required this.db, this.farm, this.cacheChart});
+  OfflinePrep({
+    required this.db,
+    this.farm,
+    this.cacheChart,
+    Future<bool> Function()? keepStorage,
+    Future<bool> Function()? storageKept,
+    DateTime Function()? now,
+  })  : keepStorage = keepStorage ?? OfflineApp.keepStorage,
+        storageKept = storageKept ?? (() => OfflineApp.storageKept),
+        _now = now ?? DateTime.now;
 
   final LocalDb db;
   final FarmRepository? farm;
+
+  /// Asks the browser to keep this site's storage (OfflineApp.keepStorage);
+  /// tests give a fake.
+  final Future<bool> Function() keepStorage;
+
+  /// Whether it already promised to (OfflineApp.storageKept).
+  final Future<bool> Function() storageKept;
+  final DateTime Function() _now;
+
+  static const _storageAskedKey = 'storage_persist_asked';
+
+  /// How long after asking the browser it is asked again, at an opening.
+  static const storageAskEvery = Duration(days: 7);
 
   /// SessionController.cacheChart: the chart of accounts into the device.
   final Future<void> Function(OrgSummary org)? cacheChart;
@@ -74,6 +104,9 @@ class OfflinePrep {
     void Function(OfflineStep step, bool done)? onStep,
     void Function(int done, int total)? onProgress,
   }) async {
+    // First, before anything is awaited: the request then carries the
+    // person's tap, which is what a browser that asks wants to see.
+    _askStorage();
     final failed = <OfflineStep>[];
     for (final step in stepsFor(org)) {
       onStep?.call(step, false);
@@ -106,6 +139,32 @@ class OfflinePrep {
       } catch (_) {}
     }
     return failed;
+  }
+
+  /// Asks the browser to keep this site's storage, without waiting for
+  /// its answer (a browser that asks the person answers when they do).
+  void _askStorage() {
+    try {
+      unawaited(keepStorage().then((_) {}, onError: (Object _) {}));
+    } catch (_) {}
+    unawaited(() async {
+      try {
+        await db.writePref(_storageAskedKey, _now().toIso8601String());
+      } catch (_) {}
+    }());
+  }
+
+  /// At an opening, on a device whose business chose to work offline:
+  /// asks again if the browser has not promised yet and was not asked in
+  /// the last [storageAskEvery]. Never throws, never waits on the person.
+  Future<void> keepStorageAtStartup() async {
+    try {
+      if (await storageKept()) return;
+      if (await readyAt() == null) return;
+      final last = DateTime.tryParse(await db.readPref(_storageAskedKey) ?? '');
+      if (last != null && _now().difference(last) < storageAskEvery) return;
+      _askStorage();
+    } catch (_) {}
   }
 
   /// Takes the web copy back off; the data caches stay (they are refreshed
