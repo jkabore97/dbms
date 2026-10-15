@@ -249,15 +249,28 @@ class SessionController extends ChangeNotifier {
     // The plan's terms, the business's feature states and (for a team
     // member) the owner's dial do not depend on one another: asked at once,
     // a business opens after one round trip instead of three.
+    //
+    // Each bounded like the resolve's steps: screens await reloadFeatures
+    // (back from Le Chemin, a setup done, an unlock), and on a stalled
+    // connection an unbounded question held them for good. A timed-out
+    // question is answered as a failed one: the defaults, the device's copy,
+    // and for the dial the same empty answer featureRulesForTier gives offline.
     final terms = _termsLoaded
         ? null
-        : admin.planTerms().then<Object?>((t) => t, onError: (Object _) => null);
+        : admin
+            .planTerms()
+            .timeout(resolveTimeout)
+            .then<Object?>((t) => t, onError: (Object _) => null);
     final states = admin
         .featureStates(org.id)
+        .timeout(resolveTimeout)
         .then<Object?>((s) => s, onError: (Object _) => null);
     final rules = org.isAdmin
         ? null
-        : admin.featureRulesForTier(org.id, OrgAccess.tierOf(org.roles));
+        : admin
+            .featureRulesForTier(org.id, OrgAccess.tierOf(org.roles))
+            .timeout(resolveTimeout)
+            .then((r) => r, onError: (Object _) => const <String, String>{});
     if (terms != null) {
       final t = await terms;
       // Offline, or a database before 066: the defaults stand.

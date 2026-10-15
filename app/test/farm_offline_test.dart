@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -6,7 +7,12 @@ import 'package:kaj_app/l10n/strings.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kaj_app/core/auth/models.dart';
 import 'package:kaj_app/core/db/local_db.dart';
+import 'package:kaj_app/core/farm/farm_repository.dart';
+import 'package:kaj_app/core/farm/models.dart';
+import 'package:kaj_app/core/retail/models.dart';
+import 'package:kaj_app/core/retail/retail_repository.dart';
 import 'package:kaj_app/features/farm/farm_home_screen.dart';
+import 'package:kaj_app/features/retail/sale_flow.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 /// The M4 demo, driven through the screen: Ignace records a feed delivery with
@@ -21,6 +27,27 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 /// So `FarmRepository` is deliberately absent from every test here. That is
 /// exactly the state of a phone at the farm gate: the counts that need the
 /// server cannot be computed, and everything Ignace does must still work.
+/// The farm gate with one bar of signal: every question goes out and no
+/// answer ever comes back — no error either.
+class _StalledFarm extends FarmRepository {
+  _StalledFarm() : super(null);
+
+  @override
+  bool get isConfigured => true;
+
+  @override
+  Future<List<StockItem>> stockOnHand(String orgId) =>
+      Completer<List<StockItem>>().future;
+}
+
+class _StalledShelf extends RetailRepository {
+  _StalledShelf() : super(null);
+
+  @override
+  Future<List<Product>> products(String orgId, {bool activeOnly = true}) =>
+      Completer<List<Product>>().future;
+}
+
 void main() {
   setUpAll(() async {
     sqfliteFfiInit();
@@ -98,6 +125,42 @@ void main() {
       // No spinner stuck forever waiting on a server that is not there.
       expect(find.byType(CircularProgressIndicator), findsNothing);
       expect(find.text('Ferme Ignace'), findsWidgets);
+    });
+  });
+
+  group('a stalled connection', () {
+    Future<void> pumpStalled(WidgetTester tester) async {
+      tester.view.physicalSize = const Size(480, 1800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(MaterialApp(
+        locale: const Locale('fr'),
+        localizationsDelegates: Strings.localizationsDelegates,
+        supportedLocales: Strings.supportedLocales,
+        home: FarmHomeScreen(
+            db: db, org: org, farm: _StalledFarm(), retail: _StalledShelf()),
+      ));
+      await flush(tester);
+    }
+
+    testWidgets('says the counts are this device\'s alone', (tester) async {
+      await pumpStalled(tester);
+      // Before: the stock was waited for without end, so the banner that
+      // says « Chiffres de cet appareil seulement » never came.
+      await tester.pump(const Duration(seconds: 13));
+      await flush(tester);
+      expect(find.textContaining('Chiffres de cet appareil seulement'),
+          findsOneWidget);
+    });
+
+    testWidgets('« Vente » opens the till, produce typed by name',
+        (tester) async {
+      await pumpStalled(tester);
+      await tester.tap(find.byKey(const Key('farm-sell')));
+      // Before: the tap waited on the list of produce, and nothing opened.
+      await tester.pump(const Duration(seconds: 13));
+      await flush(tester);
+      expect(find.byType(SaleFlow), findsOneWidget);
     });
   });
 

@@ -74,7 +74,17 @@ class SaleFlow extends StatefulWidget {
     this.customerPhone,
     this.initialLines = const [],
     this.onSaved,
+    this.sendTimeout = const Duration(seconds: 20),
   });
+
+  /// How long « Enregistrer » waits for the server before the sale is kept
+  /// on the phone instead. A market connection often stalls rather than
+  /// fails — the socket open, the reply never coming — and without a bound
+  /// the button spun for good: no error to fall back on, so the sale was
+  /// neither sent nor kept. Timed out, it is kept like any sale with no
+  /// signal; its client_uuid makes a late arrival of the first try harmless
+  /// (record_sale returns the original).
+  final Duration sendTimeout;
 
   /// The customer, already known (the carnet's « Nouveau crédit »): the
   /// customer step opens on this name.
@@ -569,7 +579,7 @@ class _SaleFlowState extends State<SaleFlow> {
         clientUuid: _clientUuid,
         customerName: _credit ? _customerName : null,
         customerPhone: _credit ? widget.customerPhone : null,
-      );
+      ).timeout(widget.sendTimeout);
       // Paid in a foreign currency: the cash that actually crossed the
       // counter, both amounts and the rate on the receipt.
       if (tender != null && total > 0 && !_credit) {

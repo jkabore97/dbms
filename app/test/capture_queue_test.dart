@@ -1,11 +1,15 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
 import 'package:kaj_app/core/capture/capture_repository.dart';
 import 'package:kaj_app/core/db/local_db.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// A build compiled with a Worker address nothing answers at: configured,
 /// so capture() files the photograph and tries; the try then dies the way
@@ -214,5 +218,42 @@ void main() {
       // the phone is merely out of range.
       expect(health.stuck, 1);
     });
+
+    test('a stalled send is left to the queue, not waited for without end',
+        () async {
+      // Signed in, with a Worker address — and a connection that takes the
+      // bytes and never answers. capture()'s one try is what the expense
+      // flow's « Enregistrer » waits on, with the expense already saved.
+      final client = SupabaseClient('https://example.supabase.co', 'anon-key',
+          authOptions: const AuthClientOptions(autoRefreshToken: false));
+      await client.auth.setInitialSession(jsonEncode({
+        'access_token': 'token',
+        'token_type': 'bearer',
+        'expires_in': 3600,
+        'user': {'id': 'u1', 'aud': 'authenticated', 'created_at': ''},
+      }));
+      final capture = CaptureRepository(
+        client,
+        db: db,
+        uploadsUrl: 'https://uploads.example.com',
+        httpClient: _Stalled(),
+        sendTimeout: const Duration(milliseconds: 50),
+      );
+
+      final id = await capture
+          .capture(orgId: 'org-1', bytes: photo(), contentType: 'image/jpeg')
+          .timeout(const Duration(seconds: 5),
+              onTimeout: () => fail('capture() hung on a stalled upload'));
+
+      expect(id, isNull, reason: 'queued, which is not a failure');
+      expect((await capture.queueHealth('org-1')).waiting, 1);
+    });
   });
+}
+
+/// The bytes go out; nothing ever comes back.
+class _Stalled extends http.BaseClient {
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) =>
+      Completer<http.StreamedResponse>().future;
 }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kaj_app/core/db/local_db.dart';
@@ -68,5 +69,54 @@ void main() {
     await sync.syncNow();
     expect(await db.pendingCount(), 0,
         reason: 'the sync was wedged: a later sweep could not drain the row');
+  });
+
+  test('recorded with no signal — an expense, a contribution, a farm\'s day — sent once the network is back, once',
+      () async {
+    // The shop's expense, the association's contribution, the farm's
+    // delivery, feed and deaths: all on the phone, none sent.
+    await db.recordEntry(
+        orgId: 'shop', amount: 5000, direction: 'out', label: 'Loyer');
+    await db.recordEntry(
+        orgId: 'asso', amount: 2000, direction: 'in', label: 'Cotisation — Awa');
+    await db.receiveStock(
+        orgId: 'farm', itemName: 'Aliment ponte', quantity: 20, unitCost: 17500);
+    await db.moveStock(
+        orgId: 'farm', itemName: 'Aliment ponte', quantity: 2, kind: 'consumed');
+    await db.recordFlockEvent(
+        orgId: 'farm',
+        flockId: 'flock-1',
+        batchCode: 'B1',
+        kind: 'mortality',
+        quantity: 3);
+    expect(await db.pendingCount(), 5);
+
+    var online = false;
+    final sent = <String, int>{};
+    final sync = SyncService(
+      db,
+      dummy,
+      currentUserId: () => 'user-1',
+      post: (action, params) async {
+        if (!online) throw const SocketException('Failed host lookup');
+        final uuid = params['p_client_uuid'] as String;
+        sent[uuid] = (sent[uuid] ?? 0) + 1;
+        expect(params['p_recorded_by'], 'user-1');
+        return 'server-$uuid';
+      },
+    );
+
+    // Still no signal: nothing is lost, everything waits.
+    await sync.syncNow();
+    expect(await db.pendingCount(), 5);
+
+    online = true;
+    await sync.syncNow();
+    expect(await db.pendingCount(), 0);
+    expect(sent, hasLength(5));
+    // A later sweep (the connection flapping, the five-minute timer) does
+    // not send any of them again.
+    await sync.syncNow();
+    expect(sent.values, everyElement(1));
   });
 }

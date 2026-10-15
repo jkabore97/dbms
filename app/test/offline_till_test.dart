@@ -1,8 +1,15 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:kaj_app/core/auth/models.dart';
 import 'package:kaj_app/core/db/local_db.dart';
+import 'package:kaj_app/core/retail/models.dart';
+import 'package:kaj_app/core/retail/retail_repository.dart';
+import 'package:kaj_app/features/retail/store_home_screen.dart';
+import 'package:kaj_app/l10n/strings.dart';
 import 'package:kaj_app/core/errors.dart';
 import 'package:kaj_app/core/retail/stock_rule.dart';
 import 'package:kaj_app/features/common/refused_notice.dart';
@@ -16,10 +23,24 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// later, but a shop sale went straight to the server and failed with an
 /// error offline — the busiest screen was the one that broke when the
 /// network dropped.
+/// The shop's server on a market connection: the day is asked and the
+/// answer never comes — no error either.
+class _StalledShop extends RetailRepository {
+  _StalledShop({super.outbox}) : super(null);
+
+  @override
+  bool get isConfigured => true;
+
+  @override
+  Future<StoreDay> day(String orgId, {DateTime? on}) =>
+      Completer<StoreDay>().future;
+}
+
 void main() {
-  setUpAll(() {
+  setUpAll(() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
+    await initializeDateFormatting('fr_FR', null);
   });
 
   test('only the transport counts as offline, never a refusal', () {
@@ -176,5 +197,46 @@ void main() {
     await tester.tap(find.text('Corriger le stock puis refaire la vente'));
     expect(fixed?.shortfall, (name: 'Savon', missing: 1.0));
     expect(find.text('Compris'), findsOneWidget);
+  });
+
+  testWidgets('a stalled connection: the home says so, with the sales on the phone',
+      (tester) async {
+    final db = (await tester.runAsync(() => LocalDb.open(path: inMemoryDatabasePath)))!;
+    addTearDown(() => tester.runAsync(db.close));
+    await tester.runAsync(() => db.queueSale(orgId: 'o1', clientUuid: 'c-1', params: {
+          'p_org_id': 'o1',
+          'p_lines': [
+            {'name': 'Savon', 'quantity': 1, 'unit_price': 450},
+          ],
+          'p_client_uuid': 'c-1',
+        }));
+    tester.view.physicalSize = const Size(480, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(MaterialApp(
+      locale: const Locale('fr'),
+      localizationsDelegates: Strings.localizationsDelegates,
+      supportedLocales: Strings.supportedLocales,
+      home: StoreHomeScreen(
+        org: const OrgSummary(
+            id: 'o1', name: 'Boutique Esperance', profile: 'retail', roles: ['cashier']),
+        retail: _StalledShop(outbox: db),
+      ),
+    ));
+    for (var i = 0; i < 5; i++) {
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 30)));
+      await tester.pump();
+    }
+    expect(find.textContaining('1 vente en attente d\'envoi'), findsOneWidget);
+
+    // Before: the day was waited for without end — the progress bar for
+    // good, and never a word that the network was why.
+    await tester.pump(const Duration(seconds: 13));
+    await tester.pump();
+    expect(find.byType(LinearProgressIndicator), findsNothing);
+    expect(find.text('Pas de connexion. Réessayez quand le réseau revient.'),
+        findsOneWidget);
+    // Selling still works: the till's button is there.
+    expect(find.byKey(const Key('home-new-sale')), findsOneWidget);
   });
 }
