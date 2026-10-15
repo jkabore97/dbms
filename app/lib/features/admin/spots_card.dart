@@ -869,7 +869,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
             ? context.tr('Déjà en avant')
             : context.tr('Déjà en avant jusqu\'au {date}', {'date': _day(e.endsAt!)}))
         : e.status == 'paid_claimed'
-            ? context.tr('Paiement signalé : Mara le vérifie')
+            ? context.tr('Paiement signalé : Marakaj le vérifie')
             : context.tr('Déjà demandée, en attente du paiement');
     return [
       KajCard(
@@ -1220,8 +1220,8 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
           const SizedBox(height: 6),
           Text(
             _channel == 'apple'
-                ? context.tr('Paiement par l\'App Store. La mise en avant est programmée dès que Mara a reçu la confirmation.')
-                : context.tr('Paiement par Google Play. La mise en avant est programmée dès que Mara a reçu la confirmation.'),
+                ? context.tr('Paiement par l\'App Store. La mise en avant est programmée dès que Marakaj a reçu la confirmation.')
+                : context.tr('Paiement par Google Play. La mise en avant est programmée dès que Marakaj a reçu la confirmation.'),
             key: const Key('spot-store-note'),
             textAlign: TextAlign.center,
             style: theme.textTheme.bodySmall,
@@ -1323,14 +1323,14 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
             valueListenable: Support.contacts,
             builder: (context, c, _) => c.whatsapp == null
                 ? Text(
-                    context.tr('Pour payer, écrivez à Mara : {email}. Le numéro de paiement vous sera donné directement.',
+                    context.tr('Pour payer, écrivez à Marakaj : {email}. Le numéro de paiement vous sera donné directement.',
                         {'email': c.email}),
                     style: muted)
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                          context.tr('Demandez le numéro de paiement à Mara sur WhatsApp : le message est déjà écrit.'),
+                          context.tr('Demandez le numéro de paiement à Marakaj sur WhatsApp : le message est déjà écrit.'),
                           style: muted),
                       const SizedBox(height: 8),
                       OutlinedButton.icon(
@@ -1345,7 +1345,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
           ),
         const SizedBox(height: 12),
         Text(
-            context.tr('Une fois le paiement envoyé, dites-le ici : Mara le vérifie et la mise en avant commence.'),
+            context.tr('Une fois le paiement envoyé, dites-le ici : Marakaj le vérifie et la mise en avant commence.'),
             style: muted),
         const SizedBox(height: 10),
         TextField(
@@ -1506,8 +1506,8 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
         const SizedBox(height: 6),
         Text(
           _channel == 'apple'
-              ? context.tr('Paiement par l\'App Store. La mise en avant est programmée dès que Mara a reçu la confirmation.')
-              : context.tr('Paiement par Google Play. La mise en avant est programmée dès que Mara a reçu la confirmation.'),
+              ? context.tr('Paiement par l\'App Store. La mise en avant est programmée dès que Marakaj a reçu la confirmation.')
+              : context.tr('Paiement par Google Play. La mise en avant est programmée dès que Marakaj a reçu la confirmation.'),
           key: const Key('spot-store-note'),
           textAlign: TextAlign.center,
           style: theme.textTheme.bodySmall,
@@ -1531,7 +1531,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
   String _payMessage(Promotion spot) {
     final name = _org?.name ?? '';
     return context.tr(
-        'Bonjour Mara, je veux payer une mise en avant : {label} · {days} jours · {amount}{org}. Quel numéro pour payer ?',
+        'Bonjour Marakaj, je veux payer une mise en avant : {label} · {days} jours · {amount}{org}. Quel numéro pour payer ?',
         {
           'label': spot.label,
           'days': spot.days,
@@ -1556,7 +1556,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
               )
             : (
                 context.tr('Merci, c\'est noté.'),
-                context.tr('Mara vérifie le paiement et lance la mise en avant. Vous serez prévenu dans la cloche.'),
+                context.tr('Marakaj vérifie le paiement et lance la mise en avant. Vous serez prévenu dans la cloche.'),
               );
     return [
       KajCard(

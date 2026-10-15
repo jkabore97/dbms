@@ -127,7 +127,7 @@ class _TodoSectionState extends State<TodoSection> {
       _Count('payouts_failed', context.tr('Versements Wave échoués'), Icons.sync_problem_outlined,
           () => context.go(Routes.consoleWave),
           hint: context.tr('à relancer dans Paiements'), urgent: true),
-      _Count('pro_paid', context.tr('« J\'ai payé » Mara Pro à confirmer'),
+      _Count('pro_paid', context.tr('« J\'ai payé » Marakaj Pro à confirmer'),
           Icons.workspace_premium_outlined, () => context.go(Routes.consolePro),
           hint: context.tr('à vérifier sur Wave'), urgent: true),
       _Count('spots', context.tr('Mises en avant à traiter'), Icons.campaign_outlined,
@@ -170,8 +170,8 @@ class _TodoSectionState extends State<TodoSection> {
           () => _list('features_lapsed',
               context.tr('Fonctions masquées après la fin d\'un paiement')),
           hint: context.tr('le propriétaire est prévenu')),
-      _Count('plans_ending', context.tr('Mara Pro qui se termine'), Icons.event_busy_outlined,
-          () => _list('plans_ending', context.tr('Mara Pro qui se termine')),
+      _Count('plans_ending', context.tr('Marakaj Pro qui se termine'), Icons.event_busy_outlined,
+          () => _list('plans_ending', context.tr('Marakaj Pro qui se termine')),
           hint: context.tr('dans les 7 jours')),
       _Count('unlocks_ending', context.tr('Outils ouverts qui se ferment'),
           Icons.lock_clock_outlined,
@@ -705,7 +705,7 @@ String featureName(BuildContext context, String key) => switch (key) {
       'vitrine_plus' => context.tr('Vitrine personnalisée'),
       'delivery' => context.tr('Livraison'),
       'online_payment' => context.tr('Paiement en ligne'),
-      'pro_all' => context.tr('Mara Pro complet'),
+      'pro_all' => context.tr('Marakaj Pro complet'),
       _ => key,
     };
 
@@ -746,11 +746,11 @@ class _TodoListSheetState extends State<TodoListSheet> {
   String _line(BuildContext context, TodoRow r) {
     final day = r.at == null ? '' : DateFormat('dd/MM').format(r.at!);
     return switch (widget.listKey) {
-      'plans_ending' => context.tr('Mara Pro jusqu\'au {date}', {'date': day}),
+      'plans_ending' => context.tr('Marakaj Pro jusqu\'au {date}', {'date': day}),
       'unlocks_ending' => context.tr('{tool} jusqu\'au {date}{gift}', {
           'tool': featureName(context, r.feature ?? ''),
           'date': day,
-          'gift': r.gift ? context.tr(' · offert par Mara') : '',
+          'gift': r.gift ? context.tr(' · offert par Marakaj') : '',
         }),
       'promos_ending' =>
         context.tr('{n} cauris à utiliser avant le {date}', {'n': r.points ?? 0, 'date': day}),
@@ -776,7 +776,7 @@ class _TodoListSheetState extends State<TodoListSheet> {
       'new_7' => [
           r.byPerson
               ? context.tr('Créée le {date} par la personne', {'date': day})
-              : context.tr('Créée le {date} par Mara', {'date': day}),
+              : context.tr('Créée le {date} par Marakaj', {'date': day}),
           ?r.owner,
           ?r.city,
         ].join(' · '),

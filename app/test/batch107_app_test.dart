@@ -171,7 +171,7 @@ void main() {
     });
   });
 
-  group('the creation page Mara sets (107\'s editor, renamed in 111)', () {
+  group('the creation page Marakaj sets (107\'s editor, renamed in 111)', () {
     testWidgets('the editor saves what is typed, and previews it', (tester) async {
       tall(tester);
       final onboarding = _Onboarding();

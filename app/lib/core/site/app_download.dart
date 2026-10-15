@@ -232,18 +232,18 @@ class _Card extends StatelessWidget {
     final String? url;
     if (!ios) {
       body = links.androidStore
-          ? context.tr('L\'application Mara est plus rapide et vous prévient de vos commandes. Elle est sur Google Play.')
-          : context.tr('L\'application Mara est plus rapide et vous prévient de vos commandes. Téléchargez-la pour Android (fichier APK).');
+          ? context.tr('L\'application Marakaj est plus rapide et vous prévient de vos commandes. Elle est sur Google Play.')
+          : context.tr('L\'application Marakaj est plus rapide et vous prévient de vos commandes. Téléchargez-la pour Android (fichier APK).');
       action = links.androidStore
           ? context.tr('Ouvrir Google Play')
           : context.tr('Télécharger pour Android');
       url = links.android;
     } else if (!homeScreen) {
-      body = context.tr('L\'application Mara est plus rapide et vous prévient de vos commandes. Elle est sur l\'App Store.');
+      body = context.tr('L\'application Marakaj est plus rapide et vous prévient de vos commandes. Elle est sur l\'App Store.');
       action = context.tr('Ouvrir l\'App Store');
       url = links.ios;
     } else {
-      body = context.tr('Ajoutez Mara à l\'écran d\'accueil : dans Safari, touchez Partager, puis « Sur l\'écran d\'accueil ».');
+      body = context.tr('Ajoutez Marakaj à l\'écran d\'accueil : dans Safari, touchez Partager, puis « Sur l\'écran d\'accueil ».');
       action = null;
       url = null;
     }
@@ -274,8 +274,8 @@ class _Card extends StatelessWidget {
                     children: [
                       Text(
                         homeScreen
-                            ? context.tr('Mara sur votre écran d\'accueil')
-                            : context.tr('Mara sur votre téléphone'),
+                            ? context.tr('Marakaj sur votre écran d\'accueil')
+                            : context.tr('Marakaj sur votre téléphone'),
                         style: theme.textTheme.titleSmall
                             ?.copyWith(fontWeight: FontWeight.w800),
                       ),

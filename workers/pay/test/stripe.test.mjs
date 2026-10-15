@@ -95,7 +95,7 @@ test("the checkout is the database's price, in dollars, as a monthly or yearly s
   assert.equal(p["line_items[0][price_data][unit_amount]"], "5000", "the database's cents, never converted here");
   assert.equal(p["line_items[0][price_data][currency]"], "usd");
   assert.equal(p["line_items[0][price_data][product_data][name]"],
-    "Mara Pro · Annuel · 30 000 FCFA · Boutique Carte", "the customer sees the FCFA price too");
+    "Marakaj Pro · Annuel · 30 000 FCFA · Boutique Carte", "the customer sees the FCFA price too");
   assert.equal(p["line_items[0][price_data][recurring][interval]"], "year");
   assert.equal(p["subscription_data[metadata][org_id]"], ORG);
   assert.equal(p.client_reference_id, ORG);
@@ -118,7 +118,7 @@ test("a returning business keeps its Stripe customer", async () => {
   assert.equal(calls[1].body["line_items[0][price_data][recurring][interval]"], "month");
   assert.equal(calls[1].body["line_items[0][price_data][unit_amount]"], "2500");
   assert.equal(calls[1].body["line_items[0][price_data][product_data][name]"],
-    "Mara Pro · Mensuel · 15 000 FCFA · B");
+    "Marakaj Pro · Mensuel · 15 000 FCFA · B");
 });
 
 test("a database before 121 (no FCFA price beside the amount) still checks out as it answers", async () => {
@@ -131,7 +131,7 @@ test("a database before 121 (no FCFA price beside the amount) still checks out a
   const p = calls[1].body;
   assert.equal(p["line_items[0][price_data][currency]"], "xof");
   assert.equal(p["line_items[0][price_data][unit_amount]"], "3000");
-  assert.equal(p["line_items[0][price_data][product_data][name]"], "Mara Pro · Mensuel · B");
+  assert.equal(p["line_items[0][price_data][product_data][name]"], "Marakaj Pro · Mensuel · B");
 });
 
 test("the FCFA price reads as the app shows it", () => {

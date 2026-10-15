@@ -13,7 +13,7 @@ import 'package:kaj_app/l10n/strings.dart';
 /// and Mara on the tab, the install and the launcher. Kaj signs the
 /// street's footer (shop_footer_test).
 void main() {
-  testWidgets('the sign-in opens on Mara\'s seal and name', (tester) async {
+  testWidgets('the sign-in opens on Marakaj\'s seal and name', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('fr'),
@@ -29,10 +29,10 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.byType(MaraWordmark), findsOneWidget);
-    expect(find.bySemanticsLabel('Mara'), findsWidgets);
+    expect(find.bySemanticsLabel('Marakaj'), findsWidgets);
   });
 
-  test('the icons are Mara\'s, at every size', () {
+  test('the icons are Marakaj\'s, at every size', () {
     const sizes = {
       'web/favicon.png': 32,
       'web/icons/Icon-192.png': 192,
@@ -62,12 +62,12 @@ void main() {
         .existsSync(), isTrue);
   });
 
-  test('the tab, the install and the launcher say Mara', () {
+  test('the tab, the install and the launcher say Marakaj', () {
     expect(File('web/index.html').readAsStringSync(),
-        contains('<title>Mara — Au Service du Peuple</title>'));
+        contains('<title>Marakaj — Au Service du Peuple</title>'));
     expect(File('web/manifest.json').readAsStringSync(),
-        contains('"short_name": "Mara"'));
+        contains('"short_name": "Marakaj"'));
     expect(File('android/app/src/main/AndroidManifest.xml').readAsStringSync(),
-        contains('android:label="Mara"'));
+        contains('android:label="Marakaj"'));
   });
 }

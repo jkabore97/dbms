@@ -298,7 +298,7 @@ void main() {
     });
   });
 
-  group('Mara\'s message', () {
+  group('Marakaj\'s message', () {
     testWidgets('« Toute l\'équipe » sends the audience; « Responsables » as before', (tester) async {
       final center = _Center();
       Future<void> send(bool team) async {

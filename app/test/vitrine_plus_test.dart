@@ -60,7 +60,7 @@ class _Admin extends AdminRepository {
   Future<void> setStorefrontStyle(String orgId, StorefrontStyle style) async {
     if (refuse) {
       throw const PostgrestException(
-          message: 'Mara Pro : la vitrine personnalisée fait partie de Mara Pro.',
+          message: 'Marakaj Pro : la vitrine personnalisée fait partie de Marakaj Pro.',
           code: 'P0001');
     }
     saved.add(style);
@@ -309,7 +309,7 @@ void main() {
       await tester.tap(save);
       await tester.pump();
       await tester.pump();
-      expect(find.textContaining('Mara Pro :'), findsOneWidget);
+      expect(find.textContaining('Marakaj Pro :'), findsOneWidget);
       expect(admin.saved, isEmpty);
     });
   });

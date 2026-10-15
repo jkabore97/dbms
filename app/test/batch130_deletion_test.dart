@@ -79,7 +79,7 @@ void main() {
     expect(line('a1'), 'Entraide Fin — association · 3 membres redeviennent simples clients');
     expect(line('f1'), 'Ferme Fin — ferme · 2 commandes en cours annulées, les clients prévenus · l\'abonnement par carte arrêté');
     expect(find.byKey(const Key('deletion-apple-store')), findsOneWidget);
-    expect(find.textContaining('Mara ne peut pas l\'annuler pour vous'), findsOneWidget);
+    expect(find.textContaining('Marakaj ne peut pas l\'annuler pour vous'), findsOneWidget);
     expect(find.text('Vous quittez aussi : À Deux.'), findsOneWidget);
     expect(find.text('Supprimer définitivement'), findsOneWidget);
 
@@ -143,19 +143,19 @@ void main() {
 
   testWidgets('a refusal by its code: the business named, in English too', (tester) async {
     final plan = AccountDeletionPlan.fromJson({
-      'blocked': 'Mara doit encore verser à « Boutique Fin » … (the server\'s French)',
+      'blocked': 'Marakaj doit encore verser à « Boutique Fin » … (the server\'s French)',
       'blocked_code': 'payout',
       'blocked_shop': 'Boutique Fin',
       'businesses': [],
       'leaves': [],
     });
     await open(tester, plan, sent: [], out: []);
-    expect(find.textContaining('Mara doit encore verser à « Boutique Fin » l\'argent d\'une commande payée par Wave'),
+    expect(find.textContaining('Marakaj doit encore verser à « Boutique Fin » l\'argent d\'une commande payée par Wave'),
         findsOneWidget);
     await tester.tap(find.text('Compris'));
     await tester.pumpAndSettle();
     await open(tester, plan, sent: [], out: [], locale: const Locale('en'));
-    expect(find.textContaining('Mara still owes “Boutique Fin” the money of an order paid by Wave'), findsOneWidget);
+    expect(find.textContaining('Marakaj still owes “Boutique Fin” the money of an order paid by Wave'), findsOneWidget);
     await tester.tap(find.text('Got it'));
     await tester.pumpAndSettle();
     await open(
@@ -194,7 +194,7 @@ void main() {
     expect(find.text('Votre compte est supprimé. Au revoir !'), findsNothing);
   });
 
-  testWidgets('B1: a subscription Mara could not stop — named, nothing deleted, the dialog stays', (tester) async {
+  testWidgets('B1: a subscription Marakaj could not stop — named, nothing deleted, the dialog stays', (tester) async {
     final out = <int>[];
     await open(tester, owner, sent: [], out: out,
         refuse: AccountRefused('Nous n\'avons pas pu arrêter …', code: 'not_stopped', name: 'Ferme Fin'));

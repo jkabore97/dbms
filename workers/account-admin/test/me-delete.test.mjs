@@ -384,7 +384,7 @@ test("the database's refusal is said in its words with its code, and nothing is 
   assert.equal(deleted(fake), false);
   assert.equal(fake.calls.some((c) => c.host !== "db.example"), false);
   // S5: a Wave payout Mara still owes the business, likewise.
-  const owed = world({ refused: { message: "Mara doit encore verser à « Boutique Fin » …", code: "payout", name: "Boutique Fin" } });
+  const owed = world({ refused: { message: "Marakaj doit encore verser à « Boutique Fin » …", code: "payout", name: "Boutique Fin" } });
   const out2 = await deleteMe(owed, { e: full });
   assert.equal(out2.status, 409);
   assert.equal(out2.body.code, "payout");
@@ -400,7 +400,7 @@ test("S6 a database still at 127: 113's path, unchanged — the check as the cal
   assert.ok(check.auth.startsWith("Bearer ey"), "113's check is the caller's");
   assert.equal(fake.calls.filter((c) => c.method === "DELETE").length, 1);
   // Its refusal (a member, on 127) is said as before.
-  const member = world({ before128: true, check: { ok: false, refused: "Votre compte tient les livres d'une activité : écrivez à Mara." } });
+  const member = world({ before128: true, check: { ok: false, refused: "Votre compte tient les livres d'une activité : écrivez à Marakaj." } });
   const out2 = await deleteMe(member);
   assert.equal(out2.status, 409);
   assert.equal(member.calls.some((c) => c.method === "DELETE"), false);
@@ -447,7 +447,7 @@ test("an answer for another id deletes nothing; GoTrue's failures are said", asy
   const broken = world({ gotrue: [500, 500] });
   const out = await deleteMe(broken);
   assert.equal(out.status, 409);
-  assert.equal(out.body.error, "La suppression n'a pas pu se faire — écrivez à Mara.");
+  assert.equal(out.body.error, "La suppression n'a pas pu se faire — écrivez à Marakaj.");
 
   const refused = world({ gotrue: [403] });
   const other = await deleteMe(refused);

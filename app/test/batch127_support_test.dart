@@ -170,7 +170,7 @@ void main() {
           'platform_set_setting {"p_key":"support_whatsapp","p_value":"18623354492"}');
       expect(find.byKey(const Key('setting-field')), findsNothing, reason: 'the dialog closes once saved');
       expect(find.text('18623354492'), findsOneWidget);
-      expect(find.text('Numéro WhatsApp de l\'aide Mara (vide : caché) : enregistré.'), findsOneWidget);
+      expect(find.text('Numéro WhatsApp de l\'aide Marakaj (vide : caché) : enregistré.'), findsOneWidget);
     });
 
     for (final typed in ['+1 862 335 4492', '18623354492', '+1 (862) 335-4492']) {
@@ -241,8 +241,8 @@ void main() {
       final server = _Server();
       await _reglages(tester, CommandCenterRepository(_client(server.asked, server.answer)), size: const Size(1280, 2400));
       expect(find.text('AIDE AUX CLIENTS'), findsOneWidget);
-      for (final label in ['Numéro WhatsApp de l\'aide Mara (vide : caché)', 'E-mail de l\'aide Mara',
-          'Heures de l\'aide Mara (par exemple 24 h/24, 7 j/7)']) {
+      for (final label in ['Numéro WhatsApp de l\'aide Marakaj (vide : caché)', 'E-mail de l\'aide Marakaj',
+          'Heures de l\'aide Marakaj (par exemple 24 h/24, 7 j/7)']) {
         expect(find.text(label), findsOneWidget, reason: label);
       }
       await _open(tester, 'support_email');
@@ -376,9 +376,9 @@ void main() {
       expect([for (final d in platformSettingDefs) if (d.group == 'help') d.key],
           ['support_whatsapp', 'support_email', 'support_hours']);
       expect(platformSettingDefs.where((d) => d.group == 'help').every((d) => d.type == SettingType.text), isTrue);
-      expect(translate('en', 'E-mail de l\'aide Mara'), 'Mara\'s help e-mail');
-      expect(translate('en', 'Heures de l\'aide Mara (par exemple 24 h/24, 7 j/7)'),
-          'Mara\'s help hours (for example 24 h/24, 7 j/7)');
+      expect(translate('en', 'E-mail de l\'aide Marakaj'), 'Marakaj\'s help e-mail');
+      expect(translate('en', 'Heures de l\'aide Marakaj (par exemple 24 h/24, 7 j/7)'),
+          'Marakaj\'s help hours (for example 24 h/24, 7 j/7)');
       expect(supportNumberDigits('\u202A+1 (862) 335\u20114492\u202C'), '18623354492');
       expect(supportNumberDigits('le support'), 'lesupport');
     });
@@ -390,7 +390,7 @@ void main() {
       final opened = _launches(tester);
       await tester.pumpWidget(_host(const SupportCard()));
       await tester.pumpAndSettle();
-      expect(find.text('Aide Mara'), findsOneWidget);
+      expect(find.text('Aide Marakaj'), findsOneWidget);
       // The installed hours drawn with non-breaking spaces (stored plain).
       expect(find.text('Une question, un souci ? Nous répondons 24\u00A0h/24, 7\u00A0j/7.'), findsOneWidget);
       expect(find.text('hello@kaj-consulting.com'), findsOneWidget);
@@ -399,8 +399,8 @@ void main() {
       await tester.tap(find.byKey(const Key('support-email')));
       await tester.pumpAndSettle();
       expect(opened, [
-        'https://wa.me/18623354492?text=${Uri.encodeComponent('Bonjour, j\'ai besoin d\'aide avec Mara.')}',
-        'mailto:hello@kaj-consulting.com?subject=Aide%20Mara',
+        'https://wa.me/18623354492?text=${Uri.encodeComponent('Bonjour, j\'ai besoin d\'aide avec Marakaj.')}',
+        'mailto:hello@kaj-consulting.com?subject=Aide%20Marakaj',
       ]);
     });
 
@@ -420,7 +420,7 @@ void main() {
       Support.reset(_withNumber);
       await tester.pumpWidget(_host(const SupportCard(), locale: const Locale('en')));
       await tester.pumpAndSettle();
-      expect(find.text('Mara Help'), findsOneWidget);
+      expect(find.text('Marakaj Help'), findsOneWidget);
       expect(find.text('A question, a problem? We answer 24/7.'), findsOneWidget);
       Support.reset(const SupportContacts(email: 'aide@marakaj.com', hours: 'lun.–sam., 8 h – 20 h'));
       await tester.pumpAndSettle();

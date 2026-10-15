@@ -36,7 +36,7 @@
          allowBackup stops the cloud backup; on Android 12 and later the
          transfer to a new phone is stopped by dataExtractionRules. -->
     <application
-        android:label="Mara"
+        android:label="Marakaj"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="false"

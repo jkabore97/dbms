@@ -231,7 +231,7 @@ async function call(w, body, { token = "owner-jwt" } = {}) {
 // ------------------------------------------------------------
 // The products
 // ------------------------------------------------------------
-test("the four spot products are the owner's, and none of them is Mara Pro", () => {
+test("the four spot products are the owner's, and none of them is Marakaj Pro", () => {
   assert.deepEqual(GOOGLE_SPOT_PRODUCTS, { mara_spot_article_7: "article", mara_spot_shop_7: "shop" });
   assert.deepEqual(APPLE_SPOT_PRODUCTS, { "bf.kaj.app.spot.article7": "article", "bf.kaj.app.spot.shop7": "shop" });
   assert.ok(isSpotProduct("mara_spot_shop_7"));
@@ -275,7 +275,7 @@ test("Google: a paid consumable is read from purchases.products, programmed once
   assert.ok(ack > settleAt && consume > ack, "ack then consume, after spot_settle");
 });
 
-test("Google: without the order's total, no amount is sent — the database writes Mara's own price, never the app's", async () => {
+test("Google: without the order's total, no amount is sent — the database writes Marakaj's own price, never the app's", async () => {
   const w = world({ google: { [`mara_spot_shop_7:${TOKEN}`]: purchase({ acknowledgementState: 1 }) },
     spot: { org_id: ORG, kind: "shop" } });
   const r = await call(w, { platform: "google", product_id: "mara_spot_shop_7", token: TOKEN,
@@ -380,7 +380,7 @@ test("Apple: a consumable's signed transaction is verified, its price and curren
   assert.ok(!w.calls.some((c) => c.url?.includes("androidpublisher")));
 });
 
-test("Apple: another app's, Mara Pro's, a refunded or another spot's transaction is refused for good", async () => {
+test("Apple: another app's, Marakaj Pro's, a refunded or another spot's transaction is refused for good", async () => {
   const cases = [
     [spotTx({ bundleId: "com.other" }), 422, "bundle"],
     [spotTx({ productId: "bf.kaj.app.pro.monthly" }), 422, "product"],
@@ -476,7 +476,7 @@ test("Google's voided one-time purchase ends its spot; a subscription's voided o
   assert.equal(w.calls.filter((c) => c.rpc === "spot_refund").length, 2);
 });
 
-test("Stripe: a spot's full refund or dispute, read again from Stripe, ends it; a partial refund or Mara Pro's charge nothing", async () => {
+test("Stripe: a spot's full refund or dispute, read again from Stripe, ends it; a partial refund or Marakaj Pro's charge nothing", async () => {
   stripeIntents.pi_spot_1 = { id: "pi_spot_1", metadata: { kind: "spot", promotion_id: SPOT },
     latest_charge: { id: "ch_1", refunded: true, disputed: false } };
   stripeIntents.pi_spot_2 = { id: "pi_spot_2", metadata: { kind: "spot", promotion_id: SPOT },
@@ -516,7 +516,7 @@ test("Stripe: a spot's one-time Checkout is the database's amount and currency, 
   assert.equal(p["line_items[0][price_data][unit_amount]"], "199");
   assert.equal(p["line_items[0][price_data][currency]"], "eur");
   assert.equal(p["line_items[0][price_data][product_data][name]"],
-    "Mara · Un article à la une, 7 jours · Robe de soirée · 1,99 EUR · Maison Élégance");
+    "Marakaj · Un article à la une, 7 jours · Robe de soirée · 1,99 EUR · Maison Élégance");
   assert.equal(p["metadata[kind]"], "spot");
   assert.equal(p["metadata[promotion_id]"], SPOT);
   assert.equal(p.client_reference_id, SPOT);

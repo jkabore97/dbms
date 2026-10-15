@@ -50,7 +50,7 @@ class MainActivity : FlutterFragmentActivity() {
                 "Commandes et messages",
                 NotificationManager.IMPORTANCE_HIGH,
             )
-            channel.description = "Les commandes, les réservations et les messages de Mara"
+            channel.description = "Les commandes, les réservations et les messages de Marakaj"
             channel.enableVibration(true)
             manager.createNotificationChannel(channel)
         } catch (e: Exception) {
@@ -182,7 +182,7 @@ class MainActivity : FlutterFragmentActivity() {
         }
     }
 
-    // Into Pictures/Mara through MediaStore: no permission from Android 10
+    // Into Pictures/Marakaj through MediaStore: no permission from Android 10
     // on. Older phones would need a storage right Mara does not ask for —
     // false, and the app opens the system sheet, which can save.
     private fun saveToPhotos(bytes: ByteArray, name: String?): Boolean {
@@ -191,7 +191,7 @@ class MainActivity : FlutterFragmentActivity() {
             val values = android.content.ContentValues().apply {
                 put(android.provider.MediaStore.Images.Media.DISPLAY_NAME, name ?: "mara.png")
                 put(android.provider.MediaStore.Images.Media.MIME_TYPE, "image/png")
-                put(android.provider.MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Mara")
+                put(android.provider.MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Marakaj")
                 put(android.provider.MediaStore.Images.Media.IS_PENDING, 1)
             }
             val resolver = contentResolver

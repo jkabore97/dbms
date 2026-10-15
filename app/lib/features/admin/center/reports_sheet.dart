@@ -110,7 +110,7 @@ class _ReportsSheetState extends State<ReportsSheet> {
   Future<void> _reach(String contact) async {
     final url = contact.contains('@')
         ? 'mailto:$contact'
-        : whatsappUrl(contact, text: context.tr('Bonjour, c\'est Mara, à propos de votre signalement.'));
+        : whatsappUrl(contact, text: context.tr('Bonjour, c\'est Marakaj, à propos de votre signalement.'));
     if (url == null) return;
     await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
   }

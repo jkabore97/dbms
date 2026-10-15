@@ -180,7 +180,7 @@ class SecuritySettings extends ChangeNotifier {
     try {
       final ok = await _bio.authenticate(
         localizedReason: translate(
-            trCurrent, 'Autoriser Mara à utiliser l\'empreinte ou Face ID'),
+            trCurrent, 'Autoriser Marakaj à utiliser l\'empreinte ou Face ID'),
         biometricOnly: true,
       );
       if (!ok) return BiometricOutcome.refused;
@@ -218,7 +218,7 @@ class SecuritySettings extends ChangeNotifier {
   Future<bool> unlockWithBiometrics() async {
     try {
       return await _bio.authenticate(
-        localizedReason: translate(trCurrent, 'Déverrouiller Mara'),
+        localizedReason: translate(trCurrent, 'Déverrouiller Marakaj'),
         biometricOnly: true,
       );
     } catch (_) {

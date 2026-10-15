@@ -157,7 +157,7 @@ class _OrderSignInSheetState extends State<OrderSignInSheet> {
             Text(
               // A booking (125) is kept as the basket is, with its day and time.
               widget.report
-                  ? context.tr('Mara vous répond dans vos notifications. Vous revenez ici juste après.')
+                  ? context.tr('Marakaj vous répond dans vos notifications. Vous revenez ici juste après.')
                   : widget.booking
                   ? context.tr('Votre réservation est gardée : vous revenez ici juste après.')
                   : context.tr('Votre panier est gardé : vous revenez ici juste après.'),

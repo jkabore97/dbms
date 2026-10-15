@@ -188,7 +188,7 @@ void main() {
       await tester.runAsync(() async {
         await db.saveIdentity(LocalIdentity(
           userId: 'user-147',
-          displayName: 'Client Mara',
+          displayName: 'Client Marakaj',
           phone: '+22670147000',
           orgsRefreshedAt: DateTime.now(),
         ));
@@ -258,14 +258,14 @@ void main() {
       await pumpApp(tester, done);
       expect(done.asked, greaterThan(0));
       expect(find.byKey(const Key('terms-gate')), findsNothing);
-      expect(find.text('Vendre sur Mara').hitTestable(), findsOneWidget);
+      expect(find.text('Vendre sur Marakaj').hitTestable(), findsOneWidget);
     });
 
     testWidgets('before 142 (no my_terms_state): nothing shown, nothing blocked', (tester) async {
       final before = FakeTerms(TermsState.none);
       await pumpApp(tester, before);
       expect(find.byKey(const Key('terms-gate')), findsNothing);
-      expect(find.text('Vendre sur Mara').hitTestable(), findsOneWidget);
+      expect(find.text('Vendre sur Marakaj').hitTestable(), findsOneWidget);
     });
   });
 
@@ -336,7 +336,7 @@ void main() {
       await tester.pumpWidget(gateHost(c));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('terms-accept')), findsNothing, reason: 'the terms are accepted');
-      expect(find.text('Je travaille à mon compte : je ne suis employé ni par Mara ni par la boutique.'),
+      expect(find.text('Je travaille à mon compte : je ne suis employé ni par Marakaj ni par la boutique.'),
           findsOneWidget);
       await tester.scrollUntilVisible(find.byKey(const Key('terms-courier-accept')), 200);
       await tester.tap(find.byKey(const Key('terms-courier-accept')));
@@ -354,7 +354,7 @@ void main() {
       await tester.scrollUntilVisible(find.byKey(const Key('terms-read')), 200);
       await tester.tap(find.byKey(const Key('terms-read')));
       await tester.pumpAndSettle();
-      expect(find.text('Qui exploite Mara'), findsOneWidget);
+      expect(find.text('Qui exploite Marakaj'), findsOneWidget);
       expect(find.text('Version 2 — en vigueur le 14 octobre 2026.'), findsOneWidget);
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
@@ -456,7 +456,7 @@ void main() {
     });
 
     test('the server\'s refusals are known and said in English', () {
-      const order = 'Acceptez d\'abord les Conditions d\'utilisation de Mara pour commander (mettez l\'application à jour si elle ne vous les montre pas).';
+      const order = 'Acceptez d\'abord les Conditions d\'utilisation de Marakaj pour commander (mettez l\'application à jour si elle ne vous les montre pas).';
       const seller = 'Acceptez d\'abord les engagements du vendeur pour créer une activité (mettez l\'application à jour si elle ne vous les montre pas).';
       const courier = 'Acceptez d\'abord la charte du livreur pour envoyer votre demande (mettez l\'application à jour si elle ne vous la montre pas).';
       for (final m in [order, seller, courier]) {
@@ -466,7 +466,7 @@ void main() {
       trCurrent = 'en';
       addTearDown(() => trCurrent = 'fr');
       expect(describeError(const PostgrestException(message: order)),
-          'First accept Mara\'s Terms of Use to order (update the app if it does not show them to you).');
+          'First accept Marakaj\'s Terms of Use to order (update the app if it does not show them to you).');
       expect(describeError(const PostgrestException(message: seller)),
           'First accept the seller\'s commitments to create a business (update the app if it does not show them to you).');
       expect(describeError(const PostgrestException(message: courier)),
@@ -582,10 +582,10 @@ void main() {
       await tester.scrollUntilVisible(find.byKey(const Key('terms-read')), 200);
       await tester.tap(find.byKey(const Key('terms-read')));
       await tester.pumpAndSettle();
-      expect(find.text('Qui exploite Mara'), findsOneWidget);
+      expect(find.text('Qui exploite Marakaj'), findsOneWidget);
       expect(await TermsGate.handleBack(c, key), isTrue);
       await tester.pumpAndSettle();
-      expect(find.text('Qui exploite Mara'), findsNothing);
+      expect(find.text('Qui exploite Marakaj'), findsNothing);
       expect(find.byKey(const Key('terms-gate')), findsOneWidget);
       // On the gate itself: taken (the phone leaves), not the router's.
       expect(await TermsGate.handleBack(c, key), isTrue);
@@ -749,7 +749,7 @@ void main() {
       await tester.tap(find.byKey(const Key('courier-start')));
       await tester.pumpAndSettle();
       expect(find.text('La charte du livreur'), findsOneWidget);
-      expect(find.text('Je travaille à mon compte : je ne suis employé ni par Mara ni par la boutique.'),
+      expect(find.text('Je travaille à mon compte : je ne suis employé ni par Marakaj ni par la boutique.'),
           findsOneWidget);
       final next = find.byKey(const Key('courier-next'));
       expect(tester.widget<FilledButton>(next).onPressed, isNull);
@@ -768,7 +768,7 @@ void main() {
         return const SizedBox();
       })));
       expect(lines, hasLength(9));
-      expect(lines.first, 'Je travaille à mon compte : je ne suis employé ni par Mara ni par la boutique.');
+      expect(lines.first, 'Je travaille à mon compte : je ne suis employé ni par Marakaj ni par la boutique.');
       expect(lines[7], startsWith('Je ne marque une commande livrée qu\'avec le code'));
       expect(lines.last, 'Un manquement à cette charte peut suspendre mon accès livreur.');
       for (final l in lines) {
@@ -786,9 +786,9 @@ void main() {
     test('every section the owner asked for, a version and a date, the lawyer\'s placeholder', () {
       final terms = dart().substring(dart().indexOf('class TermsScreen'), dart().indexOf('class FaqScreen'));
       for (final heading in [
-        '# Qui exploite Mara', '# Le rôle de Mara', '# Votre compte', '# Les entreprises', '# Les clients',
-        '# Les paiements', '# Mara Pro', '# Les livreurs', '# Cauris, ligues, prix et parrainage',
-        '# Formateurs et aide', '# Les droits de Mara', '# Signaler un problème', '# Responsabilité',
+        '# Qui exploite Marakaj', '# Le rôle de Marakaj', '# Votre compte', '# Les entreprises', '# Les clients',
+        '# Les paiements', '# Marakaj Pro', '# Les livreurs', '# Cauris, ligues, prix et parrainage',
+        '# Formateurs et aide', '# Les droits de Marakaj', '# Signaler un problème', '# Responsabilité',
         '# Vos données', '# Modifications', '# Droit applicable et litiges', '# Langue et contact',
       ]) {
         expect(terms, contains("'$heading'"), reason: heading);
@@ -796,17 +796,17 @@ void main() {
       for (final words in [
         'exploité par KAJ Consulting LLC',
         'Chaque entreprise est le vendeur',
-        'Mara n\'est pas partie à la vente',
+        'Marakaj n\'est pas partie à la vente',
         '16 ans pour commander ; 18 ans pour ouvrir une entreprise',
         'armes, munitions et explosifs',
         'se faire passer pour une marque',
         'payer autrement que par les moyens convenus',
-        'Mara peut vérifier l\'identité',
+        'Marakaj peut vérifier l\'identité',
         'Les fausses commandes',
         'Ils n\'ont aucune valeur en argent',
         'en lecture seule et pour une durée limitée',
-        'Mara coopère avec les autorités',
-        'Mara ne garantit aucune vente',
+        'Marakaj coopère avec les autorités',
+        'Marakaj ne garantit aucune vente',
         '[à valider par un avocat]',
         'Version 2 — en vigueur le 14 octobre 2026.',
         '{email}',
@@ -827,7 +827,7 @@ void main() {
         'les livreurs proches voient l\'adresse et le point de livraison, sans votre nom ni votre numéro',
         'le livreur qui prend la course reçoit ensuite votre nom et votre numéro',
         '# Vérifications contre la fraude',
-        '# Ce que Mara garde',
+        '# Ce que Marakaj garde',
       ]) {
         expect(privacy, contains(words), reason: words);
       }
@@ -878,7 +878,7 @@ void main() {
         home: Scaffold(
           body: PersonSheet(
             person: const PlatformPerson(userId: 'u1', isPlatformAdmin: false, businessCount: 0,
-                fullName: 'Client Mara'),
+                fullName: 'Client Marakaj'),
             console: ConsoleRepository(null),
             admin: AdminRepository(null),
             help: HelpRepository(null),
@@ -1009,8 +1009,8 @@ void screenshots() {
           // A new version, an owner and a courier asked too.
           c = await tracked(tester, FakeTerms(serverState(
               gate: const ['terms', 'privacy', 'seller'], accepted: const {'terms': 1, 'privacy': 1}, changed: true,
-              changes: 'Nouvelles conditions : Mara est une plateforme, chaque entreprise vend elle-même.',
-              changesEn: 'New terms: Mara is a platform, each business sells for itself.')));
+              changes: 'Nouvelles conditions : Marakaj est une plateforme, chaque entreprise vend elle-même.',
+              changesEn: 'New terms: Marakaj is a platform, each business sells for itself.')));
           await tester.pumpWidget(framed(MaterialApp(
             debugShowCheckedModeBanner: false,
             theme: kajTheme(kajPalette),

@@ -94,9 +94,9 @@ void main() {
     }
   });
 
-  test('the home page itself names Mara and links both policies', () {
+  test('the home page itself names Marakaj and links both policies', () {
     final html = File('web/index.html').readAsStringSync();
-    expect(html, contains('<h1>Mara'));
+    expect(html, contains('<h1>Marakaj'));
     expect(html, contains('href="/confidentialite"'));
     expect(html, contains('href="/conditions"'));
   });

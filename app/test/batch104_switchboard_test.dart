@@ -137,7 +137,7 @@ const _noAddress = <String, String>{
   'online_orders': 'the vitrine itself',
   // Parts and cards of Paramètres (?partie=livraison falls back to the index).
   'delivery': 'Paramètres › Livraison',
-  'online_payment': 'Paramètres › Paiements (Mara\'s payout part)',
+  'online_payment': 'Paramètres › Paiements (Marakaj\'s payout part)',
   'vitrine_plus': 'Paramètres › Vitrine › Vitrine avancée',
   'spots': 'Paramètres › Vitrine › Mettre en avant',
   // « À vendre » stays: it is the farm's own list, sold at the farm too.
@@ -389,7 +389,7 @@ void main() {
           isNull);
     });
 
-    testWidgets('a home closes up around what Mara hid', (tester) async {
+    testWidgets('a home closes up around what Marakaj hid', (tester) async {
       tester.view.physicalSize = const Size(800, 2000);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);

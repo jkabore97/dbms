@@ -419,10 +419,10 @@ void main() {
   // -------------------------------------------------------------------------
   group('2. Basic sees and tries', () {
     for (final org in _kinds) {
-      testWidgets('${org.profile}: every Pro option sealed « PRO », the line above, « Voir Mara Pro »', (tester) async {
+      testWidgets('${org.profile}: every Pro option sealed « PRO », the line above, « Voir Marakaj Pro »', (tester) async {
         await card(tester, org);
-        expect(find.text('AVEC MARA PRO'), findsOneWidget);
-        expect(find.text('Ces options s\'activent avec Mara Pro. Essayez-les : l\'aperçu vous montre le résultat.'),
+        expect(find.text('AVEC MARAKAJ PRO'), findsOneWidget);
+        expect(find.text('Ces options s\'activent avec Marakaj Pro. Essayez-les : l\'aperçu vous montre le résultat.'),
             findsOneWidget);
         // The section's seal, the layout, the articles en tête, the
         // sold-out switch and « Ouvert maintenant ».
@@ -432,7 +432,7 @@ void main() {
           final row = find.ancestor(of: find.text(label), matching: find.byType(Row)).first;
           expect(find.descendant(of: row, matching: find.text('PRO')), findsOneWidget, reason: label);
         }
-        expect(find.text('Voir Mara Pro'), findsOneWidget);
+        expect(find.text('Voir Marakaj Pro'), findsOneWidget);
         // Not the old locked card that let the layout alone be tried.
         expect(find.byKey(const Key('dressing-pro-locked')), findsNothing);
         expect(find.byKey(const Key('preview-pro-band')), findsNothing);
@@ -448,7 +448,7 @@ void main() {
       await card(tester, _shop);
       await tap(tester, find.byKey(const Key('layout-list')));
       expect(find.byKey(const Key('preview-pro-band')), findsOneWidget);
-      expect(find.text('Aperçu — avec Mara Pro'), findsOneWidget);
+      expect(find.text('Aperçu — avec Marakaj Pro'), findsOneWidget);
       await tap(tester, find.byKey(const Key('layout-grid')));
       expect(find.byKey(const Key('preview-pro-band')), findsNothing);
       // An article en tête alone, or the sold-out switch alone.
@@ -479,11 +479,11 @@ void main() {
 
     testWidgets('Pro: no line, no band, the choices as before', (tester) async {
       await card(tester, _proShop);
-      expect(find.text('Ces options s\'activent avec Mara Pro. Essayez-les : l\'aperçu vous montre le résultat.'),
+      expect(find.text('Ces options s\'activent avec Marakaj Pro. Essayez-les : l\'aperçu vous montre le résultat.'),
           findsNothing);
       await tap(tester, find.byKey(const Key('layout-menu')));
       expect(find.byKey(const Key('preview-pro-band')), findsNothing);
-      expect(find.text('Voir Mara Pro'), findsNothing);
+      expect(find.text('Voir Marakaj Pro'), findsNothing);
     });
   });
 
@@ -506,7 +506,7 @@ void main() {
       testWidgets('${org.profile}, the owner: the choices, « gardés », and saving keeps them', (tester) async {
         final admin = await tryAndSave(tester, org);
         expect(find.byKey(const Key('vitrine-pro-dialog')), findsOneWidget);
-        expect(find.text('Ces choix viennent avec Mara Pro'), findsOneWidget);
+        expect(find.text('Ces choix viennent avec Marakaj Pro'), findsOneWidget);
         expect(find.text('Liste · 3 articles en tête'), findsOneWidget);
         expect(
             find.text(
@@ -530,7 +530,7 @@ void main() {
                 'Vitrine enregistrée, en grille. Vos choix Pro sont gardés : ils s\'activent dès que vous passez à Pro.'),
             findsOneWidget);
         // #204's word, and its Pro sheet opened unasked, are gone.
-        expect(find.textContaining('vient avec Mara Pro'), findsNothing);
+        expect(find.textContaining('vient avec Marakaj Pro'), findsNothing);
       });
     }
 
@@ -617,7 +617,7 @@ void main() {
       expect(find.byKey(const Key('vitrine-pro-dialog-pro')), findsNothing);
     });
 
-    testWidgets('the iPhone app: no Pro button, no invitation, no « Voir Mara Pro »', (tester) async {
+    testWidgets('the iPhone app: no Pro button, no invitation, no « Voir Marakaj Pro »', (tester) async {
       debugSellsDigitalInApp = false;
       await tryAndSave(tester, _shop);
       expect(find.byKey(const Key('vitrine-pro-dialog')), findsOneWidget);
@@ -626,12 +626,12 @@ void main() {
       expect(find.text('Passer à Pro'), findsNothing);
       // Kept, said without an invitation to go to Pro (125).
       expect(find.textContaining('passez à Pro'), findsNothing);
-      expect(find.text('Sans Pro, votre vitrine reste en grille. Vos choix sont gardés : ils font partie de Mara Pro.'),
+      expect(find.text('Sans Pro, votre vitrine reste en grille. Vos choix sont gardés : ils font partie de Marakaj Pro.'),
           findsOneWidget);
       await tap(tester, find.byKey(const Key('vitrine-pro-dialog-save')));
-      expect(find.text('Voir Mara Pro'), findsNothing);
+      expect(find.text('Voir Marakaj Pro'), findsNothing);
       expect(find.textContaining('passez à Pro'), findsNothing);
-      expect(find.text('Vitrine enregistrée, en grille. Vos choix Pro sont gardés : ils font partie de Mara Pro.'),
+      expect(find.text('Vitrine enregistrée, en grille. Vos choix Pro sont gardés : ils font partie de Marakaj Pro.'),
           findsOneWidget);
     });
 
@@ -881,7 +881,7 @@ void main() {
       ('a passer-by', const <OrgSummary>[]),
       ('an employee', [_as(_shop, const ['employee'])]),
       ('a trainer\'s look', [_as(_shop, const ['observer'])]),
-      ('Mara\'s admin', [_as(_shop, const ['platform_admin'])]),
+      ('Marakaj\'s admin', [_as(_shop, const ['platform_admin'])]),
       ('the owner of another business', const [_farm]),
     ]) {
       testWidgets('$label: never', (tester) async {
@@ -934,12 +934,12 @@ void main() {
   group('6–7. English and 320 px × 1.3', () {
     testWidgets('the card and the dialog in English', (tester) async {
       await card(tester, _farm, locale: const Locale('en'));
-      expect(find.text('These options turn on with Mara Pro. Try them: the preview shows you the result.'),
+      expect(find.text('These options turn on with Marakaj Pro. Try them: the preview shows you the result.'),
           findsOneWidget);
       await tap(tester, find.byKey(const Key('layout-large')));
-      expect(find.text('Preview — with Mara Pro'), findsOneWidget);
+      expect(find.text('Preview — with Marakaj Pro'), findsOneWidget);
       await tap(tester, find.byKey(const Key('dressing-save')));
-      expect(find.text('These choices come with Mara Pro'), findsOneWidget);
+      expect(find.text('These choices come with Marakaj Pro'), findsOneWidget);
       expect(find.text('Large photos'), findsWidgets);
       expect(find.text('Save without the Pro options'), findsOneWidget);
       expect(find.text('Go Pro'), findsWidgets);
@@ -1057,7 +1057,7 @@ void main() {
                   app(
                       Builder(
                           builder: (context) => Scaffold(
-                                appBar: AppBar(title: const Text('Mara'), actions: const [VitrineButton(org: _shop)]),
+                                appBar: AppBar(title: const Text('Marakaj'), actions: const [VitrineButton(org: _shop)]),
                                 body: const SizedBox.expand(),
                               )),
                       locale: locale))));

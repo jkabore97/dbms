@@ -44,10 +44,10 @@ const ENTITLED = new Set(["active", "grace", "cancelled"]);
 /// The store's answer, for the purchase the app reported.
 async function lookup(platform, body, env, io) {
   if (platform === "apple") {
-    if (!appleConfigured(env)) throw new StoreError("L'App Store n'est pas encore relié à Mara.", 503, "config");
+    if (!appleConfigured(env)) throw new StoreError("L'App Store n'est pas encore relié à Marakaj.", 503, "config");
     return appleLookup(env, body?.transaction_id, io, io.verify);
   }
-  if (!googleConfigured(env)) throw new StoreError("Google Play n'est pas encore relié à Mara.", 503, "config");
+  if (!googleConfigured(env)) throw new StoreError("Google Play n'est pas encore relié à Marakaj.", 503, "config");
   return googleLookup(env, body?.token, io);
 }
 
@@ -73,10 +73,10 @@ async function settle(settlement, orgId, env, io, boughtBy = null) {
     if (result?.reason === "sandbox") {
       // 128 5c: a test purchase counts only for Mara's own businesses and
       // the App Review account's (platform setting store_review_account).
-      throw new StoreError("Achat de test refusé : un achat fait avec un compte de test (sandbox, TestFlight) n'active Mara Pro que pour les comptes de test de Mara.", 403, "sandbox");
+      throw new StoreError("Achat de test refusé : un achat fait avec un compte de test (sandbox, TestFlight) n'active Marakaj Pro que pour les comptes de test de Marakaj.", 403, "sandbox");
     }
     if (result?.reason === "no such business") {
-      throw new StoreError("Cette entreprise n'existe plus sur Mara.", 404, "no_business");
+      throw new StoreError("Cette entreprise n'existe plus sur Marakaj.", 404, "no_business");
     }
     throw new StoreError("L'abonnement n'a pas pu être enregistré.", 502, result?.reason || "");
   }
@@ -102,7 +102,7 @@ function beginRefused(error) {
     return new StoreError("Votre session a expiré : reconnectez-vous.", 401, "session");
   }
   if (error?.status === 400) {
-    return new StoreError(error.message || "Seul un administrateur abonne l'entreprise à Mara Pro", 403, "not_admin");
+    return new StoreError(error.message || "Seul un administrateur abonne l'entreprise à Marakaj Pro", 403, "not_admin");
   }
   return error;
 }
@@ -172,7 +172,7 @@ export async function appleNotify(body, env, io) {
     return spotRefund(env, io, "apple", note.spotRefund.transactionId, note.spotRefund.reason);
   }
   if (!note.settlement) return { ignored: note.ignored || "" };
-  if (!appleConfigured(env)) throw new StoreError("L'App Store n'est pas encore relié à Mara.", 503, "config");
+  if (!appleConfigured(env)) throw new StoreError("L'App Store n'est pas encore relié à Marakaj.", 503, "config");
   let s;
   try {
     s = await appleLookup(env, note.settlement.originalId, io, io.verify);
@@ -214,7 +214,7 @@ export async function googleNotify(url, body, env, io) {
   // whether the token is a spot's, and ends it once.
   // A spot bought (139), heard without the app: verified and programmed.
   if (note.oneTime) {
-    if (!googleConfigured(env)) throw new StoreError("Google Play n'est pas encore relié à Mara.", 503, "config");
+    if (!googleConfigured(env)) throw new StoreError("Google Play n'est pas encore relié à Marakaj.", 503, "config");
     try {
       return await googleSpotPurchased(env, note.oneTime, io);
     } catch (error) {
@@ -226,7 +226,7 @@ export async function googleNotify(url, body, env, io) {
     return spotRefund(env, io, "google", note.voided.token,
       `google voided${note.voided.refundType != null ? ` (${note.voided.refundType})` : ""}`);
   }
-  if (!googleConfigured(env)) throw new StoreError("Google Play n'est pas encore relié à Mara.", 503, "config");
+  if (!googleConfigured(env)) throw new StoreError("Google Play n'est pas encore relié à Marakaj.", 503, "config");
   let s;
   try {
     s = await googleLookup(env, note.token, io);

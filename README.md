@@ -1,13 +1,18 @@
-# Mara — Multi-Tenant Business Management Platform
+# Marakaj — Multi-Tenant Business Management Platform
 
-**Mara** — « Au Service du Peuple » — is the app's name; it is made and
+**Marakaj** — « Au Service du Peuple » — is the app's name (it was « Mara »
+until migration 147; the domain marakaj.com always matched); it is made and
 run by Kaj Consulting, which signs the street's footer (« POWERED BY »).
 The code keeps its old internal names — the `kaj_app` package, the
 Android id `bf.kaj.app` (changing it would orphan every installed phone),
-`KajCard`, the `kaj-pay` Worker — and the database's own sentences still
-say « Kaj », read as « Mara » by the app (`brandText`) and the push Worker.
+`KajCard`, the `kaj-pay` Worker, and from the « Mara » days `MaraMark`,
+the `mara*` colours, the `mara_*` files and the store product ids
+(`mara_pro`, `mara_spot_*`) — and the database's own sentences still
+say « Kaj » in places, read as « Marakaj » by the app (`brandText`) and the
+push Worker, which also read an older database's « Mara » as « Marakaj ».
 Brand files: `app/assets/brand/mara_*`, the icons in `app/web/icons` and
-`app/android/.../mipmap-*`; store texts in `docs/brand/mara-store-listing.md`.
+`app/android/.../mipmap-*` (the word-bearing ones remade by
+`docs/brand/build_app_brand.py`); store texts in `docs/brand/mara-store-listing.md`.
 
 One offline-first app for Kaj-consulting's clients — churches, farms, retail shops,
 and whatever comes next. Each business is a tenant (`org`) with its own subdomain,
@@ -451,7 +456,7 @@ builds without publishing; on main it publishes a new release, like a push
 ### Building for iPhone with Codemagic
 
 The iPhone app is the same Flutter app (`app/ios/`, bundle id `bf.kaj.app`,
-named « Mara », iOS 15.5 and later — the oldest the text-recognition plugin
+named « Marakaj », iOS 15.5 and later — the oldest the text-recognition plugin
 supports). iPhone only (125: `TARGETED_DEVICE_FAMILY = 1`), so App Store
 Connect asks for no iPad screenshots and App Review tests on no iPad.
 That choice is only free before release: once a version that runs on iPad
@@ -459,7 +464,7 @@ has been on the App Store, Apple does not let a later one drop iPad (people
 who installed it there would lose updates). Until 125 the app had been
 sent to TestFlight only, never released, so dropping it now is fine; the
 day iPad is wanted, it can be added, but not taken away again. It
-sells no digital goods: Mara Pro and the paid spots are not offered in it
+sells no digital goods: Marakaj Pro and the paid spots are not offered in it
 (« What the iPhone app does not sell » below). It needs a Mac to build, which GitHub's Linux machines are not:
 [Codemagic](https://codemagic.io) builds it from `codemagic.yaml` at the
 root of the repository, signs it, and sends it to TestFlight. No secret is in
@@ -470,13 +475,13 @@ owner. Step by step, once:
    enrol (99 $ a year; as an individual, or as the company with its D-U-N-S
    number). Wait for the « Welcome » e-mail.
 2. **The app's identifier** — developer.apple.com › Certificates, IDs &
-   Profiles › Identifiers › « + » › App IDs › App: description « Mara »,
+   Profiles › Identifiers › « + » › App IDs › App: description « Marakaj »,
    Bundle ID *explicit* `bf.kaj.app`. Tick **Sign in with Apple** (the app
    offers it beside Google, 125 — « Sign in with Apple (iPhone) » below);
    leave the other capabilities as they are (push for iPhone is not
    switched on yet; see below).
 3. **The app in App Store Connect** — <https://appstoreconnect.apple.com> ›
-   Apps › « + » › New App: platform iOS, name « Mara » (or « Mara — votre
+   Apps › « + » › New App: platform iOS, name « Marakaj » (or « Marakaj — votre
    activité » if the name is taken), primary language French, bundle ID
    `bf.kaj.app`, SKU `mara`. Note its **Apple ID** (a number, under App
    Information) — the App Store link will be
@@ -544,9 +549,9 @@ owner. Step by step, once:
    description, privacy policy URL (`https://marakaj.com/confidentialite`),
    *App Privacy* answers, then pick the TestFlight build and *Submit for
    Review*. Once it is live, put its address in the command center ›
-   Réglages › Applications mobiles › « Adresse de Mara sur l'App Store »:
+   Réglages › Applications mobiles › « Adresse de Marakaj sur l'App Store »:
    the web's pop-up then sends iPhones to the App Store instead of telling
-   them to add Mara to the home screen.
+   them to add Marakaj to the home screen.
 
 What was checked here and what was not: the container has no Mac, so no
 iOS build ran. `flutter create --platforms=ios` generated `app/ios/` with
@@ -588,7 +593,7 @@ the app and a one-minute poll), and with this set up it also reaches a
 desktop; Safari from iOS 16.4 when the site is added to the home screen),
 on the Android app by Firebase Cloud Messaging. The pieces: migrations 060
 and 115 (the address book, `push_subscriptions`, browsers and phones — on an
-older database, applied with `database/apply_006_to_146.sql`, below),
+older database, applied with `database/apply_006_to_147.sql`, below),
 `workers/push` (the sender: Web Push and FCM HTTP v1), `web/push_handlers.js`
 (the browser's receiver, carried by `web/mara_sw.js` — or by the bare
 `web/push_sw.js` where no worker holds the site yet), and a database webhook
@@ -647,11 +652,11 @@ inside the app works throughout.
 
 ### Welcome e-mail (Resend)
 
-A new account receives one e-mail, once: « Bienvenue sur Mara, {prénom} ! »
-from `Mara <bienvenue@marakaj.com>`, replies going to
+A new account receives one e-mail, once: « Bienvenue sur Marakaj, {prénom} ! »
+from `Marakaj <bienvenue@marakaj.com>`, replies going to
 `hello@kaj-consulting.com` — the logo, three steps (« Ajoutez vos
 articles », « Ouvrez votre vitrine », « Faites votre première vente »), the
-« Ouvrir Mara » button, the Google Play line, the privacy link. French; in
+« Ouvrir Marakaj » button, the Google Play line, the privacy link. French; in
 English when the account's sign-in says so; and since the app keeps the
 language on the phone, not on the server, a French e-mail with one English
 line otherwise. It is per person — the same for whoever later runs a shop,
@@ -689,7 +694,7 @@ One-time setup, in this order:
    any long random string (`openssl rand -hex 32`) — its own, not push's.
    `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL` and `CLOUDFLARE_API_TOKEN`
    are the ones push already uses.
-4. **The database**: apply 124 (in `database/apply_006_to_146.sql`, below).
+4. **The database**: apply 124 (in `database/apply_006_to_147.sql`, below).
 5. **Deploy the Worker**: the "Deploy the mail Worker" workflow (it runs
    on its own on a push to main that touches `workers/mail`). Without
    `RESEND_API_KEY` it deploys nothing and says so in its summary. Its
@@ -698,7 +703,7 @@ One-time setup, in this order:
    `welcome_emails`, event `INSERT`, HTTP `POST` to
    `<kaj-mail origin>/v1/welcome`, HTTP header
    `Authorization: Bearer <MAIL_WEBHOOK_SECRET>`.
-7. **Test it**: sign up with a Google address that has never used Mara (or
+7. **Test it**: sign up with a Google address that has never used Marakaj (or
    an e-mail and password, then click the confirmation link). The e-mail
    arrives within a minute; replying lands in hello@kaj-consulting.com.
    In Supabase → SQL: `select status, sent_at, error from welcome_emails
@@ -781,12 +786,12 @@ shortened. « Gérer la carte ou annuler » opens Stripe's own customer page.
 One-time setup (keys go only in GitHub's secrets page, never in chat):
 
 1. **Stripe account** for Kaj, activated for live payments. Since 121 the
-   card is **charged in US dollars** (Mara's account is in the US) while
+   card is **charged in US dollars** (Marakaj's account is in the US) while
    every price the app shows stays in FCFA: the database converts the
-   FCFA price at Command center › Réglages › Mara Pro « Taux pour la
+   FCFA price at Command center › Réglages › Marakaj Pro « Taux pour la
    carte : FCFA pour 1 $ » (`stripe_xof_per_usd`, seeded 600; a whole
    number above zero), rounded up to the cent. Stripe's page names the
-   FCFA price (« Mara Pro · Mensuel · 15 000 FCFA · <business> ») and the
+   FCFA price (« Marakaj Pro · Mensuel · 15 000 FCFA · <business> ») and the
    app shows « ≈ $25.00 par mois, payé en dollars » under the button. A
    new rate applies to new subscriptions, as a new price does.
 2. **Settings › Billing › Customer portal**: switch on cancelling and
@@ -810,13 +815,13 @@ One-time setup (keys go only in GitHub's secrets page, never in chat):
 
 Until step 6, no card button appears anywhere.
 
-### Mara Pro in the store apps (App Store, Google Play)
+### Marakaj Pro in the store apps (App Store, Google Play)
 
-Since 128/130 the iPhone app sells Mara Pro through Apple's In-App
+Since 128/130 the iPhone app sells Marakaj Pro through Apple's In-App
 Purchase and the Android (Play) app through Google Play Billing; the web
 and the GitHub APK keep Stripe and Wave. Pro stays **per business**: the
 business's id rides inside the purchase (Apple's `appAccountToken`,
-Google's `obfuscatedAccountId`), and one store account pays Mara Pro for
+Google's `obfuscatedAccountId`), and one store account pays Marakaj Pro for
 one business (Apple: one running subscription per group and Apple ID;
 Google: one `mara_pro` per account). Prices are the stores' own — set in
 App Store Connect and Play Console, shown as the store localises them,
@@ -852,7 +857,7 @@ refused sandbox purchase) is answered 200 « ignored » and logged.
 The app listens to the store from its start, not only on the Pro page,
 and verifies each purchase for the business the purchase itself names.
 It finishes a purchase only on the Worker's yes or a refusal for good
-(another business's, not Mara Pro, a refused test purchase — said and
+(another business's, not Marakaj Pro, a refused test purchase — said and
 logged); an expired session, a server error or no network leaves it open
 for the store to hand back. When the owner's purchase in this store
 already pays for another business, the Pro page sells nothing there: it
@@ -860,9 +865,9 @@ names that business and offers « Gérer mon abonnement » (on Apple, the
 other period would only change the first business's subscription).
 
 **Test (sandbox) purchases — the decision.** A sandbox purchase
-(TestFlight, App Review, a Google licence tester) turns Mara Pro on only
+(TestFlight, App Review, a Google licence tester) turns Marakaj Pro on only
 for a business owned by a platform admin or by the account named in
-Réglages › Mara Pro « Compte de test des boutiques »
+Réglages › Marakaj Pro « Compte de test des boutiques »
 (`store_review_account`, default `review.mara@gmail.com`). Give App Review
 that account (with a business on it) in the review notes. Every other
 sandbox purchase is refused (« Achat de test refusé … ») and never
@@ -897,7 +902,7 @@ One-time setup (keys go only in GitHub's secrets page, never in chat):
    (their review screenshot is the Pro page), and the Google base plans
    activated.
 7. **Switch it on** once a sandbox purchase on each store turned a test
-   business Pro: Command center › Réglages › Mara Pro « Abonnement dans
+   business Pro: Command center › Réglages › Marakaj Pro « Abonnement dans
    les applications (App Store, Google Play) » (`store_billing_on`). Until
    then the iPhone app sells no Pro and the Play app sells it by card and
    Wave, exactly as before.
@@ -916,7 +921,7 @@ payment with the store or Stripe (`/store/spot-verify`, the webhook), once
 per payment. A payment the store or Stripe takes back (Apple's REFUND,
 Google's voided purchase, Stripe's refund or dispute) is written on the
 payment and ends its spot — even when the refund is heard first. A
-payment that can program nothing (the spot refused by Mara or gone, the
+payment that can program nothing (the spot refused by Marakaj or gone, the
 article no longer on the vitrine, the vitrine closed) is written too:
 by card, Stripe refunds it at once; in the stores it appears in the
 console's « Aujourd'hui » as « Paiements de mise en avant à rembourser »
@@ -925,7 +930,7 @@ purchase is also refunded by Google after three days) or ask Apple, then
 touch « Remboursé ». A spot asked for 30 days before 139 keeps its 30
 days when paid.
 
-One-time setup, on top of Mara Pro's above (no new secret, no new key):
+One-time setup, on top of Marakaj Pro's above (no new secret, no new key):
 
 1. **Play Console › Monetize › Products › One-time products**: create
    `mara_spot_article_7` and `mara_spot_shop_7`, priced like Réglages
@@ -941,7 +946,7 @@ One-time setup, on top of Mara Pro's above (no new secret, no new key):
    **Consumable** purchases, `bf.kaj.app.spot.article7` and
    `bf.kaj.app.spot.shop7`, the same prices, a review screenshot of the
    « Mettre en avant » sheet; submit them with the next build. The
-   In-App Purchase key and the Server Notifications URL are Mara Pro's.
+   In-App Purchase key and the Server Notifications URL are Marakaj Pro's.
 3. **Stripe**: the webhook's three extra events (step 4 above). The
    Worker's existing secret key creates refunds (a restricted key would
    need « Refunds: write »).
@@ -960,7 +965,7 @@ role's, never the app's), in this order:
    minutes ago**, else the app says « Par sécurité, reconnectez-vous … »
    and offers « Me reconnecter »;
 2. `delete_my_account_stops` — the database's refusals (an open order, a
-   delivery on the road, an order paid online, a Wave payout Mara still
+   delivery on the road, an order paid online, a Wave payout Marakaj still
    owes the business…), else what will go and what must be stopped;
 3. every **Stripe** subscription cancelled and every **Google Play**
    purchase revoked, for each business that goes. One failure — or
@@ -971,7 +976,7 @@ role's, never the app's), in this order:
    account and the businesses) before any purge;
 5. `delete_my_account` — the businesses the person alone owns archived
    and purged by 014's path (`purge_org`), their members left as plain
-   shoppers, open orders cancelled with a notice, Mara's own Wave
+   shoppers, open orders cancelled with a notice, Marakaj's own Wave
    payments kept (detached: `org_id` null, `former_org_id` naming the
    tombstone), the person's rows deleted and their name taken off what
    they wrote;
@@ -987,7 +992,7 @@ developer.apple.com › Certificates, Identifiers & Profiles › Keys › « + �
 and `APPLE_SIGNIN_PRIVATE_KEY` (the `.p8` text); team `9K236BL7SX` and
 client `bf.kaj.app` are in `workers/account-admin/wrangler.toml`. Without
 it, that step is logged and the rest is done. An App Store subscription
-cannot be cancelled by Mara: the app tells the owner where to cancel it.
+cannot be cancelled by Marakaj: the app tells the owner where to cancel it.
 On a database still before 128 the Worker uses 113's path (a shopper
 with nothing on any business's books), so the order in which the
 database and the Worker go live does not break a shopper's deletion.
@@ -1057,7 +1062,7 @@ To switch it on (owner, once — no secret goes in the repository or in chat):
 3. **Supabase** — Authentication › Providers › **Apple**: on; *Client IDs*
    `bf.kaj.app`. Nothing else: the native flow needs no secret key, no
    Services ID and no redirect URL (those are for Apple's web sign-in,
-   which Mara does not use). Save.
+   which Marakaj does not use). Save.
 4. **Build** — Codemagic › *Start new build* › `ios-release`. In
    TestFlight, the sign-in screen shows « Continuer avec Apple » above
    Google.
@@ -1076,21 +1081,21 @@ that token server-side only, and have the account deletion (the
 Worker's `POST /v1/me/delete`, after `delete_my_account_check()`) call
 `auth/revoke` with it before the account is removed. That is a migration
 (a private table for the token) and a Worker change, for a later batch. Until then, the deletion still removes the
-account and its data in Mara; the person can also stop using Apple ID with
-Mara from their iPhone (Settings › their name › Sign in with Apple).
+account and its data in Marakaj; the person can also stop using Apple ID with
+Marakaj from their iPhone (Settings › their name › Sign in with Apple).
 
 ### What the iPhone app does not sell
 
 App Review's guideline 3.1.1: an iPhone app sells digital goods only
 through Apple's in-app purchase, and may not send people to buy them
-elsewhere. Mara Pro (the subscription) and the paid spots (« Mettre en
+elsewhere. Marakaj Pro (the subscription) and the paid spots (« Mettre en
 avant ») are sold by card (Stripe) and Wave, so the App Store build
 (`--dart-define=STORE=appstore`, `codemagic.yaml`) offers neither — one
 rule, `sellsDigitalInApp` in `app/lib/core/access/store_rules.dart`, read
 by every screen concerned. In the iPhone app: no Pro or spot price, no
 pay, « Bientôt disponible » or « Passer à Pro » button, no « PRO » strip,
 no Stripe page, no « Mettre en avant » entry; what Pro includes is still
-described, a locked tool says « Cette fonction fait partie de Mara Pro. »
+described, a locked tool says « Cette fonction fait partie de Marakaj Pro. »
 with only « Fermer », a business already on Pro shows « Active » with every
 tool open, and cauris unlocks (earned, never bought) work as everywhere. A
 spot bought elsewhere still shows as sponsored in the street. Shoppers
@@ -1098,8 +1103,8 @@ paying shops for orders and delivery (Wave, cash, card) are untouched:
 those are physical goods and services, which Apple lets be paid outside.
 Android and the web are unchanged.
 
-Once the platform turns `store_billing_on` on (130, « Mara Pro in the
-store apps » above), the iPhone app sells Mara Pro through Apple's own
+Once the platform turns `store_billing_on` on (130, « Marakaj Pro in the
+store apps » above), the iPhone app sells Marakaj Pro through Apple's own
 purchase and every « Passer à Pro » comes back (`sellsProInApp`), with
 the store's prices, « Restaurer mes achats », « Gérer mon abonnement » and
 the auto-renewal terms; the Play app then sells it through Google Play
@@ -1167,7 +1172,7 @@ After a deploy there is nothing to clear by hand. The deploy gives every
 file that changes between builds a folder named after its content
 (`scripts/web-fingerprint.mjs`: `/app/<hash>/`, `/ck/<hash>/`, `/a/<hash>/`,
 kept a year by the site Worker) and writes the build into `web/mara_sw.js`,
-the service worker every visitor gets. A phone that already keeps Mara opens
+the service worker every visitor gets. A phone that already keeps Marakaj opens
 the build it has at once — on a slow line or with none — prepares the new
 one in the background, and switches at its next start, or straight away
 from « Recharger » on the update banner. A first visit always gets the
@@ -1296,9 +1301,9 @@ like this on a phone, and it is not a bug in the app:
 > Le serveur a refusé la demande : Could not find the function
 > `public.trial_balance(p_from, p_org_id, p_to)` in the schema cache
 
-To bring a database anywhere between `005` and `146` up to date, paste
-`database/apply_006_to_146.sql` into the Supabase SQL editor and run it once.
-It is `006` through `146` concatenated (114, 116 and 120 are unused numbers; 137 is unused) inside one transaction, so it either
+To bring a database anywhere between `005` and `147` up to date, paste
+`database/apply_006_to_147.sql` into the Supabase SQL editor and run it once.
+It is `006` through `147` concatenated (114, 116 and 120 are unused numbers; 137 is unused) inside one transaction, so it either
 all lands or none of it does, and every migration in it is re-runnable — each
 drops what it recreates and creates nothing unconditionally — so running it
 against a database that is already part-way through is safe and is the normal
@@ -1448,7 +1453,7 @@ sending SMS messages », kept small (e.g. 30 an hour).
 
 A sandbox purchase turns Pro on only for a business owned by a platform
 admin, or by the account named in `store_review_account` **once that
-account's address is confirmed**; `store_review_orgs` (Réglages › Mara Pro,
+account's address is confirmed**; `store_review_orgs` (Réglages › Marakaj Pro,
 the businesses' ids) narrows it to those businesses (migration 130).
 
 ### The migrations' ledger

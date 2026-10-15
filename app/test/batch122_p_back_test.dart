@@ -206,7 +206,7 @@ void main() {
       }
     });
 
-    testWidgets('a chain: the shopper\'s addresses → Mon compte → the street → « Quitter Mara ? »', (tester) async {
+    testWidgets('a chain: the shopper\'s addresses → Mon compte → the street → « Quitter Marakaj ? »', (tester) async {
       final engine = _Engine(tester);
       final router = await open(tester, '/mon-compte/adresses');
       await _back(tester);
@@ -214,11 +214,11 @@ void main() {
       await _back(tester);
       expect(path(router), '/vitrines');
       await _back(tester);
-      expect(find.text('Quitter Mara ?'), findsOneWidget);
+      expect(find.text('Quitter Marakaj ?'), findsOneWidget);
       expect(engine.phonePops, 0);
     });
 
-    testWidgets('the home of the only business: back asks « Quitter Mara ? » — « Rester » stays, a second back '
+    testWidgets('the home of the only business: back asks « Quitter Marakaj ? » — « Rester » stays, a second back '
         'closes the question, « Quitter » leaves', (tester) async {
       final engine = _Engine(tester);
       final router = await open(tester, '/o/org-1');

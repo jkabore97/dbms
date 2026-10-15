@@ -178,11 +178,11 @@ async function vitrinePage(request, env, slug) {
   const style = s.style || {};
   const line = clip(style.tagline || s.blurb || "", 120);
   const count = Array.isArray(items) ? items.length : 0;
-  const title = line ? `${s.name} — ${line}` : `${s.name} — sur Mara`;
+  const title = line ? `${s.name} — ${line}` : `${s.name} — sur Marakaj`;
   const description = [
     s.blurb && s.blurb !== line ? clip(s.blurb, 160) : null,
     count > 0 ? `${count} article${count > 1 ? "s" : ""} en vitrine` : null,
-    "Commandez sur Mara.",
+    "Commandez sur Marakaj.",
   ].filter(Boolean).join(" · ");
 
   // The cover the shop chose, else its first photographed article.
@@ -206,7 +206,7 @@ async function vitrinePage(request, env, slug) {
 
   const seen = new Set();
   const rewritten = new HTMLRewriter()
-    .on("title", { element(e) { e.setInnerContent(`${s.name} · Mara`); } })
+    .on("title", { element(e) { e.setInnerContent(`${s.name} · Marakaj`); } })
     .on('meta[name="description"]', {
       element(e) { e.setAttribute("content", description); },
     })

@@ -194,7 +194,7 @@ class HelpProNudge extends StatelessWidget {
       title: Text(
         owner
             ? context.tr(
-                'Obtenez une réponse plus rapide et un meilleur accompagnement avec Mara Pro',
+                'Obtenez une réponse plus rapide et un meilleur accompagnement avec Marakaj Pro',
               )
             : context.tr('Demandez au propriétaire de passer à Pro'),
         key: const Key('help-nudge-title'),
@@ -209,7 +209,7 @@ class HelpProNudge extends StatelessWidget {
           ? null
           : Text(
               context.tr(
-                'Obtenez une réponse plus rapide et un meilleur accompagnement avec Mara Pro',
+                'Obtenez une réponse plus rapide et un meilleur accompagnement avec Marakaj Pro',
               ),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
@@ -322,7 +322,7 @@ class _FaqProBannerState extends State<FaqProBanner> {
                 child: Text(
                   owner
                       ? context.tr(
-                          'Une aide plus rapide, un formateur, avec Mara Pro',
+                          'Une aide plus rapide, un formateur, avec Marakaj Pro',
                         )
                       : context.tr('Demandez au propriétaire de passer à Pro'),
                   style: const TextStyle(
@@ -345,7 +345,7 @@ class _FaqProBannerState extends State<FaqProBanner> {
             Padding(
               padding: const EdgeInsets.only(left: 34, right: 12, top: 2),
               child: Text(
-                context.tr('Une aide plus rapide, un formateur, avec Mara Pro'),
+                context.tr('Une aide plus rapide, un formateur, avec Marakaj Pro'),
                 style: const TextStyle(color: Colors.white70),
               ),
             ),

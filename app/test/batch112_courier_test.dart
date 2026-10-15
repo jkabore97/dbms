@@ -678,7 +678,7 @@ void main() {
       ));
       expect(line,
           'Your courier application needs a fix: blurry photo. Le visage est flou | '
-          'Mara asks for a new photo of your ID. | New courier application: Awa');
+          'Marakaj asks for a new photo of your ID. | New courier application: Awa');
       expect(notificationTarget(row('courier_refused', {})), Routes.becomeCourier);
       expect(notificationTarget(row('courier_photo', {})), Routes.becomeCourier);
       expect(notificationTarget(row('courier_application', {})), Routes.consoleCouriers);
@@ -688,7 +688,7 @@ void main() {
     test('the privacy page says where the ID photos are and when they go', () {
       final js = File('../workers/kaj-app/src/legal.js').readAsStringSync();
       expect(js.contains('"# Devenir livreur"'), isTrue);
-      expect(js.contains("seule l'équipe Mara qui examine les demandes peut les voir"), isTrue);
+      expect(js.contains("seule l'équipe Marakaj qui examine les demandes peut les voir"), isTrue);
       // What happens, exactly: never shown again after 30 days, the bytes
       // deleted the next time the list is opened (no scheduler).
       expect(js.contains('elles ne sont plus jamais montrées après 30 jours'), isTrue);

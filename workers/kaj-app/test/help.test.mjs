@@ -13,7 +13,7 @@ import { afterEach, test } from "node:test";
 import site from "../src/index.js";
 import { FAQ, contactsFrom, forgetSupportContacts, supportContacts } from "../src/help.js";
 
-const PAGE = "<!DOCTYPE html><html><head><title>Mara</title></head><body></body></html>";
+const PAGE = "<!DOCTYPE html><html><head><title>Marakaj</title></head><body></body></html>";
 const env = {
   SUPABASE_URL: "https://db.example.supabase.co",
   SUPABASE_PUBLISHABLE_KEY: "sb_publishable_test",
@@ -47,14 +47,14 @@ test("with a number: WhatsApp with the greeting, the e-mail, the hours, the FAQ,
   assert.equal(r.headers.get("Cache-Control"), "public, max-age=60");
   assert.equal(r.headers.get("X-Content-Type-Options"), "nosniff");
   const html = await r.text();
-  assert.match(html, /<title>Aide Mara · Mara<\/title>/);
-  assert.match(html, /<h1>Aide Mara<\/h1>/);
+  assert.match(html, /<title>Aide Marakaj · Marakaj<\/title>/);
+  assert.match(html, /<h1>Aide Marakaj<\/h1>/);
   // The installed hours drawn with non-breaking spaces: never « 24 » / « h ».
   assert.ok(html.includes("Une question, un souci ? Nous répondons 24\u00A0h/24, 7\u00A0j/7."));
   assert.doesNotMatch(html, /24 h\/24/);
   assert.match(html, /We answer 24\/7\./);
   assert.ok(html.includes(
-    `href="https://wa.me/18623354492?text=${encodeURIComponent("Bonjour, j'ai besoin d'aide avec Mara.")}"`));
+    `href="https://wa.me/18623354492?text=${encodeURIComponent("Bonjour, j'ai besoin d'aide avec Marakaj.")}"`));
   assert.ok(html.includes('href="mailto:hello@kaj-consulting.com"'));
   for (const [q, a, qEn, aEn] of FAQ) {
     for (const t of [q, a, qEn, aEn]) {
@@ -65,8 +65,8 @@ test("with a number: WhatsApp with the greeting, the e-mail, the hours, the FAQ,
   for (const href of ["/confidentialite", "/conditions", "/supprimer-mon-compte"]) {
     assert.ok(html.includes(`href="${href}"`), href);
   }
-  assert.match(html, /Mara est édité par KAJ Consulting LLC/);
-  assert.match(html, /<meta property="og:title" content="Aide Mara">/);
+  assert.match(html, /Marakaj est édité par KAJ Consulting LLC/);
+  assert.match(html, /<meta property="og:title" content="Aide Marakaj">/);
   assert.match(html, /<meta property="og:url" content="https:\/\/marakaj.com\/aide">/);
   assert.match(html, /<meta name="description" content="[^"]+et sur WhatsApp\.">/);
   assert.doesNotMatch(html, /<script/i, "no JavaScript needed");

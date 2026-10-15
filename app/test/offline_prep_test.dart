@@ -44,7 +44,7 @@ void main() {
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(body: OfflineSheet(org: owner, prep: prep)),
     ));
-    expect(find.text('Utiliser Mara sans connexion ?'), findsOneWidget);
+    expect(find.text('Utiliser Marakaj sans connexion ?'), findsOneWidget);
     expect(find.byKey(const Key('offline-download')), findsNothing,
         reason: 'the question comes before the button');
     await tester.tap(find.byKey(const Key('offline-yes')));
@@ -56,7 +56,7 @@ void main() {
     await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 200)));
     await tester.pump();
     expect(charts, 1);
-    expect(find.text('Prêt : Mara fonctionne sans connexion'), findsOneWidget);
+    expect(find.text('Prêt : Marakaj fonctionne sans connexion'), findsOneWidget);
     expect(find.byIcon(Icons.check_circle), findsOneWidget);
     await tester.runAsync(() async {
       expect(await prep.readyAt(), isNotNull);

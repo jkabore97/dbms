@@ -198,7 +198,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                       Expanded(
                         child: Text(
                           context.tr(
-                            'Les services ne sont pas encore disponibles : la base de données n\'est pas à jour (migration 098). Demandez à l\'administrateur de Mara de l\'appliquer.',
+                            'Les services ne sont pas encore disponibles : la base de données n\'est pas à jour (migration 098). Demandez à l\'administrateur de Marakaj de l\'appliquer.',
                           ),
                           style: theme.textTheme.bodyMedium,
                         ),

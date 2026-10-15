@@ -86,30 +86,30 @@ class SpotPreview extends StatelessWidget {
         Text(
           shop
               ? switch (profile) {
-                  'farm' => context.tr('Votre ferme apparaît en premier dans la liste des vitrines de la page d\'accueil de Mara, avec le badge « Sponsorisé ».'),
-                  'association' || 'church' => context.tr('Votre association apparaît en premier dans la liste des vitrines de la page d\'accueil de Mara, avec le badge « Sponsorisé ».'),
-                  _ => context.tr('Votre boutique apparaît en premier dans la liste des vitrines de la page d\'accueil de Mara, avec le badge « Sponsorisé ».'),
+                  'farm' => context.tr('Votre ferme apparaît en premier dans la liste des vitrines de la page d\'accueil de Marakaj, avec le badge « Sponsorisé ».'),
+                  'association' || 'church' => context.tr('Votre association apparaît en premier dans la liste des vitrines de la page d\'accueil de Marakaj, avec le badge « Sponsorisé ».'),
+                  _ => context.tr('Votre boutique apparaît en premier dans la liste des vitrines de la page d\'accueil de Marakaj, avec le badge « Sponsorisé ».'),
                 }
-              : context.tr('Votre article apparaît en premier dans « À la une », en haut de la page d\'accueil de Mara, avec le badge « Sponsorisé ».'),
+              : context.tr('Votre article apparaît en premier dans « À la une », en haut de la page d\'accueil de Marakaj, avec le badge « Sponsorisé ».'),
           key: const Key('spot-preview-what'),
           style: theme.textTheme.bodyMedium,
         ),
         const SizedBox(height: 4),
         Text(
-          context.tr('Pendant 7 jours, pour tous ceux qui ouvrent Mara, sur le site et dans l\'application. Vous voyez ses vues et ses commandes dans « Mettre en avant ».'),
+          context.tr('Pendant 7 jours, pour tous ceux qui ouvrent Marakaj, sur le site et dans l\'application. Vous voyez ses vues et ses commandes dans « Mettre en avant ».'),
           style: muted,
         ),
       ],
     );
   }
 
-  /// The street's top: « mara » and its search, as the shopper sees them.
+  /// The street's top: « marakaj » and its search, as the shopper sees them.
   Widget _bar(BuildContext context) => Container(
         color: maraDeep,
         padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
         child: Row(
           children: [
-            const Text('mara',
+            const Text('marakaj',
                 style: TextStyle(
                     color: maraCaramel, fontSize: 17, fontWeight: FontWeight.w800, letterSpacing: 0.4)),
             const SizedBox(width: 12),

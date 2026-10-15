@@ -331,7 +331,7 @@ class _HelpConsoleScreenState extends State<HelpConsoleScreen> {
               const SizedBox(height: 8),
               Text(
                 context.tr(
-                  'Un formateur se choisit dans Personnes : ouvrez la fiche de la personne, « Formateur Mara ».',
+                  'Un formateur se choisit dans Personnes : ouvrez la fiche de la personne, « Formateur Marakaj ».',
                 ),
                 key: const Key('help-console-how-trainers'),
                 style: theme.textTheme.bodySmall?.copyWith(

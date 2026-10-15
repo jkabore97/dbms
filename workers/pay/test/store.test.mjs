@@ -189,7 +189,7 @@ function world({ apple = {}, google = {}, admin = true, sandboxOk = true, gone =
     calls.push({ rpc: fn, as: token, args });
     if (fn === "store_verify_begin") {
       if (!admin) {
-        const e = new Error("Seul un administrateur abonne l'entreprise à Mara Pro");
+        const e = new Error("Seul un administrateur abonne l'entreprise à Marakaj Pro");
         e.status = 400;
         throw e;
       }
@@ -631,7 +631,7 @@ test("S7: notifications for a business that is gone, or another business's token
   }
 });
 
-test("Google: a line with no base plan is not Mara Pro", async () => {
+test("Google: a line with no base plan is not Marakaj Pro", async () => {
   const w = world({ google: { "tok-0123456789": sub({ lineItems: [{ productId: "mara_pro", expiryTime: new Date(Date.now() + 30 * DAY).toISOString(), offerDetails: {} }] }) } });
   const r = await call(w, "/store/verify", { platform: "google", org_id: ORG, token: "tok-0123456789" });
   assert.equal(r.status, 422);
@@ -719,7 +719,7 @@ test("the store doors call the global fetch as a plain function", async () => {
 // SEC_AUDIT_2 L1: what Apple or Google said on a failure stays in the
 // Worker's log; the app is answered a fixed code.
 test("an App Store or Google Play failure answers the code « upstream », never the store's own words", async () => {
-  const raw = '{"errorCode":4040010,"errorMessage":"internal detail for Mara only"}';
+  const raw = '{"errorCode":4040010,"errorMessage":"internal detail for Marakaj only"}';
   const logged = [];
   const error = console.error;
   console.error = (...a) => logged.push(a.join(" "));
@@ -748,5 +748,5 @@ test("an App Store or Google Play failure answers the code « upstream », never
   } finally {
     console.error = error;
   }
-  assert.ok(logged.some((l) => l.includes("internal detail for Mara only")), "the log keeps it: " + logged.join("\n"));
+  assert.ok(logged.some((l) => l.includes("internal detail for Marakaj only")), "the log keeps it: " + logged.join("\n"));
 });

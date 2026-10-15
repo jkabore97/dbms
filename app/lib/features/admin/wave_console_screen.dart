@@ -100,9 +100,9 @@ class _WaveConsoleScreenState extends State<WaveConsoleScreen> {
                 SwitchListTile(
                   value: _terms.on,
                   onChanged: _busy ? null : (v) => _set('wave_checkout', v),
-                  title: Text(context.tr('Paiement Wave dans Mara')),
+                  title: Text(context.tr('Paiement Wave dans Marakaj')),
                   subtitle: Text(
-                      context.tr('Commandes, Mara Pro et mises en avant. À ouvrir une fois la clé Wave installée et un essai réussi.')),
+                      context.tr('Commandes, Marakaj Pro et mises en avant. À ouvrir une fois la clé Wave installée et un essai réussi.')),
                 ),
                 SwitchListTile(
                   value: _terms.card,
@@ -155,7 +155,7 @@ class _WaveConsoleScreenState extends State<WaveConsoleScreen> {
                       subtitle: Text([
                         switch (r.kind) {
                           'order' => context.tr('Commande'),
-                          'pro' => 'Mara Pro',
+                          'pro' => 'Marakaj Pro',
                           _ => 'Mise en avant',
                         },
                         r.method == 'card' ? context.tr('carte') : context.tr('Wave'),

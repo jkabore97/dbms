@@ -1,8 +1,8 @@
 /* Why Mara asks (Info.plist), in French. */
-"CFBundleDisplayName" = "Mara";
-"NSCameraUsageDescription" = "Mara utilise l'appareil photo pour photographier vos articles, vos reçus et lire les codes-barres.";
-"NSPhotoLibraryUsageDescription" = "Mara ouvre vos photos pour y choisir celle d'un article, de votre logo ou d'un reçu.";
-"NSPhotoLibraryAddUsageDescription" = "Mara enregistre dans vos photos les images que vous partagez : votre statut, une facture, un résumé.";
-"NSLocationWhenInUseUsageDescription" = "Mara utilise votre position pour montrer les boutiques et les livraisons près de vous.";
-"NSLocationAlwaysAndWhenInUseUsageDescription" = "Mara utilise votre position, seulement quand l'application est ouverte, pour montrer les boutiques et les livraisons près de vous.";
-"NSFaceIDUsageDescription" = "Mara utilise Face ID pour se déverrouiller à la place du code de l'appareil.";
+"CFBundleDisplayName" = "Marakaj";
+"NSCameraUsageDescription" = "Marakaj utilise l'appareil photo pour photographier vos articles, vos reçus et lire les codes-barres.";
+"NSPhotoLibraryUsageDescription" = "Marakaj ouvre vos photos pour y choisir celle d'un article, de votre logo ou d'un reçu.";
+"NSPhotoLibraryAddUsageDescription" = "Marakaj enregistre dans vos photos les images que vous partagez : votre statut, une facture, un résumé.";
+"NSLocationWhenInUseUsageDescription" = "Marakaj utilise votre position pour montrer les boutiques et les livraisons près de vous.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "Marakaj utilise votre position, seulement quand l'application est ouverte, pour montrer les boutiques et les livraisons près de vous.";
+"NSFaceIDUsageDescription" = "Marakaj utilise Face ID pour se déverrouiller à la place du code de l'appareil.";

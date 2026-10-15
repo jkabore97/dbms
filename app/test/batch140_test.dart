@@ -558,7 +558,7 @@ void main() {
       await tester.pump();
       expect(_shown(tester).items, hasLength(1));
       expect(_shown(tester).design, StatusDesign.vedette);
-      expect(memory.values, isEmpty, reason: 'Mara chose Vedette, not the owner');
+      expect(memory.values, isEmpty, reason: 'Marakaj chose Vedette, not the owner');
       await tester.tap(find.byKey(const Key('status-article-c')));
       await tester.pump();
       expect(_shown(tester).items.single.id, 'c');
@@ -676,7 +676,7 @@ void main() {
       t = await words(_farm, 'labour', StatusDesign.grille);
       expect(t.any((s) => s.contains(RegExp(r'25\D?000')) && s.endsWith('/ hectare')), isTrue);
       t = await words(_assoc, 'salle', StatusDesign.vedette, const Locale('en'));
-      expect(t, contains('Book on Mara'));
+      expect(t, contains('Book on Marakaj'));
       expect(t.any((s) => s.startsWith('from') && s.endsWith('/ soirée')), isTrue);
       t = await words(_salon, 's1', StatusDesign.bandeau);
       expect(t.any((s) => s.contains('SUR RENDEZ-VOUS')), isTrue);
@@ -1261,7 +1261,7 @@ void main() {
       expect(p.calls, ['whatsapp']);
     });
 
-    test('Facebook: Mara\'s App ID; missing or failing, the system sheet', () async {
+    test('Facebook: Marakaj\'s App ID; missing or failing, the system sheet', () async {
       expect(facebookAppId, '1471844268381528');
       final png = Uint8List(4);
       var p = _Platform(StatusOs.android, facebookThere: false);

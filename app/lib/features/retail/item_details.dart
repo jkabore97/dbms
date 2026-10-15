@@ -266,7 +266,7 @@ class MorePhotosProSheet extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             Text(
-              context.tr('Avec Mara Pro, un article montre plusieurs photos : vos clients les font défiler sur la vitrine avant de commander. Sans Pro, un article garde une photo.'),
+              context.tr('Avec Marakaj Pro, un article montre plusieurs photos : vos clients les font défiler sur la vitrine avant de commander. Sans Pro, un article garde une photo.'),
               style: theme.textTheme.bodyLarge,
             ),
             const SizedBox(height: 18),
@@ -277,7 +277,7 @@ class MorePhotosProSheet extends StatelessWidget {
                   Navigator.of(context).pop();
                   context.push(Routes.inside(org.id, 'kaj-pro'));
                 },
-                child: Text(context.tr('Découvrir Mara Pro')),
+                child: Text(context.tr('Découvrir Marakaj Pro')),
               )
             else
               FilledButton(
@@ -680,7 +680,7 @@ class _ItemPhotoStripState extends State<ItemPhotoStrip> {
           if (g.coverOnly && g.photos.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 6),
-              child: Text(context.tr('Plusieurs photos par article avec Mara Pro.'),
+              child: Text(context.tr('Plusieurs photos par article avec Marakaj Pro.'),
                   style: theme.textTheme.bodySmall?.copyWith(color: maraBrown)),
             ),
         ],

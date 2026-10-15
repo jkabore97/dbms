@@ -1,11 +1,23 @@
-"""Regenerate docs/brand/mara-neutre/: the Mara seal in black, white, brown and grey.
+"""Regenerate docs/brand/mara-neutre/: the Marakaj seal in black, white, brown and grey.
 
 Needs: pip install cairosvg pillow, and the Unbounded, Cinzel and Space Grotesk
 fonts installed on the machine (Google Fonts). Run: python3 build_mara_neutre.py
+
+The app's own copies (app/assets/brand, app/web/brand/og.jpg and
+mara-stacked.png, the splash in app/web/index.html, the Android and iPhone
+launch images) are made from these by build_app_brand.py.
 """
 import os, shutil, cairosvg
 from PIL import Image
 ROOT = os.path.dirname(os.path.abspath(__file__))
+
+# The word beside and under the seal. It was « mara » (four letters, 170 px
+# in Unbounded Bold); « marakaj » has seven, so each lockup sets it smaller
+# to keep the same canvas, the same seal and the same margins. The weights
+# are written out (Unbounded and Cinzel in Bold, as the kit was drawn): a
+# machine whose fontconfig picks the variable fonts' Regular would
+# otherwise draw them thinner.
+WORD = "marakaj"
 
 def glyph():
     return f'''<polygon points="28,170 28,30 100,102 100,140 64,104 64,170" fill="{TERRA}"/>
@@ -19,7 +31,7 @@ def seal(x, y, s, thin=1.0):
 <circle cx="100" cy="100" r="84" fill="none" stroke="{GOLD}" stroke-width="12" stroke-dasharray="4 18"/>
 <circle cx="100" cy="100" r="66" fill="{PANEL}" stroke="{TERRA}" stroke-width="2"/>
 <g transform="translate(100 96) scale(0.42) translate(-100 -100)">{glyph()}</g>
-<text x="100" y="148" text-anchor="middle" font-family="Cinzel" font-size="10" fill="{YEAR}" letter-spacing="4">MMXXVI</text></g>'''
+<text x="100" y="148" text-anchor="middle" font-family="Cinzel" font-weight="700" font-size="10" fill="{YEAR}" letter-spacing="4">MMXXVI</text></g>'''
 
 def kente(x, y, w, h, seg):
     n = int(w // seg) + 1
@@ -50,9 +62,9 @@ def centered(size, s, thin=2.0):
 
 # Lockups
 def horizontal():  # 1200 x 400
-    return seal(40, 40, 1.6, 1.5) + f'<text x="420" y="262" font-family="Unbounded" font-size="170" fill="{CREAM}">mara</text>'
+    return seal(40, 40, 1.6, 1.5) + f'<text x="420" y="253" font-family="Unbounded" font-weight="700" font-size="140" fill="{CREAM}">{WORD}</text>'
 def stacked():     # 800 x 1000
-    return seal(100, 50, 3.0, 1.5) + f'<text x="400" y="900" text-anchor="middle" font-family="Unbounded" font-size="170" fill="{CREAM}">mara</text>'
+    return seal(100, 50, 3.0, 1.5) + f'<text x="400" y="890" text-anchor="middle" font-family="Unbounded" font-weight="700" font-size="136" fill="{CREAM}">{WORD}</text>'
 
 def logos(prefix="logo"):
     for n in (256, 512, 1024, 2048):
@@ -79,7 +91,7 @@ def build():
     save("play-store/adaptive-icon/background-432.png", 432, 432, "")
     save("play-store/feature-graphic-1024x500.png", 1024, 500,
          seal(60, 60, 1.8) +
-         f'<text x="470" y="250" font-family="Unbounded" font-size="124" fill="{CREAM}">mara</text>'
+         f'<text x="470" y="242" font-family="Unbounded" font-weight="700" font-size="96" fill="{CREAM}">{WORD}</text>'
          f'<text x="474" y="318" font-family="Space Grotesk" font-size="34" fill="{GREY}">Les boutiques près de vous</text>'
          + kente(0, 476, 1024, 24, 64))
     # YouTube
@@ -89,20 +101,20 @@ def build():
          f'<circle cx="790" cy="720" r="620" fill="none" stroke="{GOLD}" stroke-width="40" stroke-dasharray="10 60" opacity="0.10"/>'
          + kente(0, 0, 2560, 28, 128) + kente(0, 1412, 2560, 28, 128) +
          seal(600, 530, 1.9, thin=1.5) +
-         f'<text x="1050" y="765" font-family="Unbounded" font-size="190" fill="{CREAM}">mara</text>'
+         f'<text x="1050" y="761" font-family="Unbounded" font-weight="700" font-size="176" fill="{CREAM}">{WORD}</text>'
          f'<text x="1058" y="858" font-family="Space Grotesk" font-size="52" fill="{GREY}">Les boutiques près de vous</text>')
     save("youtube/thumbnail-template-1280x720.png", 1280, 720,
          seal(1060, 40, 0.9, thin=2) +
-         f'<text x="80" y="330" font-family="Unbounded" font-size="78" fill="{CREAM}">[TITRE DE</text>'
-         f'<text x="80" y="430" font-family="Unbounded" font-size="78" fill="{GOLD}">LA VIDÉO]</text>'
-         f'<text x="84" y="520" font-family="Space Grotesk" font-size="32" fill="{GREY}">mara · les boutiques près de vous</text>'
+         f'<text x="80" y="330" font-family="Unbounded" font-weight="700" font-size="78" fill="{CREAM}">[TITRE DE</text>'
+         f'<text x="80" y="430" font-family="Unbounded" font-weight="700" font-size="78" fill="{GOLD}">LA VIDÉO]</text>'
+         f'<text x="84" y="520" font-family="Space Grotesk" font-size="32" fill="{GREY}">{WORD} · les boutiques près de vous</text>'
          + kente(0, 690, 1280, 30, 80))
     # Store screenshot templates
     def shot(path, w, h):
         m = w * 0.08; boxy = h * 0.22
         save(path, w, h,
              kente(0, 0, w, h * 0.012, w / 10) + seal(w / 2 - w * 0.06, h * 0.025, w * 0.0006, thin=2) +
-             f'<text x="{w/2}" y="{h*0.135}" text-anchor="middle" font-family="Unbounded" font-size="{w*0.065}" fill="{CREAM}">[TITRE DE L\'ÉCRAN]</text>'
+             f'<text x="{w/2}" y="{h*0.135}" text-anchor="middle" font-family="Unbounded" font-weight="700" font-size="{w*0.065}" fill="{CREAM}">[TITRE DE L\'ÉCRAN]</text>'
              f'<text x="{w/2}" y="{h*0.17}" text-anchor="middle" font-family="Space Grotesk" font-size="{w*0.04}" fill="{GREY}">[Une phrase sur ce que l\'écran permet]</text>'
              f'<rect x="{m}" y="{boxy}" width="{w-2*m}" height="{h-boxy-m}" rx="{w*0.06}" fill="{PANEL}" stroke="{TERRA}" stroke-width="{w*0.004}" stroke-dasharray="{w*0.02} {w*0.015}"/>'
              f'<text x="{w/2}" y="{boxy+(h-boxy-m)/2}" text-anchor="middle" font-family="Space Grotesk" font-size="{w*0.04}" fill="{GREY}">[Capture d\'écran de l\'app ici]</text>')

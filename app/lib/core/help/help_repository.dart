@@ -473,7 +473,7 @@ class HelpTrainer {
   const HelpTrainer({required this.firstName, this.phone, this.member = false});
 
   factory HelpTrainer.fromJson(Map<String, dynamic> j) => HelpTrainer(
-    firstName: _text(j['first_name']) ?? 'Mara',
+    firstName: _text(j['first_name']) ?? 'Marakaj',
     phone: _text(j['phone']),
     member: j['member'] == true,
   );

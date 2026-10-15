@@ -106,7 +106,7 @@ String helpWhatsAppText(
   String? ref,
 }) {
   final lines = [
-    '${pro ? '[PRO] ' : ''}${context.tr('Bonjour Mara, j\'ai besoin d\'aide.')}',
+    '${pro ? '[PRO] ' : ''}${context.tr('Bonjour Marakaj, j\'ai besoin d\'aide.')}',
     context.tr('Entreprise : {name} ({kind} · {plan})', {
       'name': org.name.trim(),
       'kind': helpKindLabel(context, org.profile),
@@ -125,7 +125,7 @@ String helpEmailSubject(
   OrgSummary org, {
   required bool pro,
   String? ref,
-}) => context.tr('Aide Mara — {name} · Réf. {ref}{pro}', {
+}) => context.tr('Aide Marakaj — {name} · Réf. {ref}{pro}', {
   'name': org.name.trim(),
   'ref': ref ?? helpRef(org.id),
   'pro': pro ? ' · PRO' : '',

@@ -126,9 +126,9 @@ function signedAt(tx, renewal) {
 
 /// Refuses what is not Mara Pro for this app.
 export function checkAppleTransaction(env, tx) {
-  if (tx.bundleId !== appleBundle(env)) throw new StoreError("Cet achat n'est pas pour Mara.", 422, "bundle");
+  if (tx.bundleId !== appleBundle(env)) throw new StoreError("Cet achat n'est pas pour Marakaj.", 422, "bundle");
   if (!APPLE_PRODUCTS.includes(tx.productId)) {
-    throw new StoreError("Cet achat n'est pas Mara Pro.", 422, "product");
+    throw new StoreError("Cet achat n'est pas Marakaj Pro.", 422, "product");
   }
 }
 
@@ -170,7 +170,7 @@ export async function appleNotification(env, body, verify = {}) {
   const data = payload.data || {};
   if (payload.notificationType === "TEST") return { test: true, payload };
   if (data.bundleId && data.bundleId !== appleBundle(env)) {
-    throw new StoreError("Cette notification n'est pas pour Mara.", 422, "bundle");
+    throw new StoreError("Cette notification n'est pas pour Marakaj.", 422, "bundle");
   }
   if (!data.signedTransactionInfo) return { ignored: payload.notificationType || "", payload };
   const tx = await verifyAppleJws(data.signedTransactionInfo, verify);

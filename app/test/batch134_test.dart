@@ -542,7 +542,7 @@ void main() {
       expect(find.text('Gâteau sur commande'), findsOneWidget);
     });
 
-    testWidgets('services hidden by Mara: Articles alone, the ＋ goes straight to an article', (tester) async {
+    testWidgets('services hidden by Marakaj: Articles alone, the ＋ goes straight to an article', (tester) async {
       await _phone(tester);
       await tester.pumpWidget(_app(CatalogueScreen(
           org: _shop, retail: _Shelf(items), access: const OrgAccess.admin(hidden: {'services'}))));
@@ -768,11 +768,11 @@ void main() {
       return s;
     }
 
-    testWidgets('no business: « ＋ Vendre sur Mara », worded, straight to the form', (tester) async {
+    testWidgets('no business: « ＋ Vendre sur Marakaj », worded, straight to the form', (tester) async {
       final s = await noBusiness(tester);
       await street(tester, s, shopper: _Shopper(pending: false));
       expect(find.byKey(const Key('street-sell')), findsOneWidget);
-      expect(find.text('Vendre sur Mara'), findsOneWidget);
+      expect(find.text('Vendre sur Marakaj'), findsOneWidget);
       // No bare picture left: no add-business icon, no helmet in the header.
       expect(find.byIcon(Icons.add_business_outlined), findsNothing);
       expect(find.byIcon(Icons.sports_motorsports_outlined), findsNothing);

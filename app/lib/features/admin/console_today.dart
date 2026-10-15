@@ -84,7 +84,7 @@ class ConsoleTodayState extends State<ConsoleToday> {
               ].join(' + '),
             })),
         _Figures([
-          _Figure('Mara Pro', money.format(m['pro'] ?? 0)),
+          _Figure('Marakaj Pro', money.format(m['pro'] ?? 0)),
           _Figure('Mises en avant', money.format(m['spots'] ?? 0)),
           // Each money its own (144): a euro part never added to francs.
           _Figure('Part livraison', today.withOthers('delivery_cut', money.format, other)),

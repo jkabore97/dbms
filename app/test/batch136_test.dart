@@ -818,7 +818,7 @@ void main() {
       expect(find.byKey(const Key('help-pro-invite')), findsNothing, reason: 'Pro already');
     });
 
-    testWidgets('the free page (mockup 7, 143): FAQ, guides, Mara « réponse sous 48 h », report — no Pro card',
+    testWidgets('the free page (mockup 7, 143): FAQ, guides, Marakaj « réponse sous 48 h », report — no Pro card',
         (tester) async {
       final went = <String>[];
       Support.reset(const SupportContacts(email: Support.defaultEmail, whatsapp: '22670000099', hours: Support.defaultHours));
@@ -1054,7 +1054,7 @@ void main() {
       expect(notificationLine(ctx, row('help_request', params: {'org': 'Salon', 'subject': 'stock'})),
           'Help request — Salon: Stock');
       expect(notificationLine(ctx, row('help_taken', params: {'who': 'Awa'})),
-          'Awa (Mara training) is handling your help request.');
+          'Awa (Marakaj training) is handling your help request.');
       expect(notificationLine(ctx, row('help_visit', params: {'who': 'Awa', 'visit_answer': 'call_instead'})),
           'Awa suggests a call instead.');
     });

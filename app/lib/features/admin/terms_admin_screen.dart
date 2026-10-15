@@ -69,7 +69,7 @@ class _TermsAdminScreenState extends State<TermsAdminScreen> {
         scrollable: true,
         title: Text(dialog.tr('Demander à tout le monde d\'accepter à nouveau ?')),
         content: Text(dialog.tr(
-            'Tout le monde devra accepter à nouveau : {docs}, à sa prochaine ouverture de Mara. Pendant {n} jours, le serveur laisse encore passer les comptes déjà là ; ensuite, il refuse leurs commandes et leurs créations tant qu\'ils n\'ont pas accepté.',
+            'Tout le monde devra accepter à nouveau : {docs}, à sa prochaine ouverture de Marakaj. Pendant {n} jours, le serveur laisse encore passer les comptes déjà là ; ensuite, il refuse leurs commandes et leurs créations tant qu\'ils n\'ont pas accepté.',
             {'docs': names, 'n': asked.graceDays})),
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialog, false), child: Text(dialog.tr('Annuler'))),

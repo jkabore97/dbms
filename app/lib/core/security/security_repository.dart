@@ -223,7 +223,7 @@ String describeUserAgent(String? ua) {
                       ? 'Linux'
                       : translate(trCurrent, 'Appareil');
   final app = s.startsWith('Dart/') || s.contains('dart:io')
-      ? translate(trCurrent, 'application Mara')
+      ? translate(trCurrent, 'application Marakaj')
       : s.contains('Edg/')
           ? 'Edge'
           : s.contains('Firefox/')

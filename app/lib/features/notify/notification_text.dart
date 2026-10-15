@@ -67,7 +67,7 @@ String notificationLine(BuildContext context, NotificationRow n) {
       return context.tr('Demande d\'aide sans réponse — {org} : {subject}',
           {'org': s('org'), 'subject': helpSubjectLabel(context, s('subject'))});
     case 'help_taken':
-      return context.tr('{who} (formation Mara) s\'occupe de votre demande d\'aide.', {'who': s('who')});
+      return context.tr('{who} (formation Marakaj) s\'occupe de votre demande d\'aide.', {'who': s('who')});
     case 'help_visit':
       return s('visit_answer') == 'accepted'
           ? context.tr('{who} viendra vous voir.', {'who': s('who')})
@@ -144,7 +144,7 @@ String notificationLine(BuildContext context, NotificationRow n) {
     case 'delivery_cancelled':
       return context.tr('La livraison pour {name} a été annulée par la boutique', {'name': s('name')});
     case 'courier_approved':
-      return context.tr('Vous êtes livreur Mara : les livraisons vous attendent.');
+      return context.tr('Vous êtes livreur Marakaj : les livraisons vous attendent.');
     // The dossier (112): sent back with its reason, a new photo asked, and
     // the platform's own bell for a dossier sent.
     case 'courier_refused':
@@ -154,8 +154,8 @@ String notificationLine(BuildContext context, NotificationRow n) {
           (note.isEmpty ? '' : ' $note');
     case 'courier_photo':
       return s('reason') == 'new_selfie'
-          ? context.tr('Mara demande une nouvelle photo de votre selfie.')
-          : context.tr('Mara demande une nouvelle photo de votre pièce d\'identité.');
+          ? context.tr('Marakaj demande une nouvelle photo de votre selfie.')
+          : context.tr('Marakaj demande une nouvelle photo de votre pièce d\'identité.');
     case 'courier_application':
       return context.tr('Nouvelle demande de livreur : {name}', {'name': s('name')});
     // 129: a new account, for Mara's admins — how it signed up.
@@ -171,7 +171,7 @@ String notificationLine(BuildContext context, NotificationRow n) {
     // 115: the dossier arrived; a delivery waits near the courier; a shop
     // named them its courier; the cash handed over; the 7-day nudge.
     case 'courier_received':
-      return context.tr('Votre demande de livreur est bien arrivée : Mara l\'examine et vous répond ici.');
+      return context.tr('Votre demande de livreur est bien arrivée : Marakaj l\'examine et vous répond ici.');
     case 'delivery_available':
       final fee = money('fee');
       return fee.isEmpty
@@ -184,12 +184,12 @@ String notificationLine(BuildContext context, NotificationRow n) {
       return context.tr('{shop} confirme avoir reçu l\'argent de la livraison pour {name} : {amount}.',
           {'shop': s('shop'), 'name': s('name'), 'amount': money('amount')});
     case 'courier_idle':
-      return context.tr('Cela fait 7 jours sans livraison : des courses vous attendent sur Mara.');
+      return context.tr('Cela fait 7 jours sans livraison : des courses vous attendent sur Marakaj.');
     // 115: the account's own.
     case 'phone_verified':
       return context.tr('Votre numéro {phone} est vérifié.', {'phone': s('phone')});
     case 'test_push':
-      return context.tr('Mara : ceci est une notification test. Si elle s\'affiche sur votre téléphone, tout marche.');
+      return context.tr('Marakaj : ceci est une notification test. Si elle s\'affiche sur votre téléphone, tout marche.');
     case 'courier_suspended':
       return context.tr('Votre accès livreur est suspendu.');
     case 'courier_pending':
@@ -261,29 +261,29 @@ String notificationLine(BuildContext context, NotificationRow n) {
       return context.tr('Votre demande de mise en avant n\'a pas été retenue.');
     // 144: the platform's hand on a spot.
     case 'spot_changed':
-      return context.tr('Mara a changé l\'article de votre mise en avant : {name}.', {'name': s('name')});
+      return context.tr('Marakaj a changé l\'article de votre mise en avant : {name}.', {'name': s('name')});
     case 'spot_stopped':
-      return context.tr('Mara a arrêté votre mise en avant.');
+      return context.tr('Marakaj a arrêté votre mise en avant.');
     case 'new_device':
       return context.tr(
           'Nouvelle connexion à votre compte sur {device}. Ce n\'était pas vous ? Ouvrez Compte › Sécurité et fermez les autres appareils.',
           {'device': s('device')});
     case 'org_closed':
       // 128: its owner deleted their account, and the business with it.
-      return context.tr('« {shop} » a fermé sur Mara : vous n\'en faites plus partie. Votre compte reste le vôtre.', {'shop': s('shop')});
+      return context.tr('« {shop} » a fermé sur Marakaj : vous n\'en faites plus partie. Votre compte reste le vôtre.', {'shop': s('shop')});
     case 'pro_active':
       // 128: bought in the App Store or on Google Play — the store's own
       // name, which every build may say.
       if (s('store') == 'apple') {
-        return context.tr('Mara Pro est actif, payé sur l\'App Store, jusqu\'au {date}.', {'date': date('until')});
+        return context.tr('Marakaj Pro est actif, payé sur l\'App Store, jusqu\'au {date}.', {'date': date('until')});
       }
       if (s('store') == 'google') {
-        return context.tr('Mara Pro est actif, payé sur Google Play, jusqu\'au {date}.', {'date': date('until')});
+        return context.tr('Marakaj Pro est actif, payé sur Google Play, jusqu\'au {date}.', {'date': date('until')});
       }
       // The iPhone app names no way of paying for Pro (125).
       return yes('card') && sellsDigitalInApp
-          ? context.tr('Mara Pro est actif, payé par carte, jusqu\'au {date}.', {'date': date('until')})
-          : context.tr('Mara Pro est actif jusqu\'au {date}.', {'date': date('until')});
+          ? context.tr('Marakaj Pro est actif, payé par carte, jusqu\'au {date}.', {'date': date('until')})
+          : context.tr('Marakaj Pro est actif jusqu\'au {date}.', {'date': date('until')});
     case 'cauris_board':
       final league = _league(context, s('league'));
       final farm = s('league').startsWith('farm|');
@@ -323,24 +323,24 @@ String notificationLine(BuildContext context, NotificationRow n) {
     case 'cauris_gift' || 'cauris_promo':
       final note = s('note');
       final line = n.kind == 'cauris_promo'
-          ? context.tr('Mara vous offre {n} cauris, à utiliser avant le {date}',
+          ? context.tr('Marakaj vous offre {n} cauris, à utiliser avant le {date}',
               {'n': s('points'), 'date': date('until')})
-          : context.tr('Mara vous offre {n} cauris', {'n': s('points')});
+          : context.tr('Marakaj vous offre {n} cauris', {'n': s('points')});
       return note.isEmpty ? '$line.' : '$line: $note.';
     case 'feature_gift':
-      return context.tr('Mara vous offre {tool} jusqu\'au {date}.', {
+      return context.tr('Marakaj vous offre {tool} jusqu\'au {date}.', {
         'tool': s('feature') == 'pro_all'
-            ? context.tr('Mara Pro complet')
+            ? context.tr('Marakaj Pro complet')
             : PlanTerms.labelOf(s('feature')),
         'date': date('until'),
       });
     // A gift taken back from the command center's journal (105).
     case 'gift_undone':
       return s('feature').isEmpty
-          ? context.tr('Mara a repris {n} cauris offerts.', {'n': s('points')})
-          : context.tr('Mara a annulé l\'ouverture de {tool}.', {
+          ? context.tr('Marakaj a repris {n} cauris offerts.', {'n': s('points')})
+          : context.tr('Marakaj a annulé l\'ouverture de {tool}.', {
               'tool': s('feature') == 'pro_all'
-                  ? context.tr('Mara Pro complet')
+                  ? context.tr('Marakaj Pro complet')
                   : PlanTerms.labelOf(s('feature')),
             });
     case 'payout_changed':
@@ -354,14 +354,14 @@ String notificationLine(BuildContext context, NotificationRow n) {
     case 'feature_rule':
       final tool = context.tr(s('label'));
       return switch (s('state')) {
-        'hidden' => context.tr('Mara a masqué « {tool} » pour votre activité.', {'tool': tool}),
-        'visible' => context.tr('Mara a rendu « {tool} » visible pour votre activité.', {'tool': tool}),
-        _ => context.tr('Mara a remis « {tool} » comme par défaut pour votre activité.', {'tool': tool}),
+        'hidden' => context.tr('Marakaj a masqué « {tool} » pour votre activité.', {'tool': tool}),
+        'visible' => context.tr('Marakaj a rendu « {tool} » visible pour votre activité.', {'tool': tool}),
+        _ => context.tr('Marakaj a remis « {tool} » comme par défaut pour votre activité.', {'tool': tool}),
       };
     // A Pro tool a rule hides came back to hidden when the business's
     // payment ended (104): the admin's rule applies; renewing brings it back.
     case 'feature_lapsed':
-      return context.tr('Votre Mara Pro a pris fin : {tool} n\'est plus disponible pour votre activité.',
+      return context.tr('Votre Marakaj Pro a pris fin : {tool} n\'est plus disponible pour votre activité.',
           {'tool': context.tr(s('label'))});
     // The applicant hears the decision on their request (107).
     case 'application_approved':
@@ -373,7 +373,7 @@ String notificationLine(BuildContext context, NotificationRow n) {
     // An older app's request, answered at once since 111: the person now
     // creates their business themselves.
     case 'application_update_app':
-      return context.tr('Mettez à jour Mara : vous créez maintenant votre activité vous-même');
+      return context.tr('Mettez à jour Marakaj : vous créez maintenant votre activité vous-même');
     // A followed vitrine's news (113): one ring a day, said again in it.
     case 'vitrine_news':
       final names = [for (final x in (p['names'] is List ? p['names'] as List : const [])) '$x'];
@@ -394,21 +394,21 @@ String notificationLine(BuildContext context, NotificationRow n) {
     case 'report_handled':
       final answer = s('answer');
       return answer.isEmpty
-          ? context.tr('Mara a traité votre signalement. Merci !')
-          : context.tr('Mara a traité votre signalement : {answer}', {'answer': answer});
+          ? context.tr('Marakaj a traité votre signalement. Merci !')
+          : context.tr('Marakaj a traité votre signalement : {answer}', {'answer': answer});
     // Mara changed the business's vitrine or its identity from the command
     // center, or took her change back (106).
     case 'mara_edited' || 'mara_undone':
       final undone = n.kind == 'mara_undone';
       if (s('what') == 'vitrine') {
         return undone
-            ? context.tr('Mara a annulé sa modification de votre vitrine')
-            : context.tr('Mara a modifié votre vitrine');
+            ? context.tr('Marakaj a annulé sa modification de votre vitrine')
+            : context.tr('Marakaj a modifié votre vitrine');
       }
       if (undone) {
-        return context.tr('Mara a annulé sa modification de l\'identité de votre activité');
+        return context.tr('Marakaj a annulé sa modification de l\'identité de votre activité');
       }
-      return context.tr('Mara a modifié l\'identité de votre activité : {what}',
+      return context.tr('Marakaj a modifié l\'identité de votre activité : {what}',
           {'what': _identityWords(context, p['fields'])});
   }
   return n.message;

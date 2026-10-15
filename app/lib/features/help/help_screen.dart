@@ -196,7 +196,7 @@ class _HelpScreenState extends State<HelpScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              context.tr('Écrire à Mara'),
+              context.tr('Écrire à Marakaj'),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w800,
               ),
@@ -206,7 +206,7 @@ class _HelpScreenState extends State<HelpScreen> {
               // « 24/7 » only where the WhatsApp is (no number set: the
               // e-mail alone, which promises its 48 h).
               pro && c.whatsapp != null
-                  ? context.tr('WhatsApp 24 h/24, 7 j/7, avec Mara Pro')
+                  ? context.tr('WhatsApp 24 h/24, 7 j/7, avec Marakaj Pro')
                   : c.whatsapp != null
                   ? context.tr('WhatsApp ou e-mail · réponse sous 48 h')
                   : context.tr('Par e-mail · réponse sous 48 h'),
@@ -268,7 +268,7 @@ class _HelpScreenState extends State<HelpScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    context.tr('Un formateur de Mara vous aide'),
+                    context.tr('Un formateur de Marakaj vous aide'),
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),

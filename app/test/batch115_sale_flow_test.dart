@@ -317,7 +317,7 @@ void main() {
   });
 
   group('payment', () {
-    testWidgets('RULE M: no mobile payment unless Mara allows it for this business',
+    testWidgets('RULE M: no mobile payment unless Marakaj allows it for this business',
         (tester) async {
       await _phone(tester);
       await tester.pumpWidget(_app(SaleFlow(

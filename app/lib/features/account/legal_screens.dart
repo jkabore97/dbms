@@ -114,7 +114,7 @@ class PrivacyScreen extends StatelessWidget {
       legal: true,
       blocks: [
         'Version 2 — en vigueur le 14 octobre 2026.',
-        'Mara enregistre les informations que vous saisissez pour faire '
+        'Marakaj enregistre les informations que vous saisissez pour faire '
             'fonctionner votre activité : ventes, dépenses, membres, produits, '
             'photos de pièces justificatives, et les personnes de votre équipe.',
         '# Ce que nous collectons',
@@ -144,7 +144,7 @@ class PrivacyScreen extends StatelessWidget {
         '# Qui voit vos informations',
         'Quand vous commandez ou réservez, l\'entreprise reçoit ce qu\'il '
             'lui faut pour vous servir : votre nom, votre numéro de '
-            'téléphone (celui que WhatsApp a vérifié, quand Mara le '
+            'téléphone (celui que WhatsApp a vérifié, quand Marakaj le '
             'demande), votre adresse et le point de livraison sur la carte, '
             'et votre message. Les membres de l\'entreprise qui gèrent les '
             'commandes les voient, et elle les garde dans ses comptes, comme '
@@ -154,9 +154,9 @@ class PrivacyScreen extends StatelessWidget {
             'qui prend la course reçoit ensuite votre nom et votre numéro, '
             'pour vous joindre pendant la livraison, et s\'engage par sa '
             'charte à ne pas s\'en servir pour autre chose.',
-        'Un formateur Mara ne voit les données d\'une entreprise qu\'à sa '
+        'Un formateur Marakaj ne voit les données d\'une entreprise qu\'à sa '
             'demande, en lecture seule et pour un temps limité. En dehors de '
-            'ces cas et des prestataires ci-dessous, Mara ne transmet vos '
+            'ces cas et des prestataires ci-dessous, Marakaj ne transmet vos '
             'informations à personne, sauf sur une demande légale des '
             'autorités.',
         '# Où elles sont stockées',
@@ -164,14 +164,14 @@ class PrivacyScreen extends StatelessWidget {
             'ne voit que ses propres données ; l\'isolement entre activités est '
             'appliqué par le serveur.',
         '# Les prestataires',
-        'Mara fait appel à quelques prestataires, chacun seulement pour ce '
+        'Marakaj fait appel à quelques prestataires, chacun seulement pour ce '
             'qui le concerne : Supabase (la base de données et les comptes) et '
             'Cloudflare (le site, les photos) hébergent les données ; Google '
             'pour la connexion avec Google et l\'envoi des notifications sur le '
             'téléphone (Firebase) ; Apple pour la connexion avec Apple ; Apple '
-            '(l\'App Store) et Google (Google Play) pour l\'abonnement Mara Pro '
+            '(l\'App Store) et Google (Google Play) pour l\'abonnement Marakaj Pro '
             'pris dans l\'application, qu\'ils facturent et gèrent eux-mêmes ; '
-            'Stripe pour le paiement par carte de Mara Pro (Mara ne voit jamais '
+            'Stripe pour le paiement par carte de Marakaj Pro (Marakaj ne voit jamais '
             'le numéro de la carte) ; Sentry pour les rapports d\'erreur de '
             'l\'application (sans nom, numéro ni contenu de vos livres) ; '
             'Resend pour envoyer l\'e-mail de bienvenue ; et, quand ils sont '
@@ -189,35 +189,35 @@ class PrivacyScreen extends StatelessWidget {
         '# Devenir livreur',
         'Pour devenir livreur, vous envoyez un selfie et la photo de votre '
             'pièce d\'identité (à moto ou en voiture, aussi votre permis). Ces '
-            'photos sont gardées à part, en privé : seule l\'équipe Mara qui '
+            'photos sont gardées à part, en privé : seule l\'équipe Marakaj qui '
             'examine les demandes peut les voir, jamais les boutiques, les '
             'clients ni la rue. Si votre demande est refusée et que vous ne la '
             'renvoyez pas, elles ne sont plus jamais montrées après 30 jours, '
             'et sont effacées la fois suivante où la liste des livreurs est '
-            'ouverte (par l\'équipe Mara, ou par vous sur « Devenir livreur »). '
+            'ouverte (par l\'équipe Marakaj, ou par vous sur « Devenir livreur »). '
             'Il en va de même, sans attendre, d\'une photo remplacée par une '
             'nouvelle et, après 30 jours sans suite, d\'une demande commencée '
             'puis laissée. Si vous êtes accepté, elles sont gardées tant que '
             'vous êtes livreur ; votre compte supprimé, elles ne sont plus '
             'montrées et sont effacées de la même façon.',
         'Quand vous êtes livreur et ouvrez les livraisons disponibles, votre '
-            'téléphone donne votre position, si vous l\'autorisez. Mara garde '
+            'téléphone donne votre position, si vous l\'autorisez. Marakaj garde '
             'la dernière, pour vous seul — ni les boutiques, ni les clients, ni '
             'les autres livreurs ne la voient — afin de vous montrer les '
             'livraisons proches et de vous prévenir de celles-ci. Après 24 '
             'heures, elle n\'est plus utilisée ; après 30 jours, elle est '
             'effacée.',
         '# Vérifications contre la fraude',
-        'Pour protéger les clients et les entreprises, Mara peut vérifier '
+        'Pour protéger les clients et les entreprises, Marakaj peut vérifier '
             'votre numéro de téléphone (un code envoyé sur WhatsApp) et, '
             'pour une entreprise ou un livreur, demander une pièce '
             'd\'identité ou des documents sur l\'activité. Ces pièces '
-            'servent seulement à cette vérification ; seule l\'équipe Mara '
+            'servent seulement à cette vérification ; seule l\'équipe Marakaj '
             'les voit.',
-        '# Ce que Mara garde',
-        'Mara garde la trace de votre acceptation des conditions (le '
+        '# Ce que Marakaj garde',
+        'Marakaj garde la trace de votre acceptation des conditions (le '
             'document, sa version, la date, l\'application utilisée) tant '
-            'que votre compte existe. Mara garde aussi les informations que '
+            'que votre compte existe. Marakaj garde aussi les informations que '
             'la loi exige ou permet de conserver pour régler un litige ou '
             'prouver une fraude, et peut les transmettre aux autorités sur '
             'une demande légale.',
@@ -236,13 +236,13 @@ class PrivacyScreen extends StatelessWidget {
             ': ses ventes, son stock, ses comptes et sa vitrine sont effacés de '
             'façon définitive, ses commandes en cours sont annulées et ses '
             'clients prévenus, et ses membres gardent leur propre compte. Un '
-            'abonnement Mara Pro pris sur l\'App Store s\'annule dans les '
-            'réglages de votre compte Apple : Mara ne peut pas l\'annuler.',
+            'abonnement Marakaj Pro pris sur l\'App Store s\'annule dans les '
+            'réglages de votre compte Apple : Marakaj ne peut pas l\'annuler.',
         '# Contact',
         'Pour toute question sur vos données, ou pour demander leur '
             'correction ou leur suppression, écrivez à '
             'hello@kaj-consulting.com, ou contactez le support depuis '
-            'l\'écran Compte › Aide. Mara est édité par KAJ Consulting LLC.',
+            'l\'écran Compte › Aide. Marakaj est édité par KAJ Consulting LLC.',
       ],
     );
   }
@@ -288,23 +288,23 @@ class _TermsScreenState extends State<TermsScreen> {
       legal: true,
       blocks: [
         'Version 2 — en vigueur le 14 octobre 2026.',
-        'Ces conditions s\'appliquent à toute personne qui utilise Mara : '
+        'Ces conditions s\'appliquent à toute personne qui utilise Marakaj : '
             'l\'application, le site marakaj.com et les vitrines. En créant '
-            'un compte, ou en continuant à utiliser Mara, vous les acceptez.',
-        '# Qui exploite Mara',
-        'Mara (« propulsé par Kaj ») est un service exploité par KAJ '
+            'un compte, ou en continuant à utiliser Marakaj, vous les acceptez.',
+        '# Qui exploite Marakaj',
+        'Marakaj (« propulsé par Kaj ») est un service exploité par KAJ '
             'Consulting LLC, une société des États-Unis. Dans ces '
-            'conditions, « Mara » et « nous » désignent KAJ Consulting LLC ; '
-            '« vous » désigne la personne qui utilise Mara.',
-        '# Le rôle de Mara',
-        'Mara est une plateforme et un intermédiaire : elle aide des '
+            'conditions, « Marakaj » et « nous » désignent KAJ Consulting LLC ; '
+            '« vous » désigne la personne qui utilise Marakaj.',
+        '# Le rôle de Marakaj',
+        'Marakaj est une plateforme et un intermédiaire : elle aide des '
             'entreprises (boutiques, fermes, associations) à tenir leurs '
             'comptes, à montrer leurs articles et à recevoir des commandes, '
             'et elle les met en relation avec des clients et des livreurs.',
         'Chaque entreprise est le vendeur. Elle seule répond de ses articles '
             'et de ses services, de ses prix, de ses livraisons, de ses '
-            'reçus, de ses impôts et de ses taxes. Mara n\'est pas partie à '
-            'la vente entre une entreprise et son client : Mara n\'achète '
+            'reçus, de ses impôts et de ses taxes. Marakaj n\'est pas partie à '
+            'la vente entre une entreprise et son client : Marakaj n\'achète '
             'pas, ne revend pas et ne garantit pas ce qui est vendu.',
         '# Votre compte',
         'Vous donnez des informations vraies et à jour : votre nom, votre '
@@ -312,18 +312,18 @@ class _TermsScreenState extends State<TermsScreen> {
             ': ne le prêtez pas, ne le vendez pas, et n\'ouvrez pas de '
             'compte au nom de quelqu\'un d\'autre.',
         'Âge minimum : 16 ans pour commander ; 18 ans pour ouvrir une '
-            'entreprise ou devenir livreur. Avant 18 ans, utilisez Mara avec '
+            'entreprise ou devenir livreur. Avant 18 ans, utilisez Marakaj avec '
             'l\'accord d\'un parent ou d\'un tuteur.',
         'Gardez secrets votre mot de passe, votre code (PIN) et les codes '
-            'que vous recevez par SMS ou WhatsApp : Mara ne vous les '
+            'que vous recevez par SMS ou WhatsApp : Marakaj ne vous les '
             'demandera jamais. Ce qui est fait avec votre compte est réputé '
             'fait par vous ; si quelqu\'un d\'autre y a accès, prévenez-nous '
             'tout de suite.',
-        'Mara peut vous demander de vérifier votre numéro de téléphone (un '
+        'Marakaj peut vous demander de vérifier votre numéro de téléphone (un '
             'code envoyé sur WhatsApp), notamment avant de commander, de '
             'créer une entreprise ou de devenir livreur.',
         '# Les entreprises',
-        'Une entreprise sur Mara doit exister vraiment et avoir une activité '
+        'Une entreprise sur Marakaj doit exister vraiment et avoir une activité '
             'légale là où elle vend. La personne qui la crée en répond, et '
             'accepte les « Engagements du vendeur », qui résument cette '
             'partie.',
@@ -331,8 +331,8 @@ class _TermsScreenState extends State<TermsScreen> {
             'que vous avez le droit d\'utiliser. Vos prix, vos stocks et vos '
             'délais sont exacts et tenus à jour. Une commande acceptée est '
             'honorée ; si ce n\'est pas possible, vous prévenez le client '
-            'tout de suite et vous l\'annulez dans Mara.',
-        'Il est interdit de vendre ou de proposer sur Mara : armes, '
+            'tout de suite et vous l\'annulez dans Marakaj.',
+        'Il est interdit de vendre ou de proposer sur Marakaj : armes, '
             'munitions et explosifs ; drogues ; médicaments sans '
             'l\'autorisation que la loi exige ; contrefaçons ; objets volés '
             'ou d\'origine douteuse ; contenus pour adultes et services '
@@ -344,14 +344,14 @@ class _TermsScreenState extends State<TermsScreen> {
         'Il est interdit de se faire passer pour une marque, une entreprise '
             'ou une personne, d\'utiliser leur nom ou leur logo sans en '
             'avoir le droit, ou de copier la vitrine d\'une autre entreprise.',
-        'Pour une commande passée sur Mara, ne demandez jamais au client de '
+        'Pour une commande passée sur Marakaj, ne demandez jamais au client de '
             'payer autrement que par les moyens convenus dans la commande '
             '(par exemple sur un autre numéro, ou un acompte en dehors de '
-            'Mara).',
-        'Mara peut vérifier l\'identité d\'une personne ou l\'existence '
+            'Marakaj).',
+        'Marakaj peut vérifier l\'identité d\'une personne ou l\'existence '
             'd\'une entreprise, et demander des pièces : pièce d\'identité, '
             'registre de commerce, autorisation, justificatif d\'adresse. '
-            'Sans réponse, ou si les pièces ne suffisent pas, Mara peut '
+            'Sans réponse, ou si les pièces ne suffisent pas, Marakaj peut '
             'limiter, suspendre ou fermer l\'entreprise.',
         '# Les clients',
         'Vous commandez de bonne foi, pour vous ou pour quelqu\'un qui vous '
@@ -361,25 +361,25 @@ class _TermsScreenState extends State<TermsScreen> {
             'entreprise sont interdites.',
         'Une réclamation sur un article (qualité, quantité, retour, '
             'remboursement) se règle d\'abord avec l\'entreprise, qui en '
-            'répond. Si cela ne s\'arrange pas, signalez-le à Mara.',
+            'répond. Si cela ne s\'arrange pas, signalez-le à Marakaj.',
         '# Les paiements',
         'En espèces : le client paie l\'entreprise, ou son livreur, à la '
-            'remise. Cet argent ne passe pas par Mara, qui n\'en répond pas.',
+            'remise. Cet argent ne passe pas par Marakaj, qui n\'en répond pas.',
         'Par Wave ou par carte, quand l\'entreprise le propose : le client '
-            'paie en ligne, par Mara et son prestataire de paiement, puis '
-            'Mara reverse le montant à l\'entreprise, moins la commission '
+            'paie en ligne, par Marakaj et son prestataire de paiement, puis '
+            'Marakaj reverse le montant à l\'entreprise, moins la commission '
             'annoncée. Un remboursement est décidé par l\'entreprise, sauf '
-            'erreur de Mara.',
-        'Mara Pro et « Mettre en avant » sont des services numériques que '
-            'Mara vend aux entreprises. Ils se paient dans l\'application '
+            'erreur de Marakaj.',
+        'Marakaj Pro et « Mettre en avant » sont des services numériques que '
+            'Marakaj vend aux entreprises. Ils se paient dans l\'application '
             '(Google Play ou App Store), par carte (Stripe) ou par les '
-            'autres moyens que Mara indique. Achetés sur Google Play ou '
+            'autres moyens que Marakaj indique. Achetés sur Google Play ou '
             'l\'App Store, ils suivent les règles de remboursement du store.',
         'Une mise en avant déjà montrée, même en partie, n\'est pas '
-            'remboursée, sauf si la loi l\'exige ou si Mara n\'a pas pu la '
+            'remboursée, sauf si la loi l\'exige ou si Marakaj n\'a pas pu la '
             'montrer.',
-        '# Mara Pro',
-        'Mara Pro est un abonnement, au mois ou à l\'année, pour une '
+        '# Marakaj Pro',
+        'Marakaj Pro est un abonnement, au mois ou à l\'année, pour une '
             'activité : il vaut pour celle pour laquelle il a été pris. Pris '
             'dans l\'application iPhone ou Android, il est facturé et géré '
             'par l\'App Store ou Google Play : le prix est celui que le '
@@ -389,76 +389,76 @@ class _TermsScreenState extends State<TermsScreen> {
             'la fin de la période en cours, et il s\'annule dans les '
             'réglages de votre compte du store, selon ses règles.',
         '# Les livreurs',
-        'Les livreurs sont indépendants : ils ne sont employés ni par Mara '
+        'Les livreurs sont indépendants : ils ne sont employés ni par Marakaj '
             'ni par les entreprises. Avant d\'être acceptés, ils acceptent '
             'la charte du livreur.',
         'L\'argent encaissé à la porte appartient à l\'entreprise : le '
             'livreur le lui remet le jour même, sans rien garder d\'autre '
-            'que ce que Mara affiche comme lui revenant.',
+            'que ce que Marakaj affiche comme lui revenant.',
         'Le code de livraison prouve que la commande a été remise. Le client '
             'le donne au livreur à la remise, et seulement à ce moment-là : '
             'ne le donnez jamais avant d\'avoir reçu votre commande. Un '
             'livreur ne le demande jamais à l\'avance.',
         '# Cauris, ligues, prix et parrainage',
-        'Les cauris sont des points de Mara. Ils n\'ont aucune valeur en '
+        'Les cauris sont des points de Marakaj. Ils n\'ont aucune valeur en '
             'argent : ils ne s\'achètent pas, ne se vendent pas, ne '
             's\'échangent pas contre de l\'argent et ne se transfèrent pas.',
-        'Mara peut annuler des cauris, un classement, un prix ou un '
+        'Marakaj peut annuler des cauris, un classement, un prix ou un '
             'parrainage obtenus par la fraude : faux comptes ou comptes '
             'multiples, fausses commandes, commandes entre proches pour '
             'gagner des points, ou tout autre contournement des règles. Ces '
             'règles peuvent changer ; l\'application montre toujours celles '
             'du moment.',
         '# Formateurs et aide',
-        'Un formateur Mara ne voit les données d\'une entreprise qu\'avec '
+        'Un formateur Marakaj ne voit les données d\'une entreprise qu\'avec '
             'l\'accord de son propriétaire ou d\'un administrateur, en '
             'lecture seule et pour une durée limitée. Il ne peut rien '
             'modifier ni rien vendre au nom de l\'entreprise.',
-        '# Les droits de Mara',
-        'Mara peut retirer un contenu (photo, texte, article) contraire à '
+        '# Les droits de Marakaj',
+        'Marakaj peut retirer un contenu (photo, texte, article) contraire à '
             'ces conditions ou à la loi.',
-        'Mara peut suspendre ou fermer une entreprise ou un compte qui ne '
+        'Marakaj peut suspendre ou fermer une entreprise ou un compte qui ne '
             'respecte pas ces conditions. En cas de fraude, de risque pour '
-            'd\'autres personnes ou de plainte sérieuse, Mara peut le faire '
-            'tout de suite ; sinon, Mara prévient d\'abord et dit pourquoi, '
+            'd\'autres personnes ou de plainte sérieuse, Marakaj peut le faire '
+            'tout de suite ; sinon, Marakaj prévient d\'abord et dit pourquoi, '
             'quand c\'est possible.',
-        'Mara garde les informations dont la loi exige ou permet la '
+        'Marakaj garde les informations dont la loi exige ou permet la '
             'conservation pour régler un litige ou prouver une fraude '
             '(commandes, paiements, signalements, échanges avec l\'aide), y '
             'compris après la fermeture d\'une entreprise ou d\'un compte.',
-        'Mara coopère avec les autorités : sur une demande légale, ou pour '
-            'protéger une personne, Mara peut leur transmettre les '
+        'Marakaj coopère avec les autorités : sur une demande légale, ou pour '
+            'protéger une personne, Marakaj peut leur transmettre les '
             'informations utiles.',
         '# Signaler un problème',
         'Une vitrine, un article, une commande ou une personne vous semble '
             'frauduleux ? Touchez « Signaler cette vitrine » dans le menu ⋮ de la vitrine, '
-            'ou écrivez à {email}. Mara examine chaque signalement.',
+            'ou écrivez à {email}. Marakaj examine chaque signalement.',
         '# Responsabilité',
         'Nous faisons de notre mieux pour que le service reste disponible, '
             'mais nous ne pouvons pas le garantir sans interruption. '
             'L\'application continue de fonctionner hors ligne et '
             'synchronise dès que la connexion revient.',
-        'Mara ne garantit aucune vente, aucun nombre de visiteurs et aucun '
-            'revenu. Mara ne répond pas des articles, des services, des prix '
+        'Marakaj ne garantit aucune vente, aucun nombre de visiteurs et aucun '
+            'revenu. Marakaj ne répond pas des articles, des services, des prix '
             'ni du comportement des entreprises, des clients ou des '
             'livreurs, ni des pertes indirectes (manque à gagner, perte de '
             'clientèle).',
-        'Si la responsabilité de Mara est engagée, elle est limitée, dans la '
-            'mesure où la loi le permet, à ce que vous avez payé à Mara '
+        'Si la responsabilité de Marakaj est engagée, elle est limitée, dans la '
+            'mesure où la loi le permet, à ce que vous avez payé à Marakaj '
             'pendant les 12 derniers mois. Rien dans ces conditions ne vous '
             'retire un droit que la loi vous donne et qu\'un contrat ne peut '
             'pas écarter.',
-        'Mara vous aide à tenir vos comptes, mais la responsabilité finale '
+        'Marakaj vous aide à tenir vos comptes, mais la responsabilité finale '
             'de vos décisions commerciales et de vos obligations légales '
             'vous revient.',
         '# Vos données',
-        'Ce que Mara fait de vos données est expliqué dans la Politique de '
+        'Ce que Marakaj fait de vos données est expliqué dans la Politique de '
             'confidentialité, qui fait partie de ces conditions.',
         '# Modifications',
-        'Mara peut modifier ces conditions. Une nouvelle version porte un '
+        'Marakaj peut modifier ces conditions. Une nouvelle version porte un '
             'nouveau numéro et une nouvelle date ; l\'application vous la '
             'montre, avec ce qui a changé, et vous demande de l\'accepter '
-            'pour continuer à utiliser Mara. Si vous ne l\'acceptez pas, '
+            'pour continuer à utiliser Marakaj. Si vous ne l\'acceptez pas, '
             'vous pouvez supprimer votre compte.',
         '# Droit applicable et litiges',
         '[à valider par un avocat] Le droit qui s\'applique à ces conditions '
@@ -515,7 +515,7 @@ class FaqScreen extends StatelessWidget {
               ),
               onPressed: () => context.push(Routes.inside(business.id, 'aide')),
               icon: const Icon(Icons.chat_outlined),
-              label: Text(context.tr('Pas trouvé ? Écrire à Mara')),
+              label: Text(context.tr('Pas trouvé ? Écrire à Marakaj')),
             ),
       blocks: [
         context.tr('# L\'application fonctionne-t-elle sans internet ?'),

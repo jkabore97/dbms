@@ -281,7 +281,7 @@ const settingCards = <SettingCard>[
     // 146 (batch 151): « Protections contre la fraude ».
     ('fraud', ['order_open_max_per_shop', 'order_first_open_max', 'courier_cash_cap', 'till_gap_review']),
   ], links: [
-    ('Actions de Mara', Routes.consoleJournal),
+    ('Actions de Marakaj', Routes.consoleJournal),
     ('Activité', Routes.consoleAudit),
     // 142 (batch 147): the documents everyone accepts, and a new version.
     ('Conditions d\'utilisation', Routes.consoleTerms),
@@ -363,7 +363,7 @@ String settingPartLabel(BuildContext context, String part) => switch (part) {
 String settingLinkLabel(BuildContext context, String fr) => switch (fr) {
       'Types d\'activité' => context.tr('Types d\'activité'),
       'Parcours de création' => context.tr('Parcours de création'),
-      'Actions de Mara' => context.tr('Actions de Mara'),
+      'Actions de Marakaj' => context.tr('Actions de Marakaj'),
       'Activité' => context.tr('Activité'),
       'Conditions d\'utilisation' => context.tr('Conditions d\'utilisation'),
       _ => fr,
@@ -397,7 +397,7 @@ bool settingMatches(BuildContext context, String key, String query) {
 }
 
 String settingGroupLabel(BuildContext context, String group) => switch (group) {
-      'pro' => context.tr('Mara Pro'),
+      'pro' => context.tr('Marakaj Pro'),
       'free' => context.tr('Sans Pro'),
       'street' => context.tr('Vitrines et rue'),
       'delivery' => context.tr('Livraison'),
@@ -416,15 +416,15 @@ String settingGroupLabel(BuildContext context, String group) => switch (group) {
     };
 
 String settingLabel(BuildContext context, String key) => switch (key) {
-      'pro_price_month' => context.tr('Prix de Mara Pro, par mois — FCFA (zone franc CFA)'),
-      'pro_price_year' => context.tr('Prix de Mara Pro, par an — FCFA (zone franc CFA)'),
-      'pro_price_month_eur' => context.tr('Prix de Mara Pro, par mois — euros (zone euro)'),
-      'pro_price_year_eur' => context.tr('Prix de Mara Pro, par an — euros (zone euro)'),
-      'pro_price_month_usd' => context.tr('Prix de Mara Pro, par mois — dollars (reste du monde)'),
-      'pro_price_year_usd' => context.tr('Prix de Mara Pro, par an — dollars (reste du monde)'),
-      'pro_currency' => context.tr('Monnaie des prix de Mara Pro'),
+      'pro_price_month' => context.tr('Prix de Marakaj Pro, par mois — FCFA (zone franc CFA)'),
+      'pro_price_year' => context.tr('Prix de Marakaj Pro, par an — FCFA (zone franc CFA)'),
+      'pro_price_month_eur' => context.tr('Prix de Marakaj Pro, par mois — euros (zone euro)'),
+      'pro_price_year_eur' => context.tr('Prix de Marakaj Pro, par an — euros (zone euro)'),
+      'pro_price_month_usd' => context.tr('Prix de Marakaj Pro, par mois — dollars (reste du monde)'),
+      'pro_price_year_usd' => context.tr('Prix de Marakaj Pro, par an — dollars (reste du monde)'),
+      'pro_currency' => context.tr('Monnaie des prix de Marakaj Pro'),
       'platform_wave' => context.tr('Numéro Wave qui reçoit les paiements Pro'),
-      'platform_wave_name' => context.tr('Nom du compte Wave de Mara'),
+      'platform_wave_name' => context.tr('Nom du compte Wave de Marakaj'),
       'stripe_on' => context.tr('Abonnement par carte (Stripe)'),
       'store_billing_on' =>
         context.tr('Abonnement dans les applications (App Store, Google Play)'),
@@ -432,7 +432,7 @@ String settingLabel(BuildContext context, String key) => switch (key) {
         context.tr('Compte de test des boutiques (achats sandbox acceptés)'),
       'store_review_orgs' => context.tr(
           'Entreprises de ce compte de test (identifiants ; vide : toutes)'),
-      'pro_features' => context.tr('Outils réservés à Mara Pro'),
+      'pro_features' => context.tr('Outils réservés à Marakaj Pro'),
       'max_item_photos_pro' => context.tr('Photos par article avec Pro (1 à 20)'),
       'free_max_staff' => context.tr('Personnes dans l\'équipe'),
       'free_max_invoices_month' => context.tr('Factures par mois'),
@@ -457,7 +457,7 @@ String settingLabel(BuildContext context, String key) => switch (key) {
       'delivery_currency' => context.tr('Monnaie des prix de livraison'),
       'delivery_max_km' => context.tr('Distance de livraison la plus longue (km)'),
       'delivery_included_km' => context.tr('Kilomètres offerts avec Pro'),
-      'delivery_share_pct' => context.tr('Part de Mara sur chaque livraison (%)'),
+      'delivery_share_pct' => context.tr('Part de Marakaj sur chaque livraison (%)'),
       'own_courier_minutes' => context.tr('Minutes réservées aux livreurs de la boutique'),
       'stuck_ready_minutes' => context.tr('Minutes avant de signaler une commande prête'),
       'courier_licence_required' => context.tr('Permis de conduire obligatoire pour livrer à moto ou en voiture'),
@@ -465,7 +465,7 @@ String settingLabel(BuildContext context, String key) => switch (key) {
       'courier_radius_km' => context.tr('Distance où les livreurs reçoivent une livraison (km, 1 à 100)'),
       'wave_checkout' => context.tr('Payer en ligne par Wave'),
       'wave_card' => context.tr('Carte bancaire sur la page Wave'),
-      'wave_commission_pct' => context.tr('Commission de Mara sur une commande payée en ligne (%)'),
+      'wave_commission_pct' => context.tr('Commission de Marakaj sur une commande payée en ligne (%)'),
       'cauris_order_min' => context.tr('Commande la plus petite qui rapporte des cauris'),
       'cauris_orders_per_customer' => context.tr('Commandes par client et par jour qui comptent'),
       'cauris_quick_minutes' => context.tr('Minutes pour une commande acceptée vite'),
@@ -485,14 +485,14 @@ String settingLabel(BuildContext context, String key) => switch (key) {
       'booking_cancel_hours' =>
         context.tr('Annulation d\'un rendez-vous par le client : jusqu\'à … heures avant'),
       'create_phone_verified' => context.tr('Numéro WhatsApp vérifié avant de créer une activité'),
-      'support_whatsapp' => context.tr('Numéro WhatsApp de l\'aide Mara (vide : caché)'),
-      'support_email' => context.tr('E-mail de l\'aide Mara'),
-      'support_hours' => context.tr('Heures de l\'aide Mara (par exemple 24 h/24, 7 j/7)'),
-      'play_store_live' => context.tr('Mara est publiée sur Google Play (sinon : le fichier APK)'),
-      'app_store_url' => context.tr('Adresse de Mara sur l\'App Store (vide : écran d\'accueil)'),
+      'support_whatsapp' => context.tr('Numéro WhatsApp de l\'aide Marakaj (vide : caché)'),
+      'support_email' => context.tr('E-mail de l\'aide Marakaj'),
+      'support_hours' => context.tr('Heures de l\'aide Marakaj (par exemple 24 h/24, 7 j/7)'),
+      'play_store_live' => context.tr('Marakaj est publiée sur Google Play (sinon : le fichier APK)'),
+      'app_store_url' => context.tr('Adresse de Marakaj sur l\'App Store (vide : écran d\'accueil)'),
       'welcome_email_on' => context.tr('E-mail de bienvenue aux nouveaux comptes'),
       'admin_new_user_notify' =>
-        context.tr('Notifier les administrateurs de Mara à chaque nouveau compte'),
+        context.tr('Notifier les administrateurs de Marakaj à chaque nouveau compte'),
       'help_hours_open' => context.tr('Aide Pro : heure d\'ouverture (0 à 23, heure de Ouagadougou)'),
       'help_hours_close' => context.tr('Aide Pro : heure de fermeture (1 à 24, heure de Ouagadougou)'),
       'help_escalate_minutes' =>
@@ -502,7 +502,7 @@ String settingLabel(BuildContext context, String key) => switch (key) {
       'help_whatsapp_template' =>
         context.tr('Modèle WhatsApp des formateurs chez Meta (vide : pas de WhatsApp)'),
       'admin_help_notify' =>
-        context.tr('Notifier les administrateurs de Mara d\'une demande d\'aide sans réponse'),
+        context.tr('Notifier les administrateurs de Marakaj d\'une demande d\'aide sans réponse'),
       'apple_web_signin' => context.tr('Connexion Apple sur le site'),
       'order_open_max_per_shop' =>
         context.tr('Commandes en cours par client dans une même activité (0 : sans limite)'),
@@ -511,7 +511,7 @@ String settingLabel(BuildContext context, String key) => switch (key) {
       'courier_cash_cap' =>
         context.tr('Espèces qu\'un livreur porte au plus à la fois — FCFA (0 : sans plafond)'),
       'till_gap_review' =>
-        context.tr('Écart de caisse signalé à Mara à partir de — FCFA (0 : jamais)'),
+        context.tr('Écart de caisse signalé à Marakaj à partir de — FCFA (0 : jamais)'),
       _ => key,
     };
 

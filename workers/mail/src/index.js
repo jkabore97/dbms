@@ -97,7 +97,7 @@ export async function welcome(userId, env, io = { fetch: (url, init) => fetch(ur
         "Idempotency-Key": `welcome-${userId}`,
       },
       body: JSON.stringify({
-        from: env.MAIL_FROM || "Mara <bienvenue@marakaj.com>",
+        from: env.MAIL_FROM || "Marakaj <bienvenue@marakaj.com>",
         to: [claim.email],
         reply_to: env.MAIL_REPLY_TO || "hello@kaj-consulting.com",
         subject: mail.subject,

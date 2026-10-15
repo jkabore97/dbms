@@ -127,7 +127,7 @@ class _BooksStartCardState extends State<BooksStartCard> {
                                 ?.copyWith(color: maraDeep, fontWeight: FontWeight.w800)),
                         const SizedBox(height: 2),
                         Text(
-                            context.tr('Ce qu\'il y avait dans la caisse avant Mara : vos comptes partiront juste.'),
+                            context.tr('Ce qu\'il y avait dans la caisse avant Marakaj : vos comptes partiront juste.'),
                             style: theme.textTheme.bodyMedium),
                       ],
                     ),

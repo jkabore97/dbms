@@ -219,7 +219,7 @@ class ShareVitrine {
         catalogue: catalogue,
         selection: selection,
         photos: photos,
-        name: article == null ? '${shop.slug}-mara.png' : '${shop.slug}-annonce-mara.png',
+        name: article == null ? '${shop.slug}-marakaj.png' : '${shop.slug}-annonce-marakaj.png',
         text: text,
         initial: initial,
         memory: kept,

@@ -258,7 +258,7 @@ void main() {
       expect(find.text('La caisse et la cotisation'), findsNothing);
     });
 
-    testWidgets('Mara turned the step off (setup_off): not drawn', (tester) async {
+    testWidgets('Marakaj turned the step off (setup_off): not drawn', (tester) async {
       await size(tester);
       await tester.pumpWidget(_app(AssociationSetupScreen(
           org: _org,

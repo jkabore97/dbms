@@ -57,8 +57,8 @@ void main() {
   const allowed = {
     'Français', // the language's own name, on the language choice
     '«   »', // a person's own words, quoted
-    '  ·  ©   Mara', // the footer: the year and the brand
-    'Mara ·  ', // a printed report's foot: the brand and the date
+    '  ·  ©   Marakaj', // the footer: the year and the brand
+    'Marakaj ·  ', // a printed report's foot: the brand and the date
     'marakaj.com/s/ ', // a vitrine's address
     'Durée :  ', // a service's description, stored in the vitrine's language
     'Demande de suppression de compte (depuis Compte). Activités :  .', // read by Mara's team, not shown
@@ -177,7 +177,10 @@ y = context.tr('{n} en stock', {'n': n});
     expect(words, contains('Remplir'));
     expect(words, contains('Mon cahier de la ferme'));
     expect(words, contains('Étape du chemin'));
-    final missing = [for (final w in words) if (!english.contains(w)) w];
+    // 097 and 100 wrote « Mara »; 147 says Marakaj, and the app reads the
+    // old words with the new name (tr.dart's oldNameText) — either finds
+    // its English.
+    final missing = [for (final w in words) if (!english.contains(w) && !english.contains(oldNameText(w))) w];
     expect(missing, isEmpty, reason: 'add these to lib/core/l10n/en.dart');
   });
 

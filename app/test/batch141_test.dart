@@ -668,7 +668,7 @@ void main() {
 
     testWidgets('Basic: the cover alone; « + » is the Pro door, nothing added', (tester) async {
       final retail = await strip(tester, limit: 1, count: 1);
-      expect(find.text('Plusieurs photos par article avec Mara Pro.'), findsOneWidget);
+      expect(find.text('Plusieurs photos par article avec Marakaj Pro.'), findsOneWidget);
       expect(find.text('Pro'), findsOneWidget);
       await tester.tap(find.byKey(const Key('item-photo-add')));
       await tester.pumpAndSettle();
@@ -733,7 +733,7 @@ void main() {
 
     testWidgets('in English', (tester) async {
       await strip(tester, limit: 1, count: 1, lang: 'en');
-      expect(find.text('Several photos per item with Mara Pro.'), findsOneWidget);
+      expect(find.text('Several photos per item with Marakaj Pro.'), findsOneWidget);
       expect(find.text('Item photos'), findsOneWidget);
     });
 

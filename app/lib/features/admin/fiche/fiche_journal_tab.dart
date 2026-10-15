@@ -48,7 +48,7 @@ class _FicheJournalTabState extends State<FicheJournalTab> {
                 ButtonSegment(
                     value: 'mara',
                     icon: const Icon(Icons.admin_panel_settings_outlined),
-                    label: Text(context.tr('Actions de Mara'))),
+                    label: Text(context.tr('Actions de Marakaj'))),
                 ButtonSegment(
                     value: 'org',
                     icon: const Icon(Icons.history),

@@ -141,7 +141,7 @@ export async function appleSpotLookup(env, transactionId, io, verify = {}) {
   }
   const got = await appleGet(env, `/inApps/v1/transactions/${transactionId}`, io);
   const tx = await verifyAppleJws(got.body.signedTransactionInfo, verify);
-  if (tx.bundleId !== appleBundle(env)) throw new StoreError("Cet achat n'est pas pour Mara.", 422, "bundle");
+  if (tx.bundleId !== appleBundle(env)) throw new StoreError("Cet achat n'est pas pour Marakaj.", 422, "bundle");
   if (!Object.hasOwn(APPLE_SPOT_PRODUCTS, tx.productId)) {
     throw new StoreError("Cet achat n'est pas une mise en avant.", 422, "product");
   }
@@ -179,9 +179,9 @@ const SETTLE_REFUSED = {
   "another spot": ["Cet achat a déjà programmé une autre mise en avant.", 409, "replayed"],
   "no spot": ["Cette mise en avant n'existe plus.", 404, "no_spot"],
   product: ["Cet achat n'est pas cette mise en avant.", 422, "product"],
-  sandbox: ["Achat de test refusé : un achat fait avec un compte de test ne programme une mise en avant que pour les comptes de test de Mara.", 403, "sandbox"],
+  sandbox: ["Achat de test refusé : un achat fait avec un compte de test ne programme une mise en avant que pour les comptes de test de Marakaj.", 403, "sandbox"],
   refunded: ["Cet achat a été remboursé : la mise en avant n'est pas programmée.", 409, "revoked"],
-  refused: ["Cette mise en avant a été refusée par Mara : le paiement sera remboursé.", 409, "refused"],
+  refused: ["Cette mise en avant a été refusée par Marakaj : le paiement sera remboursé.", 409, "refused"],
   wrong_org: ["Cet achat a été fait pour une autre entreprise.", 409, "wrong_org"],
   vitrine: ["La vitrine est fermée : la mise en avant ne peut pas être programmée, le paiement sera remboursé.", 409, "ineligible"],
   feature: ["La mise en avant n'est pas disponible pour cette activité : le paiement sera remboursé.", 409, "ineligible"],
@@ -238,13 +238,13 @@ export async function spotVerify(body, userToken, env, io) {
 
   let s;
   if (platform === "apple") {
-    if (!appleConfigured(env)) throw new StoreError("L'App Store n'est pas encore relié à Mara.", 503, "config");
+    if (!appleConfigured(env)) throw new StoreError("L'App Store n'est pas encore relié à Marakaj.", 503, "config");
     s = await appleSpotLookup(env, body?.transaction_id, io, io.verify);
     if (body?.product_id && body.product_id !== s.productId) {
       throw new StoreError("Cet achat n'est pas celui annoncé.", 422, "product");
     }
   } else {
-    if (!googleConfigured(env)) throw new StoreError("Google Play n'est pas encore relié à Mara.", 503, "config");
+    if (!googleConfigured(env)) throw new StoreError("Google Play n'est pas encore relié à Marakaj.", 503, "config");
     s = await googleSpotLookup(env, String(body?.product_id || ""), body?.token, io);
   }
   if (s.state === "pending") {
@@ -303,7 +303,7 @@ export async function stripeSpotCheckout(body, userToken, env, io) {
   const what = begun.kind === "shop" ? "La vitrine à la une" : "Un article à la une";
   const session = await createPaymentCheckout(env, {
     reference: begun.promotion_id,
-    name: ["Mara", `${what}, ${begun.days || 7} jours`, begun.label || null,
+    name: ["Marakaj", `${what}, ${begun.days || 7} jours`, begun.label || null,
       priceLabel(begun.price, begun.price_currency), begun.org_name].filter(Boolean).join(" · "),
     amount: begun.amount,
     currency: begun.currency,

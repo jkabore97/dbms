@@ -536,7 +536,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   @override
   Widget build(BuildContext context) {
     return ShopPage(
-      title: context.tr('Mara — les vitrines'),
+      title: context.tr('Marakaj — les vitrines'),
       brand: const MaraWordmark(key: Key('mara-header'), height: 34),
       announcements: ShopPage.street,
       trailing: _AccountCorner(session: widget.session),
@@ -709,7 +709,7 @@ class _AccountCorner extends StatelessWidget {
                     ),
                     onPressed: () => context.push(Routes.createBusiness),
                     icon: const Icon(Icons.add, size: 18),
-                    label: Text(context.tr('Vendre sur Mara')),
+                    label: Text(context.tr('Vendre sur Marakaj')),
                   ),
                 // The shopper's bell (115): their orders and vitrines.
                 const ShopperBell(),

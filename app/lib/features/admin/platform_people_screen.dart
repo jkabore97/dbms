@@ -190,7 +190,7 @@ class _PlatformPeopleScreenState extends State<PlatformPeopleScreen> {
         subtitle: Text(subtitle),
         trailing: person.isPlatformAdmin
             ? Chip(
-                label: Text(context.tr('Mara')),
+                label: Text(context.tr('Marakaj')),
                 visualDensity: VisualDensity.compact,
                 backgroundColor: theme.colorScheme.primaryContainer,
               )
@@ -347,10 +347,10 @@ class _PersonSheetState extends State<PersonSheet> {
       builder: (ctx) => AlertDialog(
         scrollable: true,
         title: Text(on
-            ? context.tr('Faire de {label} un formateur Mara ?', {'label': label})
+            ? context.tr('Faire de {label} un formateur Marakaj ?', {'label': label})
             : context.tr('{label} n\'est plus formateur ?', {'label': label})),
         content: Text(on
-            ? context.tr('Cette personne recevra les demandes d\'aide des entreprises Mara Pro, dans l\'app et sur WhatsApp, au numéro de son profil.')
+            ? context.tr('Cette personne recevra les demandes d\'aide des entreprises Marakaj Pro, dans l\'app et sur WhatsApp, au numéro de son profil.')
             : _offWords(context, _trainer)),
         actions: [
           TextButton(
@@ -385,10 +385,10 @@ class _PersonSheetState extends State<PersonSheet> {
           value: t.isTrainer,
           onChanged: _busy ? null : _toggleTrainer,
           secondary: const Icon(Icons.support_agent_outlined),
-          title: Text(context.tr('Formateur Mara')),
+          title: Text(context.tr('Formateur Marakaj')),
           subtitle: Text(t.isTrainer
-              ? context.tr('Reçoit les demandes d\'aide des entreprises Mara Pro.')
-              : context.tr('Aide les entreprises Mara Pro qui le demandent.')),
+              ? context.tr('Reçoit les demandes d\'aide des entreprises Marakaj Pro.')
+              : context.tr('Aide les entreprises Marakaj Pro qui le demandent.')),
         ),
         if (t.isTrainer && (phone == null || phone.trim().isEmpty))
           Container(
@@ -619,7 +619,7 @@ class _PersonSheetState extends State<PersonSheet> {
                 ),
                 if (_isPlatformAdmin)
                   Chip(
-                    label: Text(context.tr('Mara')),
+                    label: Text(context.tr('Marakaj')),
                     backgroundColor: theme.colorScheme.primaryContainer,
                   ),
               ],
@@ -671,7 +671,7 @@ class _PersonSheetState extends State<PersonSheet> {
                 contentPadding: EdgeInsets.zero,
                 value: _isPlatformAdmin,
                 onChanged: _busy ? null : (_) => _togglePlatform(),
-                title: Text(context.tr('Accès plateforme (Mara)')),
+                title: Text(context.tr('Accès plateforme (Marakaj)')),
                 subtitle: Text(
                     context.tr('Voir et gérer toutes les entreprises de la plateforme.')),
               ),

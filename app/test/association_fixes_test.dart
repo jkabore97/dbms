@@ -206,7 +206,7 @@ void main() {
       expect(states.progress.locks('invoices'), isFalse);
     });
 
-    testWidgets('the lock on an association says Mara Pro and opens it',
+    testWidgets('the lock on an association says Marakaj Pro and opens it',
         (tester) async {
       var opened = false;
       await tester.pumpWidget(_host(
@@ -223,11 +223,11 @@ void main() {
       ));
       await tester.pump();
       expect(find.text('2e entreprise'), findsOneWidget);
-      expect(find.text('Se débloque : Mara Pro'), findsOneWidget);
+      expect(find.text('Se débloque : Marakaj Pro'), findsOneWidget);
       expect(find.byKey(const Key('path-need')), findsNothing);
       await tester.tap(find.byKey(const Key('path-go')));
       expect(opened, isTrue);
-      expect(find.text('Voir Mara Pro'), findsOneWidget);
+      expect(find.text('Voir Marakaj Pro'), findsOneWidget);
     });
   });
 
@@ -291,7 +291,7 @@ void main() {
       expect(target(_row('org_application', '', org: null)), '/demandes');
       expect(target(_row('spot_paid', '', org: null)), '/console/a-la-une');
       // What the platform typed has nothing behind it.
-      expect(target(_row('platform_message', 'Mara : bonjour')), isNull);
+      expect(target(_row('platform_message', 'Marakaj : bonjour')), isNull);
       expect(target(_row('something_new', '')), '/o/a1');
     });
 
@@ -314,7 +314,7 @@ void main() {
                       'wave': false,
                       'fee': null,
                     }),
-                _row('platform_message', 'Mara : bonne semaine'),
+                _row('platform_message', 'Marakaj : bonne semaine'),
               ]),
             ),
           ),
@@ -333,7 +333,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.textContaining('New request from Awa: 2'), findsOneWidget);
       // The platform's own words, as typed.
-      expect(find.text('Mara : bonne semaine'), findsOneWidget);
+      expect(find.text('Marakaj : bonne semaine'), findsOneWidget);
       expect(
           tester
               .widget<ListTile>(find.byKey(const Key('notification-n-platform_message')))
@@ -392,7 +392,7 @@ void main() {
         _row('unlock', '', params: {'step': 'credits', 'orders': 3}):
             'Credit book unlocked: 3 orders completed.',
         _row('pro_active', '', params: {'until': '2026-11-07', 'card': true}):
-            'Mara Pro is active, paid by card, until 07/11/2026.',
+            'Marakaj Pro is active, paid by card, until 07/11/2026.',
         _row('cauris_board', '', params: {
           'league': 'retail|Ouagadougou|petites',
           'top': [

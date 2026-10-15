@@ -16,8 +16,8 @@ void main() {
   test('the manifest names the app and wears its colours', () {
     final manifest = jsonDecode(File('$web/manifest.json').readAsStringSync())
         as Map<String, dynamic>;
-    expect(manifest['short_name'], 'Mara');
-    expect(manifest['name'], startsWith('Mara'));
+    expect(manifest['short_name'], 'Marakaj');
+    expect(manifest['name'], startsWith('Marakaj'));
     expect(manifest['description'], isNot(contains('Flutter')));
     expect(manifest['lang'], 'fr');
     // The paper, not Flutter's blue.
@@ -30,7 +30,7 @@ void main() {
   test('the page carries the title, the description and the share card', () {
     final html = File('$web/index.html').readAsStringSync();
     expect(html, contains('<html lang="fr">'));
-    expect(html, contains('<title>Mara — Au Service du Peuple</title>'));
+    expect(html, contains('<title>Marakaj — Au Service du Peuple</title>'));
     expect(html, isNot(contains('kaj_app')));
     expect(html, isNot(contains('A new Flutter project')));
     expect(html, contains('property="og:title"'));

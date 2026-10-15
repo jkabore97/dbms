@@ -409,7 +409,7 @@ async function gotrueDelete(env, userId, wanted) {
   if (!res.ok && res.status !== 404) {
     console.error("gotrue delete self", res.status, await res.text());
     if (res.status >= 500) {
-      return { ok: false, response: problem(409, "La suppression n'a pas pu se faire — écrivez à Mara.") };
+      return { ok: false, response: problem(409, "La suppression n'a pas pu se faire — écrivez à Marakaj.") };
     }
     return { ok: false, response: problem(502, "La suppression du compte a échoué.") };
   }
@@ -431,7 +431,7 @@ async function deleteMeBefore128(env, token, me) {
   if (!res.ok && res.status !== 404) {
     console.error("gotrue delete self", res.status, await res.text());
     if (res.status >= 500) {
-      return problem(409, "La suppression n'a pas pu se faire — écrivez à Mara.");
+      return problem(409, "La suppression n'a pas pu se faire — écrivez à Marakaj.");
     }
     return problem(502, "La suppression du compte a échoué.");
   }

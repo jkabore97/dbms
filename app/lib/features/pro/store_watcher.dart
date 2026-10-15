@@ -43,13 +43,13 @@ String storeRefusalText(BuildContext context, StoreVerifyRefused e, String store
       'wrong_org' => context.tr('Cet achat a été fait pour une autre entreprise.'),
       'no_org' => context.tr('Cet achat ne dit pas pour quelle entreprise il a été fait.'),
       'replayed' => context.tr('Cet abonnement est déjà celui d\'une autre entreprise.'),
-      'product' || 'base_plan' => context.tr('Cet achat n\'est pas Mara Pro.'),
-      'bundle' => context.tr('Cet achat n\'est pas pour Mara.'),
-      'transaction' || 'token' || 'platform' || 'org' => context.tr('Cet achat n\'a pas pu être lu par Mara.'),
-      'sandbox' => context.tr('Achat de test refusé : un achat fait avec un compte de test (sandbox, TestFlight) n\'active Mara Pro que pour les comptes de test de Mara.'),
-      'not_admin' => context.tr('Seul un administrateur de l\'entreprise peut l\'abonner à Mara Pro.'),
+      'product' || 'base_plan' => context.tr('Cet achat n\'est pas Marakaj Pro.'),
+      'bundle' => context.tr('Cet achat n\'est pas pour Marakaj.'),
+      'transaction' || 'token' || 'platform' || 'org' => context.tr('Cet achat n\'a pas pu être lu par Marakaj.'),
+      'sandbox' => context.tr('Achat de test refusé : un achat fait avec un compte de test (sandbox, TestFlight) n\'active Marakaj Pro que pour les comptes de test de Marakaj.'),
+      'not_admin' => context.tr('Seul un administrateur de l\'entreprise peut l\'abonner à Marakaj Pro.'),
       'session' => context.tr('Votre session a expiré : reconnectez-vous, puis touchez « Restaurer mes achats ». Rien ne sera prélevé deux fois.'),
-      _ => context.tr('Le paiement est fait, mais Mara n\'a pas encore pu le vérifier. Gardez une connexion et touchez « Restaurer mes achats » : rien ne sera prélevé deux fois.'),
+      _ => context.tr('Le paiement est fait, mais Marakaj n\'a pas encore pu le vérifier. Gardez une connexion et touchez « Restaurer mes achats » : rien ne sera prélevé deux fois.'),
     };
 
 /// Where a spot's store purchase stands (142).
@@ -83,18 +83,18 @@ const spotRefusalsForGood = {
 String spotRefusalText(BuildContext context, StoreVerifyRefused e, String store) => switch (e.code) {
       'wrong_spot' || 'replayed' => context.tr('Cet achat a déjà servi à une autre mise en avant.'),
       'wrong_org' => context.tr('Cet achat a été fait pour une autre entreprise.'),
-      'no_spot' => context.tr('Cette mise en avant n\'existe plus : Mara rembourse le paiement.'),
+      'no_spot' => context.tr('Cette mise en avant n\'existe plus : Marakaj rembourse le paiement.'),
       'product' || 'bundle' => context.tr('Cet achat n\'est pas cette mise en avant.'),
-      'transaction' || 'token' || 'platform' || 'spot' => context.tr('Cet achat n\'a pas pu être lu par Mara.'),
-      'sandbox' => context.tr('Achat de test refusé : un achat fait avec un compte de test ne programme une mise en avant que pour les comptes de test de Mara.'),
+      'transaction' || 'token' || 'platform' || 'spot' => context.tr('Cet achat n\'a pas pu être lu par Marakaj.'),
+      'sandbox' => context.tr('Achat de test refusé : un achat fait avec un compte de test ne programme une mise en avant que pour les comptes de test de Marakaj.'),
       'cancelled' => context.tr('Achat annulé : rien n\'a été prélevé.'),
       'revoked' => context.tr('Cet achat a été remboursé : la mise en avant n\'est pas programmée.'),
-      'refused' => context.tr('Cette mise en avant a été refusée par Mara : le paiement sera remboursé.'),
+      'refused' => context.tr('Cette mise en avant a été refusée par Marakaj : le paiement sera remboursé.'),
       'ineligible' => context.tr('Cette mise en avant ne peut plus être programmée (vitrine fermée, ou article sans photo, prix ou stock) : le paiement sera remboursé.'),
       'pending' => context.tr('Achat en attente : {store} doit encore le confirmer. La mise en avant sera programmée dès qu\'il sera confirmé.', {'store': store}),
       'not_admin' => context.tr('Seul un administrateur de l\'entreprise peut la mettre en avant.'),
       'session' => context.tr('Votre session a expiré : reconnectez-vous, puis touchez « Vérifier un achat déjà payé ». Rien ne sera prélevé deux fois.'),
-      _ => context.tr('Le paiement est fait, mais Mara n\'a pas encore pu le vérifier. Gardez une connexion et touchez « Vérifier un achat déjà payé » : rien ne sera prélevé deux fois.'),
+      _ => context.tr('Le paiement est fait, mais Marakaj n\'a pas encore pu le vérifier. Gardez une connexion et touchez « Vérifier un achat déjà payé » : rien ne sera prélevé deux fois.'),
     };
 
 /// A spot's purchase the store itself refused, in the reader's language
@@ -236,7 +236,7 @@ class StoreWatcher {
       }
       switch (p.status) {
         case StorePurchaseStatus.pending:
-          _say(StoreNotice((context) => context.tr('Achat en attente : {store} doit encore le confirmer (accord parental, paiement en cours). Mara Pro s\'activera dès qu\'il sera confirmé.', {'store': _store}), orgId: p.orgId));
+          _say(StoreNotice((context) => context.tr('Achat en attente : {store} doit encore le confirmer (accord parental, paiement en cours). Marakaj Pro s\'activera dès qu\'il sera confirmé.', {'store': _store}), orgId: p.orgId));
         case StorePurchaseStatus.canceled:
           await _complete(p);
           _say(StoreNotice((context) => context.tr('Achat annulé : rien n\'a été prélevé.'), orgId: p.orgId));
@@ -315,7 +315,7 @@ class StoreWatcher {
       _saySpot(SpotNotice(id, e.code == 'pending' ? SpotNoticeState.pending : SpotNoticeState.refused,
           (context) => spotRefusalText(context, e, _store)));
     } catch (_) {
-      _saySpot(SpotNotice(id, SpotNoticeState.refused, (context) => context.tr('Le paiement est fait, mais Mara n\'a pas encore pu le vérifier. Gardez une connexion et touchez « Vérifier un achat déjà payé » : rien ne sera prélevé deux fois.')));
+      _saySpot(SpotNotice(id, SpotNoticeState.refused, (context) => context.tr('Le paiement est fait, mais Marakaj n\'a pas encore pu le vérifier. Gardez une connexion et touchez « Vérifier un achat déjà payé » : rien ne sera prélevé deux fois.')));
     }
   }
 
@@ -328,14 +328,14 @@ class StoreWatcher {
       final settled = verdict.orgId?.toLowerCase() ?? org;
       if (verdict.pro) {
         onPro?.call();
-        _say(StoreNotice((context) => context.tr('Merci ! Mara Pro est actif.'), good: true, orgId: settled));
+        _say(StoreNotice((context) => context.tr('Merci ! Marakaj Pro est actif.'), good: true, orgId: settled));
       } else {
         _say(StoreNotice(orgId: settled, (context) => switch (verdict.state) {
-              'expired' => context.tr('Cet abonnement est terminé : il ne donne plus Mara Pro.'),
-              'revoked' => context.tr('Cet abonnement a été remboursé : il ne donne plus Mara Pro.'),
+              'expired' => context.tr('Cet abonnement est terminé : il ne donne plus Marakaj Pro.'),
+              'revoked' => context.tr('Cet abonnement a été remboursé : il ne donne plus Marakaj Pro.'),
               'on_hold' || 'paused' => context.tr('Le paiement de cet abonnement est en attente chez {store} : mettez à jour votre moyen de paiement dans {store}.', {'store': _store}),
-              'pending' => context.tr('Achat en attente : {store} doit encore le confirmer (accord parental, paiement en cours). Mara Pro s\'activera dès qu\'il sera confirmé.', {'store': _store}),
-              _ => context.tr('Cet achat ne donne pas Mara Pro à cette entreprise.'),
+              'pending' => context.tr('Achat en attente : {store} doit encore le confirmer (accord parental, paiement en cours). Marakaj Pro s\'activera dès qu\'il sera confirmé.', {'store': _store}),
+              _ => context.tr('Cet achat ne donne pas Marakaj Pro à cette entreprise.'),
             }));
       }
     } on StoreVerifyRefused catch (e) {
@@ -354,7 +354,7 @@ class StoreWatcher {
     } catch (_) {
       // The Worker was not reached: the purchase stays open, the store
       // hands it back.
-      _say(StoreNotice((context) => context.tr('Le paiement est fait, mais Mara n\'a pas encore pu le vérifier. Gardez une connexion et touchez « Restaurer mes achats » : rien ne sera prélevé deux fois.'), orgId: org));
+      _say(StoreNotice((context) => context.tr('Le paiement est fait, mais Marakaj n\'a pas encore pu le vérifier. Gardez une connexion et touchez « Restaurer mes achats » : rien ne sera prélevé deux fois.'), orgId: org));
     }
   }
 }
@@ -396,7 +396,7 @@ String storeErrorText(BuildContext context, String? code, String? message, Strin
   }
   final why = storeErrorCode(code, message);
   final line = all.contains('itemAlreadyOwned') || all.contains('alreadyOwned')
-      ? context.tr('Ce compte {store} paie déjà Mara Pro, sans doute pour une autre de vos entreprises : un abonnement couvre une seule entreprise.', {'store': store})
+      ? context.tr('Ce compte {store} paie déjà Marakaj Pro, sans doute pour une autre de vos entreprises : un abonnement couvre une seule entreprise.', {'store': store})
       : context.tr('L\'achat n\'a pas pu se faire : {store} n\'a rien prélevé. Réessayez dans un moment.', {'store': store});
   return why == null ? line : '$line\n${context.tr('({store} : {code})', {'store': store, 'code': why})}';
 }

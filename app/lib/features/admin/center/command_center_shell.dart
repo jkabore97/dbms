@@ -660,7 +660,7 @@ class _MoneyCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              context.tr('Revenus de Mara · ce mois'),
+              context.tr('Revenus de Marakaj · ce mois'),
               style: theme.textTheme.labelLarge?.copyWith(color: soft),
             ),
             const SizedBox(height: 2),

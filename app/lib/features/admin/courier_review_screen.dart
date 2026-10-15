@@ -337,7 +337,7 @@ class _StatusLine extends StatelessWidget {
     final (text, color) = d.isSuspended
         ? (context.tr('Suspendu'), maraBrown)
         : d.isApprovedCourier
-            ? (context.tr('Approuvé : livreur Mara'), maraGreen)
+            ? (context.tr('Approuvé : livreur Marakaj'), maraGreen)
             : switch (d.status) {
                 'pending' => (context.tr('À valider'), maraCaramel),
                 'refused' => (

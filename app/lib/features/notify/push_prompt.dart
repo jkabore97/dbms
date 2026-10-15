@@ -209,8 +209,8 @@ class _PushPromptDialogState extends State<_PushPromptDialog> {
         icon: const Icon(Icons.notifications_off_outlined),
         title: Text(context.tr('Notifications bloquées')),
         content: Text(settings
-            ? context.tr('Les notifications de Mara sont bloquées sur ce téléphone. Ouvrez les réglages, touchez « Notifications » et autorisez-les : vous recevrez vos commandes, livraisons et messages même l\'application fermée.')
-            : context.tr('Ce navigateur bloque les notifications de Mara. Touchez le cadenas à gauche de l\'adresse, puis autorisez les notifications pour ce site, et rechargez la page.')),
+            ? context.tr('Les notifications de Marakaj sont bloquées sur ce téléphone. Ouvrez les réglages, touchez « Notifications » et autorisez-les : vous recevrez vos commandes, livraisons et messages même l\'application fermée.')
+            : context.tr('Ce navigateur bloque les notifications de Marakaj. Touchez le cadenas à gauche de l\'adresse, puis autorisez les notifications pour ce site, et rechargez la page.')),
         actions: [
           later,
           if (settings)

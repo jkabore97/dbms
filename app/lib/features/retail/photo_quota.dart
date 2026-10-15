@@ -270,7 +270,7 @@ class _PhotoSlotSheetState extends State<PhotoSlotSheet> {
                   Navigator.of(context).pop(false);
                   context.push(Routes.inside(widget.org.id, 'kaj-pro'));
                 },
-                child: Text(context.tr('Ou passer à Mara Pro : photos sans limite')),
+                child: Text(context.tr('Ou passer à Marakaj Pro : photos sans limite')),
               ),
           ],
         ),

@@ -204,10 +204,10 @@ class _Content {
               ? 'Retrouvez-nous ici'
               : 'Commandez ici'),
       pill: context.tr(services
-          ? 'Réservez sur Mara'
+          ? 'Réservez sur Marakaj'
           : association
-              ? 'Retrouvez-nous sur Mara'
-              : 'Commandez sur Mara'),
+              ? 'Retrouvez-nous sur Marakaj'
+              : 'Commandez sur Marakaj'),
       ribbon: context.tr(services
           ? 'Sur rendez-vous'
           : farm

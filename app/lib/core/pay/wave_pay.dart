@@ -194,7 +194,7 @@ class WavePay {
     String? transactionId,
     String? token,
   }) async {
-    if (!compiledIn) throw StateError('Pas de connexion au serveur de Mara.');
+    if (!compiledIn) throw StateError('Pas de connexion au serveur de Marakaj.');
     final session = _client?.auth.currentSession?.accessToken;
     if (session == null) {
       throw const StoreVerifyRefused('Connectez-vous pour vous abonner.', 'session', status: 401);
@@ -216,7 +216,7 @@ class WavePay {
         }),
       );
     } catch (_) {
-      throw StateError('Pas de connexion au serveur de Mara.');
+      throw StateError('Pas de connexion au serveur de Marakaj.');
     }
     Map<String, dynamic> body;
     try {
@@ -257,7 +257,7 @@ class WavePay {
     String? transactionId,
     String? token,
   }) async {
-    if (!compiledIn) throw StateError('Pas de connexion au serveur de Mara.');
+    if (!compiledIn) throw StateError('Pas de connexion au serveur de Marakaj.');
     final session = _client?.auth.currentSession?.accessToken;
     if (session == null) {
       throw const StoreVerifyRefused('Connectez-vous pour payer.', 'session', status: 401);
@@ -279,7 +279,7 @@ class WavePay {
         }),
       );
     } catch (_) {
-      throw StateError('Pas de connexion au serveur de Mara.');
+      throw StateError('Pas de connexion au serveur de Marakaj.');
     }
     Map<String, dynamic> body;
     try {

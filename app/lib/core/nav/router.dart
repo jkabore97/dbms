@@ -2152,7 +2152,7 @@ class FeatureUnavailableScreen extends StatelessWidget {
                       ?.copyWith(fontWeight: FontWeight.w800)),
               const SizedBox(height: 8),
               Text(
-                  context.tr('Cette fonction n\'est pas proposée pour {name}. Pour en parler, contactez Mara.',
+                  context.tr('Cette fonction n\'est pas proposée pour {name}. Pour en parler, contactez Marakaj.',
                       {'name': org.name}),
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyLarge),

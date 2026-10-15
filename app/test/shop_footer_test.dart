@@ -10,7 +10,7 @@ void main() {
       home: Scaffold(body: SingleChildScrollView(child: ShopFooter())),
     ));
     expect(find.textContaining('POWERED BY KAJ'), findsOneWidget);
-    expect(find.textContaining('Mara', findRichText: true), findsWidgets);
+    expect(find.textContaining('Marakaj', findRichText: true), findsWidgets);
     final kaj = (tester.widget<Text>(find.byKey(const Key('powered-by')))
             .textSpan! as TextSpan)
         .children!

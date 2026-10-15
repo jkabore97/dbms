@@ -323,7 +323,7 @@ void main() {
               expect(texts.any((t) => t.contains('marakaj.com/s/${c.shop.slug}')), isTrue,
                   reason: '$what: the link');
               expect(find.byType(QrImageView), findsOneWidget, reason: '$what: the QR code');
-              expect(find.byType(MaraWordmark), findsOneWidget, reason: '$what: Mara\'s mark');
+              expect(find.byType(MaraWordmark), findsOneWidget, reason: '$what: Marakaj\'s mark');
               expect(texts.where((t) => t.contains('XOF')), isEmpty, reason: '$what: « FCFA XOF »');
               if (c.items.isNotEmpty) {
                 expect(texts.any((t) => t.contains('FCFA')), isTrue, reason: '$what: a price');
@@ -355,7 +355,7 @@ void main() {
       expect(t, contains('Réservez ici'));
       expect(t.any((s) => s.startsWith('à partir de') && s.endsWith('/ mois')), isTrue);
       t = await words(_association, StatusDesign.vedette, const Locale('en'));
-      expect(t, contains('Book on Mara'));
+      expect(t, contains('Book on Marakaj'));
 
       t = await words(_shop4, StatusDesign.vitrine);
       expect(t, contains('BOUTIQUE'));
@@ -364,7 +364,7 @@ void main() {
       expect(t.any((s) => s.contains('NEW IN')), isTrue);
       expect(t, contains('Order here'));
       t = await words(_shop4, StatusDesign.vedette);
-      expect(t, contains('Commandez sur Mara'));
+      expect(t, contains('Commandez sur Marakaj'));
       expect(t, contains('Margherita'), reason: 'the star: the first photographed article');
 
       // Initials from the words that carry the name: « Fer à béton » is FB.

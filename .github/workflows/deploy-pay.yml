@@ -144,5 +144,5 @@ jobs:
             echo "4. In the console: switch Wave checkout on; for cards, Kaj Pro, « Paiement par carte (Stripe) »."
             echo "5. App Store Connect › the app › App Information › App Store Server Notifications: Production and Sandbox URL \`<kaj-pay origin>/store/apple-notify\`, Version 2."
             echo "6. Google Cloud: a Pub/Sub topic, Play Console › Monetization setup › Real-time developer notifications set to it, and a push subscription to \`<kaj-pay origin>/store/google-notify?secret=<GOOGLE_NOTIFY_SECRET>\`."
-            echo "7. Once both stores answer: Réglages › Mara Pro › « Abonnement dans les applications (App Store, Google Play) »."
+            echo "7. Once both stores answer: Réglages › Marakaj Pro › « Abonnement dans les applications (App Store, Google Play) »."
           } >> "$GITHUB_STEP_SUMMARY"

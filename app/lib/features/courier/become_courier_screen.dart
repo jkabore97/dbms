@@ -429,7 +429,7 @@ class _BecomeCourierScreenState extends State<BecomeCourierScreen> {
           key: const Key('courier-pending'),
           icon: Icons.hourglass_top_outlined,
           title: context.tr('En cours d\'examen'),
-          lines: [context.tr('Mara vérifie votre demande. Vous serez prévenu ici et par une notification.')],
+          lines: [context.tr('Marakaj vérifie votre demande. Vous serez prévenu ici et par une notification.')],
           timeline: d.timeline,
           now: context.tr('En cours d\'examen'),
         );
@@ -462,7 +462,7 @@ class _BecomeCourierScreenState extends State<BecomeCourierScreen> {
       icon: Icons.delivery_dining_outlined,
       title: context.tr('Livrez pour les boutiques du quartier'),
       lines: [
-        context.tr('Vous choisissez vos quartiers et vos heures. Mara valide chaque livreur avant sa première course.'),
+        context.tr('Vous choisissez vos quartiers et vos heures. Marakaj valide chaque livreur avant sa première course.'),
         context.tr('Préparez votre pièce d\'identité et votre téléphone : cinq minutes suffisent.'),
         if (d.courierStatus == 'pending')
           context.tr('Votre inscription est à l\'étude. Un dossier complet aide la plateforme à la valider.'),
@@ -755,7 +755,7 @@ class _BecomeCourierScreenState extends State<BecomeCourierScreen> {
                 onGallery: () => _take(part, gallery: true),
               ),
             ),
-          hint(context.tr('Ces photos restent privées : seule l\'équipe Mara les voit. Après un refus, elles ne sont plus jamais montrées au bout de 30 jours, et sont effacées la fois suivante où la liste des livreurs est ouverte.')),
+          hint(context.tr('Ces photos restent privées : seule l\'équipe Marakaj les voit. Après un refus, elles ne sont plus jamais montrées au bout de 30 jours, et sont effacées la fois suivante où la liste des livreurs est ouverte.')),
         ];
       case 'phone':
         final proved = d.verifiedPhone;
@@ -785,7 +785,7 @@ class _BecomeCourierScreenState extends State<BecomeCourierScreen> {
               onChanged: (_) => setState(() {}),
             ),
             if (d.rules.phoneVerified)
-              hint(context.tr('Mara demande un numéro vérifié : recevez le code sur WhatsApp.'))
+              hint(context.tr('Marakaj demande un numéro vérifié : recevez le code sur WhatsApp.'))
             else
               hint(context.tr('Un numéro vérifié rassure la plateforme.')),
           ],
@@ -869,7 +869,7 @@ class _BecomeCourierScreenState extends State<BecomeCourierScreen> {
             );
         return [
           title(context.tr('Tout est prêt ?')),
-          hint(context.tr('Relisez, puis envoyez : Mara examine chaque demande.')),
+          hint(context.tr('Relisez, puis envoyez : Marakaj examine chaque demande.')),
           gap,
           row('zone', '${d.city ?? ''} · ${d.zones.join(', ')}'),
           row('hours', courierHoursLine(context, d)),

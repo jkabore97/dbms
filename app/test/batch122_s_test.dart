@@ -106,7 +106,7 @@ void main() {
           home: SettingsSection(key: const ValueKey('n'), center: center, card: 'notifications')));
       await tester.pumpAndSettle();
       expect(find.text('APPLICATIONS MOBILES'), findsOneWidget);
-      expect(find.text('Mara est publiée sur Google Play (sinon : le fichier APK)'), findsOneWidget);
+      expect(find.text('Marakaj est publiée sur Google Play (sinon : le fichier APK)'), findsOneWidget);
       await tester.pumpWidget(MaterialApp(
           home: SettingsSection(key: const ValueKey('l'), center: center, card: 'livraison')));
       await tester.pumpAndSettle();
@@ -140,7 +140,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('setting-app_store_url')));
       await tester.pumpAndSettle();
-      for (final text in ['http://apps.apple.com/app/id1', 'Mara']) {
+      for (final text in ['http://apps.apple.com/app/id1', 'Marakaj']) {
         await tester.enterText(find.byKey(const Key('setting-field')), text);
         await tester.tap(find.byKey(const Key('setting-save')));
         await tester.pumpAndSettle();
@@ -182,7 +182,7 @@ void main() {
       final b = _Browser(AppPhone.android);
       await _street(tester, b);
       expect(find.byKey(const Key('app-download')), findsOneWidget);
-      expect(find.text('Mara sur votre téléphone'), findsOneWidget);
+      expect(find.text('Marakaj sur votre téléphone'), findsOneWidget);
       expect(find.text('Télécharger pour Android'), findsOneWidget);
       expect(b.shownAt, _now);
       await tester.tap(find.byKey(const Key('app-download-later')));
@@ -202,10 +202,10 @@ void main() {
       expect(find.text('Ouvrir l\'App Store'), findsOneWidget);
     });
 
-    testWidgets('iPhone with none: how to add Mara to the home screen, no dead button',
+    testWidgets('iPhone with none: how to add Marakaj to the home screen, no dead button',
         (tester) async {
       await _street(tester, _Browser(AppPhone.ios));
-      expect(find.text('Mara sur votre écran d\'accueil'), findsOneWidget);
+      expect(find.text('Marakaj sur votre écran d\'accueil'), findsOneWidget);
       expect(find.textContaining('dans Safari, touchez Partager'), findsOneWidget);
       expect(find.byKey(const Key('app-download-go')), findsNothing);
       expect(find.byKey(const Key('app-download-later')), findsOneWidget);

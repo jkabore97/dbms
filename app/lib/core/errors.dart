@@ -66,14 +66,15 @@ String? pathLockText(String language, String message) {
   };
 }
 
-/// The app is Mara; the database and the Worker still say « Kaj » in the
-/// sentences they send (« Kaj Pro : la livraison… », « Kaj Pro est actif »),
-/// written before the name changed. Whatever reaches a screen from them
-/// goes through here, so the person reads one name. « Kaj Consulting »,
-/// who runs Mara, keeps its own.
-String brandText(String text) => text.replaceAllMapped(
+/// The app is Marakaj; the database and the Worker still say « Kaj » in
+/// the sentences they send (« Kaj Pro : la livraison… », « Kaj Pro est
+/// actif »), written before the name changed, and a database before 147
+/// still says « Mara ». Whatever reaches a screen from them goes through
+/// here, so the person reads one name. « Kaj Consulting », who runs
+/// Marakaj, keeps its own.
+String brandText(String text) => oldNameText(text).replaceAllMapped(
     RegExp(r'\bKaj\b(?![\s-]+[Cc]onsulting)(?![-_/\w])(?!\.\w)'),
-    (_) => 'Mara');
+    (_) => 'Marakaj');
 
 String _describe(Object error) {
   if (error is AuthException) return _auth(error);
@@ -126,7 +127,7 @@ bool isSchemaOutOfDate(Object error) =>
 /// the tool or the cap is Mara Pro's (066). Every such refusal starts with
 /// "Kaj Pro :" in the database (read « Mara Pro : » here) on purpose, so a screen can open the door to pay instead of
 /// showing a wall.
-bool isProRefusal(Object error) => describeError(error).startsWith('Mara Pro');
+bool isProRefusal(Object error) => describeError(error).startsWith('Marakaj Pro');
 
 /// The SQLSTATE feature_guard (104) raises when Mara's switchboard hid the
 /// tool for this business: « Cette fonction n'est pas disponible pour

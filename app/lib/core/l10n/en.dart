@@ -28,8 +28,8 @@ const enStrings = <String, String>{
       'Home',
   'Accès de l\'équipe':
       'Team access',
-  'Accès plateforme (Mara)':
-      'Platform access (Mara)',
+  'Accès plateforme (Marakaj)':
+      'Platform access (Marakaj)',
   'Actif':
       'Active',
   'Active':
@@ -240,8 +240,8 @@ const enStrings = <String, String>{
       'Database needs updating',
   'Bientôt disponible':
       'Coming soon',
-  'Bienvenue sur Mara':
-      'Welcome to Mara',
+  'Bienvenue sur Marakaj':
+      'Welcome to Marakaj',
   'Bilan':
       'Balance sheet',
   'Bénéfice':
@@ -272,8 +272,8 @@ const enStrings = <String, String>{
       'What each level sees and can change. Owners and administrators always keep everything. Prices, credit and production are also refused by the server — not just hidden.',
   'Ce que c’est, en vos mots.':
       'What it is, in your own words.',
-  'Ce que la fenêtre Mara Pro dit aux propriétaires : où payer et combien. Sans numéro, elle dit de contacter Mara.':
-      'What the Mara Pro window tells owners: where to pay and how much. Without a number, it says to contact Mara.',
+  'Ce que la fenêtre Marakaj Pro dit aux propriétaires : où payer et combien. Sans numéro, elle dit de contacter Marakaj.':
+      'What the Marakaj Pro window tells owners: where to pay and how much. Without a number, it says to contact Marakaj.',
   'Ce que le téléphone a lu':
       'What the phone read',
   'Ce que vous vendez':
@@ -324,8 +324,8 @@ const enStrings = <String, String>{
       'Change the password',
   'Chaque lundi, les 3 premiers de chaque ligue gagnent des cauris, le badge « Top 3 » sur leur vitrine pour la semaine, et le premier est mis en avant 7 jours.':
       'Every Monday, the top 3 of each league win cauris, the “Top 3” badge on their vitrine for the week, and the winner is featured for 7 days.',
-  'Chaque membre a un code sur son téléphone. Fixez le délai maximal après lequel Mara le redemande : personne de l\'équipe ne pourra choisir plus long, ni « Jamais ».':
-      'Each member has a code on their phone. Set the longest wait before Mara asks for it again: nobody on the team can choose longer, nor “Never”.',
+  'Chaque membre a un code sur son téléphone. Fixez le délai maximal après lequel Marakaj le redemande : personne de l\'équipe ne pourra choisir plus long, ni « Jamais ».':
+      'Each member has a code on their phone. Set the longest wait before Marakaj asks for it again: nobody on the team can choose longer, nor “Never”.',
   'Chargement de vos entreprises…':
       'Loading your businesses…',
   'Chargement…':
@@ -400,8 +400,8 @@ const enStrings = <String, String>{
       'Order',
   'Commandes':
       'Orders',
-  'Commandes, Mara Pro et mises en avant. À ouvrir une fois la clé Wave installée et un essai réussi.':
-      'Orders, Mara Pro and featured spots. To open once the Wave key is installed and a test has worked.',
+  'Commandes, Marakaj Pro et mises en avant. À ouvrir une fois la clé Wave installée et un essai réussi.':
+      'Orders, Marakaj Pro and featured spots. To open once the Wave key is installed and a test has worked.',
   'Comment gagner des cauris':
       'How to earn cauris',
   'Commerce':
@@ -726,8 +726,8 @@ const enStrings = <String, String>{
       'Details — {label}',
   'Ingrédient de production':
       'Production ingredient',
-  'Inscrit et validé comme livreur Mara':
-      'Registered and approved as a Mara courier',
+  'Inscrit et validé comme livreur Marakaj':
+      'Registered and approved as a Marakaj courier',
   'Invisibles pour leurs membres, complètes, restaurables. La suppression définitive n’est possible qu’ici.':
       'Invisible to their members, complete, restorable. Permanent deletion is only possible here.',
   'Inviter':
@@ -776,8 +776,8 @@ const enStrings = <String, String>{
       'The batch leaves the home screen and keeps all its history. Nothing is deleted.',
   'La bande n\'a pas pu être clôturée.':
       'The batch could not be closed.',
-  'La boutique confirme dans Mara quand elle a reçu l\'argent ; la ligne disparaît alors d\'ici.':
-      'The shop confirms in Mara when it has received the money; the line then disappears from here.',
+  'La boutique confirme dans Marakaj quand elle a reçu l\'argent ; la ligne disparaît alors d\'ici.':
+      'The shop confirms in Marakaj when it has received the money; the line then disappears from here.',
   'La caméra n\'est pas disponible : {error}':
       'The camera is not available: {error}',
   'La caméra n\'est pas disponible : {name}':
@@ -792,10 +792,10 @@ const enStrings = <String, String>{
       'The console runs in reduced mode: search and filters are applied on this device. Apply migration 021 for server-side search.',
   'La liste des outils Pro et les plafonds gratuits ({staff}, {freeMaxInvoicesMonth} factures par mois, {freePhotoItems} articles en photo, {freeMaxPhotos} autres photos) se changent dans platform_settings.':
       'The list of Pro tools and the free caps ({staff}, {freeMaxInvoicesMonth} invoices a month, {freePhotoItems} items with a photo, {freeMaxPhotos} other photos) are changed in platform_settings.',
-  'La livraison fait partie de Mara Pro':
-      'Delivery is part of Mara Pro',
-  'La part de Mara':
-      'Mara\'s share',
+  'La livraison fait partie de Marakaj Pro':
+      'Delivery is part of Marakaj Pro',
+  'La part de Marakaj':
+      'Marakaj\'s share',
   'La photo paraît sur la vitrine et dans la recherche.':
       'The photo appears on the vitrine and in search.',
   'La réinitialisation du mot de passe et la suppression nécessitent le service de comptes (non configuré).':
@@ -810,16 +810,16 @@ const enStrings = <String, String>{
       'The ranking 4 times a week',
   'Le classement n\'est pas encore ouvert.':
       'The ranking is not open yet.',
-  'Le client paie le livreur à la porte ; la part de Mara sur chaque livraison est due par le livreur à la fin du mois, par Wave. Ce que chaque livreur doit, ce mois-ci :':
-      'The customer pays the courier at the door; Mara\'s share of each delivery is owed by the courier at the end of the month, by Wave. What each courier owes this month:',
+  'Le client paie le livreur à la porte ; la part de Marakaj sur chaque livraison est due par le livreur à la fin du mois, par Wave. Ce que chaque livreur doit, ce mois-ci :':
+      'The customer pays the courier at the door; Marakaj\'s share of each delivery is owed by the courier at the end of the month, by Wave. What each courier owes this month:',
   'Le code de votre parrain':
       'Your sponsor\'s code',
   'Le code reste toujours possible.':
       'The code always works.',
   'Le compte bouge, l\'argent non : il est parti à la livraison.':
       'The count moves, the money does not: it left with the delivery.',
-  'Le compte de la plateforme demandera, à chaque connexion, un code à 6 chiffres de Google Authenticator ou Microsoft Authenticator. Mara vous montre tout de suite comment l\'ajouter. Les comptes des boutiques ne changent pas : mot de passe, puis le code de l\'appareil.':
-      'The platform account will ask, at every sign-in, for a 6-digit code from Google Authenticator or Microsoft Authenticator. Mara shows you right away how to add it. Shop accounts do not change: password, then the device code.',
+  'Le compte de la plateforme demandera, à chaque connexion, un code à 6 chiffres de Google Authenticator ou Microsoft Authenticator. Marakaj vous montre tout de suite comment l\'ajouter. Les comptes des boutiques ne changent pas : mot de passe, puis le code de l\'appareil.':
+      'The platform account will ask, at every sign-in, for a 6-digit code from Google Authenticator or Microsoft Authenticator. Marakaj shows you right away how to add it. Shop accounts do not change: password, then the device code.',
   'Le compte sera supprimé définitivement et la personne sera déconnectée. Cette action est irréversible.':
       'The account will be deleted for good and the person signed out. This cannot be undone.',
   'Le compte sera supprimé et la personne déconnectée. À sa prochaine connexion, elle arrivera sur la page d\'accueil pour rejoindre une entreprise avec un code ou en demander une.\n\nL\'historique de ce qu\'elle a enregistré reste dans les comptes.':
@@ -876,8 +876,8 @@ const enStrings = <String, String>{
       'The figures above only count this business\'s lines. No data from another business is visible here, at any level of privilege.',
   'Les plus gros gains de la semaine':
       'The week\'s biggest earners',
-  'Les propriétaires s\'abonnent par carte, au prix ci-dessus, renouvelé chaque mois ou chaque année. À ouvrir une fois les clés Stripe installées (README, « Mara Pro by card »). Un nouveau prix vaut pour les nouveaux abonnements.':
-      'Owners subscribe by card, at the price above, renewed every month or every year. To open once the Stripe keys are installed (README, “Mara Pro by card”). A new price applies to new subscriptions.',
+  'Les propriétaires s\'abonnent par carte, au prix ci-dessus, renouvelé chaque mois ou chaque année. À ouvrir une fois les clés Stripe installées (README, « Marakaj Pro by card »). Un nouveau prix vaut pour les nouveaux abonnements.':
+      'Owners subscribe by card, at the price above, renewed every month or every year. To open once the Stripe keys are installed (README, “Marakaj Pro by card”). A new price applies to new subscriptions.',
   'Les ventes déjà faites gardent l\'ancien nom.':
       'Sales already made keep the old name.',
   'Les vitrines':
@@ -922,8 +922,8 @@ const enStrings = <String, String>{
       'Monday, Wednesday, Friday, Sunday at 7 pm',
   'Lun–Sam 8h–19h':
       'Mon–Sat 8am–7pm',
-  'MARA PRO':
-      'MARA PRO',
+  'MARAKAJ PRO':
+      'MARAKAJ PRO',
   'MEMBRES':
       'MEMBERS',
   'MONTANT':
@@ -934,16 +934,16 @@ const enStrings = <String, String>{
       'My position',
   'Ma vitrine':
       'My vitrine',
-  'Mara':
-      'Mara',
-  'Mara Pro':
-      'Mara Pro',
-  'Mara Pro sans date de fin ?':
-      'Mara Pro with no end date?',
-  'Mara Pro se règle à la main pour l\'instant : quand le paiement est arrivé sur Wave, passez l\'entreprise en Pro jusqu\'à la date payée. Passée cette date elle redevient gratuite, sans rien perdre.':
-      'Mara Pro is settled by hand for now: when the payment has arrived on Wave, switch the business to Pro until the date paid. After that date it goes back to free, losing nothing.',
-  'Mara — les vitrines':
-      'Mara — the vitrines',
+  'Marakaj':
+      'Marakaj',
+  'Marakaj Pro':
+      'Marakaj Pro',
+  'Marakaj Pro sans date de fin ?':
+      'Marakaj Pro with no end date?',
+  'Marakaj Pro se règle à la main pour l\'instant : quand le paiement est arrivé sur Wave, passez l\'entreprise en Pro jusqu\'à la date payée. Passée cette date elle redevient gratuite, sans rien perdre.':
+      'Marakaj Pro is settled by hand for now: when the payment has arrived on Wave, switch the business to Pro until the date paid. After that date it goes back to free, losing nothing.',
+  'Marakaj — les vitrines':
+      'Marakaj — the vitrines',
   'Marchandise vendue avant sa date':
       'Goods sold before their date',
   'Masquer':
@@ -1116,8 +1116,8 @@ const enStrings = <String, String>{
       'Number',
   'Numéro Wave':
       'Wave number',
-  'Numéro Wave / Orange Money de Mara':
-      'Mara\'s Wave / Orange Money number',
+  'Numéro Wave / Orange Money de Marakaj':
+      'Marakaj\'s Wave / Orange Money number',
   'Numéro copié':
       'Number copied',
   'Numéro de série (facultatif)':
@@ -1138,10 +1138,10 @@ const enStrings = <String, String>{
       'Were you referred?',
   'Ou faites-lui scanner ce code s’il est à côté de vous.':
       'Or have them scan this code if they are next to you.',
-  'Ou gagnez Mara Pro':
-      'Or earn Mara Pro',
-  'Ou passer à Mara Pro':
-      'Or switch to Mara Pro',
+  'Ou gagnez Marakaj Pro':
+      'Or earn Marakaj Pro',
+  'Ou passer à Marakaj Pro':
+      'Or switch to Marakaj Pro',
   'Ou tapez cette clé dans l’application :':
       'Or type this key in the app:',
   'Ou à la main :':
@@ -1180,8 +1180,8 @@ const enStrings = <String, String>{
       'Payment',
   'Paiement Wave':
       'Wave payment',
-  'Paiement Wave dans Mara':
-      'Wave payment in Mara',
+  'Paiement Wave dans Marakaj':
+      'Wave payment in Marakaj',
   'Paiement Wave reçu':
       'Wave payment received',
   'Paiement par carte bancaire.':
@@ -1222,8 +1222,8 @@ const enStrings = <String, String>{
       'No network: sale kept on the phone. It will go as soon as the connection is back.',
   'Pas encore prêt':
       'Not ready yet',
-  'Passer à Mara Pro':
-      'Switch to Mara Pro',
+  'Passer à Marakaj Pro':
+      'Switch to Marakaj Pro',
   'Passif':
       'Liabilities',
   'Payer':
@@ -1306,16 +1306,16 @@ const enStrings = <String, String>{
       '2 kg free-range chickens, fed on maize.',
   'Pour ceux qui liront ce plan dans deux ans':
       'For whoever reads this plan in two years',
-  'Pour payer, écrivez à Mara : {email}. Le numéro de paiement vous sera donné directement.':
-      'To pay, write to Mara: {email}. The payment number will be given to you directly.',
-  'Demandez le numéro de paiement à Mara sur WhatsApp : le message est déjà écrit.':
-      'Ask Mara for the payment number on WhatsApp: the message is already written.',
+  'Pour payer, écrivez à Marakaj : {email}. Le numéro de paiement vous sera donné directement.':
+      'To pay, write to Marakaj: {email}. The payment number will be given to you directly.',
+  'Demandez le numéro de paiement à Marakaj sur WhatsApp : le message est déjà écrit.':
+      'Ask Marakaj for the payment number on WhatsApp: the message is already written.',
   'Demander le numéro sur WhatsApp':
       'Ask for the number on WhatsApp',
-  'Bonjour Mara, je veux payer une mise en avant : {label} · {days} jours · {amount}{org}. Quel numéro pour payer ?':
-      'Hello Mara, I want to pay for a promotion: {label} · {days} days · {amount}{org}. Which number should I pay?',
-  'Pour payer, contactez Mara : le numéro de paiement vous sera donné directement.':
-      'To pay, contact Mara: the payment number will be given to you directly.',
+  'Bonjour Marakaj, je veux payer une mise en avant : {label} · {days} jours · {amount}{org}. Quel numéro pour payer ?':
+      'Hello Marakaj, I want to pay for a promotion: {label} · {days} days · {amount}{org}. Which number should I pay?',
+  'Pour payer, contactez Marakaj : le numéro de paiement vous sera donné directement.':
+      'To pay, contact Marakaj: the payment number will be given to you directly.',
   'Pour que les clients vous trouvent dans l\'annuaire, « près de moi » et sur la carte. Facultatif.':
       'So customers find you in the directory, “near me” and on the map. Optional.',
   'Pour un téléphone, une radio, un panneau…':
@@ -1376,8 +1376,8 @@ const enStrings = <String, String>{
       'Qty',
   'Qualité':
       'Quality',
-  'Quand un client paie sa commande par Wave ou par carte dans Mara, l\'argent est envoyé sur ce numéro Wave quelques instants après. Un numéro Wave ordinaire suffit.':
-      'When a customer pays their order by Wave or by card in Mara, the money is sent to this Wave number a few moments later. An ordinary Wave number is enough.',
+  'Quand un client paie sa commande par Wave ou par carte dans Marakaj, l\'argent est envoyé sur ce numéro Wave quelques instants après. Un numéro Wave ordinaire suffit.':
+      'When a customer pays their order by Wave or by card in Marakaj, the money is sent to this Wave number a few moments later. An ordinary Wave number is enough.',
   'Quand ça se vend':
       'When it sells',
   'Quantité':
@@ -1516,10 +1516,10 @@ const enStrings = <String, String>{
       'Try again',
   'Réinitialiser le mot de passe':
       'Reset the password',
-  'Réservé à Mara : après avoir vu le récépissé et les responsables.':
-      'For Mara only: after seeing the registration receipt and the officers.',
-  'Réservé à Mara Pro':
-      'Mara Pro only',
+  'Réservé à Marakaj : après avoir vu le récépissé et les responsables.':
+      'For Marakaj only: after seeing the registration receipt and the officers.',
+  'Réservé à Marakaj Pro':
+      'Marakaj Pro only',
   'Résumé de la semaine':
       'Week\'s summary',
   'Rôle':
@@ -1564,8 +1564,8 @@ const enStrings = <String, String>{
       'Threshold ({unit})',
   'Seuil d\'alerte stock bas (facultatif)':
       'Low stock alert threshold (optional)',
-  'Seul le propriétaire peut passer à Mara Pro.':
-      'Only the owner can switch to Mara Pro.',
+  'Seul le propriétaire peut passer à Marakaj Pro.':
+      'Only the owner can switch to Marakaj Pro.',
   'Seulement si la page de paiement Wave accepte les cartes pour votre compte.':
       'Only if the Wave payment page accepts cards for your account.',
   'Silencieuse':
@@ -1664,8 +1664,8 @@ const enStrings = <String, String>{
       'Already featured',
   'Déjà en avant jusqu\'au {date}':
       'Already featured until {date}',
-  'Paiement signalé : Mara le vérifie':
-      'Payment reported: Mara is checking it',
+  'Paiement signalé : Marakaj le vérifie':
+      'Payment reported: Marakaj is checking it',
   'Déjà demandée, en attente du paiement':
       'Already requested, waiting for payment',
   'Une seule mise en avant à la fois pour la même place. Vous pourrez la prolonger quand elle se termine.':
@@ -1724,8 +1724,8 @@ const enStrings = <String, String>{
       'A report is a figure at a moment. Better no figure at all than last week\'s shown as today\'s.',
   'Un téléphone perdu ou volé':
       'A lost or stolen phone',
-  'Une fois le paiement envoyé, dites-le ici : Mara le vérifie et la mise en avant commence.':
-      'Once the payment is sent, say so here: Mara checks it and the featured spot starts.',
+  'Une fois le paiement envoyé, dites-le ici : Marakaj le vérifie et la mise en avant commence.':
+      'Once the payment is sent, say so here: Marakaj checks it and the featured spot starts.',
   'Une photo sans nom reste une preuve. La classer la rend trouvable.':
       'A photo without a name is still proof. Filing it makes it findable.',
   'Utiliser':
@@ -1776,8 +1776,8 @@ const enStrings = <String, String>{
       'View',
   'Voir (lecture seule)':
       'View (read only)',
-  'Voir Mara Pro':
-      'See Mara Pro',
+  'Voir Marakaj Pro':
+      'See Marakaj Pro',
   'Voir et gérer toutes les entreprises de la plateforme.':
       'See and manage every business on the platform.',
   'Voir la carte':
@@ -1796,10 +1796,10 @@ const enStrings = <String, String>{
       'See my vitrine',
   'Vos clients vous voient sur la carte.':
       'Your customers see you on the map.',
-  'Vos commandes prêtes leur sont proposées en premier, seuls, pendant 10 minutes ; ensuite à tous les livreurs Mara.':
-      'Your ready orders are offered to them first, alone, for 10 minutes; then to every Mara courier.',
-  'Vos commandes, vos clients fidèles et votre vitrine rapportent des cauris. Avec {cost} cauris, tout Mara Pro est à vous pour 30 jours — ou débloquez un seul outil pour moins.':
-      'Your orders, your loyal customers and your vitrine earn cauris. With {cost} cauris, all of Mara Pro is yours for 30 days — or unlock a single tool for less.',
+  'Vos commandes prêtes leur sont proposées en premier, seuls, pendant 10 minutes ; ensuite à tous les livreurs Marakaj.':
+      'Your ready orders are offered to them first, alone, for 10 minutes; then to every Marakaj courier.',
+  'Vos commandes, vos clients fidèles et votre vitrine rapportent des cauris. Avec {cost} cauris, tout Marakaj Pro est à vous pour 30 jours — ou débloquez un seul outil pour moins.':
+      'Your orders, your loyal customers and your vitrine earn cauris. With {cost} cauris, all of Marakaj Pro is yours for 30 days — or unlock a single tool for less.',
   'Votre accès porte sur les totaux. Le détail des opérations ne vous est pas communiqué.':
       'Your access covers the totals. The detail of operations is not shared with you.',
   'Votre accès porte sur les totaux. Le détail par compte ne vous est pas communiqué.':
@@ -1820,8 +1820,8 @@ const enStrings = <String, String>{
       'Your manager sent it to you by WhatsApp or SMS.',
   'Votre vitrine':
       'Your vitrine',
-  'Votre vitrine propose le retrait en boutique. Passez à Mara Pro pour livrer vos clients, avec le prix calculé selon la distance.':
-      'Your vitrine offers pickup at the shop. Switch to Mara Pro to deliver to your customers, with the price worked out by distance.',
+  'Votre vitrine propose le retrait en boutique. Passez à Marakaj Pro pour livrer vos clients, avec le prix calculé selon la distance.':
+      'Your vitrine offers pickup at the shop. Switch to Marakaj Pro to deliver to your customers, with the price worked out by distance.',
   'Vous dirigez une entreprise ?':
       'Do you run a business?',
   'Vous en avez ':
@@ -1838,8 +1838,8 @@ const enStrings = <String, String>{
       'Check again',
   'Vérifiez le paiement Wave, puis validez : la période commence aussitôt, ou dès qu\'une place se libère.':
       'Check the Wave payment, then approve: the period starts at once, or as soon as a spot frees up.',
-  'Vérifiée par Mara':
-      'Verified by Mara',
+  'Vérifiée par Marakaj':
+      'Verified by Marakaj',
   'Wave':
       'Wave',
   'Wave (plateforme)':
@@ -1850,8 +1850,8 @@ const enStrings = <String, String>{
       'WhatsApp',
   'XXXX-XXXX':
       'XXXX-XXXX',
-  'après {minDays} jours sur Mara':
-      'after {minDays} days on Mara',
+  'après {minDays} jours sur Marakaj':
+      'after {minDays} days on Marakaj',
   'au plus {dailyCap} par jour':
       'at most {dailyCap} a day',
   'clôturée':
@@ -1954,8 +1954,8 @@ const enStrings = <String, String>{
       'to settle',
   'Œufs frais, poulets de chair…':
       'Fresh eggs, broilers…',
-  'Œufs, volailles, récoltes : ce que vous mettez ici, avec sa photo et son prix, est sur votre vitrine. Les clients commandent et viennent le chercher à la ferme ; la livraison vient avec Mara Pro.':
-      'Eggs, poultry, harvests: what you put here, with its photo and price, is on your vitrine. Customers order and collect it at the farm; delivery comes with Mara Pro.',
+  'Œufs, volailles, récoltes : ce que vous mettez ici, avec sa photo et son prix, est sur votre vitrine. Les clients commandent et viennent le chercher à la ferme ; la livraison vient avec Marakaj Pro.':
+      'Eggs, poultry, harvests: what you put here, with its photo and price, is on your vitrine. Customers order and collect it at the farm; delivery comes with Marakaj Pro.',
   '— fin —':
       '— end —',
   'Ajoutez au moins un article.':
@@ -2074,8 +2074,8 @@ const enStrings = <String, String>{
       'Accept',
   'Débloquer':
       'Unlock',
-  'Avec Mara Pro':
-      'With Mara Pro',
+  'Avec Marakaj Pro':
+      'With Marakaj Pro',
   'Ouvert':
       'Open',
   'Verrouillé':
@@ -2108,8 +2108,8 @@ const enStrings = <String, String>{
       'Expenses backed by receipts',
   'Peu de corrections':
       'Few corrections',
-  'Six mois sur Mara':
-      'Six months on Mara',
+  'Six mois sur Marakaj':
+      'Six months on Marakaj',
   ' (coût {costPrice})':
       ' (cost {costPrice})',
   ' · archivée':
@@ -2158,8 +2158,8 @@ const enStrings = <String, String>{
       'Yearly · {_monthsOffered} months free',
   'Appui long sur une ligne pour la corriger.':
       'Long-press a line to correct it.',
-  'Après ce délai hors de l\'application, Mara redemande le code de l\'appareil.':
-      'After this time away from the app, Mara asks for the device code again.',
+  'Après ce délai hors de l\'application, Marakaj redemande le code de l\'appareil.':
+      'After this time away from the app, Marakaj asks for the device code again.',
   'Aucun article pour le moment. Le premier est créé tout seul, à la première réception.':
       'No items yet. The first is created by itself, at the first delivery.',
   'Aucun autre appareil n\'était connecté.':
@@ -2194,8 +2194,8 @@ const enStrings = <String, String>{
       'This account manages every business. To open it, you will now need your password and a 6-digit code given by an app on your phone.',
   'Cette course n\'est pas la vôtre.':
       'This trip is not yours.',
-  'Cette entreprise est sur Mara Pro. Tous les outils ci-dessous sont ouverts.':
-      'This business is on Mara Pro. All the tools below are open.',
+  'Cette entreprise est sur Marakaj Pro. Tous les outils ci-dessous sont ouverts.':
+      'This business is on Marakaj Pro. All the tools below are open.',
   'Cette entreprise est suspendue : ses membres peuvent consulter mais rien enregistrer. Réactivez-la pour rétablir les opérations.':
       'This business is suspended: its members can look but record nothing. Reactivate it to restore operations.',
   'Cette semaine':
@@ -2256,10 +2256,10 @@ const enStrings = <String, String>{
       'Save the sale',
   'Enregistrez vos animaux et vos parcelles.':
       'Record your animals and your plots.',
-  'Entreprise passée sur Mara Pro.':
-      'Business switched to Mara Pro.',
-  'Entreprise repassée sur Mara (gratuit).':
-      'Business back on Mara (free).',
+  'Entreprise passée sur Marakaj Pro.':
+      'Business switched to Marakaj Pro.',
+  'Entreprise repassée sur Marakaj (gratuit).':
+      'Business back on Marakaj (free).',
   'Faites grandir {name}':
       'Grow {name}',
   'Fermée':
@@ -2304,26 +2304,26 @@ const enStrings = <String, String>{
       'Delivered',
   'Loin de la zone de la monnaie':
       'Far from the currency\'s zone',
-  'Mara (gratuit)':
-      'Mara (free)',
-  'Mara Pro complet':
-      'Full Mara Pro',
-  'Mara Pro complet : tous les outils, sans limite':
-      'Full Mara Pro: every tool, without limit',
-  'Mara reste gratuit pour le quotidien : le stock, les ventes, le carnet de crédit, la vitrine et {freeMaxStaff} personne(s) en plus du propriétaire, une fois la mise en route faite. Mara Pro ajoute ce dont une entreprise qui grandit a besoin :':
-      'Mara stays free for everyday work: stock, sales, the credit book, the vitrine and {freeMaxStaff} person(s) besides the owner, once the first setup is done. Mara Pro adds what a growing business needs:',
-  'Mara reste gratuit pour le quotidien. Mara Pro ajoute la livraison, le paiement en ligne et les outils d\'une entreprise qui grandit.':
-      'Mara stays free for everyday work. Mara Pro adds delivery, online payment and the tools of a growing business.',
-  'Mara vérifie le paiement et lance la mise en avant. Vous serez prévenu dans la cloche.':
-      'Mara checks the payment and starts the featured spot. You will be told in the bell.',
+  'Marakaj (gratuit)':
+      'Marakaj (free)',
+  'Marakaj Pro complet':
+      'Full Marakaj Pro',
+  'Marakaj Pro complet : tous les outils, sans limite':
+      'Full Marakaj Pro: every tool, without limit',
+  'Marakaj reste gratuit pour le quotidien : le stock, les ventes, le carnet de crédit, la vitrine et {freeMaxStaff} personne(s) en plus du propriétaire, une fois la mise en route faite. Marakaj Pro ajoute ce dont une entreprise qui grandit a besoin :':
+      'Marakaj stays free for everyday work: stock, sales, the credit book, the vitrine and {freeMaxStaff} person(s) besides the owner, once the first setup is done. Marakaj Pro adds what a growing business needs:',
+  'Marakaj reste gratuit pour le quotidien. Marakaj Pro ajoute la livraison, le paiement en ligne et les outils d\'une entreprise qui grandit.':
+      'Marakaj stays free for everyday work. Marakaj Pro adds delivery, online payment and the tools of a growing business.',
+  'Marakaj vérifie le paiement et lance la mise en avant. Vous serez prévenu dans la cloche.':
+      'Marakaj checks the payment and starts the featured spot. You will be told in the bell.',
   'Masquer les bandes clôturées':
       'Hide closed batches',
   'Masquer les comptes retirés':
       'Hide removed accounts',
-  'Merci ! Mara Pro est actif.':
-      'Thank you! Mara Pro is active.',
-  'Merci ! Paiement reçu — Mara Pro s\'active dans quelques secondes.':
-      'Thank you! Payment received — Mara Pro switches on in a few seconds.',
+  'Merci ! Marakaj Pro est actif.':
+      'Thank you! Marakaj Pro is active.',
+  'Merci ! Paiement reçu — Marakaj Pro s\'active dans quelques secondes.':
+      'Thank you! Payment received — Marakaj Pro switches on in a few seconds.',
   'Merci ! {name} est votre parrain.':
       'Thank you! {name} is your sponsor.',
   'Mettre à jour la clôture':
@@ -2340,8 +2340,8 @@ const enStrings = <String, String>{
       'New invoice',
   'Ouverte':
       'Open',
-  'Ouvrez votre application d\'authentification et entrez le code à 6 chiffres affiché pour Mara.':
-      'Open your authenticator app and enter the 6-digit code shown for Mara.',
+  'Ouvrez votre application d\'authentification et entrez le code à 6 chiffres affiché pour Marakaj.':
+      'Open your authenticator app and enter the 6-digit code shown for Marakaj.',
   'Paie, analyses, comptabilité, équipe sans limite…':
       'Payroll, analytics, accounting, unlimited team…',
   'Paiement annulé : rien n\'a été prélevé.':
@@ -2449,8 +2449,8 @@ const enStrings = <String, String>{
       'Everything is sent',
   'Tout est payé.':
       'Everything is paid.',
-  'Téléphone perdu ? Dans le tableau de bord Supabase : Authentication › Users › ce compte › supprimez son facteur. Mara proposera alors d\'en ajouter un nouveau.':
-      'Lost phone? In the Supabase dashboard: Authentication › Users › this account › delete its factor. Mara will then offer to add a new one.',
+  'Téléphone perdu ? Dans le tableau de bord Supabase : Authentication › Users › ce compte › supprimez son facteur. Marakaj proposera alors d\'en ajouter un nouveau.':
+      'Lost phone? In the Supabase dashboard: Authentication › Users › this account › delete its factor. Marakaj will then offer to add a new one.',
   'Un administrateur Kaj-consulting examine la demande. Une fois validée, vous en serez le propriétaire.':
       'A Kaj-consulting administrator reviews the request. Once approved, you will be its owner.',
   'Une bande ou une récolte à venir : les clients commandent à l\'avance.':
@@ -2483,8 +2483,8 @@ const enStrings = <String, String>{
       'You will be its owner. A starting chart of accounts is created automatically.',
   'Vous ne pouvez pas modifier ce compte.':
       'You cannot change this account.',
-  'Vous êtes sur Mara Pro':
-      'You are on Mara Pro',
+  'Vous êtes sur Marakaj Pro':
+      'You are on Marakaj Pro',
   'Vérification…':
       'Checking…',
   'Wave configuré':
@@ -2559,8 +2559,8 @@ const enStrings = <String, String>{
       '{n} other currencies',
   '{n} autre monnaie':
       '{n} other currency',
-  'Une deuxième entreprise : avec Mara Pro.':
-      'A second business: with Mara Pro.',
+  'Une deuxième entreprise : avec Marakaj Pro.':
+      'A second business: with Marakaj Pro.',
   'Paiement en espèces uniquement pour le moment.':
       'Cash payment only for now.',
   'Ajoutez d\'abord un article.':
@@ -2588,7 +2588,7 @@ const enStrings = <String, String>{
   'Ouvre à': 'Opens at',
   'Ferme à': 'Closes at',
   'Choisissez au moins un jour.': 'Choose at least one day.',
-  'AVEC MARA PRO': 'WITH MARA PRO',
+  'AVEC MARAKAJ PRO': 'WITH MARAKAJ PRO',
   'La présentation, les articles à la une et « Ouvert maintenant ».':
       'The layout, featured articles and “Open now”.',
   'Présentation des articles': 'How articles are shown',
@@ -2619,10 +2619,10 @@ const enStrings = <String, String>{
   '« Gérer » vous en donne les clés : articles, photos, prix et « Habiller ma vitrine » s\'y modifient comme dans toute entreprise.':
       '“Manage” gives you the keys: articles, photos, prices and “Dress my vitrine” are edited as in any business.',
   'Pas à proximité': 'Not nearby',
-  'Cette boutique ne prend pas de commandes près de chez vous. C\'est une vitrine d\'exemple de Mara : regardez, inspirez-vous, et commandez dans les boutiques de votre quartier.':
-      'This shop takes no orders near you. It is a Mara example vitrine: look, get inspired, and order from the shops in your neighbourhood.',
-  'Pas à proximité : cette boutique ne prend pas de commandes près de chez vous. C\'est une vitrine d\'exemple de Mara.':
-      'Not nearby: this shop takes no orders near you. It is a Mara example vitrine.',
+  'Cette boutique ne prend pas de commandes près de chez vous. C\'est une vitrine d\'exemple de Marakaj : regardez, inspirez-vous, et commandez dans les boutiques de votre quartier.':
+      'This shop takes no orders near you. It is a Marakaj example vitrine: look, get inspired, and order from the shops in your neighbourhood.',
+  'Pas à proximité : cette boutique ne prend pas de commandes près de chez vous. C\'est une vitrine d\'exemple de Marakaj.':
+      'Not nearby: this shop takes no orders near you. It is a Marakaj example vitrine.',
   'Réservé à l\'administration de la plateforme': 'For the platform administration only',
   'Ce n\'est pas une vitrine d\'exemple': 'This is not an example vitrine',
   'Photo indisponible pour le moment.': 'Photo unavailable for now.',
@@ -2630,15 +2630,15 @@ const enStrings = <String, String>{
   'L\'application sur ce téléphone': 'The app on this phone',
   'Vos catégories et vos comptes': 'Your categories and accounts',
   'Votre stock et vos bandes': 'Your stock and your flocks',
-  'Prêt : Mara fonctionne sans connexion': 'Ready: Mara works without a connection',
+  'Prêt : Marakaj fonctionne sans connexion': 'Ready: Marakaj works without a connection',
   'Presque prêt': 'Almost ready',
-  'Utiliser Mara sans connexion ?': 'Use Mara without a connection?',
+  'Utiliser Marakaj sans connexion ?': 'Use Marakaj without a connection?',
   'Sans réseau, vos écritures restent sur ce téléphone et partent dès que la connexion revient.':
       'With no network, your entries stay on this phone and are sent as soon as the connection is back.',
   'Certaines parties n\'ont pas pu être téléchargées. Réessayez avec une meilleure connexion.':
       'Some parts could not be downloaded. Try again with a better connection.',
-  'Mara peut garder sur ce téléphone de quoi travailler sans réseau. Les clients de votre vitrine, eux, n\'en ont pas besoin.':
-      'Mara can keep what you need to work without a network on this phone. Your vitrine\'s customers do not need it.',
+  'Marakaj peut garder sur ce téléphone de quoi travailler sans réseau. Les clients de votre vitrine, eux, n\'en ont pas besoin.':
+      'Marakaj can keep what you need to work without a network on this phone. Your vitrine\'s customers do not need it.',
   '{done} fichiers sur {total}': '{done} of {total} files',
   'Oui': 'Yes',
   'Télécharger pour hors ligne': 'Download for offline use',
@@ -2678,7 +2678,7 @@ const enStrings = <String, String>{
   'Téléphone de la boutique': 'Shop phone',
   'Couverture, couleur, horaires · aperçu': 'Cover, colour, hours · preview',
   'Une place en tête de la rue': 'A spot at the top of the street',
-  'Verrouillé : vos clients ne le voient qu\'avec Mara Pro.': 'Locked: your customers only see it with Mara Pro.',
+  'Verrouillé : vos clients ne le voient qu\'avec Marakaj Pro.': 'Locked: your customers only see it with Marakaj Pro.',
   'Vos articles en liste ou en menu': 'Your articles as a list or a menu',
   'Six articles à la une, en tête': 'Six featured articles, at the top',
   '« Ouvert maintenant » et les épuisés cachés': '“Open now” and sold-out items hidden',
@@ -2719,7 +2719,7 @@ const enStrings = <String, String>{
   'Avec {n} produits, votre vitrine se montre à tout le monde.': 'With {n} products, your vitrine shows itself to everyone.',
   'Une entreprise vous nomme parrain. Quand elle décolle, +{referral} cauris de plus.': 'A business names you as its sponsor. When it takes off, +{referral} more cauris.',
   'Faites vos ventes à la caisse, sur l\'accueil.': 'Make your sales at the till, on the home screen.',
-  'Rejoignez Mara, les boutiques près de chez vous. Quand on vous demande qui vous a parrainé, donnez le code « {code} ».': 'Join Mara, the shops near you. When you are asked who referred you, give the code “{code}”.',
+  'Rejoignez Marakaj, les boutiques près de chez vous. Quand on vous demande qui vous a parrainé, donnez le code « {code} ».': 'Join Marakaj, the shops near you. When you are asked who referred you, give the code “{code}”.',
   'Pas encore de cauris. Votre premier article en vente en rapporte.': 'No cauris yet. Your first item for sale earns some.',
   'Étapes du chemin : {n} cauris chacune': 'Path steps: {n} cauris each',
   'Étapes du chemin : {min} à {max} cauris chacune': 'Path steps: {min} to {max} cauris each',
@@ -2766,7 +2766,7 @@ const enStrings = <String, String>{
   'Un client qui revient, c\'est un client content.': 'A customer who comes back is a happy customer.',
   'Sept jours de caisse, et vous voyez ce que vous gagnez.': 'Seven days of till, and you see what you earn.',
   'Sept jours de cahier, et vous voyez votre ferme grandir.': 'Seven days of log, and you see your farm grow.',
-  'Vos cauris ouvrent les outils de Mara Pro.': 'Your cauris open the Mara Pro tools.',
+  'Vos cauris ouvrent les outils de Marakaj Pro.': 'Your cauris open the Marakaj Pro tools.',
   'Les trois premiers de la semaine gagnent des cauris en plus.': 'The week\'s top three earn extra cauris.',
   'Commande terminée': 'Order completed',
   'Commande acceptée en moins de 15 min': 'Order accepted in under 15 min',
@@ -2780,7 +2780,7 @@ const enStrings = <String, String>{
   'Dépensés': 'Spent',
   'Étape du chemin': 'Path step',
   'Podium de la semaine': 'Week\'s podium',
-  'Leçon de l\'Académie Mara': 'Mara Academy lesson',
+  'Leçon de l\'Académie Marakaj': 'Marakaj Academy lesson',
   'Voir les articles et commander :': 'See the items and order:',
   'Partager {name}': 'Share {name}',
   'Mettre en statut WhatsApp': 'Post as a WhatsApp status',
@@ -2845,7 +2845,7 @@ const enStrings = <String, String>{
   'Un article porte déjà ce nom': 'An item already has this name',
   'Un service porte déjà ce nom': 'A service already has this name',
   'Cet article a du stock : il ne peut pas devenir un service': 'This item has stock: it cannot become a service',
-  'Les services ne sont pas encore disponibles : la base de données n\'est pas à jour (migration 098). Demandez à l\'administrateur de Mara de l\'appliquer.': 'Services are not available yet: the database is not up to date (migration 098). Ask the Mara administrator to apply it.',
+  'Les services ne sont pas encore disponibles : la base de données n\'est pas à jour (migration 098). Demandez à l\'administrateur de Marakaj de l\'appliquer.': 'Services are not available yet: the database is not up to date (migration 098). Ask the Marakaj administrator to apply it.',
   'Retirer ce service ?': 'Remove this service?',
   '« {name} » quitte la vitrine et la caisse. Les commandes et les ventes passées le gardent.': '“{name}” leaves the vitrine and the till. Past orders and sales keep it.',
   '{n} article': '{n} item',
@@ -2876,7 +2876,7 @@ const enStrings = <String, String>{
   'Votre réservation chez {shop} : {status}': 'Your booking at {shop}: {status}',
   'Votre commande chez {shop} : {status}': 'Your order at {shop}: {status}',
   'La livraison pour {name} a été annulée par la boutique': 'The delivery for {name} was cancelled by the shop',
-  'Vous êtes livreur Mara : les livraisons vous attendent.': 'You are a Mara courier: deliveries are waiting for you.',
+  'Vous êtes livreur Marakaj : les livraisons vous attendent.': 'You are a Marakaj courier: deliveries are waiting for you.',
   'Votre accès livreur est suspendu.': 'Your courier access is suspended.',
   'Votre inscription livreur est à l\'étude.': 'Your courier application is being reviewed.',
   'Un livreur prend la commande de {name}': 'A courier is taking {name}\'s order',
@@ -2898,8 +2898,8 @@ const enStrings = <String, String>{
   'Votre mise en avant est validée : elle commence le {date}.': 'Your promotion is approved: it starts on {date}.',
   'Votre demande de mise en avant n\'a pas été retenue.': 'Your promotion request was not accepted.',
   'Nouvelle connexion à votre compte sur {device}. Ce n\'était pas vous ? Ouvrez Compte › Sécurité et fermez les autres appareils.': 'New sign-in to your account on {device}. Not you? Open Account › Security and sign out of the other devices.',
-  'Mara Pro est actif, payé par carte, jusqu\'au {date}.': 'Mara Pro is active, paid by card, until {date}.',
-  'Mara Pro est actif jusqu\'au {date}.': 'Mara Pro is active until {date}.',
+  'Marakaj Pro est actif, payé par carte, jusqu\'au {date}.': 'Marakaj Pro is active, paid by card, until {date}.',
+  'Marakaj Pro est actif jusqu\'au {date}.': 'Marakaj Pro is active until {date}.',
   'une ferme': 'a farm',
   'une boutique': 'a shop',
   'Vous êtes 1er, bravo ! Gardez la tête.': 'You are 1st, well done! Stay ahead.',
@@ -2933,11 +2933,11 @@ const enStrings = <String, String>{
   'Payer un salaire, noter une journée, les personnes sans compte': 'Pay a salary, record a day, people without an account',
   'Équipe sans limite': 'Team without limit',
   'Débloquée avec vos cauris jusqu\'au {date}': 'Unlocked with your cauris until {date}',
-  'Avec Mara Pro, ajoutez autant de personnes que vous voulez.': 'With Mara Pro, add as many people as you like.',
+  'Avec Marakaj Pro, ajoutez autant de personnes que vous voulez.': 'With Marakaj Pro, add as many people as you like.',
   '1 personne offerte': '1 person free',
   'Elle s\'ouvre une fois la mise en route terminée.': 'It opens once the first setup is done.',
   'Votre personne offerte est là': 'Your free person is in',
-  'Pour ajouter quelqu\'un d\'autre : Mara Pro, ou l\'équipe débloquée avec des cauris.': 'To add someone else: Mara Pro, or the team unlocked with cauris.',
+  'Pour ajouter quelqu\'un d\'autre : Marakaj Pro, ou l\'équipe débloquée avec des cauris.': 'To add someone else: Marakaj Pro, or the team unlocked with cauris.',
   'Débloquer l\'équipe': 'Unlock the team',
   'Débloquer l\'équipe ({cost} cauris)': 'Unlock the team ({cost} cauris)',
   'Salaire : pas encore noté': 'Salary: not recorded yet',
@@ -2958,7 +2958,7 @@ const enStrings = <String, String>{
   'Cauris à utiliser avant une date': 'Cauris to spend before a date',
   'Dépensés en premier ; ce qui reste disparaît ce jour-là.': 'Spent first; what is left goes on that day.',
   'Ouvrir un outil jusqu\'à une date': 'Open a tool until a date',
-  'Offert par Mara : aucun cauri dépensé.': 'A gift from Mara: no cauris spent.',
+  'Offert par Marakaj : aucun cauri dépensé.': 'A gift from Marakaj: no cauris spent.',
   'Boutique': 'Shop',
   'Entreprise': 'Business',
   'dont {n} à utiliser avant le {date}': 'of which {n} to spend before {date}',
@@ -2976,20 +2976,20 @@ const enStrings = <String, String>{
   'Toutes vos places photo sont prises': 'All your photo places are taken',
   'Une place de plus, pour toujours : ': 'One more place, for good: ',
   'Le propriétaire ou un administrateur peut l\'acheter.': 'The owner or an admin can buy it.',
-  'Ou passer à Mara Pro : photos sans limite': 'Or go Mara Pro: photos without limit',
+  'Ou passer à Marakaj Pro : photos sans limite': 'Or go Marakaj Pro: photos without limit',
   'Mes cauris': 'My cauris',
   ' — il en manque {_missing}': ' — {_missing} short',
-  'Mara vous offre {n} cauris, à utiliser avant le {date}': 'Mara gives you {n} cauris, to spend before {date}',
-  'Mara vous offre {n} cauris': 'Mara gives you {n} cauris',
-  'Mara vous offre {tool} jusqu\'au {date}.': 'Mara gives you {tool} until {date}.',
+  'Marakaj vous offre {n} cauris, à utiliser avant le {date}': 'Marakaj gives you {n} cauris, to spend before {date}',
+  'Marakaj vous offre {n} cauris': 'Marakaj gives you {n} cauris',
+  'Marakaj vous offre {tool} jusqu\'au {date}.': 'Marakaj gives you {tool} until {date}.',
   'Offrir à une entreprise': 'Give to a business',
-  'Cadeau de Mara': 'A gift from Mara',
-  'Cauris offerts par Mara': 'Cauris given by Mara',
+  'Cadeau de Marakaj': 'A gift from Marakaj',
+  'Cauris offerts par Marakaj': 'Cauris given by Marakaj',
   'Articles en photo': 'Items with a photo',
   'Une place photo de plus, pour toujours': 'One more photo place, for good',
-  'Mara Pro : cette entreprise a déjà sa personne offerte en plus du propriétaire. Pour ajouter quelqu\'un : Mara Pro, ou l\'équipe débloquée avec des cauris.': 'Mara Pro: this business already has its free person besides the owner. To add someone: Mara Pro, or the team unlocked with cauris.',
-  'Mara Pro : la personne offerte s\'ouvre une fois la mise en route de l\'entreprise terminée. Avant : Mara Pro, ou l\'équipe débloquée avec des cauris.': 'Mara Pro: the free person opens once the business\'s first setup is done. Before that: Mara Pro, or the team unlocked with cauris.',
-  'Mara Pro : toutes vos places photo sont prises. Pour photographier un article de plus : Mara Pro, ou une place photo achetée avec des cauris.': 'Mara Pro: all your photo places are taken. To photograph one more item: Mara Pro, or a photo place bought with cauris.',
+  'Marakaj Pro : cette entreprise a déjà sa personne offerte en plus du propriétaire. Pour ajouter quelqu\'un : Marakaj Pro, ou l\'équipe débloquée avec des cauris.': 'Marakaj Pro: this business already has its free person besides the owner. To add someone: Marakaj Pro, or the team unlocked with cauris.',
+  'Marakaj Pro : la personne offerte s\'ouvre une fois la mise en route de l\'entreprise terminée. Avant : Marakaj Pro, ou l\'équipe débloquée avec des cauris.': 'Marakaj Pro: the free person opens once the business\'s first setup is done. Before that: Marakaj Pro, or the team unlocked with cauris.',
+  'Marakaj Pro : toutes vos places photo sont prises. Pour photographier un article de plus : Marakaj Pro, ou une place photo achetée avec des cauris.': 'Marakaj Pro: all your photo places are taken. To photograph one more item: Marakaj Pro, or a photo place bought with cauris.',
   'Seul un administrateur note le salaire de l\'équipe': 'Only an admin records the team\'s salaries',
   'Cette personne n\'est pas dans l\'équipe': 'This person is not in the team',
   'Le salaire doit être un montant positif': 'The salary must be a positive amount',
@@ -3010,7 +3010,7 @@ const enStrings = <String, String>{
   'Dans Équipe : la place offerte, le code à envoyer, le salaire': 'In Team: the free place, the code to send, the salary',
   'En plus de vous, sans rien payer.': 'Besides you, at no cost.',
   'Nouvelle demande : {pending} à traiter sur la vitrine.': 'New request: {pending} to handle on the vitrine.',
-  'Offert par Mara jusqu\'au {date}': 'A gift from Mara until {date}',
+  'Offert par Marakaj jusqu\'au {date}': 'A gift from Marakaj until {date}',
   'Offrir {n} cauris ?': 'Give {n} cauris?',
   'À {name}. C\'est plus de {limit} cauris.': 'To {name}. That is more than {limit} cauris.',
   'Pas encore de cauris.': 'No cauris yet.',
@@ -3031,8 +3031,8 @@ const enStrings = <String, String>{
   '{rate} / heure': '{rate} / hour',
   '{used} / {free}': '{used} / {free}',
   '{used} personnes (limite : {free})': '{used} people (limit: {free})',
-  'Mara Pro : toutes vos places photo sont prises. La photo reste dans vos documents, sans article. Pour la mettre sur l\'article : Mara Pro, ou une place photo achetée avec des cauris.': 'Mara Pro: all your photo places are taken. The photo stays in your documents, with no item. To put it on the item: Mara Pro, or a photo place bought with cauris.',
-  'Mara Pro : cet article a une photo et toutes vos places photo sont prises. Pour le remettre : Mara Pro, une place photo achetée avec des cauris, ou un autre article photographié retiré.': 'Mara Pro: this item has a photo and all your photo places are taken. To bring it back: Mara Pro, a photo place bought with cauris, or another photographed item removed.',
+  'Marakaj Pro : toutes vos places photo sont prises. La photo reste dans vos documents, sans article. Pour la mettre sur l\'article : Marakaj Pro, ou une place photo achetée avec des cauris.': 'Marakaj Pro: all your photo places are taken. The photo stays in your documents, with no item. To put it on the item: Marakaj Pro, or a photo place bought with cauris.',
+  'Marakaj Pro : cet article a une photo et toutes vos places photo sont prises. Pour le remettre : Marakaj Pro, une place photo achetée avec des cauris, ou un autre article photographié retiré.': 'Marakaj Pro: this item has a photo and all your photo places are taken. To bring it back: Marakaj Pro, a photo place bought with cauris, or another photographed item removed.',
   'Seule la plateforme nomme une formatrice ou un formateur': 'Only the platform names a trainer',
   'Le propriétaire ne se change pas ici': 'The owner is not changed here',
   'Seule la plateforme nomme un propriétaire': 'Only the platform names an owner',
@@ -3067,7 +3067,7 @@ const enStrings = <String, String>{
   'Une autre association.': 'Another kind of association.',
   'Choisissez ce qu\'elle est.': 'Choose what it is.',
   'Le nom du membre, s\'il vous plaît.': 'The member\'s name, please.',
-  'Bonjour ! Je vous inscris comme membre de *{name}* sur Mara. Envoyez-moi votre nom et votre numéro de téléphone.': 'Hello! I am registering you as a member of *{name}* on Mara. Send me your name and your phone number.',
+  'Bonjour ! Je vous inscris comme membre de *{name}* sur Marakaj. Envoyez-moi votre nom et votre numéro de téléphone.': 'Hello! I am registering you as a member of *{name}* on Marakaj. Send me your name and your phone number.',
   'WhatsApp ne s\'est pas ouvert.': 'WhatsApp did not open.',
   'Votre association': 'Your association',
   'Son nom, et ce qu\'elle est.': 'Its name, and what it is.',
@@ -3094,7 +3094,7 @@ const enStrings = <String, String>{
   'Plus de {name} en stock': 'No {name} left in stock',
   'Vente refusée : rien n\'a été enregistré': 'Sale refused: nothing was recorded',
   'Sortie de stock refusée : rien n\'a été enregistré': 'Stock use refused: nothing was recorded',
-  'Mara Pro : les analyses font partie de Mara Pro. Ouvrez Compte › Mara Pro, ou débloquez-les avec vos cauris.': 'Mara Pro: the analyses are part of Mara Pro. Open Account › Mara Pro, or unlock them with your cauris.',
+  'Marakaj Pro : les analyses font partie de Marakaj Pro. Ouvrez Compte › Marakaj Pro, ou débloquez-les avec vos cauris.': 'Marakaj Pro: the analyses are part of Marakaj Pro. Open Account › Marakaj Pro, or unlock them with your cauris.',
   'Les analyses ne concernent pas une association': 'Analyses are not for an association',
   '7 j': '7 d',
   '30 j': '30 d',
@@ -3162,11 +3162,11 @@ const enStrings = <String, String>{
   'Réservé au propriétaire': 'Owner only',
   // 104: Mara's switchboard.
   'Pas disponible pour votre activité': 'Not available for your business',
-  'Cette fonction n\'est pas proposée pour {name}. Pour en parler, contactez Mara.': 'This feature is not offered for {name}. To talk about it, contact Mara.',
+  'Cette fonction n\'est pas proposée pour {name}. Pour en parler, contactez Marakaj.': 'This feature is not offered for {name}. To talk about it, contact Marakaj.',
   'Cette fonction n\'est pas disponible pour votre activité.': 'This feature is not available for your business.',
-  'Mara a masqué « {tool} » pour votre activité.': 'Mara hid “{tool}” for your business.',
-  'Mara a rendu « {tool} » visible pour votre activité.': 'Mara made “{tool}” visible for your business.',
-  'Mara a remis « {tool} » comme par défaut pour votre activité.': 'Mara set “{tool}” back to its default for your business.',
+  'Marakaj a masqué « {tool} » pour votre activité.': 'Marakaj hid “{tool}” for your business.',
+  'Marakaj a rendu « {tool} » visible pour votre activité.': 'Marakaj made “{tool}” visible for your business.',
+  'Marakaj a remis « {tool} » comme par défaut pour votre activité.': 'Marakaj set “{tool}” back to its default for your business.',
   'Carnet de crédit': 'Credit book',
   'Corrections des ventes et livraisons': 'Sale and delivery corrections',
   'Tontines': 'Tontines',
@@ -3248,11 +3248,11 @@ const enStrings = <String, String>{
   'Revenir à la page d\'origine ?': 'Go back to the original page?',
   'Le mot d\'accueil et les questions sont retirés ; les trois types sont proposés. Les demandes déjà reçues gardent leurs réponses.': 'The welcome and the questions are removed; all three types are offered. Requests already received keep their answers.',
   'Remettre la page d\'origine': 'Restore the original page',
-  'La page de demande est celle de Mara.': 'The request page is Mara’s own.',
+  'La page de demande est celle de Marakaj.': 'The request page is Marakaj’s own.',
   'La page de demande est celle d\'origine.': 'The request page is the original one.',
   'Toujours demandés : le nom de l\'activité, son adresse (marakaj.com/s/…), son type et sa monnaie, avec une phrase pour la décrire.': 'Always asked: the business’s name, its address (marakaj.com/s/…), its type and currency, with a sentence describing it.',
   'Mot d\'accueil': 'Welcome',
-  'Ex. : Bienvenue ! Mara répond sous deux jours.': 'E.g.: Welcome! Mara answers within two days.',
+  'Ex. : Bienvenue ! Marakaj répond sous deux jours.': 'E.g.: Welcome! Marakaj answers within two days.',
   'Types proposés': 'Types offered',
   'Questions en plus': 'Extra questions',
   'Ajouter une question': 'Add a question',
@@ -3275,7 +3275,7 @@ const enStrings = <String, String>{
   'Informations manquantes': 'Missing information',
   'Nom déjà utilisé': 'Name already used',
   'Adresse (lien) à changer': 'Address (link) to change',
-  'Activité hors du champ de Mara': 'Business outside Mara’s scope',
+  'Activité hors du champ de Marakaj': 'Business outside Marakaj’s scope',
   'Demande en double': 'Duplicate request',
   'Votre demande est acceptée : {name} est ouverte.': 'Your request is accepted: {name} is open.',
   'Votre demande pour {name} est refusée : {reason}': 'Your request for {name} is refused: {reason}',
@@ -3327,7 +3327,7 @@ const enStrings = <String, String>{
   'Une entreprise par son nom, son adresse ou le téléphone de son propriétaire ; une personne par son nom, son téléphone ou son e-mail ; une commande par son numéro ou son client.': 'A business by its name, its address or its owner\'s phone; a person by name, phone or email; an order by its number or its customer.',
   '{n} entreprise(s)': '{n} business(es)',
   'État': 'Status',
-  'Actions de Mara': 'Mara\'s actions',
+  'Actions de Marakaj': 'Marakaj\'s actions',
   'Activité': 'Activity',
   'Ctrl K': 'Ctrl K',
   'La rue': 'The street',
@@ -3360,7 +3360,7 @@ const enStrings = <String, String>{
   'Commande la plus petite qui rapporte des cauris': 'Smallest order that earns cauris',
   'Commandes par client et par jour qui comptent': 'Orders per customer per day that count',
   'Commandes terminées pour ouvrir le carnet de crédit': 'Finished orders to open the credit book',
-  'Commission de Mara sur une commande payée en ligne (%)': 'Mara\'s commission on an order paid online (%)',
+  'Commission de Marakaj sur une commande payée en ligne (%)': 'Marakaj\'s commission on an order paid online (%)',
   'Distance de livraison la plus longue (km)': 'Longest delivery distance (km)',
   'Désactivée — changée dans Compte › Sécurité.': 'Off — changed in Account › Security.',
   'Entreprises dans une ligue avant le classement': 'Businesses in a league before the ranking',
@@ -3379,13 +3379,13 @@ const enStrings = <String, String>{
   'Minutes réservées aux livreurs de la boutique': 'Minutes reserved for the shop\'s own couriers',
   'Mises en avant en même temps': 'Featured spots at the same time',
   'Mois d\'historique': 'Months of history',
-  'Monnaie des prix de Mara Pro': 'Currency of Mara Pro prices',
+  'Monnaie des prix de Marakaj Pro': 'Currency of Marakaj Pro prices',
   'Monnaie des prix de livraison': 'Currency of delivery prices',
-  'Nom du compte Wave de Mara': 'Name on Mara\'s Wave account',
+  'Nom du compte Wave de Marakaj': 'Name on Marakaj\'s Wave account',
   'Numéro Wave qui reçoit les paiements Pro': 'Wave number that receives Pro payments',
-  'Outils réservés à Mara Pro': 'Tools reserved for Mara Pro',
+  'Outils réservés à Marakaj Pro': 'Tools reserved for Marakaj Pro',
   'Ouvrir tous les outils du Chemin à tout le monde': 'Open every tool of the Path to everyone',
-  'Part de Mara sur chaque livraison (%)': 'Mara\'s share of each delivery (%)',
+  'Part de Marakaj sur chaque livraison (%)': 'Marakaj\'s share of each delivery (%)',
   'Payer en ligne par Wave': 'Pay online with Wave',
   'Personnes dans l\'équipe': 'People on the team',
   'Petite ligue : moins de … commandes en 30 jours': 'Small league: fewer than … orders in 30 days',
@@ -3400,7 +3400,7 @@ const enStrings = <String, String>{
   'Validation en deux étapes du compte de la plateforme': 'Two-step verification of the platform account',
   'Vitrine remplie à … % pour paraître dans la rue': 'Vitrine … % complete to appear on the street',
   '{name} : enregistré.': '{name}: saved.',
-  ' · offert par Mara': ' · given by Mara',
+  ' · offert par Marakaj': ' · given by Marakaj',
   'Cauris offerts qui expirent': 'Gifted cauris expiring',
   'Commandes bloquées': 'Stuck orders',
   'Dans les 7 jours': 'Within 7 days',
@@ -3408,8 +3408,8 @@ const enStrings = <String, String>{
   'Devises': 'Currencies',
   'La boutique à la une jusqu\'au {date}': 'The shop featured until {date}',
   'Livreurs à valider': 'Couriers to approve',
-  'Mara Pro jusqu\'au {date}': 'Mara Pro until {date}',
-  'Mara Pro qui se termine': 'Mara Pro ending',
+  'Marakaj Pro jusqu\'au {date}': 'Marakaj Pro until {date}',
+  'Marakaj Pro qui se termine': 'Marakaj Pro ending',
   'Mises en avant qui finissent': 'Featured spots ending',
   'Mises en avant à traiter': 'Featured spots to handle',
   'Outils ouverts qui se ferment': 'Opened tools closing',
@@ -3429,7 +3429,7 @@ const enStrings = <String, String>{
   '{feature} : {state} jusqu\'au {date}': '{feature}: {state} until {date}',
   '{n} cauris à utiliser avant le {date}': '{n} cauris to use before {date}',
   '{tool} jusqu\'au {date}{gift}': '{tool} until {date}{gift}',
-  '« J\'ai payé » Mara Pro à confirmer': 'Mara Pro “I have paid” to confirm',
+  '« J\'ai payé » Marakaj Pro à confirmer': 'Marakaj Pro “I have paid” to confirm',
   'À traiter': 'To handle',
   'Message': 'Message',
   'Ouvrir l\'activité': 'Open the business',
@@ -3455,13 +3455,13 @@ const enStrings = <String, String>{
   'Un pourcentage ne dépasse pas 100.': 'A percentage does not go above 100.',
   'Un texte de 200 caractères au plus.': 'A text of 200 characters at most.',
   'Ce réglage attend une liste de mots.': 'This setting expects a list of words.',
-  'Mara a repris {n} cauris offerts.': 'Mara took back {n} gifted cauris.',
-  'Mara a annulé l\'ouverture de {tool}.': 'Mara closed {tool} again.',
+  'Marakaj a repris {n} cauris offerts.': 'Marakaj took back {n} gifted cauris.',
+  'Marakaj a annulé l\'ouverture de {tool}.': 'Marakaj closed {tool} again.',
   // The fiche entreprise (106).
   'Fiche entreprise': 'Business card',
   'Voir comme le commerçant': 'See as the merchant',
   'Vous voyez {name} comme son propriétaire': 'You see {name} as its owner does',
-  'Son rôle, sa formule, ce que Mara lui montre. Lecture seule : rien ne s\'enregistre d\'ici.': 'Their role, their plan, what Mara shows them. Read only: nothing is saved from here.',
+  'Son rôle, sa formule, ce que Marakaj lui montre. Lecture seule : rien ne s\'enregistre d\'ici.': 'Their role, their plan, what Marakaj shows them. Read only: nothing is saved from here.',
   'Quitter': 'Leave',
   'Journal de l\'activité': 'The business\'s log',
   'Dernière activité : {when}': 'Last activity: {when}',
@@ -3471,7 +3471,7 @@ const enStrings = <String, String>{
   'en vente': 'on sale',
   'Vitrine ouverte': 'Vitrine open',
   'Vitrine fermée': 'Vitrine closed',
-  'réglages Mara': 'Mara settings',
+  'réglages Marakaj': 'Marakaj settings',
   '{n} au journal': '{n} in the journal',
   '{kind} · créée le {date}': '{kind} · created on {date}',
   'À surveiller': 'To watch',
@@ -3479,9 +3479,9 @@ const enStrings = <String, String>{
   'Suspendue depuis le {date}': 'Suspended since {date}',
   '« J\'ai payé » à confirmer ({n})': '“I have paid” to confirm ({n})',
   'Mise en avant à décider ({n})': 'Promotion to decide ({n})',
-  'Mara Pro se termine le {date}': 'Mara Pro ends on {date}',
+  'Marakaj Pro se termine le {date}': 'Marakaj Pro ends on {date}',
   'Outil ouvert qui se ferme dans 7 jours ({n})': 'Open tool closing within 7 days ({n})',
-  'Réglage Mara qui se termine dans 7 jours ({n})': 'Mara setting ending within 7 days ({n})',
+  'Réglage Marakaj qui se termine dans 7 jours ({n})': 'Marakaj setting ending within 7 days ({n})',
   'Silencieuse depuis {n} jours': 'Silent for {n} days',
   'Mise en route pas terminée': 'Setup not finished',
   'Aucun propriétaire nommé.': 'No owner named.',
@@ -3498,7 +3498,7 @@ const enStrings = <String, String>{
   'Réglé pour cette activité': 'Set for this business',
   'Réglé pour tout le type d\'activité': 'Set for the whole kind of business',
   ' jusqu\'au {date}': ' until {date}',
-  'Formule Mara': 'Mara plan',
+  'Formule Marakaj': 'Marakaj plan',
   'Outil ouvert': 'Tool open',
   'Payée — ne peut pas être masquée': 'Paid — cannot be hidden',
   'Masquer « {label} » pour {name} ?': 'Hide “{label}” for {name}?',
@@ -3510,7 +3510,7 @@ const enStrings = <String, String>{
   'Pourquoi (pour le journal, facultatif)': 'Why (for the journal, optional)',
   'Identité enregistrée.': 'Identity saved.',
   'Identité enregistrée. {who} est prévenu(e).': 'Identity saved. {who} is told.',
-  'Vous modifiez l\'identité de {name} en tant que Mara': 'You are changing {name}\'s identity as Mara',
+  'Vous modifiez l\'identité de {name} en tant que Marakaj': 'You are changing {name}\'s identity as Marakaj',
   'Le propriétaire est prévenu. Chaque changement va au journal, avec « Annuler ».': 'The owner is told. Every change goes to the journal, with “Undo”.',
   'Chaque membre ouvrira un autre accueil. Il faudra taper le nom de l\'activité pour confirmer.': 'Every member will open another home. You will type the business\'s name to confirm.',
   'L\'ancien lien de la vitrine ne marchera plus.': 'The vitrine\'s old link will stop working.',
@@ -3519,7 +3519,7 @@ const enStrings = <String, String>{
   'Changer le type d\'activité ?': 'Change the kind of business?',
   'Chaque membre ouvrira un autre accueil dès demain matin. Tapez « {name} » pour confirmer.': 'Every member will open another home from tomorrow morning. Type “{name}” to confirm.',
   'Changer le type': 'Change the kind',
-  'Vous modifiez la vitrine de {name} en tant que Mara': 'You are changing {name}\'s vitrine as Mara',
+  'Vous modifiez la vitrine de {name} en tant que Marakaj': 'You are changing {name}\'s vitrine as Marakaj',
   'C\'est l\'éditeur du propriétaire. Il est prévenu, et chaque changement va au journal, avec « Annuler ».': 'This is the owner\'s editor. They are told, and every change goes to the journal, with “Undo”.',
   'Le lien que le propriétaire partage': 'The link the owner shares',
   'Ouvrir l\'éditeur de la vitrine': 'Open the vitrine editor',
@@ -3529,32 +3529,32 @@ const enStrings = <String, String>{
   'aujourd\'hui': 'today',
   'hier': 'yesterday',
   'il y a {n} j': '{n} d ago',
-  '{name} est sur Mara Pro.': '{name} is on Mara Pro.',
-  '{name} est sur Mara (gratuit).': '{name} is on Mara (free).',
-  'Mara Pro, sans date de fin': 'Mara Pro, with no end date',
-  'Ouvert par « Mara Pro complet », pas par la formule.': 'Opened by “Mara Pro complete”, not by the plan.',
+  '{name} est sur Marakaj Pro.': '{name} is on Marakaj Pro.',
+  '{name} est sur Marakaj (gratuit).': '{name} is on Marakaj (free).',
+  'Marakaj Pro, sans date de fin': 'Marakaj Pro, with no end date',
+  'Ouvert par « Marakaj Pro complet », pas par la formule.': 'Opened by “Marakaj Pro complete”, not by the plan.',
   'Payé jusqu\'au {date}': 'Paid until {date}',
-  'Note (vue par Mara seulement)': 'Note (seen by Mara only)',
+  'Note (vue par Marakaj seulement)': 'Note (seen by Marakaj only)',
   'Outils ouverts': 'Open tools',
   'Aucun outil ouvert en ce moment': 'No tool open right now',
   'jusqu\'au {date}': 'until {date}',
-  'Offert par Mara': 'Given by Mara',
+  'Offert par Marakaj': 'Given by Marakaj',
   'Payé en cauris': 'Paid in cauris',
   'Cauris et cadeaux': 'Cauris and gifts',
-  'Mara a annulé sa modification de votre vitrine': 'Mara took back her change to your vitrine',
-  'Mara a modifié votre vitrine': 'Mara changed your vitrine',
-  'Mara a annulé sa modification de l\'identité de votre activité': 'Mara took back her change to your business\'s identity',
-  'Mara a modifié l\'identité de votre activité : {what}': 'Mara changed your business\'s identity: {what}',
+  'Marakaj a annulé sa modification de votre vitrine': 'Marakaj took back her change to your vitrine',
+  'Marakaj a modifié votre vitrine': 'Marakaj changed your vitrine',
+  'Marakaj a annulé sa modification de l\'identité de votre activité': 'Marakaj took back her change to your business\'s identity',
+  'Marakaj a modifié l\'identité de votre activité : {what}': 'Marakaj changed your business\'s identity: {what}',
   'nom': 'name',
   'adresse web': 'web address',
   'type d\'activité': 'kind of business',
   'monnaie': 'currency',
   'vérification': 'verification',
-  'Réservé à l\'équipe Mara': 'For Mara\'s team only',
+  'Réservé à l\'équipe Marakaj': 'For Marakaj\'s team only',
   'Cette activité est archivée : restaurez-la avant de la modifier': 'This business is archived: restore it before changing it',
   'Le nom de l\'activité ne peut pas être vide': 'The business\'s name cannot be empty',
   'Cette adresse est déjà prise': 'This address is already taken',
-  'La vérification par Mara concerne les associations': 'Mara\'s verification is for associations',
+  'La vérification par Marakaj concerne les associations': 'Marakaj\'s verification is for associations',
   'Rien à annuler': 'Nothing to undo',
   'Annulation impossible : l\'ancienne adresse est prise par une autre activité': 'Cannot undo: the old address is taken by another business',
   'Silencieuses depuis 30 jours': 'Silent for 30 days',
@@ -3567,7 +3567,7 @@ const enStrings = <String, String>{
   'Le cadeau n\'a pas été écrit': 'The gift was not recorded',
   'Fonctions masquées après la fin d\'un paiement': 'Features hidden after a payment ended',
   '{tool} n\'est plus visible depuis le {date}': '{tool} has not been visible since {date}',
-  'Votre Mara Pro a pris fin : {tool} n\'est plus disponible pour votre activité.': 'Your Mara Pro has ended: {tool} is no longer available for your business.',
+  'Votre Marakaj Pro a pris fin : {tool} n\'est plus disponible pour votre activité.': 'Your Marakaj Pro has ended: {tool} is no longer available for your business.',
   'Voir comme le responsable': 'See as the person in charge',
   '« {label} » : réglage retiré.': '“{label}”: setting removed.',
   'Laissé par son ancien type d\'activité': 'Left from its former type of business',
@@ -3581,7 +3581,7 @@ const enStrings = <String, String>{
   'Se connecter autrement': 'Sign in another way',
   'Créer un compte': 'Create an account',
   'Votre numéro WhatsApp': 'Your WhatsApp number',
-  'Avant votre première commande, Mara vérifie votre numéro : la boutique pourra vous joindre.': 'Before your first order, Mara checks your number, so the shop can reach you.',
+  'Avant votre première commande, Marakaj vérifie votre numéro : la boutique pourra vous joindre.': 'Before your first order, Marakaj checks your number, so the shop can reach you.',
   'Recevoir le code sur WhatsApp': 'Get the code on WhatsApp',
   'Code envoyé sur WhatsApp au {phone}.': 'Code sent on WhatsApp to {phone}.',
   'Code à 6 chiffres': '6-digit code',
@@ -3589,7 +3589,7 @@ const enStrings = <String, String>{
   'Renvoyer le code': 'Send the code again',
   'Renvoyer le code dans {s} s': 'Send the code again in {s} s',
   'Changer de numéro': 'Change number',
-  'Ce numéro est déjà celui d\'un autre compte Mara.': 'This number already belongs to another Mara account.',
+  'Ce numéro est déjà celui d\'un autre compte Marakaj.': 'This number already belongs to another Marakaj account.',
   'Code faux ou expiré. Vérifiez les 6 chiffres, ou demandez un nouveau code.': 'Wrong or expired code. Check the 6 digits, or ask for a new code.',
   'Patientez une minute avant de demander un nouveau code.': 'Wait a minute before asking for a new code.',
   'Ce numéro n\'est pas valide.': 'This number is not valid.',
@@ -3620,10 +3620,10 @@ const enStrings = <String, String>{
   'La livraison n\'est pas proposée pour le moment. Choisissez le retrait.': 'Delivery is not offered for now. Choose pickup.',
   'Cette ferme ne vend pas ses produits en ligne pour le moment.': 'This farm is not selling its products online for now.',
   'Les services ne sont pas proposés sur votre vitrine pour le moment.': 'Services are not offered on your vitrine for now.',
-  'Commandes fermées par Mara pour le moment : vos clients voient votre vitrine sans pouvoir commander. Les commandes déjà reçues restent dans Commandes.': 'Orders closed by Mara for now: your customers see your vitrine but cannot order. Orders already received stay in Orders.',
+  'Commandes fermées par Marakaj pour le moment : vos clients voient votre vitrine sans pouvoir commander. Les commandes déjà reçues restent dans Commandes.': 'Orders closed by Marakaj for now: your customers see your vitrine but cannot order. Orders already received stay in Orders.',
   'Pas sur la vitrine pour le moment': 'Not on the vitrine for now',
-  'Mara a retiré vos produits de la vitrine. Gardez-les ici : vous les vendez toujours à la ferme.': 'Mara took your products off the vitrine. Keep them here: you still sell them at the farm.',
-  'Mara a fermé les commandes de votre vitrine : vos clients la regardent sans commander. Celles déjà reçues restent ici.': 'Mara closed your vitrine\'s orders: your customers can look but not order. Orders already received stay here.',
+  'Marakaj a retiré vos produits de la vitrine. Gardez-les ici : vous les vendez toujours à la ferme.': 'Marakaj took your products off the vitrine. Keep them here: you still sell them at the farm.',
+  'Marakaj a fermé les commandes de votre vitrine : vos clients la regardent sans commander. Celles déjà reçues restent ici.': 'Marakaj closed your vitrine\'s orders: your customers can look but not order. Orders already received stay here.',
   'Pas de réseau — la vitrine de votre dernière visite': 'No network — the shop as you last saw it',
   'Pas de réseau — les vitrines de votre dernière visite': 'No network — the shops as you last saw them',
   'La carte n\'a pas pu s\'ouvrir. Vérifiez le réseau.': 'The map could not open. Check the network.',
@@ -3637,15 +3637,15 @@ const enStrings = <String, String>{
   'Il faut un peu d\'activité pour que cet outil serve.': 'This tool needs a little activity before it is useful.',
   'Vos cauris…': 'Your cauris…',
   'Il vous manque {n} cauris': 'You need {n} more cauris',
-  'Ou tout ouvrir maintenant : Mara Pro complet, {cost} cauris': 'Or open everything now: Mara Pro complete, {cost} cauris',
+  'Ou tout ouvrir maintenant : Marakaj Pro complet, {cost} cauris': 'Or open everything now: Marakaj Pro complete, {cost} cauris',
   'Prix enregistré.': 'Price saved.',
   'Cauris, pour 30 jours': 'Cauris, for 30 days',
   'Attente, en jours': 'Wait, in days',
-  'Jours sur Mara avant de pouvoir l\'acheter. 0 : dès le premier jour.': 'Days on Mara before it can be bought. 0: from the first day.',
+  'Jours sur Marakaj avant de pouvoir l\'acheter. 0 : dès le premier jour.': 'Days on Marakaj before it can be bought. 0: from the first day.',
   'Disponible dans {n} jours': 'Available in {n} days',
   'Cauris, {tool} : {c0} → {c1} cauris, attente {d0} → {d1} jours': 'Cauris, {tool}: {c0} → {c1} cauris, wait {d0} → {d1} days',
   'Cet outil n\'existe pas pour votre activité : vos cauris restent à vous.': 'This tool does not exist for your business: your cauris stay yours.',
-  'Votre entreprise est sur Mara Pro : cet outil est déjà ouvert, vos cauris restent à vous.': 'Your business is on Mara Pro: this tool is already open, your cauris stay yours.',
+  'Votre entreprise est sur Marakaj Pro : cet outil est déjà ouvert, vos cauris restent à vous.': 'Your business is on Marakaj Pro: this tool is already open, your cauris stay yours.',
   'Une place photo s\'achète sans attente.': 'A photo slot is bought with no wait.',
   'Une attente de 0 à 3650 jours, s\'il vous plaît.': 'A wait of 0 to 3650 days, please.',
   'Ce prix a changé depuis : annulez d\'abord le dernier changement.': 'This price has changed since: undo the latest change first.',
@@ -3660,10 +3660,10 @@ const enStrings = <String, String>{
   'Maraîchage': 'Market gardening',
   'Céréales': 'Grain',
   'Mixte': 'Mixed',
-  'Avant de créer votre activité, Mara vérifie votre numéro WhatsApp.': 'Before you create your business, Mara checks your WhatsApp number.',
+  'Avant de créer votre activité, Marakaj vérifie votre numéro WhatsApp.': 'Before you create your business, Marakaj checks your WhatsApp number.',
   'Impossible de charger': 'Could not load',
-  'Une deuxième activité : avec Mara Pro': 'A second business: with Mara Pro',
-  'Vous avez déjà une activité sur Mara. Passez-la à Mara Pro pour en créer une deuxième.': 'You already have a business on Mara. Move it to Mara Pro to create a second one.',
+  'Une deuxième activité : avec Marakaj Pro': 'A second business: with Marakaj Pro',
+  'Vous avez déjà une activité sur Marakaj. Passez-la à Marakaj Pro pour en créer une deuxième.': 'You already have a business on Marakaj. Move it to Marakaj Pro to create a second one.',
   'Aperçu de la création': 'Creation preview',
   'Créer mon activité': 'Create my business',
   'Vos réponses ont été gardées : vous reprenez ici.': 'Your answers were kept: you pick up here.',
@@ -3693,7 +3693,7 @@ const enStrings = <String, String>{
   'Le numéro de votre ferme': 'Your farm\'s number',
   'Le numéro de votre association': 'Your association\'s number',
   'Vos clients vous appellent ou vous écrivent sur WhatsApp à ce numéro.': 'Your customers call you or write to you on WhatsApp at this number.',
-  'Mara demande un numéro WhatsApp vérifié pour créer une activité.': 'Mara asks for a verified WhatsApp number to create a business.',
+  'Marakaj demande un numéro WhatsApp vérifié pour créer une activité.': 'Marakaj asks for a verified WhatsApp number to create a business.',
   'Vérifier mon numéro WhatsApp': 'Verify my WhatsApp number',
   'Vérifié sur WhatsApp': 'Verified on WhatsApp',
   'Celle du pays du numéro. Vos prix et vos comptes sont dans cette monnaie.': 'The number\'s country\'s. Your prices and your books are in this currency.',
@@ -3712,7 +3712,7 @@ const enStrings = <String, String>{
   '1 demande envoyée depuis une ancienne version de l\'application attend : la personne peut maintenant créer son activité elle-même, dans la nouvelle version.': '1 request sent from an old version of the app is waiting: the person can now create their business themselves, in the new version.',
   '{n} demandes envoyées depuis une ancienne version de l\'application attendent : la personne peut maintenant créer son activité elle-même, dans la nouvelle version.': '{n} requests sent from an old version of the app are waiting: the person can now create their business themselves, in the new version.',
   'Aucune activité créée pour l\'instant.': 'No business created yet.',
-  'Demande validée par Mara': 'Request approved by Mara',
+  'Demande validée par Marakaj': 'Request approved by Marakaj',
   'Demande refusée : {reason}': 'Request refused: {reason}',
   'Créée par la personne': 'Created by the person',
   'Vous avez une activité ?': 'Do you run a business?',
@@ -3722,13 +3722,13 @@ const enStrings = <String, String>{
   'Nouvelles activités (7 j)': 'New businesses (7 d)',
   'à accueillir': 'to welcome',
   'Créée le {date} par la personne': 'Created on {date} by the person',
-  'Créée le {date} par Mara': 'Created on {date} by Mara',
+  'Créée le {date} par Marakaj': 'Created on {date} by Marakaj',
   'Parcours d\'origine remis. Le journal le garde.': 'Original flow restored. The journal keeps it.',
   'Parcours de création enregistré. Le journal le garde.': 'Creation flow saved. The journal keeps it.',
   'Revenir au parcours d\'origine ?': 'Go back to the original flow?',
   'Le mot d\'accueil et les questions sont retirés ; les trois types sont proposés. Les activités déjà créées gardent leurs réponses.': 'The welcome text and the questions are removed; the three kinds are offered. Businesses already created keep their answers.',
   'Remettre le parcours d\'origine': 'Restore the original flow',
-  'Le parcours de création est celui de Mara.': 'The creation flow is Mara\'s.',
+  'Le parcours de création est celui de Marakaj.': 'The creation flow is Marakaj\'s.',
   'Le parcours de création est celui d\'origine.': 'The creation flow is the original one.',
   'Toujours demandés, un par écran : le type, le nom et son adresse (marakaj.com/s/…), ce que fait l\'activité, la ville et le quartier, le téléphone et la monnaie. Vos questions viennent ensuite, une par écran.': 'Always asked, one per screen: the kind, the name and its address (marakaj.com/s/…), what the business does, the town and neighbourhood, the phone and the currency. Your questions come next, one per screen.',
   'Ex. : Bienvenue ! Votre activité est prête en cinq minutes.': 'E.g. Welcome! Your business is ready in five minutes.',
@@ -3764,7 +3764,7 @@ const enStrings = <String, String>{
   'Signalements': 'Reports',
   'des clients, à lire': 'from customers, to read',
   'Signalement traité : la personne est prévenue.': 'Report handled: the person has been told.',
-  'Bonjour, c\'est Mara, à propos de votre signalement.': 'Hello, this is Mara, about your report.',
+  'Bonjour, c\'est Marakaj, à propos de votre signalement.': 'Hello, this is Marakaj, about your report.',
   'À lire': 'To read',
   'Traités': 'Handled',
   'Un client': 'A customer',
@@ -3775,25 +3775,25 @@ const enStrings = <String, String>{
   'Un mot pour la personne (facultatif)': 'A word for the person (optional)',
   'Remboursé par la boutique, merci !': 'Refunded by the shop, thank you!',
   'Aide aux clients': 'Customer help',
-  'Numéro WhatsApp de l\'aide Mara (vide : caché)': 'Mara\'s WhatsApp help number (empty: hidden)',
+  'Numéro WhatsApp de l\'aide Marakaj (vide : caché)': 'Marakaj\'s WhatsApp help number (empty: hidden)',
   // 126: « Aide Mara ».
-  'E-mail de l\'aide Mara': 'Mara\'s help e-mail',
-  'Heures de l\'aide Mara (par exemple 24 h/24, 7 j/7)': 'Mara\'s help hours (for example 24 h/24, 7 j/7)',
+  'E-mail de l\'aide Marakaj': 'Marakaj\'s help e-mail',
+  'Heures de l\'aide Marakaj (par exemple 24 h/24, 7 j/7)': 'Marakaj\'s help hours (for example 24 h/24, 7 j/7)',
   'L\'e-mail de l\'aide : une adresse comme hello@kaj-consulting.com.':
       'The help e-mail: an address such as hello@kaj-consulting.com.',
   'Les heures de l\'aide : quelques mots, 60 caractères au plus (par exemple 24 h/24, 7 j/7).':
       'The help hours: a few words, 60 characters at most (for example 24 h/24, 7 j/7).',
-  'Aide Mara': 'Mara Help',
+  'Aide Marakaj': 'Marakaj Help',
   'Une question, un souci ? Nous répondons {hours}.': 'A question, a problem? We answer {hours}.',
   '24 h/24, 7 j/7': '24/7',
   'E-mail': 'E-mail',
-  'Bonjour, j\'ai besoin d\'aide avec Mara.': 'Hello, I need help with Mara.',
+  'Bonjour, j\'ai besoin d\'aide avec Marakaj.': 'Hello, I need help with Marakaj.',
   'Aucune application d\'e-mail : écrivez à {email}.': 'No e-mail app here: write to {email}.',
   'Prix en baisse chez {shop} : {name} à {price}': 'Price down at {shop}: {name} at {price}',
   'Nouveau chez {shop} : {name}': 'New at {shop}: {name}',
   '{n} nouveautés chez {shop} : {names}': '{n} new at {shop}: {names}',
-  'Mara a traité votre signalement. Merci !': 'Mara has handled your report. Thank you!',
-  'Mara a traité votre signalement : {answer}': 'Mara has handled your report: {answer}',
+  'Marakaj a traité votre signalement. Merci !': 'Marakaj has handled your report. Thank you!',
+  'Marakaj a traité votre signalement : {answer}': 'Marakaj has handled your report: {answer}',
   'Vitrine suivie : ses nouveautés et ses offres vous seront dites.': 'Vitrine followed: you will be told of its new items and offers.',
   'Vous ne suivez plus cette vitrine.': 'You no longer follow this vitrine.',
   'Ne plus suivre': 'Unfollow',
@@ -3801,7 +3801,7 @@ const enStrings = <String, String>{
   'Votre compte a besoin d\'une connexion.': 'Your account needs a connection.',
   'Votre compte n\'a pas pu être chargé. Vérifiez le réseau.': 'Your account could not be loaded. Check the network.',
   'Numéro WhatsApp vérifié.': 'WhatsApp number verified.',
-  'Je fais mes achats sur Mara : les vitrines des boutiques, des fermes et des associations de chez nous. {url}': 'I shop on Mara: the vitrines of our local shops, farms and associations. {url}',
+  'Je fais mes achats sur Marakaj : les vitrines des boutiques, des fermes et des associations de chez nous. {url}': 'I shop on Marakaj: the vitrines of our local shops, farms and associations. {url}',
   'Téléchargement impossible : {error}': 'Download failed: {error}',
   'Votre compte est supprimé. Au revoir !': 'Your account is deleted. Goodbye!',
   'Mes achats': 'My purchases',
@@ -3817,13 +3817,13 @@ const enStrings = <String, String>{
   'Paiement préféré': 'Preferred payment',
   'Notifications': 'Notifications',
   'Vos commandes et les nouveautés de vos vitrines': 'Your orders and your vitrines\' news',
-  'Avec Mara': 'With Mara',
+  'Avec Marakaj': 'With Marakaj',
   'Devenir livreur': 'Become a courier',
   'Vos courses et vos gains': 'Your runs and your earnings',
   'Livrez les commandes de votre quartier': 'Deliver your neighbourhood\'s orders',
   'Une boutique, une ferme ou une association': 'A shop, a farm or an association',
   'Parrainer un ami': 'Invite a friend',
-  'Envoyez-lui Mara sur WhatsApp': 'Send them Mara on WhatsApp',
+  'Envoyez-lui Marakaj sur WhatsApp': 'Send them Marakaj on WhatsApp',
   'Signaler un problème': 'Report a problem',
   'Une commande, une vitrine, l\'application': 'An order, a vitrine, the app',
   'Mes données': 'My data',
@@ -3843,7 +3843,7 @@ const enStrings = <String, String>{
   'Votre compte, vos adresses et vos favoris seront effacés pour toujours. Vos commandes restent chez les boutiques, sans votre nom ni votre numéro.': 'Your account, addresses and favourites will be erased for good. Your orders stay with the shops, without your name or your number.',
   'Pour confirmer, tapez {word} :': 'To confirm, type {word}:',
   'Garder mon compte': 'Keep my account',
-  'La suppression en ligne n\'est pas encore ouverte : écrivez à Mara et votre compte sera supprimé.': 'Online deletion is not open yet: write to Mara and your account will be deleted.',
+  'La suppression en ligne n\'est pas encore ouverte : écrivez à Marakaj et votre compte sera supprimé.': 'Online deletion is not open yet: write to Marakaj and your account will be deleted.',
   'Vos adresses n\'ont pas pu être chargées. Vérifiez le réseau.': 'Your addresses could not be loaded. Check the network.',
   'Mes adresses': 'My addresses',
   'Choisies d\'un geste quand vous commandez avec livraison. La note et l\'épingle guident le livreur.': 'Picked in one tap when you order with delivery. The note and the pin guide the courier.',
@@ -3882,10 +3882,10 @@ const enStrings = <String, String>{
   'L\'application': 'The app',
   'Autre chose': 'Something else',
   'Dites en quelques mots ce qui ne va pas (10 caractères au moins).': 'Say in a few words what is wrong (10 characters at least).',
-  'Merci : Mara a reçu votre signalement et vous répondra dans vos notifications.': 'Thank you: Mara has your report and will answer in your notifications.',
+  'Merci : Marakaj a reçu votre signalement et vous répondra dans vos notifications.': 'Thank you: Marakaj has your report and will answer in your notifications.',
   'De quoi s\'agit-il ?': 'What is it about?',
   'La commande n\'est pas arrivée, le prix est faux…': 'The order did not arrive, the price is wrong…',
-  'Envoyer à Mara': 'Send to Mara',
+  'Envoyer à Marakaj': 'Send to Marakaj',
   'Ce qui ne va pas, en quelques mots': 'What is wrong, in a few words',
   'Vous n\'avez pas encore réservé de service.': 'You have not booked a service yet.',
   'Réserver à nouveau': 'Book again',
@@ -3908,16 +3908,16 @@ const enStrings = <String, String>{
   'Commande introuvable.': 'Order not found.',
   'Choisissez de quoi il s\'agit.': 'Choose what it is about.',
   'Un message de 1 000 caractères au plus.': 'A message of 1,000 characters at most.',
-  'Vous avez déjà envoyé 5 signalements aujourd\'hui : Mara les lit et vous répond.': 'You have already sent 5 reports today: Mara reads them and will answer.',
+  'Vous avez déjà envoyé 5 signalements aujourd\'hui : Marakaj les lit et vous répond.': 'You have already sent 5 reports today: Marakaj reads them and will answer.',
   'Une réponse de 500 caractères au plus.': 'An answer of 500 characters at most.',
   'Signalement introuvable.': 'Report not found.',
   'Ce signalement est déjà traité.': 'This report is already handled.',
   'Ce signalement a changé depuis.': 'This report has changed since.',
   'Un compte de la plateforme ne se supprime pas ici.': 'A platform account is not deleted here.',
-  'Ce compte gère la plateforme Mara : il ne peut pas être supprimé, sinon plus personne ne pourrait la gérer. Pour essayer la suppression, utilisez un autre compte.':
-      'This account runs the Mara platform: it cannot be deleted, or nobody could run it any more. To try deletion, use another account.',
-  'Vous faites partie d\'une activité sur Mara : votre compte se supprime une fois que vous n\'en faites plus partie.': 'You belong to a business on Mara: your account can be deleted once you no longer belong to it.',
-  'Vous êtes livreur sur Mara : écrivez à Mara pour fermer votre compte livreur.': 'You are a courier on Mara: write to Mara to close your courier account.',
+  'Ce compte gère la plateforme Marakaj : il ne peut pas être supprimé, sinon plus personne ne pourrait la gérer. Pour essayer la suppression, utilisez un autre compte.':
+      'This account runs the Marakaj platform: it cannot be deleted, or nobody could run it any more. To try deletion, use another account.',
+  'Vous faites partie d\'une activité sur Marakaj : votre compte se supprime une fois que vous n\'en faites plus partie.': 'You belong to a business on Marakaj: your account can be deleted once you no longer belong to it.',
+  'Vous êtes livreur sur Marakaj : écrivez à Marakaj pour fermer votre compte livreur.': 'You are a courier on Marakaj: write to Marakaj to close your courier account.',
   'Une commande est en cours : attendez qu\'elle soit terminée, ou annulez-la, puis supprimez votre compte.': 'An order is in progress: wait until it is finished, or cancel it, then delete your account.',
   'Le numéro WhatsApp de l\'aide : l\'indicatif du pays puis le numéro, en chiffres (par exemple 22670000000).': 'The WhatsApp help number: the country code then the number, in digits (for example 22670000000).',
   // 112: becoming a courier (builder J).
@@ -3927,14 +3927,14 @@ const enStrings = <String, String>{
   'Accès suspendu': 'Access suspended',
   'Votre accès livreur est suspendu. Contactez la plateforme.': 'Your courier access is suspended. Contact the platform.',
   'En cours d\'examen': 'Under review',
-  'Mara vérifie votre demande. Vous serez prévenu ici et par une notification.': 'Mara is checking your application. You will be told here and by a notification.',
+  'Marakaj vérifie votre demande. Vous serez prévenu ici et par une notification.': 'Marakaj is checking your application. You will be told here and by a notification.',
   'Nouvelle photo demandée': 'New photo requested',
   'À corriger': 'To fix',
   'À refaire : {steps}. Le reste de votre demande est gardé.': 'To redo: {steps}. The rest of your application is kept.',
   'Reprendre la photo': 'Retake the photo',
   'Corriger ma demande': 'Fix my application',
   'Livrez pour les boutiques du quartier': 'Deliver for the shops of your neighbourhood',
-  'Vous choisissez vos quartiers et vos heures. Mara valide chaque livreur avant sa première course.': 'You choose your neighbourhoods and your hours. Mara approves every courier before their first run.',
+  'Vous choisissez vos quartiers et vos heures. Marakaj valide chaque livreur avant sa première course.': 'You choose your neighbourhoods and your hours. Marakaj approves every courier before their first run.',
   'Préparez votre pièce d\'identité et votre téléphone : cinq minutes suffisent.': 'Have your ID and your phone ready: five minutes is enough.',
   'Votre inscription est à l\'étude. Un dossier complet aide la plateforme à la valider.': 'Your registration is under review. A complete application helps the platform approve it.',
   'Continuer ma demande': 'Continue my application',
@@ -3962,11 +3962,11 @@ const enStrings = <String, String>{
   'Votre pièce d\'identité': 'Your ID',
   'Le recto et le verso, toute la pièce dans le cadre, lisible, sans reflet.': 'Front and back, the whole card in the frame, readable, no glare.',
   '{part} (facultatif)': '{part} (optional)',
-  'Ces photos restent privées : seule l\'équipe Mara les voit. Après un refus, elles ne sont plus jamais montrées au bout de 30 jours, et sont effacées la fois suivante où la liste des livreurs est ouverte.': 'These photos stay private: only the Mara team sees them. After a refusal they are never shown again after 30 days, and are deleted the next time the couriers list is opened.',
+  'Ces photos restent privées : seule l\'équipe Marakaj les voit. Après un refus, elles ne sont plus jamais montrées au bout de 30 jours, et sont effacées la fois suivante où la liste des livreurs est ouverte.': 'These photos stay private: only the Marakaj team sees them. After a refusal they are never shown again after 30 days, and are deleted the next time the couriers list is opened.',
   'La boutique et le client vous joignent sur ce numéro.': 'The shop and the customer reach you on this number.',
   '{phone} — vérifié sur WhatsApp': '{phone} — verified on WhatsApp',
   'Numéro WhatsApp': 'WhatsApp number',
-  'Mara demande un numéro vérifié : recevez le code sur WhatsApp.': 'Mara asks for a verified number: get the code on WhatsApp.',
+  'Marakaj demande un numéro vérifié : recevez le code sur WhatsApp.': 'Marakaj asks for a verified number: get the code on WhatsApp.',
   'Un numéro vérifié rassure la plateforme.': 'A verified number reassures the platform.',
   'Utiliser un autre numéro': 'Use another number',
   'Vérifier sur WhatsApp': 'Verify on WhatsApp',
@@ -3975,7 +3975,7 @@ const enStrings = <String, String>{
   'La charte du livreur': 'The courier charter',
   'J\'ai lu et j\'accepte la charte du livreur': 'I have read and accept the courier charter',
   'Tout est prêt ?': 'All set?',
-  'Relisez, puis envoyez : Mara examine chaque demande.': 'Read it over, then send: Mara reviews every application.',
+  'Relisez, puis envoyez : Marakaj examine chaque demande.': 'Read it over, then send: Marakaj reviews every application.',
   'Votre demande': 'Your application',
   'Envoi…': 'Sending…',
   'Pas encore prise': 'Not taken yet',
@@ -4018,7 +4018,7 @@ const enStrings = <String, String>{
   'Approuvée : vous êtes livreur': 'Approved: you are a courier',
   'De nouveau en cours d\'examen': 'Under review again',
   'Je livre ce que la boutique m\'a confié, sans l\'ouvrir ni rien en retirer.': 'I deliver what the shop gave me, without opening it or taking anything out.',
-  'J\'encaisse le montant exact affiché dans Mara et je remets à la boutique ce qui lui revient, le jour même.': 'I collect the exact amount shown in Mara and hand the shop what is due to it, the same day.',
+  'J\'encaisse le montant exact affiché dans Marakaj et je remets à la boutique ce qui lui revient, le jour même.': 'I collect the exact amount shown in Marakaj and hand the shop what is due to it, the same day.',
   'Je respecte le client : je suis poli et à l\'heure, et je ne garde ni son numéro ni son adresse pour autre chose que sa livraison.': 'I respect the customer: I am polite and on time, and I keep neither their number nor their address for anything but their delivery.',
   'Je respecte le code de la route, je porte un casque à moto et je ne livre jamais après avoir bu de l\'alcool.': 'I follow the highway code, I wear a helmet on a motorbike and I never deliver after drinking alcohol.',
   'Je préviens la boutique et le client en cas de retard ou de problème.': 'I tell the shop and the customer if I am late or there is a problem.',
@@ -4036,7 +4036,7 @@ const enStrings = <String, String>{
   'Mobile Money': 'Mobile Money',
   'Acceptée (version {v}) le {date}': 'Accepted (version {v}) on {date}',
   'Ces photos sont privées : seule la plateforme les voit. Après un refus que le livreur ne renvoie pas, elles ne sont plus jamais montrées au bout de 30 jours, et sont effacées la fois suivante où la liste des livreurs est ouverte.': 'These photos are private: only the platform sees them. After a refusal the courier does not send again, they are never shown again after 30 days, and are deleted the next time the couriers list is opened.',
-  'Approuvé : livreur Mara': 'Approved: Mara courier',
+  'Approuvé : livreur Marakaj': 'Approved: Marakaj courier',
   'Suspendu': 'Suspended',
   'À valider': 'To approve',
   'À corriger par le livreur : {reason}': 'To be fixed by the courier: {reason}',
@@ -4053,8 +4053,8 @@ const enStrings = <String, String>{
   'À corriger par le livreur': 'To be fixed by the courier',
   'Voir ma demande': 'See my application',
   'Votre demande de livreur est à corriger : {reason}.': 'Your courier application needs a fix: {reason}.',
-  'Mara demande une nouvelle photo de votre selfie.': 'Mara asks for a new photo of your selfie.',
-  'Mara demande une nouvelle photo de votre pièce d\'identité.': 'Mara asks for a new photo of your ID.',
+  'Marakaj demande une nouvelle photo de votre selfie.': 'Marakaj asks for a new photo of your selfie.',
+  'Marakaj demande une nouvelle photo de votre pièce d\'identité.': 'Marakaj asks for a new photo of your ID.',
   'Nouvelle demande de livreur : {name}': 'New courier application: {name}',
   'Livreur {name} : {decision}': 'Courier {name}: {decision}',
   'approuvé': 'approved',
@@ -4118,10 +4118,10 @@ const enStrings = <String, String>{
   'permis': 'licence',
   'vérifié': 'verified',
   'Aperçu impossible ici': 'No preview here',
-  'Votre nom reste sur ce que vous avez inscrit pour une activité sur Mara (ventes, stock, factures…) : écrivez à Mara pour fermer votre compte.': 'Your name stays on what you recorded for a business on Mara (sales, stock, invoices…): write to Mara to close your account.',
-  'La suppression n\'a pas pu se faire — écrivez à Mara.': 'The deletion could not be done — write to Mara.',
-  'Mettez à jour Mara : vous créez maintenant votre activité vous-même': 'Update Mara: you now create your business yourself',
-  'Cette adresse est réservée à Mara : choisissez-en une autre.': 'This address is reserved for Mara: choose another one.',
+  'Votre nom reste sur ce que vous avez inscrit pour une activité sur Marakaj (ventes, stock, factures…) : écrivez à Marakaj pour fermer votre compte.': 'Your name stays on what you recorded for a business on Marakaj (sales, stock, invoices…): write to Marakaj to close your account.',
+  'La suppression n\'a pas pu se faire — écrivez à Marakaj.': 'The deletion could not be done — write to Marakaj.',
+  'Mettez à jour Marakaj : vous créez maintenant votre activité vous-même': 'Update Marakaj: you now create your business yourself',
+  'Cette adresse est réservée à Marakaj : choisissez-en une autre.': 'This address is reserved for Marakaj: choose another one.',
   'Vous avez déjà créé 3 activités en 24 heures : c\'est le maximum, réessayez demain.': 'You have already created 3 businesses in 24 hours: that is the maximum, try again tomorrow.',
   'Quitter sans enregistrer ?': 'Leave without saving?',
   'Ce que vous avez saisi ici sera perdu.': 'What you typed here will be lost.',
@@ -4476,7 +4476,7 @@ const enStrings = <String, String>{
   'Déjà en stock : {n}': 'Already in stock: {n}',
   'Déjà prêt ?': 'Ready already?',
   'Elle paraît sur la vitrine et dans la recherche.': 'It shows on the storefront and in search.',
-  'En dessous de ce nombre, Mara vous prévient.': 'Below this number, Mara warns you.',
+  'En dessous de ce nombre, Marakaj vous prévient.': 'Below this number, Marakaj warns you.',
   'Expire le {date}': 'Expires on {date}',
   'Expire le': 'Expires on',
   'Non, je le vends': 'No, I sell it',
@@ -4617,14 +4617,14 @@ const enStrings = <String, String>{
   'Activé : une commande sonnera quand cet onglet est en arrière-plan.': 'On: an order will ring while this tab is in the background.',
   'Recevez les demandes et les signalements même l\'application fermée.': 'Get requests and reports even with the app closed.',
   'Tester la notification': 'Test the notification',
-  'Votre demande de livreur est bien arrivée : Mara l\'examine et vous répond ici.': 'Your courier application has arrived: Mara is reviewing it and will answer here.',
+  'Votre demande de livreur est bien arrivée : Marakaj l\'examine et vous répond ici.': 'Your courier application has arrived: Marakaj is reviewing it and will answer here.',
   'Nouvelle livraison près de vous : {shop}': 'New delivery near you: {shop}',
   'Nouvelle livraison près de vous : {shop} ({fee})': 'New delivery near you: {shop} ({fee})',
   '{shop} vous a ajouté à ses livreurs : ses livraisons vous arrivent en premier.': '{shop} added you to its couriers: its deliveries reach you first.',
   '{shop} confirme avoir reçu l\'argent de la livraison pour {name} : {amount}.': '{shop} confirms it received the money of the delivery for {name}: {amount}.',
-  'Cela fait 7 jours sans livraison : des courses vous attendent sur Mara.': '7 days without a delivery: jobs are waiting for you on Mara.',
+  'Cela fait 7 jours sans livraison : des courses vous attendent sur Marakaj.': '7 days without a delivery: jobs are waiting for you on Marakaj.',
   'Votre numéro {phone} est vérifié.': 'Your number {phone} is verified.',
-  'Mara : ceci est une notification test. Si elle s\'affiche sur votre téléphone, tout marche.': 'Mara: this is a test notification. If it shows on your phone, everything works.',
+  'Marakaj : ceci est une notification test. Si elle s\'affiche sur votre téléphone, tout marche.': 'Marakaj: this is a test notification. If it shows on your phone, everything works.',
   'Soyez prévenu des commandes et du stock, même l\'application fermée.': 'Hear about orders and stock, even with the app closed.',
   'Soyez prévenu des réservations et de votre équipe, même l\'application fermée.': 'Hear about bookings and your team, even with the app closed.',
   'Recevez les nouvelles livraisons même l\'application fermée.': 'Get new deliveries even with the app closed.',
@@ -4662,8 +4662,8 @@ const enStrings = <String, String>{
       'Push Worker address in this build',
   'Autorisation de l\'appareil':
       'Device permission',
-  'Ce navigateur bloque les notifications de Mara. Touchez le cadenas à gauche de l\'adresse, puis autorisez les notifications pour ce site, et rechargez la page.':
-      'This browser blocks Mara\'s notifications. Tap the padlock left of the address, allow notifications for this site, then reload the page.',
+  'Ce navigateur bloque les notifications de Marakaj. Touchez le cadenas à gauche de l\'adresse, puis autorisez les notifications pour ce site, et rechargez la page.':
+      'This browser blocks Marakaj\'s notifications. Tap the padlock left of the address, allow notifications for this site, then reload the page.',
   'Cet appareil est inscrit : il sonnera même l\'application fermée.':
       'This device is registered: it will ring even with the app closed.',
   'Cette version a été construite sans google-services.json.':
@@ -4690,8 +4690,8 @@ const enStrings = <String, String>{
       'Device token obtained',
   'L\'enregistrement n\'a pas abouti : voyez la ligne marquée « non » ci-dessus.':
       'The registration did not go through: see the line marked “no” above.',
-  'Les notifications de Mara sont bloquées sur ce téléphone. Ouvrez les réglages, touchez « Notifications » et autorisez-les : vous recevrez vos commandes, livraisons et messages même l\'application fermée.':
-      'Mara\'s notifications are blocked on this phone. Open the settings, tap “Notifications” and allow them: you will get your orders, deliveries and messages even with the app closed.',
+  'Les notifications de Marakaj sont bloquées sur ce téléphone. Ouvrez les réglages, touchez « Notifications » et autorisez-les : vous recevrez vos commandes, livraisons et messages même l\'application fermée.':
+      'Marakaj\'s notifications are blocked on this phone. Open the settings, tap “Notifications” and allow them: you will get your orders, deliveries and messages even with the app closed.',
   'Ma ferme':
       'My farm',
   'Mon association':
@@ -4724,8 +4724,8 @@ const enStrings = <String, String>{
       'Your shop is ready',
   'Votre ferme est prête':
       'Your farm is ready',
-  'Votre vitrine propose le retrait à la ferme. Passez à Mara Pro pour livrer vos clients, avec le prix calculé selon la distance.':
-      'Your vitrine offers pickup at the farm. Move to Mara Pro to deliver to your customers, with the price worked out from the distance.',
+  'Votre vitrine propose le retrait à la ferme. Passez à Marakaj Pro pour livrer vos clients, avec le prix calculé selon la distance.':
+      'Your vitrine offers pickup at the farm. Move to Marakaj Pro to deliver to your customers, with the price worked out from the distance.',
   'autorisées':
       'allowed',
   'bloquées (seuls les réglages peuvent les ouvrir)':
@@ -4756,18 +4756,18 @@ const enStrings = <String, String>{
       'No fingerprint or face is set up on this phone. Add one in the phone\'s settings (Security), then come back here.',
   'Le téléphone n\'a pas pu vérifier l\'empreinte. Réessayez, ou gardez le code.':
       'The phone could not check the fingerprint. Try again, or keep the code.',
-  'Autoriser Mara à utiliser l\'empreinte ou Face ID':
-      'Allow Mara to use your fingerprint or Face ID',
-  'Déverrouiller Mara':
-      'Unlock Mara',
+  'Autoriser Marakaj à utiliser l\'empreinte ou Face ID':
+      'Allow Marakaj to use your fingerprint or Face ID',
+  'Déverrouiller Marakaj':
+      'Unlock Marakaj',
   'Vos activités':
       'Your businesses',
   'Créer une nouvelle activité':
       'Create a new business',
-  'Une deuxième activité demande Mara Pro':
-      'A second business needs Mara Pro',
-  'Avec Mara Pro, vous gérez plusieurs activités depuis le même compte et passez de l\'une à l\'autre ici.':
-      'With Mara Pro you run several businesses from the same account and switch between them here.',
+  'Une deuxième activité demande Marakaj Pro':
+      'A second business needs Marakaj Pro',
+  'Avec Marakaj Pro, vous gérez plusieurs activités depuis le même compte et passez de l\'une à l\'autre ici.':
+      'With Marakaj Pro you run several businesses from the same account and switch between them here.',
   'Passer à Pro':
       'Go Pro',
   'Notifications sur ce téléphone':
@@ -4787,34 +4787,34 @@ const enStrings = <String, String>{
       'Mobile apps',
   'Distance où les livreurs reçoivent une livraison (km, 1 à 100)':
       'Distance within which couriers receive a delivery (km, 1 to 100)',
-  'Mara est publiée sur Google Play (sinon : le fichier APK)':
-      'Mara is live on Google Play (otherwise: the APK file)',
-  'Adresse de Mara sur l\'App Store (vide : écran d\'accueil)':
-      'Mara\'s App Store address (empty: home screen)',
+  'Marakaj est publiée sur Google Play (sinon : le fichier APK)':
+      'Marakaj is live on Google Play (otherwise: the APK file)',
+  'Adresse de Marakaj sur l\'App Store (vide : écran d\'accueil)':
+      'Marakaj\'s App Store address (empty: home screen)',
   'Un nombre de {lo} à {hi}.':
       'A number from {lo} to {hi}.',
   'Une adresse qui commence par https://, ou rien.':
       'An address starting with https://, or nothing.',
-  'L\'application Mara est plus rapide et vous prévient de vos commandes. Elle est sur Google Play.':
-      'The Mara app is faster and tells you about your orders. It is on Google Play.',
-  'L\'application Mara est plus rapide et vous prévient de vos commandes. Téléchargez-la pour Android (fichier APK).':
-      'The Mara app is faster and tells you about your orders. Download it for Android (APK file).',
+  'L\'application Marakaj est plus rapide et vous prévient de vos commandes. Elle est sur Google Play.':
+      'The Marakaj app is faster and tells you about your orders. It is on Google Play.',
+  'L\'application Marakaj est plus rapide et vous prévient de vos commandes. Téléchargez-la pour Android (fichier APK).':
+      'The Marakaj app is faster and tells you about your orders. Download it for Android (APK file).',
   'Ouvrir Google Play':
       'Open Google Play',
   'Télécharger pour Android':
       'Download for Android',
-  'L\'application Mara est plus rapide et vous prévient de vos commandes. Elle est sur l\'App Store.':
-      'The Mara app is faster and tells you about your orders. It is on the App Store.',
+  'L\'application Marakaj est plus rapide et vous prévient de vos commandes. Elle est sur l\'App Store.':
+      'The Marakaj app is faster and tells you about your orders. It is on the App Store.',
   'Ouvrir l\'App Store':
       'Open the App Store',
-  'Ajoutez Mara à l\'écran d\'accueil : dans Safari, touchez Partager, puis « Sur l\'écran d\'accueil ».':
-      'Add Mara to your home screen: in Safari, tap Share, then “Add to Home Screen”.',
-  'Mara sur votre écran d\'accueil':
-      'Mara on your home screen',
-  'Mara sur votre téléphone':
-      'Mara on your phone',
+  'Ajoutez Marakaj à l\'écran d\'accueil : dans Safari, touchez Partager, puis « Sur l\'écran d\'accueil ».':
+      'Add Marakaj to your home screen: in Safari, tap Share, then “Add to Home Screen”.',
+  'Marakaj sur votre écran d\'accueil':
+      'Marakaj on your home screen',
+  'Marakaj sur votre téléphone':
+      'Marakaj on your phone',
   // Batch 122, builder P: back from a root asks before leaving.
-  'Quitter Mara ?': 'Leave Mara?',
+  'Quitter Marakaj ?': 'Leave Marakaj?',
   'Ex. : Maison Élégance, Le Comptoir Doré, Atelier Lumière':
       'E.g. Maison Élégance, Le Comptoir Doré, Atelier Lumière',
   'Ex. : Domaine des Acacias, Ferme Horizon Vert, Les Jardins du Sahel':
@@ -4948,8 +4948,8 @@ const enStrings = <String, String>{
       'sold out',
   'Voir l\'article':
       'See the item',
-  'Bonjour {shop}, une question sur « {item} » vu sur votre vitrine Mara.':
-      'Hello {shop}, a question about “{item}” seen on your Mara vitrine.',
+  'Bonjour {shop}, une question sur « {item} » vu sur votre vitrine Marakaj.':
+      'Hello {shop}, a question about “{item}” seen on your Marakaj vitrine.',
   'Retrait en boutique, ou livraison dans le quartier':
       'Pick up at the shop, or delivery in the neighbourhood',
   'Des boutiques de chez vous, tenues par leurs commerçants':
@@ -5122,10 +5122,10 @@ const enStrings = <String, String>{
       'Pins far away',
   'hors de la zone de la monnaie':
       'outside the currency\'s area',
-  'Mara a vérifié qui vous êtes.':
-      'Mara has checked who you are.',
-  'Mara vérifie l\'association (récépissé, responsables). Demandez-le à votre contact Mara.':
-      'Mara checks the association (registration receipt, officers). Ask your Mara contact.',
+  'Marakaj a vérifié qui vous êtes.':
+      'Marakaj has checked who you are.',
+  'Marakaj vérifie l\'association (récépissé, responsables). Demandez-le à votre contact Marakaj.':
+      'Marakaj checks the association (registration receipt, officers). Ask your Marakaj contact.',
   '{v} semaines sur les 8 dernières ont leurs entrées.':
       '{v} of the last 8 weeks have their entries.',
   '{v} semaines sur 8 : notez les entrées et sorties au moins 6 semaines sur 8.':
@@ -5146,10 +5146,10 @@ const enStrings = <String, String>{
       '{v} correction for {of} entries.',
   '{v} corrections pour {of} entrées : vérifiez avant d\'enregistrer (moins d\'une sur 10).':
       '{v} corrections for {of} entries: check before saving (fewer than one in 10).',
-  'Sur Mara depuis {months} mois.':
-      'On Mara for {months} months.',
-  'Sur Mara depuis {months} mois : la confiance se gagne avec le temps.':
-      'On Mara for {months} months: trust is earned with time.',
+  'Sur Marakaj depuis {months} mois.':
+      'On Marakaj for {months} months.',
+  'Sur Marakaj depuis {months} mois : la confiance se gagne avec le temps.':
+      'On Marakaj for {months} months: trust is earned with time.',
   'Aucun groupe d’animaux.':
       'No animal groups.',
   'Chèvres, bovins, pintades — tout ce qui n’est pas une bande de volailles suivie séparément.':
@@ -5326,8 +5326,8 @@ const enStrings = <String, String>{
       'Unknown device',
   'Appareil':
       'Device',
-  'application Mara':
-      'Mara app',
+  'application Marakaj':
+      'Marakaj app',
   'navigateur':
       'browser',
   'Nouvelle commande — {name}':
@@ -5414,10 +5414,10 @@ const enStrings = <String, String>{
       'The percentage goes from 0 to 100.',
   'Enregistré : {pct} % sur les prochaines livraisons. Les commandes déjà passées gardent leur part.':
       'Saved: {pct} % on the next deliveries. Orders already placed keep their share.',
-  '{amount} F CFA dus à Mara':
-      '{amount} F CFA owed to Mara',
-  '{amount} dus à Mara':
-      '{amount} owed to Mara',
+  '{amount} F CFA dus à Marakaj':
+      '{amount} F CFA owed to Marakaj',
+  '{amount} dus à Marakaj':
+      '{amount} owed to Marakaj',
   '{n} courses':
       '{n} runs',
   '{n} course':
@@ -5528,10 +5528,10 @@ const enStrings = <String, String>{
       'Nothing to show for this period.',
   'Ouvrez ce lien dans votre navigateur : {url}':
       'Open this link in your browser: {url}',
-  'Une nouvelle version de Mara est en ligne.':
-      'A new version of Mara is online.',
-  'Une nouvelle version de Mara est disponible.':
-      'A new version of Mara is available.',
+  'Une nouvelle version de Marakaj est en ligne.':
+      'A new version of Marakaj is online.',
+  'Une nouvelle version de Marakaj est disponible.':
+      'A new version of Marakaj is available.',
   'Recharger':
       'Reload',
   'Télécharger':
@@ -5580,8 +5580,8 @@ const enStrings = <String, String>{
       'Left to pay: {amount}',
   'Les deux prix doivent être des nombres entiers.':
       'Both prices must be whole numbers.',
-  'Enregistré. Les prochains écrans Mara Pro le disent.':
-      'Saved. The next Mara Pro screens say so.',
+  'Enregistré. Les prochains écrans Marakaj Pro le disent.':
+      'Saved. The next Marakaj Pro screens say so.',
   '{from}–{to} sur {n}':
       '{from}–{to} of {n}',
   'Payé jusqu\'au':
@@ -5628,14 +5628,14 @@ const enStrings = <String, String>{
       '{month} a month, or {year} a year.',
   'Installez Google Authenticator ou Microsoft Authenticator (Play Store).':
       'Install Google Authenticator or Microsoft Authenticator (Play Store).',
-  'Ajoutez Mara : scannez ce code depuis un autre écran, ou touchez le bouton sur ce téléphone.':
-      'Add Mara: scan this code from another screen, or tap the button on this phone.',
+  'Ajoutez Marakaj : scannez ce code depuis un autre écran, ou touchez le bouton sur ce téléphone.':
+      'Add Marakaj: scan this code from another screen, or tap the button on this phone.',
   '1er':
       '1st',
   '{n}e':
       '#{n}',
-  'Je suis {place} cette semaine sur Mara, en {league} ! 🏆':
-      'I am {place} this week on Mara, in {league}! 🏆',
+  'Je suis {place} cette semaine sur Marakaj, en {league} ! 🏆':
+      'I am {place} this week on Marakaj, in {league}! 🏆',
   'Venez voir ma vitrine : {url}':
       'Come and see my vitrine: {url}',
   'Cette semaine · {n} entreprise(s) dans la course':
@@ -5758,8 +5758,8 @@ const enStrings = <String, String>{
       'Savannah',
   'Ardoise':
       'Slate',
-  'Bonjour ! Vous êtes invité(e) à rejoindre « {org} » sur Mara.\n\n1. Installez l\'application\n2. Créez votre compte\n3. Entrez ce code :\n\n{code}\n\nLe code expire dans {delay}.':
-      'Hello! You are invited to join “{org}” on Mara.\n\n1. Install the app\n2. Create your account\n3. Enter this code:\n\n{code}\n\nThe code expires in {delay}.',
+  'Bonjour ! Vous êtes invité(e) à rejoindre « {org} » sur Marakaj.\n\n1. Installez l\'application\n2. Créez votre compte\n3. Entrez ce code :\n\n{code}\n\nLe code expire dans {delay}.':
+      'Hello! You are invited to join “{org}” on Marakaj.\n\n1. Install the app\n2. Create your account\n3. Enter this code:\n\n{code}\n\nThe code expires in {delay}.',
   'quelques jours':
       'a few days',
   'Normal':
@@ -6032,8 +6032,8 @@ const enStrings = <String, String>{
       'Value: {value}',
   'Disponibles':
       'Available',
-  'part Mara {amount}':
-      'Mara\'s share {amount}',
+  'part Marakaj {amount}':
+      'Marakaj\'s share {amount}',
   '{births} naissances · {losses} pertes':
       '{births} births · {losses} losses',
   '{n} tentatives':
@@ -6090,7 +6090,7 @@ const enStrings = <String, String>{
       '# How do I reach someone?',
   'Depuis la page Aide de votre entreprise (Compte › Aide), ou Mon profil › Aide : par WhatsApp ou par e-mail.':
       'From your business\'s Help page (Account › Help), or My profile › Help: on WhatsApp or by e-mail.',
-  'Pas trouvé ? Écrire à Mara': 'Not found? Write to Mara',
+  'Pas trouvé ? Écrire à Marakaj': 'Not found? Write to Marakaj',
   'Demandes reçues · formateurs': 'Requests received · trainers',
   'Ce que les entreprises demandent aux formateurs': 'What businesses ask the trainers',
   'WhatsApp 24/7 · un formateur': 'WhatsApp 24/7 · a trainer',
@@ -6120,17 +6120,17 @@ const enStrings = <String, String>{
   'La connexion avec Apple n\'a pas abouti. Réessayez.':
       'Signing in with Apple did not go through. Try again.',
   // 125: the iPhone app sells no digital goods (store_rules.dart).
-  'Cette fonction fait partie de Mara Pro.':
-      'This feature is part of Mara Pro.',
-  'Vous avez déjà une activité sur Mara. Une deuxième activité fait partie de Mara Pro.':
-      'You already have a business on Mara. A second business is part of Mara Pro.',
-  'Votre vitrine propose le retrait en boutique. La livraison, avec le prix calculé selon la distance, fait partie de Mara Pro.':
-      'Your vitrine offers pickup at the shop. Delivery, priced by distance, is part of Mara Pro.',
-  'Votre vitrine propose le retrait à la ferme. La livraison, avec le prix calculé selon la distance, fait partie de Mara Pro.':
-      'Your vitrine offers pickup at the farm. Delivery, priced by distance, is part of Mara Pro.',
+  'Cette fonction fait partie de Marakaj Pro.':
+      'This feature is part of Marakaj Pro.',
+  'Vous avez déjà une activité sur Marakaj. Une deuxième activité fait partie de Marakaj Pro.':
+      'You already have a business on Marakaj. A second business is part of Marakaj Pro.',
+  'Votre vitrine propose le retrait en boutique. La livraison, avec le prix calculé selon la distance, fait partie de Marakaj Pro.':
+      'Your vitrine offers pickup at the shop. Delivery, priced by distance, is part of Marakaj Pro.',
+  'Votre vitrine propose le retrait à la ferme. La livraison, avec le prix calculé selon la distance, fait partie de Marakaj Pro.':
+      'Your vitrine offers pickup at the farm. Delivery, priced by distance, is part of Marakaj Pro.',
   // 125: the iPhone app's words with no way of paying in them.
-  'Gagnez Mara Pro':
-      'Earn Mara Pro',
+  'Gagnez Marakaj Pro':
+      'Earn Marakaj Pro',
   'Installez Google Authenticator ou Microsoft Authenticator (App Store).':
       'Install Google Authenticator or Microsoft Authenticator (App Store).',
   'Votre mise en avant est programmée.':
@@ -6291,56 +6291,56 @@ const enStrings = <String, String>{
   // 130: Mara Pro in the store apps (store_panel.dart), its notice and its switch.
   'Abonnement dans les applications (App Store, Google Play)':
       'Subscription in the apps (App Store, Google Play)',
-  'Mara Pro est actif, payé sur l\'App Store, jusqu\'au {date}.':
-      'Mara Pro is on, paid on the App Store, until {date}.',
-  'Mara Pro est actif, payé sur Google Play, jusqu\'au {date}.':
-      'Mara Pro is on, paid on Google Play, until {date}.',
-  'Achat en attente : {store} doit encore le confirmer (accord parental, paiement en cours). Mara Pro s\'activera dès qu\'il sera confirmé.':
-      'Purchase pending: {store} still has to confirm it (parental approval, payment in progress). Mara Pro turns on as soon as it is confirmed.',
+  'Marakaj Pro est actif, payé sur l\'App Store, jusqu\'au {date}.':
+      'Marakaj Pro is on, paid on the App Store, until {date}.',
+  'Marakaj Pro est actif, payé sur Google Play, jusqu\'au {date}.':
+      'Marakaj Pro is on, paid on Google Play, until {date}.',
+  'Achat en attente : {store} doit encore le confirmer (accord parental, paiement en cours). Marakaj Pro s\'activera dès qu\'il sera confirmé.':
+      'Purchase pending: {store} still has to confirm it (parental approval, payment in progress). Marakaj Pro turns on as soon as it is confirmed.',
   'Achat annulé : rien n\'a été prélevé.':
       'Purchase cancelled: nothing was charged.',
-  'Ce compte {store} paie déjà Mara Pro, sans doute pour une autre de vos entreprises : un abonnement couvre une seule entreprise.':
-      'This {store} account already pays for Mara Pro, probably for another of your businesses: one subscription covers one business.',
+  'Ce compte {store} paie déjà Marakaj Pro, sans doute pour une autre de vos entreprises : un abonnement couvre une seule entreprise.':
+      'This {store} account already pays for Marakaj Pro, probably for another of your businesses: one subscription covers one business.',
   'L\'achat n\'a pas pu se faire : {store} n\'a rien prélevé. Réessayez dans un moment.':
       'The purchase did not go through: {store} charged nothing. Try again in a moment.',
   'Vérification de l\'achat auprès de {store}…':
       'Checking the purchase with {store}…',
-  'Cet abonnement est terminé : il ne donne plus Mara Pro.':
-      'This subscription has ended: it no longer gives Mara Pro.',
-  'Cet abonnement a été remboursé : il ne donne plus Mara Pro.':
-      'This subscription was refunded: it no longer gives Mara Pro.',
+  'Cet abonnement est terminé : il ne donne plus Marakaj Pro.':
+      'This subscription has ended: it no longer gives Marakaj Pro.',
+  'Cet abonnement a été remboursé : il ne donne plus Marakaj Pro.':
+      'This subscription was refunded: it no longer gives Marakaj Pro.',
   'Le paiement de cet abonnement est en attente chez {store} : mettez à jour votre moyen de paiement dans {store}.':
       'The payment for this subscription is on hold at {store}: update your payment method in {store}.',
-  'Cet achat ne donne pas Mara Pro à cette entreprise.':
-      'This purchase does not give this business Mara Pro.',
-  'Le paiement est fait, mais Mara n\'a pas encore pu le vérifier. Gardez une connexion et touchez « Restaurer mes achats » : rien ne sera prélevé deux fois.':
-      'The payment is made, but Mara could not check it yet. Stay connected and tap “Restore purchases”: nothing will be charged twice.',
+  'Cet achat ne donne pas Marakaj Pro à cette entreprise.':
+      'This purchase does not give this business Marakaj Pro.',
+  'Le paiement est fait, mais Marakaj n\'a pas encore pu le vérifier. Gardez une connexion et touchez « Restaurer mes achats » : rien ne sera prélevé deux fois.':
+      'The payment is made, but Marakaj could not check it yet. Stay connected and tap “Restore purchases”: nothing will be charged twice.',
   'Recherche de vos achats sur {store}…':
       'Looking for your purchases on {store}…',
-  'Aucun abonnement Mara Pro à restaurer sur ce compte {store}.':
-      'No Mara Pro subscription to restore on this {store} account.',
+  'Aucun abonnement Marakaj Pro à restaurer sur ce compte {store}.':
+      'No Marakaj Pro subscription to restore on this {store} account.',
   '{store} n\'a pas répondu. Réessayez dans un moment.':
       '{store} did not answer. Try again in a moment.',
-  'Seul un administrateur de l\'entreprise peut l\'abonner à Mara Pro.':
-      'Only an administrator of the business can subscribe it to Mara Pro.',
-  '{store} ne propose pas Mara Pro sur cet appareil pour le moment. Réessayez plus tard.':
-      '{store} does not offer Mara Pro on this device for now. Try again later.',
+  'Seul un administrateur de l\'entreprise peut l\'abonner à Marakaj Pro.':
+      'Only an administrator of the business can subscribe it to Marakaj Pro.',
+  '{store} ne propose pas Marakaj Pro sur cet appareil pour le moment. Réessayez plus tard.':
+      '{store} does not offer Marakaj Pro on this device for now. Try again later.',
   'Restaurer mes achats':
       'Restore purchases',
   'Gérer mon abonnement':
       'Manage my subscription',
-  'Mara Pro est un abonnement à renouvellement automatique{prices}. Le paiement est débité sur votre compte {store} à la confirmation de l\'achat. L\'abonnement se renouvelle automatiquement au même prix et pour la même durée, sauf s\'il est annulé au moins 24 heures avant la fin de la période en cours. Gérez-le ou annulez-le à tout moment dans les réglages de votre compte {store}.':
-      'Mara Pro is an auto-renewing subscription{prices}. Payment is charged to your {store} account when you confirm the purchase. The subscription renews automatically at the same price for the same length unless it is cancelled at least 24 hours before the end of the current period. Manage or cancel it at any time in your {store} account settings.',
+  'Marakaj Pro est un abonnement à renouvellement automatique{prices}. Le paiement est débité sur votre compte {store} à la confirmation de l\'achat. L\'abonnement se renouvelle automatiquement au même prix et pour la même durée, sauf s\'il est annulé au moins 24 heures avant la fin de la période en cours. Gérez-le ou annulez-le à tout moment dans les réglages de votre compte {store}.':
+      'Marakaj Pro is an auto-renewing subscription{prices}. Payment is charged to your {store} account when you confirm the purchase. The subscription renews automatically at the same price for the same length unless it is cancelled at least 24 hours before the end of the current period. Manage or cancel it at any time in your {store} account settings.',
   ' : 1 mois à {price}':
       ': 1 month at {price}',
   ' : 1 an à {price}':
       ': 1 year at {price}',
   ', ou 1 an à {price}':
       ', or 1 year at {price}',
-  'Mara Pro · 1 an':
-      'Mara Pro · 1 year',
-  'Mara Pro · 1 mois':
-      'Mara Pro · 1 month',
+  'Marakaj Pro · 1 an':
+      'Marakaj Pro · 1 year',
+  'Marakaj Pro · 1 mois':
+      'Marakaj Pro · 1 month',
   '{price} par an':
       '{price} a year',
   '{price} par mois':
@@ -6372,18 +6372,18 @@ const enStrings = <String, String>{
       'the card subscription stopped',
   'Leurs ventes, leur stock, leurs comptes et leur vitrine disparaissent aussi : c\'est définitif.':
       'Their sales, stock, books and shop window go too: this is final.',
-  'Votre abonnement Mara Pro de l\'App Store continue d\'être facturé par Apple tant que vous ne l\'annulez pas : Réglages › votre nom › Abonnements › Mara Pro. Mara ne peut pas l\'annuler pour vous.':
-      'Your App Store Mara Pro subscription keeps being charged by Apple until you cancel it: Settings › your name › Subscriptions › Mara Pro. Mara cannot cancel it for you.',
+  'Votre abonnement Marakaj Pro de l\'App Store continue d\'être facturé par Apple tant que vous ne l\'annulez pas : Réglages › votre nom › Abonnements › Marakaj Pro. Marakaj ne peut pas l\'annuler pour vous.':
+      'Your App Store Marakaj Pro subscription keeps being charged by Apple until you cancel it: Settings › your name › Subscriptions › Marakaj Pro. Marakaj cannot cancel it for you.',
   'Vous quittez aussi : {names}.':
       'You also leave: {names}.',
   'Une livraison est en cours : terminez-la, puis supprimez votre compte.':
       'A delivery is under way: finish it, then delete your account.',
-  'Mettez Mara à jour : la suppression d\'un compte qui tient une activité se confirme dans la dernière version de l\'application.':
-      'Update Mara: deleting an account that runs a business is confirmed in the latest version of the app.',
+  'Mettez Marakaj à jour : la suppression d\'un compte qui tient une activité se confirme dans la dernière version de l\'application.':
+      'Update Marakaj: deleting an account that runs a business is confirmed in the latest version of the app.',
   'La liste de vos activités a changé : relisez-la avant de supprimer votre compte.':
       'The list of your businesses has changed: read it again before deleting your account.',
-  '« {shop} » a fermé sur Mara : vous n\'en faites plus partie. Votre compte reste le vôtre.':
-      '“{shop}” closed on Mara: you are no longer part of it. Your account stays yours.',
+  '« {shop} » a fermé sur Marakaj : vous n\'en faites plus partie. Votre compte reste le vôtre.':
+      '“{shop}” closed on Marakaj: you are no longer part of it. Your account stays yours.',
   // 130: the date of birth and the number, optional at sign-up.
   'Numéro de téléphone (facultatif)':
       'Phone number (optional)',
@@ -6401,22 +6401,22 @@ const enStrings = <String, String>{
       'This purchase does not say which business it was made for.',
   'Cet abonnement est déjà celui d\'une autre entreprise.':
       'This subscription already belongs to another business.',
-  'Cet achat n\'est pas Mara Pro.':
-      'This purchase is not Mara Pro.',
-  'Cet achat n\'est pas pour Mara.':
-      'This purchase is not for Mara.',
-  'Cet achat n\'a pas pu être lu par Mara.':
-      'Mara could not read this purchase.',
-  'Achat de test refusé : un achat fait avec un compte de test (sandbox, TestFlight) n\'active Mara Pro que pour les comptes de test de Mara.':
-      'Test purchase refused: a purchase made with a test account (sandbox, TestFlight) turns on Mara Pro only for Mara\'s own test accounts.',
+  'Cet achat n\'est pas Marakaj Pro.':
+      'This purchase is not Marakaj Pro.',
+  'Cet achat n\'est pas pour Marakaj.':
+      'This purchase is not for Marakaj.',
+  'Cet achat n\'a pas pu être lu par Marakaj.':
+      'Marakaj could not read this purchase.',
+  'Achat de test refusé : un achat fait avec un compte de test (sandbox, TestFlight) n\'active Marakaj Pro que pour les comptes de test de Marakaj.':
+      'Test purchase refused: a purchase made with a test account (sandbox, TestFlight) turns on Marakaj Pro only for Marakaj\'s own test accounts.',
   'Votre session a expiré : reconnectez-vous, puis touchez « Restaurer mes achats ». Rien ne sera prélevé deux fois.':
       'Your session has expired: sign in again, then tap “Restore purchases”. Nothing will be charged twice.',
-  'Votre abonnement {store} paie déjà Mara Pro pour « {name} ». Un abonnement couvre une seule entreprise : il ne peut pas payer aussi celle-ci depuis ce compte {store}. Pour changer d\'entreprise, ou l\'arrêter, gérez-le dans {store}.':
-      'Your {store} subscription already pays Mara Pro for “{name}”. One subscription covers one business: it cannot also pay for this one from this {store} account. To move it to another business, or stop it, manage it in {store}.',
+  'Votre abonnement {store} paie déjà Marakaj Pro pour « {name} ». Un abonnement couvre une seule entreprise : il ne peut pas payer aussi celle-ci depuis ce compte {store}. Pour changer d\'entreprise, ou l\'arrêter, gérez-le dans {store}.':
+      'Your {store} subscription already pays Marakaj Pro for “{name}”. One subscription covers one business: it cannot also pay for this one from this {store} account. To move it to another business, or stop it, manage it in {store}.',
   'Une commande de « {name} » est en route ou déjà payée en ligne : livrez-la ou remboursez-la, puis supprimez votre compte.':
       'An order of “{name}” is on its way or already paid online: deliver or refund it, then delete your account.',
-  'Mara doit encore verser à « {name} » l\'argent d\'une commande payée par Wave (versement en attente ou en échec) : attendez qu\'il arrive, ou écrivez à l\'aide Mara, puis supprimez votre compte.':
-      'Mara still owes “{name}” the money of an order paid by Wave (payout pending or failed): wait for it to arrive, or write to Mara\'s help, then delete your account.',
+  'Marakaj doit encore verser à « {name} » l\'argent d\'une commande payée par Wave (versement en attente ou en échec) : attendez qu\'il arrive, ou écrivez à l\'aide Marakaj, puis supprimez votre compte.':
+      'Marakaj still owes “{name}” the money of an order paid by Wave (payout pending or failed): wait for it to arrive, or write to Marakaj\'s help, then delete your account.',
   'Par sécurité, reconnectez-vous avant de supprimer votre compte : la connexion doit dater de moins de 10 minutes.':
       'For your safety, sign in again before deleting your account: the sign-in must be less than 10 minutes old.',
   'Nous n\'avons pas pu arrêter l\'abonnement de « {name} » : rien n\'a été supprimé. Réessayez dans un moment ou écrivez à l\'aide.':
@@ -6424,15 +6424,15 @@ const enStrings = <String, String>{
   // 129: a new account, for Mara's admins.
   'Nouveau compte : {name} ({how})': 'New account: {name} ({how})',
   'e-mail': 'email',
-  'Notifier les administrateurs de Mara à chaque nouveau compte':
-      'Notify Mara\'s admins of every new account',
+  'Notifier les administrateurs de Marakaj à chaque nouveau compte':
+      'Notify Marakaj\'s admins of every new account',
   // 132: the store's own reason, an existing store subscription.
   '({store} : {code})': '({store}: {code})',
-  'Ce compte {account} a déjà un abonnement Mara Pro, pour une autre entreprise ou refusé. Gérez-le ou annulez-le dans {store}, puis réessayez.':
-      'This {account} account already has a Mara Pro subscription, for another business or refused. Manage or cancel it in {store}, then try again.',
+  'Ce compte {account} a déjà un abonnement Marakaj Pro, pour une autre entreprise ou refusé. Gérez-le ou annulez-le dans {store}, puis réessayez.':
+      'This {account} account already has a Marakaj Pro subscription, for another business or refused. Manage or cancel it in {store}, then try again.',
   'l\'App Store': 'the App Store',
-  'Ce compte {store} a déjà un abonnement Mara Pro pour cette entreprise : touchez « Restaurer mes achats » pour l\'activer.':
-      'This {store} account already has a Mara Pro subscription for this business: tap “Restore purchases” to turn it on.',
+  'Ce compte {store} a déjà un abonnement Marakaj Pro pour cette entreprise : touchez « Restaurer mes achats » pour l\'activer.':
+      'This {store} account already has a Marakaj Pro subscription for this business: tap “Restore purchases” to turn it on.',
   // 133 (UI audit F-1, F-2): the farm's stock lines and herds.
   'seuil {n} {unit}': 'threshold {n} {unit}',
   'aucun seuil': 'no threshold',
@@ -6444,8 +6444,8 @@ const enStrings = <String, String>{
   // faithfully for the English app; the French text binds (legal_screens.dart).
   'La version française de ce texte est celle qui fait foi. Voici sa traduction en anglais, pour information.':
       'The French version of this text is the binding one. Here is its English translation, for information.',
-  'Mara enregistre les informations que vous saisissez pour faire fonctionner votre activité : ventes, dépenses, membres, produits, photos de pièces justificatives, et les personnes de votre équipe.':
-      'Mara records the information you enter to run your business: sales, expenses, members, products, photos of receipts and supporting documents, and the people on your team.',
+  'Marakaj enregistre les informations que vous saisissez pour faire fonctionner votre activité : ventes, dépenses, membres, produits, photos de pièces justificatives, et les personnes de votre équipe.':
+      'Marakaj records the information you enter to run your business: sales, expenses, members, products, photos of receipts and supporting documents, and the people on your team.',
   '# Ce que nous collectons':
       '# What we collect',
   'Votre nom et votre numéro de téléphone, votre date de naissance si vous la donnez (elle n\'est jamais obligatoire), les données que vous entrez dans l\'application, et les photos que vous prenez pour vos reçus et livraisons.':
@@ -6468,38 +6468,38 @@ const enStrings = <String, String>{
       'On secure servers (Supabase and Cloudflare). Each business sees only its own data; the separation between businesses is enforced by the server.',
   '# Les prestataires':
       '# Service providers',
-  'Mara fait appel à quelques prestataires, chacun seulement pour ce qui le concerne : Supabase (la base de données et les comptes) et Cloudflare (le site, les photos) hébergent les données ; Google pour la connexion avec Google et l\'envoi des notifications sur le téléphone (Firebase) ; Apple pour la connexion avec Apple ; Apple (l\'App Store) et Google (Google Play) pour l\'abonnement Mara Pro pris dans l\'application, qu\'ils facturent et gèrent eux-mêmes ; Stripe pour le paiement par carte de Mara Pro (Mara ne voit jamais le numéro de la carte) ; Sentry pour les rapports d\'erreur de l\'application (sans nom, numéro ni contenu de vos livres) ; Resend pour envoyer l\'e-mail de bienvenue ; et, quand ils sont ouverts, Wave pour le paiement par mobile money et WhatsApp (Meta) pour envoyer le code de vérification du numéro. Aucun ne reçoit vos données pour de la publicité.':
-      'Mara uses a few service providers, each only for what concerns it: Supabase (the database and the accounts) and Cloudflare (the website, the photos) host the data; Google for signing in with Google and for sending notifications to the phone (Firebase); Apple for signing in with Apple; Apple (the App Store) and Google (Google Play) for the Mara Pro subscription taken in the app, which they bill and manage themselves; Stripe for paying for Mara Pro by card (Mara never sees the card number); Sentry for the app\'s error reports (with no name, number or content of your books); Resend to send the welcome email; and, when they are open, Wave for mobile money payments and WhatsApp (Meta) to send the phone number verification code. None of them receives your data for advertising.',
+  'Marakaj fait appel à quelques prestataires, chacun seulement pour ce qui le concerne : Supabase (la base de données et les comptes) et Cloudflare (le site, les photos) hébergent les données ; Google pour la connexion avec Google et l\'envoi des notifications sur le téléphone (Firebase) ; Apple pour la connexion avec Apple ; Apple (l\'App Store) et Google (Google Play) pour l\'abonnement Marakaj Pro pris dans l\'application, qu\'ils facturent et gèrent eux-mêmes ; Stripe pour le paiement par carte de Marakaj Pro (Marakaj ne voit jamais le numéro de la carte) ; Sentry pour les rapports d\'erreur de l\'application (sans nom, numéro ni contenu de vos livres) ; Resend pour envoyer l\'e-mail de bienvenue ; et, quand ils sont ouverts, Wave pour le paiement par mobile money et WhatsApp (Meta) pour envoyer le code de vérification du numéro. Aucun ne reçoit vos données pour de la publicité.':
+      'Marakaj uses a few service providers, each only for what concerns it: Supabase (the database and the accounts) and Cloudflare (the website, the photos) host the data; Google for signing in with Google and for sending notifications to the phone (Firebase); Apple for signing in with Apple; Apple (the App Store) and Google (Google Play) for the Marakaj Pro subscription taken in the app, which they bill and manage themselves; Stripe for paying for Marakaj Pro by card (Marakaj never sees the card number); Sentry for the app\'s error reports (with no name, number or content of your books); Resend to send the welcome email; and, when they are open, Wave for mobile money payments and WhatsApp (Meta) to send the phone number verification code. None of them receives your data for advertising.',
   '# Les visites des vitrines':
       '# Visits to vitrines',
   'Quand vous ouvrez la vitrine d\'une activité, l\'application ou votre navigateur envoie un numéro tiré au hasard et gardé sur l\'appareil, afin que chaque visiteur ne soit compté qu\'une fois par jour. Ce numéro n\'est jamais lié à vous ni à votre compte, et la vitrine n\'affiche que le nombre de ses visiteurs. Les membres de l\'activité ne sont pas comptés ; les visites de plus de 400 jours sont effacées (le total reste).':
       'When you open a business\'s vitrine, the app or your browser sends a randomly drawn number kept on the device, so that each visitor is counted only once a day. This number is never linked to you or to your account, and the vitrine shows only the number of its visitors. The business\'s members are not counted; visits older than 400 days are erased (the total remains).',
   '# Devenir livreur':
       '# Becoming a courier',
-  'Pour devenir livreur, vous envoyez un selfie et la photo de votre pièce d\'identité (à moto ou en voiture, aussi votre permis). Ces photos sont gardées à part, en privé : seule l\'équipe Mara qui examine les demandes peut les voir, jamais les boutiques, les clients ni la rue. Si votre demande est refusée et que vous ne la renvoyez pas, elles ne sont plus jamais montrées après 30 jours, et sont effacées la fois suivante où la liste des livreurs est ouverte (par l\'équipe Mara, ou par vous sur « Devenir livreur »). Il en va de même, sans attendre, d\'une photo remplacée par une nouvelle et, après 30 jours sans suite, d\'une demande commencée puis laissée. Si vous êtes accepté, elles sont gardées tant que vous êtes livreur ; votre compte supprimé, elles ne sont plus montrées et sont effacées de la même façon.':
-      'To become a courier, you send a selfie and a photo of your identity document (on a motorbike or in a car, also your driving licence). These photos are kept separately, in private: only the Mara team that reviews applications can see them, never the shops, the customers or the street. If your application is refused and you do not send it again, they are never shown again after 30 days, and are erased the next time the list of couriers is opened (by the Mara team, or by you on “Devenir livreur”). The same applies, without waiting, to a photo replaced by a new one and, after 30 days with no follow-up, to an application started and then left. If you are accepted, they are kept as long as you are a courier; once your account is deleted, they are no longer shown and are erased in the same way.',
-  'Quand vous êtes livreur et ouvrez les livraisons disponibles, votre téléphone donne votre position, si vous l\'autorisez. Mara garde la dernière, pour vous seul — ni les boutiques, ni les clients, ni les autres livreurs ne la voient — afin de vous montrer les livraisons proches et de vous prévenir de celles-ci. Après 24 heures, elle n\'est plus utilisée ; après 30 jours, elle est effacée.':
-      'When you are a courier and open the available deliveries, your phone gives your position, if you allow it. Mara keeps the latest one, for you alone — neither the shops, nor the customers, nor the other couriers see it — in order to show you the deliveries nearby and to alert you to them. After 24 hours it is no longer used; after 30 days it is erased.',
+  'Pour devenir livreur, vous envoyez un selfie et la photo de votre pièce d\'identité (à moto ou en voiture, aussi votre permis). Ces photos sont gardées à part, en privé : seule l\'équipe Marakaj qui examine les demandes peut les voir, jamais les boutiques, les clients ni la rue. Si votre demande est refusée et que vous ne la renvoyez pas, elles ne sont plus jamais montrées après 30 jours, et sont effacées la fois suivante où la liste des livreurs est ouverte (par l\'équipe Marakaj, ou par vous sur « Devenir livreur »). Il en va de même, sans attendre, d\'une photo remplacée par une nouvelle et, après 30 jours sans suite, d\'une demande commencée puis laissée. Si vous êtes accepté, elles sont gardées tant que vous êtes livreur ; votre compte supprimé, elles ne sont plus montrées et sont effacées de la même façon.':
+      'To become a courier, you send a selfie and a photo of your identity document (on a motorbike or in a car, also your driving licence). These photos are kept separately, in private: only the Marakaj team that reviews applications can see them, never the shops, the customers or the street. If your application is refused and you do not send it again, they are never shown again after 30 days, and are erased the next time the list of couriers is opened (by the Marakaj team, or by you on “Devenir livreur”). The same applies, without waiting, to a photo replaced by a new one and, after 30 days with no follow-up, to an application started and then left. If you are accepted, they are kept as long as you are a courier; once your account is deleted, they are no longer shown and are erased in the same way.',
+  'Quand vous êtes livreur et ouvrez les livraisons disponibles, votre téléphone donne votre position, si vous l\'autorisez. Marakaj garde la dernière, pour vous seul — ni les boutiques, ni les clients, ni les autres livreurs ne la voient — afin de vous montrer les livraisons proches et de vous prévenir de celles-ci. Après 24 heures, elle n\'est plus utilisée ; après 30 jours, elle est effacée.':
+      'When you are a courier and open the available deliveries, your phone gives your position, if you allow it. Marakaj keeps the latest one, for you alone — neither the shops, nor the customers, nor the other couriers see it — in order to show you the deliveries nearby and to alert you to them. After 24 hours it is no longer used; after 30 days it is erased.',
   '# Vos droits':
       '# Your rights',
-  'Vous pouvez demander la correction ou la suppression de vos données en contactant le support. Vous pouvez aussi télécharger vos données et supprimer votre compte vous-même, tout de suite, depuis Mon profil › Mes données (ou Compte › Mes données si vous tenez une activité ou en êtes membre) : votre profil, vos adresses, vos favoris, vos notifications et vos signalements partent avec lui ; vos commandes restent chez les boutiques, au nom de « Client supprimé », sans votre numéro ni votre adresse ; ce que vous avez inscrit pour une activité (une vente, une écriture) lui reste, sans votre nom. Si vous êtes le seul propriétaire d\'une activité, elle est supprimée avec votre compte : ses ventes, son stock, ses comptes et sa vitrine sont effacés de façon définitive, ses commandes en cours sont annulées et ses clients prévenus, et ses membres gardent leur propre compte. Un abonnement Mara Pro pris sur l\'App Store s\'annule dans les réglages de votre compte Apple : Mara ne peut pas l\'annuler.':
-      'You can ask for your data to be corrected or deleted by contacting support. You can also download your data and delete your account yourself, right away, from Mon profil › Mes données (or Compte › Mes données if you run a business or are a member of one): your profile, your addresses, your favourites, your notifications and your reports go with it; your orders stay with the shops, under the name “Client supprimé”, without your number or your address; what you recorded for a business (a sale, an entry) stays with it, without your name. If you are the only owner of a business, it is deleted with your account: its sales, its stock, its accounts and its vitrine are permanently erased, its open orders are cancelled and its customers notified, and its members keep their own accounts. A Mara Pro subscription taken on the App Store is cancelled in your Apple account settings: Mara cannot cancel it.',
+  'Vous pouvez demander la correction ou la suppression de vos données en contactant le support. Vous pouvez aussi télécharger vos données et supprimer votre compte vous-même, tout de suite, depuis Mon profil › Mes données (ou Compte › Mes données si vous tenez une activité ou en êtes membre) : votre profil, vos adresses, vos favoris, vos notifications et vos signalements partent avec lui ; vos commandes restent chez les boutiques, au nom de « Client supprimé », sans votre numéro ni votre adresse ; ce que vous avez inscrit pour une activité (une vente, une écriture) lui reste, sans votre nom. Si vous êtes le seul propriétaire d\'une activité, elle est supprimée avec votre compte : ses ventes, son stock, ses comptes et sa vitrine sont effacés de façon définitive, ses commandes en cours sont annulées et ses clients prévenus, et ses membres gardent leur propre compte. Un abonnement Marakaj Pro pris sur l\'App Store s\'annule dans les réglages de votre compte Apple : Marakaj ne peut pas l\'annuler.':
+      'You can ask for your data to be corrected or deleted by contacting support. You can also download your data and delete your account yourself, right away, from Mon profil › Mes données (or Compte › Mes données if you run a business or are a member of one): your profile, your addresses, your favourites, your notifications and your reports go with it; your orders stay with the shops, under the name “Client supprimé”, without your number or your address; what you recorded for a business (a sale, an entry) stays with it, without your name. If you are the only owner of a business, it is deleted with your account: its sales, its stock, its accounts and its vitrine are permanently erased, its open orders are cancelled and its customers notified, and its members keep their own accounts. A Marakaj Pro subscription taken on the App Store is cancelled in your Apple account settings: Marakaj cannot cancel it.',
   '# Contact':
       '# Contact',
-  'Pour toute question sur vos données, ou pour demander leur correction ou leur suppression, écrivez à hello@kaj-consulting.com, ou contactez le support depuis l\'écran Compte › Aide. Mara est édité par KAJ Consulting LLC.':
-      'For any question about your data, or to ask for it to be corrected or deleted, write to hello@kaj-consulting.com, or contact support from the Compte › Aide screen. Mara is published by KAJ Consulting LLC.',
+  'Pour toute question sur vos données, ou pour demander leur correction ou leur suppression, écrivez à hello@kaj-consulting.com, ou contactez le support depuis l\'écran Compte › Aide. Marakaj est édité par KAJ Consulting LLC.':
+      'For any question about your data, or to ask for it to be corrected or deleted, write to hello@kaj-consulting.com, or contact support from the Compte › Aide screen. Marakaj is published by KAJ Consulting LLC.',
   '# Votre compte':
       '# Your account',
   'Nous faisons de notre mieux pour que le service reste disponible, mais nous ne pouvons pas le garantir sans interruption. L\'application continue de fonctionner hors ligne et synchronise dès que la connexion revient.':
       'We do our best to keep the service available, but we cannot guarantee it without interruption. The app keeps working offline and synchronises as soon as the connection returns.',
   '# Responsabilité':
       '# Liability',
-  'Mara vous aide à tenir vos comptes, mais la responsabilité finale de vos décisions commerciales et de vos obligations légales vous revient.':
-      'Mara helps you keep your accounts, but the final responsibility for your business decisions and your legal obligations lies with you.',
-  '# Mara Pro':
-      '# Mara Pro',
-  'Mara Pro est un abonnement, au mois ou à l\'année, pour une activité : il vaut pour celle pour laquelle il a été pris. Pris dans l\'application iPhone ou Android, il est facturé et géré par l\'App Store ou Google Play : le prix est celui que le store affiche, le paiement est débité sur votre compte du store à la confirmation de l\'achat, l\'abonnement se renouvelle automatiquement sauf s\'il est annulé au moins 24 heures avant la fin de la période en cours, et il s\'annule dans les réglages de votre compte du store, selon ses règles.':
-      'Mara Pro is a subscription, monthly or yearly, for one business: it applies to the business it was taken for. Taken in the iPhone or Android app, it is billed and managed by the App Store or Google Play: the price is the one the store shows, payment is charged to your store account when the purchase is confirmed, the subscription renews automatically unless it is cancelled at least 24 hours before the end of the current period, and it is cancelled in your store account settings, according to its rules.',
+  'Marakaj vous aide à tenir vos comptes, mais la responsabilité finale de vos décisions commerciales et de vos obligations légales vous revient.':
+      'Marakaj helps you keep your accounts, but the final responsibility for your business decisions and your legal obligations lies with you.',
+  '# Marakaj Pro':
+      '# Marakaj Pro',
+  'Marakaj Pro est un abonnement, au mois ou à l\'année, pour une activité : il vaut pour celle pour laquelle il a été pris. Pris dans l\'application iPhone ou Android, il est facturé et géré par l\'App Store ou Google Play : le prix est celui que le store affiche, le paiement est débité sur votre compte du store à la confirmation de l\'achat, l\'abonnement se renouvelle automatiquement sauf s\'il est annulé au moins 24 heures avant la fin de la période en cours, et il s\'annule dans les réglages de votre compte du store, selon ses règles.':
+      'Marakaj Pro is a subscription, monthly or yearly, for one business: it applies to the business it was taken for. Taken in the iPhone or Android app, it is billed and managed by the App Store or Google Play: the price is the one the store shows, payment is charged to your store account when the purchase is confirmed, the subscription renews automatically unless it is cancelled at least 24 hours before the end of the current period, and it is cancelled in your store account settings, according to its rules.',
   '# Modifications':
       '# Changes',
   // 133 (UI audit B-3): a small phone's folded bar actions.
@@ -6540,7 +6540,7 @@ const enStrings = <String, String>{
   'place': 'seat',
   'lot': 'lot',
   // 134: « Créer mon activité », easy to find.
-  'Vendre sur Mara': 'Sell on Mara',
+  'Vendre sur Marakaj': 'Sell on Marakaj',
   'J\'ai un code d\'invitation': 'I have an invitation code',
   'GRATUIT · 3 MINUTES': 'FREE · 3 MINUTES',
   'Vous vendez, élevez ou gérez une association ?':
@@ -6557,8 +6557,8 @@ const enStrings = <String, String>{
   'Suivre le stock': 'Track stock',
   'Stock non suivi': 'Stock not tracked',
   'Le stock': 'Stock',
-  'Mara compte ce qu\'il reste ; à zéro, il est épuisé.':
-      'Mara counts what is left; at zero it is sold out.',
+  'Marakaj compte ce qu\'il reste ; à zéro, il est épuisé.':
+      'Marakaj counts what is left; at zero it is sold out.',
   'Pas de compte : toujours disponible sur la vitrine.':
       'No count: always available on the shop window.',
   'Le chiffre rouge sur « {place} » reste tant que ces crédits ne sont pas remboursés : ouvrir cette page ne l\'efface pas.':
@@ -6640,8 +6640,8 @@ const enStrings = <String, String>{
       'What are the rules?',
   'Qui sont mes clients ?':
       'Who are my clients?',
-  'Revenus de Mara · ce mois':
-      'Mara\'s revenue · this month',
+  'Revenus de Marakaj · ce mois':
+      'Marakaj\'s revenue · this month',
   'Rien ne vous attend.':
       'Nothing is waiting for you.',
   'Rue, mises en avant':
@@ -6750,14 +6750,14 @@ const enStrings = <String, String>{
       'Help requests per business per 24 hours',
   'Modèle WhatsApp des formateurs chez Meta (vide : pas de WhatsApp)':
       'Trainers’ WhatsApp template at Meta (empty: no WhatsApp)',
-  'Notifier les administrateurs de Mara d\'une demande d\'aide sans réponse':
-      'Notify Mara’s admins of a help request nobody answered',
+  'Notifier les administrateurs de Marakaj d\'une demande d\'aide sans réponse':
+      'Notify Marakaj’s admins of a help request nobody answered',
   'Demande d\'aide — {org} : {subject}':
       'Help request — {org}: {subject}',
   'Demande d\'aide sans réponse — {org} : {subject}':
       'Help request with no answer — {org}: {subject}',
-  '{who} (formation Mara) s\'occupe de votre demande d\'aide.':
-      '{who} (Mara training) is handling your help request.',
+  '{who} (formation Marakaj) s\'occupe de votre demande d\'aide.':
+      '{who} (Marakaj training) is handling your help request.',
   '{who} viendra vous voir.':
       '{who} will come and see you.',
   '{who} vous propose plutôt un appel.':
@@ -6774,8 +6774,8 @@ const enStrings = <String, String>{
       '{org} closed the request',
   '{n} en attente':
       '{n} waiting',
-  'L\'équipe de formation de Mara':
-      'Mara’s training team',
+  'L\'équipe de formation de Marakaj':
+      'Marakaj’s training team',
   'Besoin d\'aide — un formateur':
       'Need help — a trainer',
   'Guides et aide':
@@ -6800,8 +6800,8 @@ const enStrings = <String, String>{
       'On duty',
   'Hors service':
       'Off duty',
-  'Réservé à l\'équipe de formation de Mara.':
-      'For Mara’s training team only.',
+  'Réservé à l\'équipe de formation de Marakaj.':
+      'For Marakaj’s training team only.',
   'Hors des heures d\'aide ({hours}) : les nouvelles demandes arrivent à l\'ouverture.':
       'Outside the help hours ({hours}): new requests arrive at opening time.',
   'Aucune demande pour l\'instant.':
@@ -6856,12 +6856,12 @@ const enStrings = <String, String>{
       '{n} d',
   'Un numéro où vous joindre, avec l\'indicatif (par exemple 22670000000).':
       'A number to reach you on, with the country code (for example 22670000000).',
-  'Vous avez fait toutes vos demandes pour aujourd\'hui. Réessayez demain, ou écrivez à Mara.':
-      'You have made all your requests for today. Try again tomorrow, or write to Mara.',
+  'Vous avez fait toutes vos demandes pour aujourd\'hui. Réessayez demain, ou écrivez à Marakaj.':
+      'You have made all your requests for today. Try again tomorrow, or write to Marakaj.',
   'Envoyer la demande':
       'Send the request',
-  'Mara joint l\'écran, l\'entreprise et la version de l\'app.':
-      'Mara attaches the screen, the business and the app version.',
+  'Marakaj joint l\'écran, l\'entreprise et la version de l\'app.':
+      'Marakaj attaches the screen, the business and the app version.',
   'Un formateur vous aide':
       'A trainer helps you',
   'Votre demande est gardée.':
@@ -6982,16 +6982,16 @@ const enStrings = <String, String>{
       'Not satisfied',
   'Satisfait':
       'Satisfied',
-  'Un formateur de Mara vous aide':
-      'A Mara trainer helps you',
+  'Un formateur de Marakaj vous aide':
+      'A Marakaj trainer helps you',
   'Ajouter un article · Partager ma vitrine · Annuler une vente…':
       'Add an item · Share my shop window · Cancel a sale…',
   'Guides — Le Chemin':
       'Guides — The Path',
   'Pas à pas, dans l\'app':
       'Step by step, in the app',
-  'Écrire à Mara':
-      'Write to Mara',
+  'Écrire à Marakaj':
+      'Write to Marakaj',
   'WhatsApp ou e-mail · réponse sous 48 h':
       'WhatsApp or e-mail · answer within 48 h',
   'Par e-mail · réponse sous 48 h':
@@ -7005,8 +7005,8 @@ const enStrings = <String, String>{
       'Sign in to ask for help.',
   'Seule l\'équipe de l\'entreprise peut demander de l\'aide ici.':
       'Only the business’s team can ask for help here.',
-  'L\'aide d\'un formateur vient avec Mara Pro.':
-      'A trainer’s help comes with Mara Pro.',
+  'L\'aide d\'un formateur vient avec Marakaj Pro.':
+      'A trainer’s help comes with Marakaj Pro.',
   'Choisissez comment être aidé : appel, WhatsApp ou visite.':
       'Choose how to be helped: a call, WhatsApp or a visit.',
   'Un message de 500 caractères au plus, s\'il vous plaît.':
@@ -7015,8 +7015,8 @@ const enStrings = <String, String>{
       'This photo is not from this business.',
   'Une demande d\'aide est déjà en cours pour cette entreprise.':
       'A help request is already open for this business.',
-  'Les demandes d\'aide de ces 24 heures sont toutes faites. Réessayez demain, ou écrivez à Mara.':
-      'All of this 24 hours’ help requests are used. Try again tomorrow, or write to Mara.',
+  'Les demandes d\'aide de ces 24 heures sont toutes faites. Réessayez demain, ou écrivez à Marakaj.':
+      'All of this 24 hours’ help requests are used. Try again tomorrow, or write to Marakaj.',
   'Une autre demande d\'aide est déjà en cours pour cette entreprise.':
       'Another help request is already open for this business.',
   'Cette demande n\'est pas la vôtre.':
@@ -7033,8 +7033,8 @@ const enStrings = <String, String>{
       'This trainer already sees your business.',
   'Vous ne pouvez pas retirer cet accès.':
       'You cannot remove this access.',
-  'Réservé aux formateurs de Mara.':
-      'For Mara’s trainers only.',
+  'Réservé aux formateurs de Marakaj.':
+      'For Marakaj’s trainers only.',
   'Cette demande ne vous est pas adressée.':
       'This request is not for you.',
   'Un autre formateur s\'occupe déjà de cette demande.':
@@ -7082,9 +7082,9 @@ const enStrings = <String, String>{
   'En précommande': 'Pre-order now',
   'Réservez ici': 'Book here',
   'Retrouvez-nous ici': 'Find us here',
-  'Commandez sur Mara': 'Order on Mara',
-  'Réservez sur Mara': 'Book on Mara',
-  'Retrouvez-nous sur Mara': 'Find us on Mara',
+  'Commandez sur Marakaj': 'Order on Marakaj',
+  'Réservez sur Marakaj': 'Book on Marakaj',
+  'Retrouvez-nous sur Marakaj': 'Find us on Marakaj',
   'Découvrez notre vitrine': 'Discover our vitrine',
   'La caisse et la cotisation':
       'The cash box and the dues',
@@ -7110,8 +7110,8 @@ const enStrings = <String, String>{
       'Dues above zero, please.',
   'Indiquez votre caisse de départ':
       'Enter your opening cash',
-  'Ce qu\'il y avait dans la caisse avant Mara : vos comptes partiront juste.':
-      'What was in the cash box before Mara: your books will start right.',
+  'Ce qu\'il y avait dans la caisse avant Marakaj : vos comptes partiront juste.':
+      'What was in the cash box before Marakaj: your books will start right.',
   'Indiquer':
       'Enter it',
   'Cotisation habituelle : {amount} par semaine':
@@ -7147,8 +7147,8 @@ const enStrings = <String, String>{
       'Sign in with Apple on the website',
   'La fenêtre d\'Apple n\'a pas pu s\'ouvrir. Touchez à nouveau « Continuer avec Apple » ; si rien ne s\'ouvre, autorisez les fenêtres pour ce site.':
       'Apple\'s window could not open. Tap “Continue with Apple” again; if nothing opens, allow pop-ups for this site.',
-  'Avec Mara Pro, un article montre plusieurs photos : vos clients les font défiler sur la vitrine avant de commander. Sans Pro, un article garde une photo.':
-      'With Mara Pro, an item shows several photos: your customers swipe through them on the vitrine before ordering. Without Pro, an item keeps one photo.',
+  'Avec Marakaj Pro, un article montre plusieurs photos : vos clients les font défiler sur la vitrine avant de commander. Sans Pro, un article garde une photo.':
+      'With Marakaj Pro, an item shows several photos: your customers swipe through them on the vitrine before ordering. Without Pro, an item keeps one photo.',
   'Avec Pro':
       'With Pro',
   'Ce que le client lit avant de commander, sur la vitrine.':
@@ -7165,8 +7165,8 @@ const enStrings = <String, String>{
       'Description',
   'Durée (facultatif)':
       'Duration (optional)',
-  'Découvrir Mara Pro':
-      'Discover Mara Pro',
+  'Découvrir Marakaj Pro':
+      'Discover Marakaj Pro',
   'Décrivez-le en quelques mots':
       'Describe it in a few words',
   'En minutes':
@@ -7189,8 +7189,8 @@ const enStrings = <String, String>{
       'Photos per item with Pro (1 to 20)',
   'Plusieurs photos par article':
       'Several photos per item',
-  'Plusieurs photos par article avec Mara Pro.':
-      'Several photos per item with Mara Pro.',
+  'Plusieurs photos par article avec Marakaj Pro.':
+      'Several photos per item with Marakaj Pro.',
   'Poulets élevés en plein air, 45 jours, environ 1,8 kg':
       'Free-range chickens, 45 days, about 1.8 kg',
   'Salle de 80 places, chaises et sono comprises':
@@ -7314,12 +7314,12 @@ const enStrings = <String, String>{
       'What you need',
   'Demande d\'aide envoyée':
       'Help request sent',
-  'Obtenez une réponse plus rapide et un meilleur accompagnement avec Mara Pro':
-      'Get a faster answer and better support with Mara Pro',
+  'Obtenez une réponse plus rapide et un meilleur accompagnement avec Marakaj Pro':
+      'Get a faster answer and better support with Marakaj Pro',
   'Demandez au propriétaire de passer à Pro':
       'Ask the owner to switch to Pro',
-  'Une aide plus rapide, un formateur, avec Mara Pro':
-      'Faster help, a trainer, with Mara Pro',
+  'Une aide plus rapide, un formateur, avec Marakaj Pro':
+      'Faster help, a trainer, with Marakaj Pro',
   'Articles / Catalogue':
       'Items / Catalogue',
   'Caisse / Ventes':
@@ -7332,16 +7332,16 @@ const enStrings = <String, String>{
       'Farm stock',
   'Cotisations':
       'Dues',
-  'Bonjour Mara, j\'ai besoin d\'aide.':
-      'Hello Mara, I need help.',
+  'Bonjour Marakaj, j\'ai besoin d\'aide.':
+      'Hello Marakaj, I need help.',
   'Entreprise : {name} ({kind} · {plan})':
       'Business: {name} ({kind} · {plan})',
   'Réf. : {ref}':
       'Ref.: {ref}',
   'Page : {page}':
       'Page: {page}',
-  'Aide Mara — {name} · Réf. {ref}{pro}':
-      'Mara help — {name} · Ref. {ref}{pro}',
+  'Aide Marakaj — {name} · Réf. {ref}{pro}':
+      'Marakaj help — {name} · Ref. {ref}{pro}',
   'aujourd\'hui à {time}':
       'today at {time}',
   'demain à {time}':
@@ -7356,8 +7356,8 @@ const enStrings = <String, String>{
       'My requests',
   'Réponse sous 48 h':
       'Answer within 48 h',
-  'WhatsApp 24 h/24, 7 j/7, avec Mara Pro':
-      'WhatsApp 24/7, with Mara Pro',
+  'WhatsApp 24 h/24, 7 j/7, avec Marakaj Pro':
+      'WhatsApp 24/7, with Marakaj Pro',
   'Écrire un e-mail':
       'Write an e-mail',
   'Nouvelle demande':
@@ -7438,18 +7438,18 @@ const enStrings = <String, String>{
       'At a time I choose',
   'Pas de numéro sur son profil':
       'No number on their profile',
-  'Un formateur se choisit dans Personnes : ouvrez la fiche de la personne, « Formateur Mara ».':
-      'Trainers are chosen in People: open the person\'s card, “Mara trainer”.',
-  'Aide les entreprises Mara Pro qui le demandent.':
-      'Helps the Mara Pro businesses that ask.',
+  'Un formateur se choisit dans Personnes : ouvrez la fiche de la personne, « Formateur Marakaj ».':
+      'Trainers are chosen in People: open the person\'s card, “Marakaj trainer”.',
+  'Aide les entreprises Marakaj Pro qui le demandent.':
+      'Helps the Marakaj Pro businesses that ask.',
   'Cette personne ne recevra plus de demandes d\'aide ; ses accès en lecture seule s\'arrêtent.':
       'This person will no longer receive help requests; their read-only accesses end.',
-  'Cette personne recevra les demandes d\'aide des entreprises Mara Pro, dans l\'app et sur WhatsApp, au numéro de son profil.':
-      'This person will receive the help requests of Mara Pro businesses, in the app and on WhatsApp, at the number on their profile.',
-  'Faire de {label} un formateur Mara ?':
-      'Make {label} a Mara trainer?',
-  'Formateur Mara':
-      'Mara trainer',
+  'Cette personne recevra les demandes d\'aide des entreprises Marakaj Pro, dans l\'app et sur WhatsApp, au numéro de son profil.':
+      'This person will receive the help requests of Marakaj Pro businesses, in the app and on WhatsApp, at the number on their profile.',
+  'Faire de {label} un formateur Marakaj ?':
+      'Make {label} a Marakaj trainer?',
+  'Formateur Marakaj':
+      'Marakaj trainer',
   'Formateur ajouté':
       'Trainer added',
   'Cette personne ne recevra plus de demandes d\'aide ; ses accès en lecture seule s\'arrêtent, et elle ne verra plus l\'entreprise qui lui est confiée.':
@@ -7462,8 +7462,8 @@ const enStrings = <String, String>{
       'Choose a time within the next 14 days.',
   'Choisissez un jour et une heure, s\'il vous plaît.':
       'Choose a day and a time, please.',
-  'Seule l\'équipe Mara choisit les formateurs.':
-      'Only the Mara team chooses the trainers.',
+  'Seule l\'équipe Marakaj choisit les formateurs.':
+      'Only the Marakaj team chooses the trainers.',
   'Formateur : oui ou non.':
       'Trainer: yes or no.',
   'Ce compte n\'existe pas.':
@@ -7476,8 +7476,8 @@ const enStrings = <String, String>{
       'Reached at {phone}',
   'Pas de numéro sur son profil : les demandes ne pourront pas le joindre par WhatsApp ni par appel. Ajoutez-en un à son compte.':
       'No number on their profile: requests cannot reach them by WhatsApp or by a call. Add one to their account.',
-  'Reçoit les demandes d\'aide des entreprises Mara Pro.':
-      'Receives the help requests of Mara Pro businesses.',
+  'Reçoit les demandes d\'aide des entreprises Marakaj Pro.':
+      'Receives the help requests of Marakaj Pro businesses.',
   '{label} n\'est plus formateur ?':
       'Remove {label} from the trainers?',
   'Une question, un souci ? Réponse sous 48 h.':
@@ -7493,30 +7493,30 @@ const enStrings = <String, String>{
       '{n} featured items',
   'Épuisés masqués':
       'Sold-out items hidden',
-  'Ces choix viennent avec Mara Pro':
-      'These choices come with Mara Pro',
+  'Ces choix viennent avec Marakaj Pro':
+      'These choices come with Marakaj Pro',
   'Sans Pro, votre vitrine reste en grille. Vos choix sont gardés : ils s\'activent dès que vous passez à Pro.':
       'Without Pro, your vitrine stays a grid. Your choices are kept: they turn on as soon as you go Pro.',
   'Sans Pro, votre vitrine reste en grille. Pour le moment, ces choix ne peuvent pas être gardés : il faudra les refaire une fois Pro activé.':
       'Without Pro, your vitrine stays a grid. For now these choices cannot be kept: you will make them again once Pro is on.',
-  'Sans Pro, votre vitrine reste en grille. Vos choix sont gardés : ils font partie de Mara Pro.':
-      'Without Pro, your vitrine stays a grid. Your choices are kept: they are part of Mara Pro.',
-  'Vitrine enregistrée, en grille. Vos choix Pro sont gardés : ils font partie de Mara Pro.':
-      'Vitrine saved, as a grid. Your Pro choices are kept: they are part of Mara Pro.',
+  'Sans Pro, votre vitrine reste en grille. Vos choix sont gardés : ils font partie de Marakaj Pro.':
+      'Without Pro, your vitrine stays a grid. Your choices are kept: they are part of Marakaj Pro.',
+  'Vitrine enregistrée, en grille. Vos choix Pro sont gardés : ils font partie de Marakaj Pro.':
+      'Vitrine saved, as a grid. Your Pro choices are kept: they are part of Marakaj Pro.',
   'Enregistrer sans les options Pro':
       'Save without the Pro options',
   'Vitrine enregistrée, en grille. Vos choix Pro sont gardés : ils s\'activent dès que vous passez à Pro.':
       'Vitrine saved, as a grid. Your Pro choices are kept: they turn on as soon as you go Pro.',
   'Vitrine enregistrée, en grille. Vos choix Pro n\'ont pas pu être gardés pour le moment.':
       'Vitrine saved, as a grid. Your Pro choices could not be kept for now.',
-  'Ces options s\'activent avec Mara Pro. Essayez-les : l\'aperçu vous montre le résultat.':
-      'These options turn on with Mara Pro. Try them: the preview shows you the result.',
+  'Ces options s\'activent avec Marakaj Pro. Essayez-les : l\'aperçu vous montre le résultat.':
+      'These options turn on with Marakaj Pro. Try them: the preview shows you the result.',
   '« Ouvert maintenant »':
       '« Open now »',
   'Votre vitrine dit « Ouvert maintenant » ou « Fermé » d\'après vos jours et vos heures.':
       'Your vitrine says « Open now » or « Closed » from your days and hours.',
-  'Aperçu — avec Mara Pro':
-      'Preview — with Mara Pro',
+  'Aperçu — avec Marakaj Pro':
+      'Preview — with Marakaj Pro',
   'Personnaliser ma vitrine':
       'Customise my vitrine',
   'La page que voient vos clients':
@@ -7585,10 +7585,10 @@ const enStrings = <String, String>{
       'Price: …',
   'Acheter · {price}':
       'Buy · {price}',
-  'Paiement par l\'App Store. La mise en avant est programmée dès que Mara a reçu la confirmation.':
-      'Paid through the App Store. The promotion is scheduled as soon as Mara has the confirmation.',
-  'Paiement par Google Play. La mise en avant est programmée dès que Mara a reçu la confirmation.':
-      'Paid through Google Play. The promotion is scheduled as soon as Mara has the confirmation.',
+  'Paiement par l\'App Store. La mise en avant est programmée dès que Marakaj a reçu la confirmation.':
+      'Paid through the App Store. The promotion is scheduled as soon as Marakaj has the confirmation.',
+  'Paiement par Google Play. La mise en avant est programmée dès que Marakaj a reçu la confirmation.':
+      'Paid through Google Play. The promotion is scheduled as soon as Marakaj has the confirmation.',
   'Visa, Mastercard. Paiement unique et sécurisé par Stripe : la mise en avant est programmée dès que le paiement est reçu.':
       'Visa, Mastercard. A single payment, secured by Stripe: the promotion is scheduled as soon as the payment is received.',
   'Le paiement par carte n\'est pas encore ouvert. Revenez bientôt : votre demande est gardée.':
@@ -7605,30 +7605,30 @@ const enStrings = <String, String>{
       'Preview: {name} at the top of the list of vitrines, marked Sponsored',
   'Aperçu : {name} en tête de « À la une », marqué Sponsorisé':
       'Preview: {name} at the head of “Featured”, marked Sponsored',
-  'Votre ferme apparaît en premier dans la liste des vitrines de la page d\'accueil de Mara, avec le badge « Sponsorisé ».':
-      'Your farm comes first in the list of vitrines on Mara\'s home page, with the “Sponsored” badge.',
-  'Votre association apparaît en premier dans la liste des vitrines de la page d\'accueil de Mara, avec le badge « Sponsorisé ».':
-      'Your association comes first in the list of vitrines on Mara\'s home page, with the “Sponsored” badge.',
-  'Votre boutique apparaît en premier dans la liste des vitrines de la page d\'accueil de Mara, avec le badge « Sponsorisé ».':
-      'Your shop comes first in the list of vitrines on Mara\'s home page, with the “Sponsored” badge.',
-  'Votre article apparaît en premier dans « À la une », en haut de la page d\'accueil de Mara, avec le badge « Sponsorisé ».':
-      'Your item comes first in “Featured”, at the top of Mara\'s home page, with the “Sponsored” badge.',
-  'Pendant 7 jours, pour tous ceux qui ouvrent Mara, sur le site et dans l\'application. Vous voyez ses vues et ses commandes dans « Mettre en avant ».':
-      'For 7 days, for everyone who opens Mara, on the website and in the app. You see its views and orders in “Feature”.',
+  'Votre ferme apparaît en premier dans la liste des vitrines de la page d\'accueil de Marakaj, avec le badge « Sponsorisé ».':
+      'Your farm comes first in the list of vitrines on Marakaj\'s home page, with the “Sponsored” badge.',
+  'Votre association apparaît en premier dans la liste des vitrines de la page d\'accueil de Marakaj, avec le badge « Sponsorisé ».':
+      'Your association comes first in the list of vitrines on Marakaj\'s home page, with the “Sponsored” badge.',
+  'Votre boutique apparaît en premier dans la liste des vitrines de la page d\'accueil de Marakaj, avec le badge « Sponsorisé ».':
+      'Your shop comes first in the list of vitrines on Marakaj\'s home page, with the “Sponsored” badge.',
+  'Votre article apparaît en premier dans « À la une », en haut de la page d\'accueil de Marakaj, avec le badge « Sponsorisé ».':
+      'Your item comes first in “Featured”, at the top of Marakaj\'s home page, with the “Sponsored” badge.',
+  'Pendant 7 jours, pour tous ceux qui ouvrent Marakaj, sur le site et dans l\'application. Vous voyez ses vues et ses commandes dans « Mettre en avant ».':
+      'For 7 days, for everyone who opens Marakaj, on the website and in the app. You see its views and orders in “Feature”.',
   'Votre article':
       'Your item',
-  'Prix de Mara Pro, par mois — FCFA (zone franc CFA)':
-      'Mara Pro price, per month — FCFA (CFA franc zone)',
-  'Prix de Mara Pro, par an — FCFA (zone franc CFA)':
-      'Mara Pro price, per year — FCFA (CFA franc zone)',
-  'Prix de Mara Pro, par mois — euros (zone euro)':
-      'Mara Pro price, per month — euros (euro area)',
-  'Prix de Mara Pro, par an — euros (zone euro)':
-      'Mara Pro price, per year — euros (euro area)',
-  'Prix de Mara Pro, par mois — dollars (reste du monde)':
-      'Mara Pro price, per month — dollars (rest of the world)',
-  'Prix de Mara Pro, par an — dollars (reste du monde)':
-      'Mara Pro price, per year — dollars (rest of the world)',
+  'Prix de Marakaj Pro, par mois — FCFA (zone franc CFA)':
+      'Marakaj Pro price, per month — FCFA (CFA franc zone)',
+  'Prix de Marakaj Pro, par an — FCFA (zone franc CFA)':
+      'Marakaj Pro price, per year — FCFA (CFA franc zone)',
+  'Prix de Marakaj Pro, par mois — euros (zone euro)':
+      'Marakaj Pro price, per month — euros (euro area)',
+  'Prix de Marakaj Pro, par an — euros (zone euro)':
+      'Marakaj Pro price, per year — euros (euro area)',
+  'Prix de Marakaj Pro, par mois — dollars (reste du monde)':
+      'Marakaj Pro price, per month — dollars (rest of the world)',
+  'Prix de Marakaj Pro, par an — dollars (reste du monde)':
+      'Marakaj Pro price, per year — dollars (rest of the world)',
   'Un article à la une, 7 jours — FCFA (zone franc CFA)':
       'An item featured, 7 days — FCFA (CFA franc zone)',
   'La boutique à la une, 7 jours — FCFA (zone franc CFA)':
@@ -7655,12 +7655,12 @@ const enStrings = <String, String>{
       'Subscribe by card · {price} / month',
   'Cet achat a déjà servi à une autre mise en avant.':
       'This purchase already paid for another promotion.',
-  'Cette mise en avant n\'existe plus : écrivez à l\'aide de Mara pour le remboursement.':
-      'This promotion no longer exists: write to Mara\'s help for the refund.',
+  'Cette mise en avant n\'existe plus : écrivez à l\'aide de Marakaj pour le remboursement.':
+      'This promotion no longer exists: write to Marakaj\'s help for the refund.',
   'Cet achat n\'est pas cette mise en avant.':
       'This purchase is not this promotion.',
-  'Achat de test refusé : un achat fait avec un compte de test ne programme une mise en avant que pour les comptes de test de Mara.':
-      'Test purchase refused: a purchase made with a test account schedules a promotion only for Mara\'s test accounts.',
+  'Achat de test refusé : un achat fait avec un compte de test ne programme une mise en avant que pour les comptes de test de Marakaj.':
+      'Test purchase refused: a purchase made with a test account schedules a promotion only for Marakaj\'s test accounts.',
   'Cet achat a été remboursé : la mise en avant n\'est pas programmée.':
       'This purchase was refunded: the promotion is not scheduled.',
   'Achat en attente : {store} doit encore le confirmer. La mise en avant sera programmée dès qu\'il sera confirmé.':
@@ -7669,8 +7669,8 @@ const enStrings = <String, String>{
       'Only an administrator of the business can promote it.',
   'Votre session a expiré : reconnectez-vous, puis touchez « Vérifier un achat déjà payé ». Rien ne sera prélevé deux fois.':
       'Your session has expired: sign in again, then tap “Check a purchase already paid”. Nothing will be charged twice.',
-  'Le paiement est fait, mais Mara n\'a pas encore pu le vérifier. Gardez une connexion et touchez « Vérifier un achat déjà payé » : rien ne sera prélevé deux fois.':
-      'The payment is made, but Mara could not check it yet. Stay connected and tap “Check a purchase already paid”: nothing will be charged twice.',
+  'Le paiement est fait, mais Marakaj n\'a pas encore pu le vérifier. Gardez une connexion et touchez « Vérifier un achat déjà payé » : rien ne sera prélevé deux fois.':
+      'The payment is made, but Marakaj could not check it yet. Stay connected and tap “Check a purchase already paid”: nothing will be charged twice.',
   'Un achat précédent de cette mise en avant n\'est pas encore vérifié : touchez « Vérifier un achat déjà payé ».':
       'An earlier purchase of this promotion is not checked yet: tap “Check a purchase already paid”.',
   'Merci ! Votre mise en avant est payée et programmée.':
@@ -7679,12 +7679,12 @@ const enStrings = <String, String>{
       'At least 300 FCFA: card payment (Stripe) takes no less.',
   'Au moins 0,50 : le paiement par carte (Stripe) ne prend pas moins.':
       'At least 0.50: card payment (Stripe) takes no less.',
-  'Cette mise en avant a été refusée par Mara : le paiement sera remboursé.':
-      'Mara declined this promotion: the payment will be refunded.',
+  'Cette mise en avant a été refusée par Marakaj : le paiement sera remboursé.':
+      'Marakaj declined this promotion: the payment will be refunded.',
   'Cette mise en avant ne peut plus être programmée (vitrine fermée, ou article sans photo, prix ou stock) : le paiement sera remboursé.':
       'This promotion can no longer be scheduled (shop window closed, or the item has no photo, price or stock): the payment will be refunded.',
-  'Cette mise en avant n\'existe plus : Mara rembourse le paiement.':
-      'This promotion no longer exists: Mara refunds the payment.',
+  'Cette mise en avant n\'existe plus : Marakaj rembourse le paiement.':
+      'This promotion no longer exists: Marakaj refunds the payment.',
   'Paiements de mise en avant à rembourser':
       'Promotion payments to refund',
   'dans Play Console ou auprès d\'Apple':
@@ -7713,98 +7713,98 @@ const enStrings = <String, String>{
   // binds, this is its faithful English (legal_screens.dart).
   'Version 2 — en vigueur le 14 octobre 2026.':
       'Version 2 — in force from 14 October 2026.',
-  'Ces conditions s\'appliquent à toute personne qui utilise Mara : l\'application, le site marakaj.com et les vitrines. En créant un compte, ou en continuant à utiliser Mara, vous les acceptez.':
-      'These terms apply to everyone who uses Mara: the app, the marakaj.com website and the vitrines. By creating an account, or by continuing to use Mara, you accept them.',
-  '# Qui exploite Mara':
-      '# Who runs Mara',
-  'Mara (« propulsé par Kaj ») est un service exploité par KAJ Consulting LLC, une société des États-Unis. Dans ces conditions, « Mara » et « nous » désignent KAJ Consulting LLC ; « vous » désigne la personne qui utilise Mara.':
-      'Mara (“powered by Kaj”) is a service run by KAJ Consulting LLC, a United States company. In these terms, “Mara” and “we” mean KAJ Consulting LLC; “you” means the person using Mara.',
-  '# Le rôle de Mara':
-      '# Mara\'s role',
-  'Mara est une plateforme et un intermédiaire : elle aide des entreprises (boutiques, fermes, associations) à tenir leurs comptes, à montrer leurs articles et à recevoir des commandes, et elle les met en relation avec des clients et des livreurs.':
-      'Mara is a platform and an intermediary: it helps businesses (shops, farms, associations) keep their accounts, show their items and receive orders, and it puts them in touch with customers and couriers.',
-  'Chaque entreprise est le vendeur. Elle seule répond de ses articles et de ses services, de ses prix, de ses livraisons, de ses reçus, de ses impôts et de ses taxes. Mara n\'est pas partie à la vente entre une entreprise et son client : Mara n\'achète pas, ne revend pas et ne garantit pas ce qui est vendu.':
-      'Each business is the seller. It alone answers for its goods and services, its prices, its deliveries, its receipts, its taxes and duties. Mara is not a party to the sale between a business and its customer: Mara does not buy, resell or guarantee what is sold.',
+  'Ces conditions s\'appliquent à toute personne qui utilise Marakaj : l\'application, le site marakaj.com et les vitrines. En créant un compte, ou en continuant à utiliser Marakaj, vous les acceptez.':
+      'These terms apply to everyone who uses Marakaj: the app, the marakaj.com website and the vitrines. By creating an account, or by continuing to use Marakaj, you accept them.',
+  '# Qui exploite Marakaj':
+      '# Who runs Marakaj',
+  'Marakaj (« propulsé par Kaj ») est un service exploité par KAJ Consulting LLC, une société des États-Unis. Dans ces conditions, « Marakaj » et « nous » désignent KAJ Consulting LLC ; « vous » désigne la personne qui utilise Marakaj.':
+      'Marakaj (“powered by Kaj”) is a service run by KAJ Consulting LLC, a United States company. In these terms, “Marakaj” and “we” mean KAJ Consulting LLC; “you” means the person using Marakaj.',
+  '# Le rôle de Marakaj':
+      '# Marakaj\'s role',
+  'Marakaj est une plateforme et un intermédiaire : elle aide des entreprises (boutiques, fermes, associations) à tenir leurs comptes, à montrer leurs articles et à recevoir des commandes, et elle les met en relation avec des clients et des livreurs.':
+      'Marakaj is a platform and an intermediary: it helps businesses (shops, farms, associations) keep their accounts, show their items and receive orders, and it puts them in touch with customers and couriers.',
+  'Chaque entreprise est le vendeur. Elle seule répond de ses articles et de ses services, de ses prix, de ses livraisons, de ses reçus, de ses impôts et de ses taxes. Marakaj n\'est pas partie à la vente entre une entreprise et son client : Marakaj n\'achète pas, ne revend pas et ne garantit pas ce qui est vendu.':
+      'Each business is the seller. It alone answers for its goods and services, its prices, its deliveries, its receipts, its taxes and duties. Marakaj is not a party to the sale between a business and its customer: Marakaj does not buy, resell or guarantee what is sold.',
   'Vous donnez des informations vraies et à jour : votre nom, votre numéro de téléphone. Un compte appartient à une seule personne : ne le prêtez pas, ne le vendez pas, et n\'ouvrez pas de compte au nom de quelqu\'un d\'autre.':
       'You give true and up-to-date information: your name, your phone number. An account belongs to one person only: do not lend it, do not sell it, and do not open an account in someone else\'s name.',
-  'Âge minimum : 16 ans pour commander ; 18 ans pour ouvrir une entreprise ou devenir livreur. Avant 18 ans, utilisez Mara avec l\'accord d\'un parent ou d\'un tuteur.':
-      'Minimum age: 16 to order; 18 to open a business or become a courier. Under 18, use Mara with the agreement of a parent or guardian.',
-  'Gardez secrets votre mot de passe, votre code (PIN) et les codes que vous recevez par SMS ou WhatsApp : Mara ne vous les demandera jamais. Ce qui est fait avec votre compte est réputé fait par vous ; si quelqu\'un d\'autre y a accès, prévenez-nous tout de suite.':
-      'Keep your password, your code (PIN) and the codes you receive by SMS or WhatsApp secret: Mara will never ask you for them. What is done with your account is taken to be done by you; if someone else has access to it, tell us at once.',
-  'Mara peut vous demander de vérifier votre numéro de téléphone (un code envoyé sur WhatsApp), notamment avant de commander, de créer une entreprise ou de devenir livreur.':
-      'Mara may ask you to verify your phone number (a code sent on WhatsApp), in particular before you order, create a business or become a courier.',
+  'Âge minimum : 16 ans pour commander ; 18 ans pour ouvrir une entreprise ou devenir livreur. Avant 18 ans, utilisez Marakaj avec l\'accord d\'un parent ou d\'un tuteur.':
+      'Minimum age: 16 to order; 18 to open a business or become a courier. Under 18, use Marakaj with the agreement of a parent or guardian.',
+  'Gardez secrets votre mot de passe, votre code (PIN) et les codes que vous recevez par SMS ou WhatsApp : Marakaj ne vous les demandera jamais. Ce qui est fait avec votre compte est réputé fait par vous ; si quelqu\'un d\'autre y a accès, prévenez-nous tout de suite.':
+      'Keep your password, your code (PIN) and the codes you receive by SMS or WhatsApp secret: Marakaj will never ask you for them. What is done with your account is taken to be done by you; if someone else has access to it, tell us at once.',
+  'Marakaj peut vous demander de vérifier votre numéro de téléphone (un code envoyé sur WhatsApp), notamment avant de commander, de créer une entreprise ou de devenir livreur.':
+      'Marakaj may ask you to verify your phone number (a code sent on WhatsApp), in particular before you order, create a business or become a courier.',
   '# Les entreprises':
       '# Businesses',
-  'Une entreprise sur Mara doit exister vraiment et avoir une activité légale là où elle vend. La personne qui la crée en répond, et accepte les « Engagements du vendeur », qui résument cette partie.':
-      'A business on Mara must really exist and carry on a lawful activity where it sells. The person who creates it answers for it, and accepts the “Seller\'s commitments”, which sum up this part.',
-  'Vous publiez seulement des photos et des textes qui sont à vous, ou que vous avez le droit d\'utiliser. Vos prix, vos stocks et vos délais sont exacts et tenus à jour. Une commande acceptée est honorée ; si ce n\'est pas possible, vous prévenez le client tout de suite et vous l\'annulez dans Mara.':
-      'You publish only photos and texts that are yours, or that you have the right to use. Your prices, your stock and your lead times are accurate and kept up to date. An accepted order is honoured; if that is not possible, you tell the customer at once and cancel it in Mara.',
-  'Il est interdit de vendre ou de proposer sur Mara : armes, munitions et explosifs ; drogues ; médicaments sans l\'autorisation que la loi exige ; contrefaçons ; objets volés ou d\'origine douteuse ; contenus pour adultes et services sexuels ; animaux sauvages vivants, espèces protégées et leurs parties ; produits dangereux (produits chimiques, pesticides interdits, gaz) ; faux documents ; montages financiers (« doublement d\'argent », ventes pyramidales, loteries ou prêts sans autorisation) ; et tout ce que la loi du pays interdit.':
-      'It is forbidden to sell or offer on Mara: weapons, ammunition and explosives; drugs; medicines without the authorisation the law requires; counterfeits; stolen goods or goods of doubtful origin; adult content and sexual services; live wild animals, protected species and their parts; hazardous goods (chemicals, banned pesticides, gas); false documents; financial schemes (“money doubling”, pyramid selling, lotteries or loans without authorisation); and anything the law of the country forbids.',
+  'Une entreprise sur Marakaj doit exister vraiment et avoir une activité légale là où elle vend. La personne qui la crée en répond, et accepte les « Engagements du vendeur », qui résument cette partie.':
+      'A business on Marakaj must really exist and carry on a lawful activity where it sells. The person who creates it answers for it, and accepts the “Seller\'s commitments”, which sum up this part.',
+  'Vous publiez seulement des photos et des textes qui sont à vous, ou que vous avez le droit d\'utiliser. Vos prix, vos stocks et vos délais sont exacts et tenus à jour. Une commande acceptée est honorée ; si ce n\'est pas possible, vous prévenez le client tout de suite et vous l\'annulez dans Marakaj.':
+      'You publish only photos and texts that are yours, or that you have the right to use. Your prices, your stock and your lead times are accurate and kept up to date. An accepted order is honoured; if that is not possible, you tell the customer at once and cancel it in Marakaj.',
+  'Il est interdit de vendre ou de proposer sur Marakaj : armes, munitions et explosifs ; drogues ; médicaments sans l\'autorisation que la loi exige ; contrefaçons ; objets volés ou d\'origine douteuse ; contenus pour adultes et services sexuels ; animaux sauvages vivants, espèces protégées et leurs parties ; produits dangereux (produits chimiques, pesticides interdits, gaz) ; faux documents ; montages financiers (« doublement d\'argent », ventes pyramidales, loteries ou prêts sans autorisation) ; et tout ce que la loi du pays interdit.':
+      'It is forbidden to sell or offer on Marakaj: weapons, ammunition and explosives; drugs; medicines without the authorisation the law requires; counterfeits; stolen goods or goods of doubtful origin; adult content and sexual services; live wild animals, protected species and their parts; hazardous goods (chemicals, banned pesticides, gas); false documents; financial schemes (“money doubling”, pyramid selling, lotteries or loans without authorisation); and anything the law of the country forbids.',
   'Il est interdit de se faire passer pour une marque, une entreprise ou une personne, d\'utiliser leur nom ou leur logo sans en avoir le droit, ou de copier la vitrine d\'une autre entreprise.':
       'It is forbidden to pass yourself off as a brand, a business or a person, to use their name or logo without the right to, or to copy another business\'s vitrine.',
-  'Pour une commande passée sur Mara, ne demandez jamais au client de payer autrement que par les moyens convenus dans la commande (par exemple sur un autre numéro, ou un acompte en dehors de Mara).':
-      'For an order placed on Mara, never ask the customer to pay other than by the means agreed in the order (for example to another number, or a deposit outside Mara).',
-  'Mara peut vérifier l\'identité d\'une personne ou l\'existence d\'une entreprise, et demander des pièces : pièce d\'identité, registre de commerce, autorisation, justificatif d\'adresse. Sans réponse, ou si les pièces ne suffisent pas, Mara peut limiter, suspendre ou fermer l\'entreprise.':
-      'Mara may check a person\'s identity or a business\'s existence, and ask for documents: an identity document, a trade register entry, a licence, a proof of address. Without an answer, or if the documents are not enough, Mara may limit, suspend or close the business.',
+  'Pour une commande passée sur Marakaj, ne demandez jamais au client de payer autrement que par les moyens convenus dans la commande (par exemple sur un autre numéro, ou un acompte en dehors de Marakaj).':
+      'For an order placed on Marakaj, never ask the customer to pay other than by the means agreed in the order (for example to another number, or a deposit outside Marakaj).',
+  'Marakaj peut vérifier l\'identité d\'une personne ou l\'existence d\'une entreprise, et demander des pièces : pièce d\'identité, registre de commerce, autorisation, justificatif d\'adresse. Sans réponse, ou si les pièces ne suffisent pas, Marakaj peut limiter, suspendre ou fermer l\'entreprise.':
+      'Marakaj may check a person\'s identity or a business\'s existence, and ask for documents: an identity document, a trade register entry, a licence, a proof of address. Without an answer, or if the documents are not enough, Marakaj may limit, suspend or close the business.',
   '# Les clients':
       '# Customers',
   'Vous commandez de bonne foi, pour vous ou pour quelqu\'un qui vous l\'a demandé. Vous êtes présent, ou joignable, pour recevoir la commande et la payer comme convenu. Les fausses commandes, les commandes pour rire et les commandes passées pour nuire à une entreprise sont interdites.':
       'You order in good faith, for yourself or for someone who asked you to. You are there, or reachable, to receive the order and pay for it as agreed. Fake orders, prank orders and orders placed to harm a business are forbidden.',
-  'Une réclamation sur un article (qualité, quantité, retour, remboursement) se règle d\'abord avec l\'entreprise, qui en répond. Si cela ne s\'arrange pas, signalez-le à Mara.':
-      'A complaint about an item (quality, quantity, return, refund) is settled first with the business, which answers for it. If it is not resolved, report it to Mara.',
+  'Une réclamation sur un article (qualité, quantité, retour, remboursement) se règle d\'abord avec l\'entreprise, qui en répond. Si cela ne s\'arrange pas, signalez-le à Marakaj.':
+      'A complaint about an item (quality, quantity, return, refund) is settled first with the business, which answers for it. If it is not resolved, report it to Marakaj.',
   '# Les paiements':
       '# Payments',
-  'En espèces : le client paie l\'entreprise, ou son livreur, à la remise. Cet argent ne passe pas par Mara, qui n\'en répond pas.':
-      'In cash: the customer pays the business, or its courier, on delivery or collection. This money does not go through Mara, which does not answer for it.',
-  'Par Wave ou par carte, quand l\'entreprise le propose : le client paie en ligne, par Mara et son prestataire de paiement, puis Mara reverse le montant à l\'entreprise, moins la commission annoncée. Un remboursement est décidé par l\'entreprise, sauf erreur de Mara.':
-      'By Wave or by card, when the business offers it: the customer pays online, through Mara and its payment provider, then Mara pays the amount to the business, less the announced commission. A refund is decided by the business, unless Mara made the error.',
-  'Mara Pro et « Mettre en avant » sont des services numériques que Mara vend aux entreprises. Ils se paient dans l\'application (Google Play ou App Store), par carte (Stripe) ou par les autres moyens que Mara indique. Achetés sur Google Play ou l\'App Store, ils suivent les règles de remboursement du store.':
-      'Mara Pro and “Mettre en avant” are digital services Mara sells to businesses. They are paid for in the app (Google Play or the App Store), by card (Stripe) or by the other means Mara indicates. Bought on Google Play or the App Store, they follow the store\'s refund rules.',
-  'Une mise en avant déjà montrée, même en partie, n\'est pas remboursée, sauf si la loi l\'exige ou si Mara n\'a pas pu la montrer.':
-      'A promotion already shown, even in part, is not refunded, unless the law requires it or Mara could not show it.',
+  'En espèces : le client paie l\'entreprise, ou son livreur, à la remise. Cet argent ne passe pas par Marakaj, qui n\'en répond pas.':
+      'In cash: the customer pays the business, or its courier, on delivery or collection. This money does not go through Marakaj, which does not answer for it.',
+  'Par Wave ou par carte, quand l\'entreprise le propose : le client paie en ligne, par Marakaj et son prestataire de paiement, puis Marakaj reverse le montant à l\'entreprise, moins la commission annoncée. Un remboursement est décidé par l\'entreprise, sauf erreur de Marakaj.':
+      'By Wave or by card, when the business offers it: the customer pays online, through Marakaj and its payment provider, then Marakaj pays the amount to the business, less the announced commission. A refund is decided by the business, unless Marakaj made the error.',
+  'Marakaj Pro et « Mettre en avant » sont des services numériques que Marakaj vend aux entreprises. Ils se paient dans l\'application (Google Play ou App Store), par carte (Stripe) ou par les autres moyens que Marakaj indique. Achetés sur Google Play ou l\'App Store, ils suivent les règles de remboursement du store.':
+      'Marakaj Pro and “Mettre en avant” are digital services Marakaj sells to businesses. They are paid for in the app (Google Play or the App Store), by card (Stripe) or by the other means Marakaj indicates. Bought on Google Play or the App Store, they follow the store\'s refund rules.',
+  'Une mise en avant déjà montrée, même en partie, n\'est pas remboursée, sauf si la loi l\'exige ou si Marakaj n\'a pas pu la montrer.':
+      'A promotion already shown, even in part, is not refunded, unless the law requires it or Marakaj could not show it.',
   '# Les livreurs':
       '# Couriers',
-  'Les livreurs sont indépendants : ils ne sont employés ni par Mara ni par les entreprises. Avant d\'être acceptés, ils acceptent la charte du livreur.':
-      'Couriers are independent: they are employed neither by Mara nor by the businesses. Before being accepted, they accept the courier\'s charter.',
-  'L\'argent encaissé à la porte appartient à l\'entreprise : le livreur le lui remet le jour même, sans rien garder d\'autre que ce que Mara affiche comme lui revenant.':
-      'The money collected at the door belongs to the business: the courier hands it over the same day, keeping nothing but what Mara shows as theirs.',
+  'Les livreurs sont indépendants : ils ne sont employés ni par Marakaj ni par les entreprises. Avant d\'être acceptés, ils acceptent la charte du livreur.':
+      'Couriers are independent: they are employed neither by Marakaj nor by the businesses. Before being accepted, they accept the courier\'s charter.',
+  'L\'argent encaissé à la porte appartient à l\'entreprise : le livreur le lui remet le jour même, sans rien garder d\'autre que ce que Marakaj affiche comme lui revenant.':
+      'The money collected at the door belongs to the business: the courier hands it over the same day, keeping nothing but what Marakaj shows as theirs.',
   'Le code de livraison prouve que la commande a été remise. Le client le donne au livreur à la remise, et seulement à ce moment-là : ne le donnez jamais avant d\'avoir reçu votre commande. Un livreur ne le demande jamais à l\'avance.':
       'The delivery code proves that the order was handed over. The customer gives it to the courier on delivery, and only then: never give it before you have received your order. A courier never asks for it in advance.',
   '# Cauris, ligues, prix et parrainage':
       '# Cauris, leagues, prizes and referrals',
-  'Les cauris sont des points de Mara. Ils n\'ont aucune valeur en argent : ils ne s\'achètent pas, ne se vendent pas, ne s\'échangent pas contre de l\'argent et ne se transfèrent pas.':
-      'Cauris are Mara\'s points. They have no cash value: they cannot be bought, sold, exchanged for money or transferred.',
-  'Mara peut annuler des cauris, un classement, un prix ou un parrainage obtenus par la fraude : faux comptes ou comptes multiples, fausses commandes, commandes entre proches pour gagner des points, ou tout autre contournement des règles. Ces règles peuvent changer ; l\'application montre toujours celles du moment.':
-      'Mara may cancel cauris, a ranking, a prize or a referral obtained by fraud: fake or multiple accounts, fake orders, orders between relatives to earn points, or any other way around the rules. These rules may change; the app always shows the current ones.',
+  'Les cauris sont des points de Marakaj. Ils n\'ont aucune valeur en argent : ils ne s\'achètent pas, ne se vendent pas, ne s\'échangent pas contre de l\'argent et ne se transfèrent pas.':
+      'Cauris are Marakaj\'s points. They have no cash value: they cannot be bought, sold, exchanged for money or transferred.',
+  'Marakaj peut annuler des cauris, un classement, un prix ou un parrainage obtenus par la fraude : faux comptes ou comptes multiples, fausses commandes, commandes entre proches pour gagner des points, ou tout autre contournement des règles. Ces règles peuvent changer ; l\'application montre toujours celles du moment.':
+      'Marakaj may cancel cauris, a ranking, a prize or a referral obtained by fraud: fake or multiple accounts, fake orders, orders between relatives to earn points, or any other way around the rules. These rules may change; the app always shows the current ones.',
   '# Formateurs et aide':
       '# Trainers and help',
-  'Un formateur Mara ne voit les données d\'une entreprise qu\'avec l\'accord de son propriétaire ou d\'un administrateur, en lecture seule et pour une durée limitée. Il ne peut rien modifier ni rien vendre au nom de l\'entreprise.':
-      'A Mara trainer sees a business\'s data only with the agreement of its owner or an administrator, read-only and for a limited time. They cannot change anything or sell anything in the business\'s name.',
-  '# Les droits de Mara':
-      '# Mara\'s rights',
-  'Mara peut retirer un contenu (photo, texte, article) contraire à ces conditions ou à la loi.':
-      'Mara may remove content (a photo, a text, an item) contrary to these terms or to the law.',
-  'Mara peut suspendre ou fermer une entreprise ou un compte qui ne respecte pas ces conditions. En cas de fraude, de risque pour d\'autres personnes ou de plainte sérieuse, Mara peut le faire tout de suite ; sinon, Mara prévient d\'abord et dit pourquoi, quand c\'est possible.':
-      'Mara may suspend or close a business or an account that does not respect these terms. In case of fraud, of a risk to other people or of a serious complaint, Mara may do so at once; otherwise Mara warns first and says why, when possible.',
-  'Mara garde les informations dont la loi exige ou permet la conservation pour régler un litige ou prouver une fraude (commandes, paiements, signalements, échanges avec l\'aide), y compris après la fermeture d\'une entreprise ou d\'un compte.':
-      'Mara keeps the information the law requires or allows it to keep to settle a dispute or prove a fraud (orders, payments, reports, exchanges with the help desk), including after a business or an account is closed.',
-  'Mara coopère avec les autorités : sur une demande légale, ou pour protéger une personne, Mara peut leur transmettre les informations utiles.':
-      'Mara cooperates with the authorities: on a lawful request, or to protect a person, Mara may pass the relevant information on to them.',
+  'Un formateur Marakaj ne voit les données d\'une entreprise qu\'avec l\'accord de son propriétaire ou d\'un administrateur, en lecture seule et pour une durée limitée. Il ne peut rien modifier ni rien vendre au nom de l\'entreprise.':
+      'A Marakaj trainer sees a business\'s data only with the agreement of its owner or an administrator, read-only and for a limited time. They cannot change anything or sell anything in the business\'s name.',
+  '# Les droits de Marakaj':
+      '# Marakaj\'s rights',
+  'Marakaj peut retirer un contenu (photo, texte, article) contraire à ces conditions ou à la loi.':
+      'Marakaj may remove content (a photo, a text, an item) contrary to these terms or to the law.',
+  'Marakaj peut suspendre ou fermer une entreprise ou un compte qui ne respecte pas ces conditions. En cas de fraude, de risque pour d\'autres personnes ou de plainte sérieuse, Marakaj peut le faire tout de suite ; sinon, Marakaj prévient d\'abord et dit pourquoi, quand c\'est possible.':
+      'Marakaj may suspend or close a business or an account that does not respect these terms. In case of fraud, of a risk to other people or of a serious complaint, Marakaj may do so at once; otherwise Marakaj warns first and says why, when possible.',
+  'Marakaj garde les informations dont la loi exige ou permet la conservation pour régler un litige ou prouver une fraude (commandes, paiements, signalements, échanges avec l\'aide), y compris après la fermeture d\'une entreprise ou d\'un compte.':
+      'Marakaj keeps the information the law requires or allows it to keep to settle a dispute or prove a fraud (orders, payments, reports, exchanges with the help desk), including after a business or an account is closed.',
+  'Marakaj coopère avec les autorités : sur une demande légale, ou pour protéger une personne, Marakaj peut leur transmettre les informations utiles.':
+      'Marakaj cooperates with the authorities: on a lawful request, or to protect a person, Marakaj may pass the relevant information on to them.',
   '# Signaler un problème':
       '# Reporting a problem',
-  'Une vitrine, un article, une commande ou une personne vous semble frauduleux ? Touchez « Signaler cette vitrine » dans le menu ⋮ de la vitrine, ou écrivez à {email}. Mara examine chaque signalement.':
-      'Does a vitrine, an item, an order or a person look fraudulent to you? Tap “Report this vitrine” in the vitrine’s ⋮ menu, or write to {email}. Mara reviews every report.',
-  'Mara ne garantit aucune vente, aucun nombre de visiteurs et aucun revenu. Mara ne répond pas des articles, des services, des prix ni du comportement des entreprises, des clients ou des livreurs, ni des pertes indirectes (manque à gagner, perte de clientèle).':
-      'Mara guarantees no sale, no number of visitors and no income. Mara does not answer for the goods, services or prices, nor for the conduct of businesses, customers or couriers, nor for indirect losses (loss of profit, loss of customers).',
-  'Si la responsabilité de Mara est engagée, elle est limitée, dans la mesure où la loi le permet, à ce que vous avez payé à Mara pendant les 12 derniers mois. Rien dans ces conditions ne vous retire un droit que la loi vous donne et qu\'un contrat ne peut pas écarter.':
-      'If Mara is liable, its liability is limited, to the extent the law allows, to what you paid Mara over the last 12 months. Nothing in these terms takes away a right the law gives you that a contract cannot set aside.',
+  'Une vitrine, un article, une commande ou une personne vous semble frauduleux ? Touchez « Signaler cette vitrine » dans le menu ⋮ de la vitrine, ou écrivez à {email}. Marakaj examine chaque signalement.':
+      'Does a vitrine, an item, an order or a person look fraudulent to you? Tap “Report this vitrine” in the vitrine’s ⋮ menu, or write to {email}. Marakaj reviews every report.',
+  'Marakaj ne garantit aucune vente, aucun nombre de visiteurs et aucun revenu. Marakaj ne répond pas des articles, des services, des prix ni du comportement des entreprises, des clients ou des livreurs, ni des pertes indirectes (manque à gagner, perte de clientèle).':
+      'Marakaj guarantees no sale, no number of visitors and no income. Marakaj does not answer for the goods, services or prices, nor for the conduct of businesses, customers or couriers, nor for indirect losses (loss of profit, loss of customers).',
+  'Si la responsabilité de Marakaj est engagée, elle est limitée, dans la mesure où la loi le permet, à ce que vous avez payé à Marakaj pendant les 12 derniers mois. Rien dans ces conditions ne vous retire un droit que la loi vous donne et qu\'un contrat ne peut pas écarter.':
+      'If Marakaj is liable, its liability is limited, to the extent the law allows, to what you paid Marakaj over the last 12 months. Nothing in these terms takes away a right the law gives you that a contract cannot set aside.',
   '# Vos données':
       '# Your data',
-  'Ce que Mara fait de vos données est expliqué dans la Politique de confidentialité, qui fait partie de ces conditions.':
-      'What Mara does with your data is explained in the Privacy Policy, which is part of these terms.',
-  'Mara peut modifier ces conditions. Une nouvelle version porte un nouveau numéro et une nouvelle date ; l\'application vous la montre, avec ce qui a changé, et vous demande de l\'accepter pour continuer à utiliser Mara. Si vous ne l\'acceptez pas, vous pouvez supprimer votre compte.':
-      'Mara may change these terms. A new version carries a new number and a new date; the app shows it to you, with what changed, and asks you to accept it to keep using Mara. If you do not accept it, you can delete your account.',
+  'Ce que Marakaj fait de vos données est expliqué dans la Politique de confidentialité, qui fait partie de ces conditions.':
+      'What Marakaj does with your data is explained in the Privacy Policy, which is part of these terms.',
+  'Marakaj peut modifier ces conditions. Une nouvelle version porte un nouveau numéro et une nouvelle date ; l\'application vous la montre, avec ce qui a changé, et vous demande de l\'accepter pour continuer à utiliser Marakaj. Si vous ne l\'acceptez pas, vous pouvez supprimer votre compte.':
+      'Marakaj may change these terms. A new version carries a new number and a new date; the app shows it to you, with what changed, and asks you to accept it to keep using Marakaj. If you do not accept it, you can delete your account.',
   '# Droit applicable et litiges':
       '# Governing law and disputes',
   '[à valider par un avocat] Le droit qui s\'applique à ces conditions et le tribunal compétent en cas de litige seront précisés ici. En cas de désaccord, écrivez-nous d\'abord à {email} : nous cherchons toujours une solution amiable.':
@@ -7815,24 +7815,24 @@ const enStrings = <String, String>{
       'These terms are written in French, and the French version is binding; the English translation is given for information. For any question: {email}, or the app\'s help (Compte › Aide, or Mon profil › Aide).',
   '# Vérifications contre la fraude':
       '# Checks against fraud',
-  'Pour protéger les clients et les entreprises, Mara peut vérifier votre numéro de téléphone (un code envoyé sur WhatsApp) et, pour une entreprise ou un livreur, demander une pièce d\'identité ou des documents sur l\'activité. Ces pièces servent seulement à cette vérification ; seule l\'équipe Mara les voit.':
-      'To protect customers and businesses, Mara may verify your phone number (a code sent on WhatsApp) and, for a business or a courier, ask for an identity document or documents about the activity. These documents are used only for that check; only the Mara team sees them.',
-  '# Ce que Mara garde':
-      '# What Mara keeps',
-  'Mara garde la trace de votre acceptation des conditions (le document, sa version, la date, l\'application utilisée) tant que votre compte existe. Mara garde aussi les informations que la loi exige ou permet de conserver pour régler un litige ou prouver une fraude, et peut les transmettre aux autorités sur une demande légale.':
-      'Mara keeps a record of your acceptance of the terms (the document, its version, the date, the app used) for as long as your account exists. Mara also keeps the information the law requires or allows it to keep to settle a dispute or prove a fraud, and may pass it on to the authorities on a lawful request.',
-  'Mara est une plateforme exploitée par KAJ Consulting LLC : chaque entreprise vend elle-même et répond de ses articles, de ses prix et de ses livraisons.':
-      'Mara is a platform run by KAJ Consulting LLC: each business sells for itself and answers for its items, its prices and its deliveries.',
-  'Un compte par personne, avec des informations vraies. Gardez secrets votre mot de passe et vos codes : Mara ne les demande jamais.':
-      'One account per person, with true information. Keep your password and your codes secret: Mara never asks for them.',
+  'Pour protéger les clients et les entreprises, Marakaj peut vérifier votre numéro de téléphone (un code envoyé sur WhatsApp) et, pour une entreprise ou un livreur, demander une pièce d\'identité ou des documents sur l\'activité. Ces pièces servent seulement à cette vérification ; seule l\'équipe Marakaj les voit.':
+      'To protect customers and businesses, Marakaj may verify your phone number (a code sent on WhatsApp) and, for a business or a courier, ask for an identity document or documents about the activity. These documents are used only for that check; only the Marakaj team sees them.',
+  '# Ce que Marakaj garde':
+      '# What Marakaj keeps',
+  'Marakaj garde la trace de votre acceptation des conditions (le document, sa version, la date, l\'application utilisée) tant que votre compte existe. Marakaj garde aussi les informations que la loi exige ou permet de conserver pour régler un litige ou prouver une fraude, et peut les transmettre aux autorités sur une demande légale.':
+      'Marakaj keeps a record of your acceptance of the terms (the document, its version, the date, the app used) for as long as your account exists. Marakaj also keeps the information the law requires or allows it to keep to settle a dispute or prove a fraud, and may pass it on to the authorities on a lawful request.',
+  'Marakaj est une plateforme exploitée par KAJ Consulting LLC : chaque entreprise vend elle-même et répond de ses articles, de ses prix et de ses livraisons.':
+      'Marakaj is a platform run by KAJ Consulting LLC: each business sells for itself and answers for its items, its prices and its deliveries.',
+  'Un compte par personne, avec des informations vraies. Gardez secrets votre mot de passe et vos codes : Marakaj ne les demande jamais.':
+      'One account per person, with true information. Keep your password and your codes secret: Marakaj never asks for them.',
   'Interdits : la fraude, les fausses commandes, les articles illégaux, contrefaits ou volés, et se faire passer pour quelqu\'un d\'autre.':
       'Forbidden: fraud, fake orders, illegal, counterfeit or stolen goods, and passing yourself off as someone else.',
-  'Payez une commande seulement par les moyens convenus dans Mara, et ne donnez le code de livraison qu\'à la remise.':
-      'Pay for an order only by the means agreed in Mara, and give the delivery code only on delivery.',
+  'Payez une commande seulement par les moyens convenus dans Marakaj, et ne donnez le code de livraison qu\'à la remise.':
+      'Pay for an order only by the means agreed in Marakaj, and give the delivery code only on delivery.',
   'Les cauris n\'ont pas de valeur en argent ; ceux gagnés par la fraude sont annulés.':
       'Cauris have no cash value; those earned by fraud are cancelled.',
-  'Mara peut vérifier une identité, retirer un contenu et suspendre un compte en cas de fraude ou de plainte.':
-      'Mara may check an identity, remove content and suspend an account in case of fraud or a complaint.',
+  'Marakaj peut vérifier une identité, retirer un contenu et suspendre un compte en cas de fraude ou de plainte.':
+      'Marakaj may check an identity, remove content and suspend an account in case of fraud or a complaint.',
   'Mon activité existe vraiment et elle est légale.':
       'My business really exists and is lawful.',
   'Je ne vends rien d\'interdit : ni armes, ni drogues, ni médicaments sans autorisation, ni contrefaçons, ni objets volés.':
@@ -7843,10 +7843,10 @@ const enStrings = <String, String>{
       'I honour the orders I accept, and I tell the customer if there is a problem.',
   'Je ne demande jamais de payer en dehors des moyens convenus dans la commande.':
       'I never ask to be paid outside the means agreed in the order.',
-  'Mara peut vérifier mon identité et me demander des pièces ; en cas de fraude, mon activité peut être fermée.':
-      'Mara may check my identity and ask me for documents; in case of fraud, my business may be closed.',
-  'Je travaille à mon compte : je ne suis employé ni par Mara ni par la boutique.':
-      'I work on my own account: I am employed neither by Mara nor by the shop.',
+  'Marakaj peut vérifier mon identité et me demander des pièces ; en cas de fraude, mon activité peut être fermée.':
+      'Marakaj may check my identity and ask me for documents; in case of fraud, my business may be closed.',
+  'Je travaille à mon compte : je ne suis employé ni par Marakaj ni par la boutique.':
+      'I work on my own account: I am employed neither by Marakaj nor by the shop.',
   'Je ne marque une commande livrée qu\'avec le code que le client me donne à la remise ; je ne le demande jamais à l\'avance.':
       'I mark an order delivered only with the code the customer gives me on delivery; I never ask for it in advance.',
   // 147 (142): the gate, the seller's commitments, the console's terms
@@ -7855,10 +7855,10 @@ const enStrings = <String, String>{
       'Our terms have changed',
   'Avant de continuer':
       'Before you continue',
-  'Lisez ce qui change, puis acceptez la nouvelle version pour continuer à utiliser Mara.':
-      'Read what changes, then accept the new version to keep using Mara.',
-  'Mara protège ses clients et ses entreprises contre la fraude. Lisez l\'essentiel, puis acceptez pour continuer.':
-      'Mara protects its customers and its businesses against fraud. Read the key points, then accept to continue.',
+  'Lisez ce qui change, puis acceptez la nouvelle version pour continuer à utiliser Marakaj.':
+      'Read what changes, then accept the new version to keep using Marakaj.',
+  'Marakaj protège ses clients et ses entreprises contre la fraude. Lisez l\'essentiel, puis acceptez pour continuer.':
+      'Marakaj protects its customers and its businesses against fraud. Read the key points, then accept to continue.',
   'L\'essentiel':
       'The key points',
   'J\'ai lu et j\'accepte les Conditions d\'utilisation et la Politique de confidentialité':
@@ -7869,14 +7869,14 @@ const enStrings = <String, String>{
       'Read the Privacy Policy',
   'Engagements du vendeur':
       'Seller\'s commitments',
-  'Vous tenez une activité sur Mara : vous vous engagez à ceci.':
-      'You run a business on Mara: you commit to the following.',
+  'Vous tenez une activité sur Marakaj : vous vous engagez à ceci.':
+      'You run a business on Marakaj: you commit to the following.',
   'Avant de créer votre activité, vous vous engagez à ceci :':
       'Before creating your business, you commit to the following:',
   'J\'accepte les engagements du vendeur':
       'I accept the seller\'s commitments',
-  'Vous livrez avec Mara : la charte a changé.':
-      'You deliver with Mara: the charter has changed.',
+  'Vous livrez avec Marakaj : la charte a changé.':
+      'You deliver with Marakaj: the charter has changed.',
   'Version {n} du {date}':
       'Version {n} of {date}',
   'Ce qui change : {changes}':
@@ -7893,8 +7893,8 @@ const enStrings = <String, String>{
       'Website',
   'Demander à tout le monde d\'accepter à nouveau ?':
       'Ask everyone to accept again?',
-  'Tout le monde devra accepter à nouveau : {docs}, à sa prochaine ouverture de Mara. Pendant {n} jours, le serveur laisse encore passer les comptes déjà là ; ensuite, il refuse leurs commandes et leurs créations tant qu\'ils n\'ont pas accepté.':
-      'Everyone will have to accept again: {docs}, the next time they open Mara. For {n} days the server still lets the existing accounts through; after that it refuses their orders and creations until they have accepted.',
+  'Tout le monde devra accepter à nouveau : {docs}, à sa prochaine ouverture de Marakaj. Pendant {n} jours, le serveur laisse encore passer les comptes déjà là ; ensuite, il refuse leurs commandes et leurs créations tant qu\'ils n\'ont pas accepté.':
+      'Everyone will have to accept again: {docs}, the next time they open Marakaj. For {n} days the server still lets the existing accounts through; after that it refuses their orders and creations until they have accepted.',
   'Nouvelle version publiée : tout le monde sera invité à l\'accepter.':
       'New version published: everyone will be asked to accept it.',
   'Les acceptations arrivent avec la migration 142 : en attendant, personne n\'est interrogé.':
@@ -7921,8 +7921,8 @@ const enStrings = <String, String>{
       'Days during which existing accounts are still let through (0 to 90)',
   'De 0 à 90 jours.':
       'From 0 to 90 days.',
-  'Acceptez d\'abord les Conditions d\'utilisation de Mara pour commander (mettez l\'application à jour si elle ne vous les montre pas).':
-      'First accept Mara\'s Terms of Use to order (update the app if it does not show them to you).',
+  'Acceptez d\'abord les Conditions d\'utilisation de Marakaj pour commander (mettez l\'application à jour si elle ne vous les montre pas).':
+      'First accept Marakaj\'s Terms of Use to order (update the app if it does not show them to you).',
   'Acceptez d\'abord les engagements du vendeur pour créer une activité (mettez l\'application à jour si elle ne vous les montre pas).':
       'First accept the seller\'s commitments to create a business (update the app if it does not show them to you).',
   'Acceptez d\'abord la charte du livreur pour envoyer votre demande (mettez l\'application à jour si elle ne vous la montre pas).':
@@ -7944,12 +7944,12 @@ const enStrings = <String, String>{
   // 147 (the fraud audit): who receives a customer's name, number and address.
   '# Qui voit vos informations':
       '# Who sees your information',
-  'Quand vous commandez ou réservez, l\'entreprise reçoit ce qu\'il lui faut pour vous servir : votre nom, votre numéro de téléphone (celui que WhatsApp a vérifié, quand Mara le demande), votre adresse et le point de livraison sur la carte, et votre message. Les membres de l\'entreprise qui gèrent les commandes les voient, et elle les garde dans ses comptes, comme une boutique garde ses ventes.':
-      'When you order or book, the business receives what it needs to serve you: your name, your phone number (the one WhatsApp verified, when Mara asks for it), your address and the delivery point on the map, and your message. The business\'s members who handle orders see them, and it keeps them in its accounts, as a shop keeps its sales.',
+  'Quand vous commandez ou réservez, l\'entreprise reçoit ce qu\'il lui faut pour vous servir : votre nom, votre numéro de téléphone (celui que WhatsApp a vérifié, quand Marakaj le demande), votre adresse et le point de livraison sur la carte, et votre message. Les membres de l\'entreprise qui gèrent les commandes les voient, et elle les garde dans ses comptes, comme une boutique garde ses ventes.':
+      'When you order or book, the business receives what it needs to serve you: your name, your phone number (the one WhatsApp verified, when Marakaj asks for it), your address and the delivery point on the map, and your message. The business\'s members who handle orders see them, and it keeps them in its accounts, as a shop keeps its sales.',
   'Pour une livraison, les livreurs proches voient l\'adresse et le point de livraison, sans votre nom ni votre numéro ; le livreur qui prend la course reçoit ensuite votre nom et votre numéro, pour vous joindre pendant la livraison, et s\'engage par sa charte à ne pas s\'en servir pour autre chose.':
       'For a delivery, nearby couriers see the address and the delivery point, without your name or number; the courier who takes the job then receives your name and number, to reach you during the delivery, and commits in their charter not to use them for anything else.',
-  'Un formateur Mara ne voit les données d\'une entreprise qu\'à sa demande, en lecture seule et pour un temps limité. En dehors de ces cas et des prestataires ci-dessous, Mara ne transmet vos informations à personne, sauf sur une demande légale des autorités.':
-      'A Mara trainer sees a business\'s data only at its request, read-only and for a limited time. Apart from these cases and the service providers below, Mara passes your information on to no one, except on a lawful request from the authorities.',
+  'Un formateur Marakaj ne voit les données d\'une entreprise qu\'à sa demande, en lecture seule et pour un temps limité. En dehors de ces cas et des prestataires ci-dessous, Marakaj ne transmet vos informations à personne, sauf sur une demande légale des autorités.':
+      'A Marakaj trainer sees a business\'s data only at its request, read-only and for a limited time. Apart from these cases and the service providers below, Marakaj passes your information on to no one, except on a lawful request from the authorities.',
   // 144: an amount that does not fit its money.
   'Ce n\'est pas un montant':
       'This is not an amount',
@@ -8039,17 +8039,17 @@ const enStrings = <String, String>{
       'Changed by the platform: the dates and the price stay, the business is told, it is written in the log.',
   'Elle s\'arrête tout de suite (programmée, elle n\'aura pas lieu). Un remboursement passe par « à rembourser ». L\'entreprise est prévenue, c\'est inscrit au journal.':
       'It stops right away (if scheduled, it will not take place). A refund goes through « à rembourser ». The business is told, it is written in the log.',
-  'Mara a changé l\'article de votre mise en avant : {name}.':
-      'Mara changed the item of your promotion: {name}.',
-  'Mara a arrêté votre mise en avant.': 'Mara stopped your promotion.',
+  'Marakaj a changé l\'article de votre mise en avant : {name}.':
+      'Marakaj changed the item of your promotion: {name}.',
+  'Marakaj a arrêté votre mise en avant.': 'Marakaj stopped your promotion.',
   'La vitrine entière n\'a pas d\'article à changer': 'The whole vitrine has no item to change',
   'Cette mise en avant est terminée': 'This promotion is over',
   'L\'article ou le service ne se change qu\'une fois': 'The item or service can be changed only once',
   'L\'article ou le service se change seulement dans les 24 h après le début':
       'The item or service can be changed only within 24 h of the start',
   'C\'est déjà cet article ou ce service': 'It is already this item or service',
-  'Paiement signalé : Mara le vérifie, la demande ne s\'annule plus':
-      'Payment reported: Mara is checking it, the request can no longer be cancelled',
+  'Paiement signalé : Marakaj le vérifie, la demande ne s\'annule plus':
+      'Payment reported: Marakaj is checking it, the request can no longer be cancelled',
   'Seule une demande pas encore payée s\'annule': 'Only a request not yet paid can be cancelled',
   'Un paiement Wave est en cours pour cette demande : réessayez dans une heure':
       'A Wave payment is in progress for this request: try again in an hour',
@@ -8070,8 +8070,8 @@ const enStrings = <String, String>{
       'Hello, I would like to report the vitrine “{name}” ({link}).',
   'Signalement : {name}': 'Report: {name}',
   'Connectez-vous pour signaler': 'Sign in to report',
-  'Mara vous répond dans vos notifications. Vous revenez ici juste après.':
-      'Mara answers you in your notifications. You come straight back here.',
+  'Marakaj vous répond dans vos notifications. Vous revenez ici juste après.':
+      'Marakaj answers you in your notifications. You come straight back here.',
   'ou écrivez-nous': 'or write to us',
   'Vitrines masquées': 'Hidden vitrines',
   'Vitrines masquées ({n})': 'Hidden vitrines ({n})',
@@ -8099,8 +8099,8 @@ const enStrings = <String, String>{
       'Orders in progress for a new account, before its first finished one (0: no limit)',
   'Espèces qu\'un livreur porte au plus à la fois — FCFA (0 : sans plafond)':
       'Most cash a courier carries at once — FCFA (0: no cap)',
-  'Écart de caisse signalé à Mara à partir de — FCFA (0 : jamais)':
-      'Till gap reported to Mara from — FCFA (0: never)',
+  'Écart de caisse signalé à Marakaj à partir de — FCFA (0 : jamais)':
+      'Till gap reported to Marakaj from — FCFA (0: never)',
   'À vérifier : fraude':
       'To review: fraud',
   'blocages, livreurs au plafond, écarts de caisse':
@@ -8183,8 +8183,8 @@ const enStrings = <String, String>{
       '{amount} short',
   'La clôture de caisse arrive avec la prochaine mise à jour du serveur. Vos ventes, elles, sont bien enregistrées.':
       'Closing the till comes with the next server update. Your sales are recorded as usual.',
-  'Comptez les espèces dans la caisse, sans regarder les ventes. Mara compare ensuite avec ce qui est attendu : le fonds de caisse, plus les ventes en espèces du jour, moins les retours.':
-      'Count the cash in the till without looking at the sales. Mara then compares it with what is expected: the opening float, plus the day’s cash sales, minus returns.',
+  'Comptez les espèces dans la caisse, sans regarder les ventes. Marakaj compare ensuite avec ce qui est attendu : le fonds de caisse, plus les ventes en espèces du jour, moins les retours.':
+      'Count the cash in the till without looking at the sales. Marakaj then compares it with what is expected: the opening float, plus the day’s cash sales, minus returns.',
   'Espèces comptées dans la caisse':
       'Cash counted in the till',
   'Fonds de caisse du matin (facultatif)':
@@ -8207,10 +8207,10 @@ const enStrings = <String, String>{
       'Counted',
   'Enregistré. Le propriétaire voit chaque clôture et son écart.':
       'Saved. The owner sees every closing and its gap.',
-  'Payez par Wave seulement depuis Mara, une fois la commande acceptée — jamais à un numéro reçu par message ou par appel.':
-      'Pay by Wave only from inside Mara, once the order is accepted — never to a number sent by message or given on a call.',
-  'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez à la livraison, au retrait, ou par Wave dans Mara.':
-      'Never pay in advance to someone you do not know. Pay on delivery, at pickup, or by Wave in Mara.',
+  'Payez par Wave seulement depuis Marakaj, une fois la commande acceptée — jamais à un numéro reçu par message ou par appel.':
+      'Pay by Wave only from inside Marakaj, once the order is accepted — never to a number sent by message or given on a call.',
+  'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez à la livraison, au retrait, ou par Wave dans Marakaj.':
+      'Never pay in advance to someone you do not know. Pay on delivery, at pickup, or by Wave in Marakaj.',
   'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez à la livraison ou au retrait.':
       'Never pay in advance to someone you do not know. Pay on delivery or at pickup.',
   'On vous demande de payer avant ? Signalez-le':
@@ -8251,8 +8251,8 @@ const enStrings = <String, String>{
       'From 0 (no limit) to 50 orders, please.',
   'De 1 000 à 10 000 000 FCFA, ou 0 pour aucun, s\'il vous plaît.':
       'From 1,000 to 10,000,000 FCFA, or 0 for none, please.',
-  'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez au retrait, ou par Wave dans Mara.':
-      'Never pay in advance to someone you do not know. Pay at pickup, or by Wave in Mara.',
+  'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez au retrait, ou par Wave dans Marakaj.':
+      'Never pay in advance to someone you do not know. Pay at pickup, or by Wave in Marakaj.',
   'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez au retrait.':
       'Never pay in advance to someone you do not know. Pay at pickup.',
   'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez à la livraison, quand vous recevez la commande.':

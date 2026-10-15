@@ -324,7 +324,7 @@ class _PreviewBanner extends StatelessWidget {
                       ?.copyWith(color: maraBlack, fontWeight: FontWeight.w800),
                 ),
                 Text(
-                  context.tr('Son rôle, sa formule, ce que Mara lui montre. Lecture seule : rien ne s\'enregistre d\'ici.'),
+                  context.tr('Son rôle, sa formule, ce que Marakaj lui montre. Lecture seule : rien ne s\'enregistre d\'ici.'),
                   style: theme.textTheme.bodySmall?.copyWith(color: maraBlack),
                 ),
               ],

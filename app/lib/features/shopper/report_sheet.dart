@@ -74,7 +74,7 @@ class _ReportSheetState extends State<ReportSheet> {
       _error = null;
     });
     final messenger = ScaffoldMessenger.maybeOf(context);
-    final thanks = context.tr('Merci : Mara a reçu votre signalement et vous répondra dans vos notifications.');
+    final thanks = context.tr('Merci : Marakaj a reçu votre signalement et vous répondra dans vos notifications.');
     try {
       await widget.shopper.report(
         topic: _topic,
@@ -110,7 +110,7 @@ class _ReportSheetState extends State<ReportSheet> {
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2, color: ShopStyle.paper))
-                    : Text(context.tr('Envoyer à Mara')),
+                    : Text(context.tr('Envoyer à Marakaj')),
               ),
             ),
       children: [

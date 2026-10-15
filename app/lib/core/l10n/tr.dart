@@ -47,9 +47,25 @@ String intlLocale([String? language]) =>
     (language ?? trCurrent) == 'en' ? 'en' : 'fr_FR';
 
 String translate(String language, String fr, [Map<String, Object?> args = const {}]) {
-  var s = language == 'en' ? (enStrings[fr] ?? fr) : fr;
+  // A sentence the server wrote before 147 (« Mara Pro complet », « Cadeau
+  // de Mara ») is read as its new self, in both languages.
+  final key = enStrings.containsKey(fr) ? fr : oldNameText(fr);
+  var s = language == 'en' ? (enStrings[key] ?? key) : key;
   for (final e in args.entries) {
     s = s.replaceAll('{${e.key}}', '${e.value}');
   }
   return s;
 }
+
+/// The product was « Mara » until it became « Marakaj ». A sentence written
+/// by a server or a Worker from before the change (migration 147) still
+/// says the old name: it is read with the new one, word for word, so a
+/// screen never shows both. A sentence that already says « Marakaj » is
+/// the new server's and is left as it is (a business or a person called
+/// Mara in it stays so). Dart's \b is ASCII-only, so the word's end is
+/// spelt out: « Maraîchage » is not the name.
+String oldNameText(String text) => text.contains('Marakaj')
+    ? text
+    : text.replaceAll(_oldName, 'Marakaj');
+
+final _oldName = RegExp(r'(?<![\wÀ-ÿ])Mara(?![\wÀ-ÿ])');

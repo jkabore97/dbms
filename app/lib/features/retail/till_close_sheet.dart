@@ -184,7 +184,7 @@ class _TillCloseSheetState extends State<TillCloseSheet> {
           )
         else ...[
           Text(context.tr(
-              'Comptez les espèces dans la caisse, sans regarder les ventes. Mara compare ensuite avec ce qui est attendu : le fonds de caisse, plus les ventes en espèces du jour, moins les retours.')),
+              'Comptez les espèces dans la caisse, sans regarder les ventes. Marakaj compare ensuite avec ce qui est attendu : le fonds de caisse, plus les ventes en espèces du jour, moins les retours.')),
           const SizedBox(height: 14),
           TextField(
             key: const Key('till-counted'),

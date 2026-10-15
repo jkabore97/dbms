@@ -611,7 +611,7 @@ class ShopFooter extends StatelessWidget {
                               color: ShopStyle.ink),
                         ),
                         TextSpan(
-                            text: '  ·  © ${DateTime.now().year} Mara',
+                            text: '  ·  © ${DateTime.now().year} Marakaj',
                             style: const TextStyle(letterSpacing: 0.4)),
                       ],
                     ),

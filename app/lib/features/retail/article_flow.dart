@@ -545,7 +545,7 @@ class _ArticleFlowState extends State<ArticleFlow> {
         FlowStep(
           id: 'alert',
           title: context.tr('Prévenir quand il en reste peu ?'),
-          help: context.tr('En dessous de ce nombre, Mara vous prévient.'),
+          help: context.tr('En dessous de ce nombre, Marakaj vous prévient.'),
           optional: true,
           shown: () => sell && existing == null && !_simple && _counts,
           isValid: () => _low.text.trim().isEmpty || (_num(_low) ?? -1) >= 0,
@@ -801,7 +801,7 @@ class _ArticleFlowState extends State<ArticleFlow> {
             title: Text(context.tr('Suivre le stock'),
                 style: const TextStyle(fontWeight: FontWeight.w600)),
             subtitle: Text(_tracked
-                ? context.tr('Mara compte ce qu\'il reste ; à zéro, il est épuisé.')
+                ? context.tr('Marakaj compte ce qu\'il reste ; à zéro, il est épuisé.')
                 : context.tr('Pas de compte : toujours disponible sur la vitrine.')),
           ),
           const SizedBox(height: 8),

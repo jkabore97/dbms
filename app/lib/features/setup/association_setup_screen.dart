@@ -391,7 +391,7 @@ class _AssociationSetupScreenState extends State<AssociationSetupScreen> {
   Future<void> _invite() async {
     final name = _name.text.trim().isEmpty ? widget.org.name : _name.text.trim();
     final text = context.tr(
-        'Bonjour ! Je vous inscris comme membre de *{name}* sur Mara. Envoyez-moi votre nom et votre numéro de téléphone.',
+        'Bonjour ! Je vous inscris comme membre de *{name}* sur Marakaj. Envoyez-moi votre nom et votre numéro de téléphone.',
         {'name': name});
     try {
       await launchUrl(Uri.parse(whatsappShareUrl(text)),

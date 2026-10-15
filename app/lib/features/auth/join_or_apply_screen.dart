@@ -138,7 +138,7 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
 
     return ScrollHint(child: Scaffold(
       appBar: AppBar(leading: parentBack(context),
-        title: Text(context.tr('Bienvenue sur Mara')),
+        title: Text(context.tr('Bienvenue sur Marakaj')),
         actions: [
           IconButton(
             onPressed: widget.onSignOut,

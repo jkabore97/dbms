@@ -61,7 +61,7 @@ export const FAQ = [
   ],
 ];
 
-const GREETING = "Bonjour, j'ai besoin d'aide avec Mara.";
+const GREETING = "Bonjour, j'ai besoin d'aide avec Marakaj.";
 
 // The installed hours as drawn: non-breaking spaces, so « 24 h/24 » never
 // breaks between 24 and h. Stored with plain ones (126), as typed in Réglages.
@@ -98,7 +98,7 @@ export function helpHtml(contacts) {
   const faq = FAQ.map(([q, a, qEn, aEn]) => `<h3>${escape(q)}</h3>
 <p>${escape(a)}</p>
 <p class="en" lang="en"><b>${escape(qEn)}</b> ${escape(aEn)}</p>`).join("\n");
-  const main = `<h1>Aide Mara</h1>
+  const main = `<h1>Aide Marakaj</h1>
 <p class="lead">Une question, un souci ? Nous répondons ${escape(hours)}.</p>
 ${installed ? `<p class="en" lang="en">A question, a problem? We answer 24/7.</p>\n` : ""}<div class="contact">
 ${wa}<a class="button mail" href="mailto:${escape(email)}">Écrire à ${escape(email)}</a>
@@ -109,15 +109,15 @@ ${faq}
 <h2>Vos données</h2>
 <p><a href="/confidentialite">Politique de confidentialité</a> · <a href="/conditions">Conditions d'utilisation</a> · <a href="/supprimer-mon-compte">Supprimer votre compte</a></p>
 <p class="en" lang="en">Privacy policy, terms of use, deleting your account.</p>
-<p class="editor">Mara est édité par KAJ Consulting LLC.</p>`;
-  const title = "Aide Mara";
-  const description = `Une question, un souci ? L'équipe Mara répond ${hours}, par e-mail${whatsapp ? " et sur WhatsApp" : ""}.`;
+<p class="editor">Marakaj est édité par KAJ Consulting LLC.</p>`;
+  const title = "Aide Marakaj";
+  const description = `Une question, un souci ? L'équipe Marakaj répond ${hours}, par e-mail${whatsapp ? " et sur WhatsApp" : ""}.`;
   const meta = {
     "og:title": title,
     "og:description": description,
     "og:url": "https://marakaj.com/aide",
     "og:type": "website",
-    "og:site_name": "Mara",
+    "og:site_name": "Marakaj",
   };
   const head = Object.entries(meta)
     .map(([k, v]) => `<meta property="${k}" content="${escape(v)}">\n`).join("")
