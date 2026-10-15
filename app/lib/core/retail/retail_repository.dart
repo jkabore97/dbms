@@ -265,7 +265,59 @@ class RetailRepository {
   /// (064's) before — or while nothing has been read yet.
   int get descriptionMax => itemPhotosLive ? 1000 : 300;
 
+  /// The catalogue, from the server. The active list — the one the till
+  /// sells from — is kept on the phone each time it is read, for
+  /// [tillProducts] to fall back on when the server cannot answer.
   Future<List<Product>> products(String orgId, {bool activeOnly = true}) async {
+    final askedAt = DateTime.now();
+    final rows = await _readProducts(orgId, activeOnly: activeOnly);
+    final outbox = _outbox;
+    if (activeOnly && outbox != null) {
+      try {
+        await outbox.cacheProducts(
+            orgId, [for (final p in rows) p.toShelfRow()],
+            askedAt: askedAt);
+      } catch (_) {
+        // Best-effort: the next read keeps it.
+      }
+    }
+    return rows;
+  }
+
+  /// What « Vente » sells from (shop and farm): the server's catalogue,
+  /// asked for at most [timeout] — else, offline or stalled, the one this
+  /// phone last read, with [fromDevice] set for the till to say so. Its
+  /// counts are the server's of then less this phone's sales sent since;
+  /// the sales still waiting the till takes off itself, as it does online.
+  /// Nothing kept: the server's failure, as before.
+  Future<({List<Product> products, bool fromDevice})> tillProducts(
+    String orgId, {
+    Duration timeout = const Duration(seconds: 12),
+  }) async {
+    try {
+      return (
+        products: await products(orgId).timeout(timeout),
+        fromDevice: false
+      );
+    } catch (_) {
+      final kept = await keptProducts(orgId);
+      if (kept.isEmpty) rethrow;
+      return (products: kept, fromDevice: true);
+    }
+  }
+
+  /// The catalogue this phone last read, for [orgId]; empty when none.
+  Future<List<Product>> keptProducts(String orgId) async {
+    try {
+      final rows = await _outbox?.cachedProducts(orgId) ?? const [];
+      return [for (final r in rows) Product.fromRow(r)];
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<List<Product>> _readProducts(String orgId,
+      {required bool activeOnly}) async {
     // is_published was missing from this list for a while: the edit sheet
     // then read every article as "not on the vitrine", showed the switch
     // off, and saving the sheet — any edit, a price — quietly unpublished
@@ -424,6 +476,12 @@ class RetailRepository {
       if (customerPhone != null && customerPhone.isNotEmpty)
         'p_customer_phone': customerPhone,
     });
+    // Taken off the till's copy on the phone too, which was read before it:
+    // should the next read fail, the till does not offer it again.
+    try {
+      await _outbox?.takeFromCachedProducts(
+          orgId, [for (final l in lines) l.toJson()]);
+    } catch (_) {}
     return id as String;
   }
 
@@ -744,15 +802,29 @@ class RetailRepository {
       final rows = await client.rpc('product_photo_keys', params: {
         'p_org_id': orgId,
       }) as List<dynamic>;
-      return _photoKeysHeard[orgId] = {
+      final keys = _photoKeysHeard[orgId] = {
         for (final r in rows)
           if (r is Map && r['product_id'] != null && r['photo_key'] != null)
             '${r['product_id']}': '${r['photo_key']}',
       };
+      try {
+        await _outbox?.keepProductPhotoKeys(orgId, keys);
+      } catch (_) {}
+      return keys;
     } catch (_) {
       // No signal (122): the keys last heard while the app is open, so the
-      // till and the list still find the pictures the phone holds.
-      return _photoKeysHeard[orgId] ?? const {};
+      // till and the list still find the pictures the phone holds — and on
+      // a cold start, the ones kept beside the till's catalogue.
+      final heard = _photoKeysHeard[orgId];
+      if (heard != null) return heard;
+      try {
+        return {
+          for (final r in await _outbox?.cachedProducts(orgId) ?? const [])
+            if (r['photo_key'] != null) '${r['id']}': '${r['photo_key']}',
+        };
+      } catch (_) {
+        return const {};
+      }
     }
   }
 

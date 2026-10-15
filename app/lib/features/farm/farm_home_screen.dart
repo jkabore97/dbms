@@ -532,15 +532,19 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
   }
 
   /// The farm's « Vente » (115): the same flow as the shop's till, over
-  /// what it has for sale (« À vendre »). No signal: the list it last had
-  /// is not kept, so the produce is typed by name — and the sale waits on
-  /// the phone, as the shop's does.
+  /// what it has for sale (« À vendre »). No signal, or a stalled one: the
+  /// list this phone last read, its stock less the sales it already made
+  /// (the till says the list is the phone's) — typed by name only when it
+  /// never read one. The sale waits on the phone, as the shop's does.
   Future<void> _sell() async {
     final retail = widget.retail;
     if (retail == null) return;
     List<Product> products = const [];
+    var fromDevice = false;
     try {
-      products = await retail.products(widget.org.id).timeout(_askFor);
+      final shelf = await retail.tillProducts(widget.org.id, timeout: _askFor);
+      products = shelf.products;
+      fromDevice = shelf.fromDevice;
     } catch (_) {}
     if (!mounted) return;
     final sold = await StepFlow.push(
@@ -551,6 +555,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
         retail: retail,
         currency: widget.org.currency,
         products: products,
+        productsFromDevice: fromDevice,
         farm: true,
         canCredit: widget.access.canEdit('credits') &&
             !PathGate.locks(context, widget.org, 'credits'),

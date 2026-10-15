@@ -35,7 +35,7 @@ class LocalDb {
 
     final db = await openDatabase(
       path,
-      version: 13,
+      version: 14,
       onCreate: (db, version) async {
         await _createSchema(db, version);
         await _createIdentitySchema(db);
@@ -44,6 +44,7 @@ class LocalDb {
         await _createFarmSchema(db);
         await _createCaptureSchema(db);
         await _createPrefsSchema(db);
+        await _createShelfSchema(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         // v1 -> v2: who this device belongs to, and which businesses they can
@@ -140,6 +141,10 @@ class LocalDb {
             await db.execute('ALTER TABLE outbox ADD COLUMN refused_at TEXT');
           }
         }
+        // v13 -> v14: the till's catalogue as the server last listed it, so
+        // an offline cold start still has its articles and their stock. A
+        // new table (IF NOT EXISTS): nothing already on the phone is touched.
+        if (oldVersion < 14) await _createShelfSchema(db);
       },
     );
     return LocalDb._(db);
@@ -156,6 +161,36 @@ class LocalDb {
     await db.execute(
         'CREATE TABLE IF NOT EXISTS device_prefs (k TEXT PRIMARY KEY, v TEXT)');
   }
+
+  /// The till's catalogue (shop and farm), as the server last listed it:
+  /// only what « Vente » reads — no buying price, which an employee's
+  /// phone has no need to keep. `read_at` is when that list was asked for:
+  /// a sale this phone sent after it is not in its counts yet.
+  static Future<void> _createShelfSchema(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS cached_products (
+        org_id        TEXT NOT NULL,
+        product_id    TEXT NOT NULL,
+        name          TEXT NOT NULL,
+        barcode       TEXT,
+        sale_price    REAL NOT NULL DEFAULT 0,
+        quantity      REAL NOT NULL DEFAULT 0,
+        unit          TEXT,
+        is_ingredient INTEGER NOT NULL DEFAULT 0,
+        is_service    INTEGER NOT NULL DEFAULT 0,
+        price_from    INTEGER NOT NULL DEFAULT 0,
+        stock_tracked INTEGER NOT NULL DEFAULT 1,
+        photo_key     TEXT,
+        read_at       TEXT NOT NULL,
+        PRIMARY KEY (org_id, product_id)
+      )
+    ''');
+  }
+
+  /// The device_prefs keys that belong to the person signed in rather than
+  /// to the device — the owner's dial for them, per business — and go with
+  /// them at sign-out ([clearIdentity]).
+  static const personalPrefPrefix = 'mine:';
 
   Future<String?> readPref(String key) async {
     final rows =
@@ -517,10 +552,17 @@ class LocalDb {
   /// touch `entries` or `outbox`: work already recorded belongs to the org it
   /// was recorded against, and deleting it here would destroy the one copy
   /// that exists when the phone has never had signal.
+  ///
+  /// What was read for the person goes with them: the till's catalogue and
+  /// the dial the owner set for them. The next person on this phone reads
+  /// their own from the server.
   Future<void> clearIdentity() async {
     await _db.transaction((txn) async {
       await txn.delete('identity');
       await txn.delete('cached_orgs');
+      await txn.delete('cached_products');
+      await txn.delete('device_prefs',
+          where: 'k LIKE ?', whereArgs: ['$personalPrefPrefix%']);
     });
   }
 
@@ -1478,31 +1520,175 @@ class LocalDb {
   /// shelf once they reach the server, for [orgId]: by product id, and by
   /// lower-cased name (`name:<name>`) for a line typed without one. The
   /// shelf the till reads is the server's, which has not seen them yet.
-  Future<Map<String, double>> pendingSaleQuantities(String orgId) async {
+  Future<Map<String, double>> pendingSaleQuantities(String orgId) =>
+      _saleQuantities(
+          "org_id = ? AND action = 'record_sale' "
+          'AND synced_at IS NULL AND refused_at IS NULL',
+          [orgId]);
+
+  /// The lines of the till's outbox rows matching [where], added up by
+  /// product id, or `name:<name>` for a line typed without one.
+  Future<Map<String, double>> _saleQuantities(
+      String where, List<Object?> args) async {
     final rows = await _db.query(
       'outbox',
       columns: ['payload'],
-      where: "org_id = ? AND action = 'record_sale' "
-          'AND synced_at IS NULL AND refused_at IS NULL',
-      whereArgs: [orgId],
+      where: where,
+      whereArgs: args,
     );
     final taken = <String, double>{};
     for (final r in rows) {
       try {
         final payload =
             jsonDecode(r['payload'] as String) as Map<String, dynamic>;
-        for (final l in (payload['p_lines'] as List? ?? const [])) {
-          final line = l as Map;
-          final q = (line['quantity'] as num?)?.toDouble() ?? 0;
-          if (q <= 0) continue;
-          final id = line['product_id'] as String?;
-          final key = id != null && id.isNotEmpty
-              ? id
-              : 'name:${'${line['name'] ?? ''}'.trim().toLowerCase()}';
-          taken[key] = (taken[key] ?? 0) + q;
-        }
+        _addLines(taken, payload['p_lines'] as List? ?? const []);
       } catch (_) {}
     }
     return taken;
+  }
+
+  static void _addLines(Map<String, double> taken, List<dynamic> lines) {
+    for (final l in lines) {
+      final line = l as Map;
+      final q = (line['quantity'] as num?)?.toDouble() ?? 0;
+      if (q <= 0) continue;
+      final id = line['product_id'] as String?;
+      final key = id != null && id.isNotEmpty
+          ? id
+          : 'name:${'${line['name'] ?? ''}'.trim().toLowerCase()}';
+      taken[key] = (taken[key] ?? 0) + q;
+    }
+  }
+
+  // ----------------------------------------------------------------
+  // The till's catalogue
+  // ----------------------------------------------------------------
+
+  /// Replaces this org's catalogue wholesale, the way [cacheFarmItems] does:
+  /// an article retired on the server has to stop being offered here.
+  /// [askedAt] is when the list was asked for — before the request left,
+  /// so a sale sent while it was in flight is counted off again rather than
+  /// missed (the safe side: the till may say one fewer, never one more).
+  /// The photo keys already kept ([keepProductPhotoKeys]) stay with their
+  /// articles: they are read by another question.
+  Future<void> cacheProducts(
+    String orgId,
+    List<Map<String, Object?>> products, {
+    required DateTime askedAt,
+  }) async {
+    final at = askedAt.toUtc().toIso8601String();
+    await _db.transaction((txn) async {
+      final photos = {
+        for (final r in await txn.query('cached_products',
+            columns: ['product_id', 'photo_key'],
+            where: 'org_id = ? AND photo_key IS NOT NULL',
+            whereArgs: [orgId]))
+          r['product_id'] as String: r['photo_key'] as String,
+      };
+      await txn
+          .delete('cached_products', where: 'org_id = ?', whereArgs: [orgId]);
+      for (final p in products) {
+        final id = p['id'] as String;
+        await txn.insert(
+          'cached_products',
+          {
+            'org_id': orgId,
+            'product_id': id,
+            'name': p['name'],
+            'barcode': p['barcode'],
+            'sale_price': p['sale_price'] ?? 0,
+            'quantity': p['quantity'] ?? 0,
+            'unit': p['unit'],
+            'is_ingredient': p['is_ingredient'] == true ? 1 : 0,
+            'is_service': p['is_service'] == true ? 1 : 0,
+            'price_from': p['price_from'] == true ? 1 : 0,
+            'stock_tracked': p['stock_tracked'] == false ? 0 : 1,
+            'photo_key': photos[id],
+            'read_at': at,
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    });
+  }
+
+  /// The catalogue as last listed, by name, in the shape the server's rows
+  /// have (`id`, booleans as booleans). Each count is the server's of then,
+  /// less what this phone's sales sent since took — those reached the
+  /// server after the list was read. The sales still waiting are left to
+  /// the till, which takes them off whichever list it was given.
+  Future<List<Map<String, Object?>>> cachedProducts(String orgId) async {
+    final rows = await _db.query('cached_products',
+        where: 'org_id = ?', whereArgs: [orgId], orderBy: 'name ASC');
+    if (rows.isEmpty) return const [];
+    final readAt = rows
+        .map((r) => r['read_at'] as String)
+        .reduce((a, b) => a.compareTo(b) <= 0 ? a : b);
+    final sentSince = await _saleQuantities(
+        "org_id = ? AND action = 'record_sale' "
+        'AND synced_at IS NOT NULL AND synced_at >= ?',
+        [orgId, readAt]);
+    return [
+      for (final r in rows)
+        {
+          'id': r['product_id'],
+          'name': r['name'],
+          'barcode': r['barcode'],
+          'sale_price': r['sale_price'],
+          'quantity': r['stock_tracked'] == 1 && r['is_service'] == 0
+              ? (r['quantity'] as num).toDouble() -
+                  (sentSince[r['product_id']] ?? 0) -
+                  (sentSince['name:${'${r['name']}'.trim().toLowerCase()}'] ??
+                      0)
+              : r['quantity'],
+          'unit': r['unit'],
+          'is_ingredient': r['is_ingredient'] == 1,
+          'is_service': r['is_service'] == 1,
+          'price_from': r['price_from'] == 1,
+          'stock_tracked': r['stock_tracked'] == 1,
+          'photo_key': r['photo_key'],
+        },
+    ];
+  }
+
+  /// Each article's picture key as last heard (122), kept beside it so the
+  /// till offline shows the photographs the phone still holds.
+  Future<void> keepProductPhotoKeys(
+      String orgId, Map<String, String> keys) async {
+    await _db.transaction((txn) async {
+      await txn.update('cached_products', {'photo_key': null},
+          where: 'org_id = ?', whereArgs: [orgId]);
+      for (final e in keys.entries) {
+        await txn.update('cached_products', {'photo_key': e.value},
+            where: 'org_id = ? AND product_id = ?',
+            whereArgs: [orgId, e.key]);
+      }
+    });
+  }
+
+  /// A sale the server took at once (not through the outbox): its lines
+  /// come off the kept counts, which were read before it.
+  Future<void> takeFromCachedProducts(
+      String orgId, List<Map<String, Object?>> lines) async {
+    final taken = <String, double>{};
+    _addLines(taken, lines);
+    if (taken.isEmpty) return;
+    await _db.transaction((txn) async {
+      final rows = await txn.query('cached_products',
+          columns: ['product_id', 'name'],
+          where: 'org_id = ? AND stock_tracked = 1 AND is_service = 0',
+          whereArgs: [orgId]);
+      for (final r in rows) {
+        final id = r['product_id'] as String;
+        final q = (taken[id] ?? 0) +
+            (taken['name:${'${r['name']}'.trim().toLowerCase()}'] ?? 0);
+        if (q <= 0) continue;
+        await txn.rawUpdate(
+          'UPDATE cached_products SET quantity = quantity - ? '
+          'WHERE org_id = ? AND product_id = ?',
+          [q, orgId, id],
+        );
+      }
+    });
   }
 }
