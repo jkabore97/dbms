@@ -428,10 +428,22 @@ class RetailRepository {
   Future<StoreDay> day(String orgId, {DateTime? on}) async {
     final client = _requireClient();
     final date = on ?? DateTime.now();
-    final rows = await client.rpc('store_day', params: {
-      'p_org_id': orgId,
-      'p_on': _date(date),
-    }) as List<dynamic>;
+    final params = {'p_org_id': orgId, 'p_on': _date(date)};
+    List<dynamic> rows;
+    try {
+      // The phone's own day (145): its date from local midnight to local
+      // midnight, the offset telling the server where midnight is. Before
+      // 145 the server counted the UTC day of that date — a shop at UTC+1
+      // saw its 00:30 sale on yesterday's figures.
+      rows = await client.rpc('store_day', params: {
+        ...params,
+        'p_utc_offset_minutes': date.timeZoneOffset.inMinutes,
+      }) as List<dynamic>;
+    } catch (error) {
+      // A database without 145 yet: the UTC day, as before.
+      if (!isSchemaOutOfDate(error)) rethrow;
+      rows = await client.rpc('store_day', params: params) as List<dynamic>;
+    }
 
     if (rows.isEmpty) return const StoreDay();
     return StoreDay.fromRow(Map<String, dynamic>.from(rows.first as Map));

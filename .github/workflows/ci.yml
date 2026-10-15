@@ -907,6 +907,12 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch144.sql
+      - name: "Prove a shop's day read by its index and on its own clock — documents_by_product as 136 orders an item's photos, taken by the planner, a cover reading one document; store_day's day a range on sales_by_day (one day's sales read, where 011 read them all), the same answer as 011 day by day over a year for a UTC shop, a sale at 23:30 local at UTC+1 on its day and 00:30 on the next, UTC-1 too, ±14 h refused; still SECURITY INVOKER; the old door's signature, default, columns and grants unchanged, the new one authenticated's, closed to anon and PUBLIC; run twice the same (145)"
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch145.sql
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch145.sql
 
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each

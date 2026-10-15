@@ -29,6 +29,8 @@ import 'core/db/local_db.dart';
 import 'core/farm/farm_repository.dart';
 import 'core/invoicing/invoicing_repository.dart';
 import 'core/l10n/locale_controller.dart';
+import 'core/net/timeout_client.dart';
+import 'core/offline/offline_prep.dart';
 import 'l10n/strings.dart';
 import 'core/onboarding/onboarding_repository.dart';
 import 'core/notify/notifications_repository.dart';
@@ -131,6 +133,10 @@ Future<void> _startup() async {
     await Supabase.initialize(
       url: supabaseUrl,
       publishableKey: supabasePublishableKey,
+      // Every call to the server gives up after a silent line instead of
+      // spinning forever (core/net/timeout_client.dart), and says « Pas de
+      // connexion » like any other loss of signal.
+      httpClient: TimeoutClient(http.Client()),
       // The session is written to device storage and reloaded on launch, so a
       // phone that has been out of range for a fortnight still knows who its
       // owner is. Refreshing that session needs signal; the device PIN covers
@@ -384,6 +390,10 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
     if (_session.phase == SessionPhase.ready) unawaited(_storeWatcher?.recoverSpots());
     if (_session.phase != SessionPhase.ready || _deviceRegistered) return;
     _deviceRegistered = true;
+    // A browser that keeps a business's unsent work: asked once more to
+    // promise not to clear it (a no-op off the web, and once the browser
+    // has promised).
+    unawaited(OfflinePrep(db: widget.db).keepStorageAtStartup());
     unawaited(() async {
       final id = await _security.deviceId();
       await _securityApi.registerDevice(id, SecuritySettings.deviceLabel());
