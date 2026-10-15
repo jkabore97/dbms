@@ -232,9 +232,49 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     }
   }
 
+  /// The street in the server's own order, before the paid shops are lifted
+  /// to the top: kept so the spots alone can be asked again (144's quiet
+  /// position) and the list re-arranged without asking for it again.
+  List<DirectoryEntry> _server = const [];
+
+  /// Which answer is the latest. A list asked by name and one asked from
+  /// « près de moi » can cross on a slow line; the older must never land
+  /// over the newer. The spots have their own, since they are also asked
+  /// alone.
+  int _listStamp = 0;
+  int _spotStamp = 0;
+
+  /// The strip's articles already counted as seen on this visit (071): a
+  /// spot asked again from the phone's position is the same look, not a
+  /// second one, and a spot is paid by what it is seen.
+  final Set<String> _counted = {};
+
+  void _countSeen() {
+    final fresh = [for (final f in _featured) if (_counted.add(f.id)) f.id];
+    if (fresh.isNotEmpty) unawaited(widget.storefront.recordSeen(fresh));
+  }
+
+  /// A paid shop leads the list, the rest keep the server's order (nearest
+  /// first, or by name); the vitrines d'exemple close it.
+  static List<DirectoryEntry> _arrange(List<DirectoryEntry> entries,
+      Set<String> spotlights, Set<String> showcases) {
+    bool real(DirectoryEntry e) => !showcases.contains(e.slug);
+    return [
+      ...entries.where((e) => real(e) && spotlights.contains(e.slug)),
+      ...entries.where((e) => real(e) && !spotlights.contains(e.slug)),
+      // In the server's order: the most photographed first (095).
+      for (final slug in showcases) ...entries.where((e) => e.slug == slug),
+    ];
+  }
+
   Future<void> _load() async {
+    final listStamp = ++_listStamp;
+    final spotStamp = ++_spotStamp;
     setState(() {
-      _loading = true;
+      // The skeleton only for an empty page: a street already on screen
+      // stays there while it is asked again (« près de moi »), rather than
+      // blinking away and losing the place it was scrolled to.
+      _loading = _entries.isEmpty;
       _error = null;
     });
     if (!widget.storefront.isConfigured) {
@@ -247,8 +287,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     // The street as this phone last saw it, at once (street_cache.dart):
     // on a slow line the shops show while the fresh list comes.
     final kept = _entries.isEmpty ? await widget.storefront.keptStreet() : null;
-    if (kept != null && mounted && _entries.isEmpty) {
+    if (kept != null && mounted && _entries.isEmpty && listStamp == _listStamp) {
       setState(() {
+        _server = kept.entries;
         _entries = kept.entries;
         _previews = kept.previews;
         _loading = false;
@@ -271,34 +312,29 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         widget.storefront.spotlights(lat: spot?.latitude, lng: spot?.longitude),
         widget.storefront.showcaseSlugs(),
       ]);
-      if (!mounted) return;
-      final spotlights = results[2] as Set<String>;
+      // A newer question was asked meanwhile: its answer is the one shown.
+      if (!mounted || listStamp != _listStamp) return;
       final entries = results[0] as List<DirectoryEntry>;
       final showcases = results[3] as Set<String>;
+      // The spots asked alone since (the phone's position): theirs stand.
+      final spotsCurrent = spotStamp == _spotStamp;
+      final spotlights =
+          spotsCurrent ? results[2] as Set<String> : _spotlights;
       setState(() {
-        // A paid shop leads the list, the rest keep the server's order
-        // (nearest first, or by name); the vitrines d'exemple close it.
-        bool real(DirectoryEntry e) => !showcases.contains(e.slug);
-        _entries = [
-          ...entries.where((e) => real(e) && spotlights.contains(e.slug)),
-          ...entries.where((e) => real(e) && !spotlights.contains(e.slug)),
-          // In the server's order: the most photographed first (095).
-          for (final slug in showcases)
-            ...entries.where((e) => e.slug == slug),
-        ];
+        _server = entries;
+        _entries = _arrange(entries, spotlights, showcases);
         _spotlights = spotlights;
         _showcases = showcases;
-        _featured = results[1] as List<FeaturedItem>;
+        if (spotsCurrent) _featured = results[1] as List<FeaturedItem>;
         _loading = false;
       });
       // No network: the last look, said as such.
       if (widget.storefront.keptAt != null) _sayKept();
       // The strip is what a spot buys: count it as seen, in one call.
-      unawaited(widget.storefront
-          .recordSeen([for (final f in _featured) f.id]));
+      _countSeen();
       unawaited(_loadPreviews());
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted || listStamp != _listStamp) return;
       if (_entries.isNotEmpty) {
         // The last look is on screen: it stays, said as such.
         _sayKept();
@@ -320,10 +356,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   Future<void> _loadPreviews() async {
+    final stamp = _listStamp;
     try {
       final previews = await widget.storefront
           .previews([for (final e in _entries) e.slug]);
-      if (mounted) setState(() => _previews = previews);
+      if (mounted && stamp == _listStamp) setState(() => _previews = previews);
     } catch (_) {
       // The cards keep their names; the goods simply do not show.
     }
@@ -347,9 +384,40 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       );
       if (!mounted || _here != null) return;
       _quiet = LatLng(position.latitude, position.longitude);
-      await _load();
+      // Only the spots depend on it (144): the list keeps its order until
+      // « près de moi », so it is not asked for again — nor its previews.
+      await _loadSpots();
     } catch (_) {
       // No position: the server's saved pin, or no spot.
+    }
+  }
+
+  /// The paid spots alone, asked again from [_quiet]: the strip and the
+  /// sponsored shops at the top, the rest of the street as it is.
+  Future<void> _loadSpots() async {
+    if (!widget.storefront.isConfigured) return;
+    final stamp = ++_spotStamp;
+    final spot = _here ?? _quiet;
+    try {
+      final results = await Future.wait<Object>([
+        widget.storefront
+            .featured(lat: spot?.latitude, lng: spot?.longitude)
+            .catchError((_) => const <FeaturedItem>[]),
+        widget.storefront.spotlights(lat: spot?.latitude, lng: spot?.longitude),
+      ]);
+      if (!mounted || stamp != _spotStamp) return;
+      final spotlights = results[1] as Set<String>;
+      setState(() {
+        _featured = results[0] as List<FeaturedItem>;
+        _spotlights = spotlights;
+        // Before the list has come, it is arranged when it does.
+        if (_server.isNotEmpty) {
+          _entries = _arrange(_server, spotlights, _showcases);
+        }
+      });
+      _countSeen();
+    } catch (_) {
+      // The strip stays as it was.
     }
   }
 

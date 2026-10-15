@@ -215,8 +215,9 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
       _loading = false;
     });
 
-    await _refreshFromServer();
-    await _readPath();
+    // The server's counts and the path do not wait for each other: one
+    // round trip on a slow line, not four in turn.
+    await Future.wait([_refreshFromServer(), _readPath()]);
 
     if (!mounted) return;
     final items = await widget.db.cachedFarmItems(widget.org.id);
@@ -253,15 +254,20 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
     if (farm == null || !farm.isConfigured) return;
 
     try {
-      final items = await farm.stockOnHand(widget.org.id);
-      final flocks = await farm.flocks(widget.org.id);
+      // Asked at once; awaited in turn, so a failure is heard here and
+      // never as an error nobody caught.
+      final askedItems = farm.stockOnHand(widget.org.id)..ignore();
+      final askedFlocks = farm.flocks(widget.org.id)..ignore();
       // 019: what this farm actually keeps and grows. Best-effort — a
       // database without it yet leaves the shape empty, and the screen then
       // behaves exactly as it did before.
-      try {
-        final shape = await farm.shape(widget.org.id);
-        if (mounted) setState(() => _shape = shape);
-      } catch (_) {}
+      final askedShape = farm
+          .shape(widget.org.id)
+          .then<FarmShape?>((s) => s, onError: (Object _) => null);
+      final items = await askedItems;
+      final flocks = await askedFlocks;
+      final shape = await askedShape;
+      if (shape != null && mounted) setState(() => _shape = shape);
       await widget.db.cacheFarmItems(
         widget.org.id,
         items.map((i) => i.toCache()).toList(),

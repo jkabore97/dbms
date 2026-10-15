@@ -265,7 +265,10 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
   Future<void> _load() async {
     unawaited(_checkStreet());
     setState(() {
-      _loading = true;
+      // The skeleton only for an empty page: back from its settings, the
+      // owner's vitrine stays on screen while it is read again, rather
+      // than blinking away and losing the place it was scrolled to.
+      _loading = _shop == null;
       _error = null;
     });
     if (!widget.storefront.isConfigured) {
@@ -1669,6 +1672,10 @@ class _OrderSheetState extends State<OrderSheet> {
   }
 
   Future<void> _submit() async {
+    // A second tap before the button has redrawn as busy (a slow phone
+    // delivers both in one frame) must not send the order twice: an order
+    // carries no key the server could recognise it by.
+    if (_busy) return;
     if (_fulfilment == 'delivery' && _address.text.trim().isEmpty) {
       setState(() => _error = context.tr('Indiquez où livrer.'));
       return;

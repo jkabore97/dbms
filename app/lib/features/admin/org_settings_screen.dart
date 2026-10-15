@@ -253,33 +253,45 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       _error = null;
     });
     try {
-      final org = await widget.admin.fetchOrg(widget.orgId);
-      final wave = await widget.admin.waveMerchant(widget.orgId);
-      final rates = await widget.admin.currencyRates(widget.orgId);
-      final storefront = await widget.admin.storefront(widget.orgId);
+      // Every question at once: none depends on another, and on 3G each is
+      // a round trip of half a second or more — nine of them one after the
+      // other kept the page on its spinner for seconds. Each is awaited in
+      // turn below, so the first failure is still the one said; the others'
+      // failures are heard there, or not at all — never as an error nobody
+      // caught.
+      final admin = widget.admin;
+      final id = widget.orgId;
+      final askedOrg = admin.fetchOrg(id)..ignore();
+      final askedWave = admin.waveMerchant(id)..ignore();
+      final askedRates = admin.currencyRates(id)..ignore();
+      final askedStorefront = admin.storefront(id)..ignore();
       // The reach is one optional field: failing to read it must not cost
       // the owner the rest of the settings.
-      double? reach;
-      try {
-        reach = await widget.admin.deliveryReach(widget.orgId);
-      } catch (_) {
-        reach = null;
-      }
-      final included = await widget.admin.deliveryIncludedKm(widget.orgId);
+      final askedReach = admin
+          .deliveryReach(id)
+          .then<double?>((r) => r, onError: (Object _) => null);
+      final askedIncluded = admin.deliveryIncludedKm(id)..ignore();
       // The contact lines and the checklist are extras: failing to read
       // them must not cost the owner the rest of the settings.
-      ({String? phone, String? address}) contact = (phone: null, address: null);
-      try {
-        contact = await widget.admin.orgContact(widget.orgId);
-      } catch (_) {}
-      VitrineChecklist? checklist;
-      try {
-        checklist = await widget.admin.vitrineChecklist(widget.orgId);
-      } catch (_) {}
+      final askedContact = admin.orgContact(id).then<({String? phone, String? address})>(
+          (c) => c, onError: (Object _) => (phone: null, address: null));
+      final askedChecklist = admin
+          .vitrineChecklist(id)
+          .then<VitrineChecklist?>((c) => c, onError: (Object _) => null);
       // Only the platform edits the plan, so only the platform pays for the
       // read; members show what the org list already says.
-      final plan = widget.canSetPlan
-          ? await widget.admin.orgPlan(widget.orgId)
+      final askedPlan = widget.canSetPlan ? (admin.orgPlan(id)..ignore()) : null;
+
+      final org = await askedOrg;
+      final wave = await askedWave;
+      final rates = await askedRates;
+      final storefront = await askedStorefront;
+      final reach = await askedReach;
+      final included = await askedIncluded;
+      final contact = await askedContact;
+      final checklist = await askedChecklist;
+      final plan = askedPlan != null
+          ? await askedPlan
           : (plan: widget.plan, until: null, note: null);
       if (!mounted) return;
       setState(() {

@@ -121,12 +121,18 @@ class _CheminScreenState extends State<CheminScreen> {
       _error = null;
     });
     try {
+      // The milestones first: what they pay is in the answers after them.
       await widget.cauris.milestones(widget.org.id);
-      final path = await widget.cauris.pathState(widget.org.id);
-      final w = await widget.cauris.wallet(widget.org.id);
-      // What the cauris buy, from the same moment as the wallet above
-      // (108): the session's copy could be minutes behind it.
-      await session?.reloadFeatures(widget.org.id);
+      // Then the path, the wallet and what the cauris buy (108: from the
+      // same moment as the wallet; the session's copy could be minutes
+      // behind it) — at once, one round trip rather than three. Awaited in
+      // turn, so the first failure is the one said.
+      final askedPath = widget.cauris.pathState(widget.org.id)..ignore();
+      final askedWallet = widget.cauris.wallet(widget.org.id)..ignore();
+      final askedFeatures = session?.reloadFeatures(widget.org.id)?..ignore();
+      final path = await askedPath;
+      final w = await askedWallet;
+      await askedFeatures;
       if (!mounted) return;
       setState(() {
         _path = path;
