@@ -1,10 +1,13 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kaj_app/l10n/strings.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:kaj_app/core/auth/models.dart';
 import 'package:kaj_app/core/db/local_db.dart';
+import 'package:kaj_app/core/retail/retail_repository.dart';
 import 'package:kaj_app/features/church/church_home_screen.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -16,6 +19,15 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 ///      survive all the way to the row in the day's list.
 ///   3. What reaches the outbox is exactly record_entry()'s shape (007).
 ///   4. No church word is offered to an association (the owner's decision).
+/// The vitrine's side of an association (098) on a market connection: the
+/// request goes out and the answer never comes.
+class _StalledRequests extends RetailRepository {
+  _StalledRequests() : super(null);
+
+  @override
+  Future<int> pendingOrders(String orgId) => Completer<int>().future;
+}
+
 void main() {
   setUpAll(() async {
     sqfliteFfiInit();
@@ -289,5 +301,37 @@ void main() {
 
     final pending = await tester.runAsync(() => db.pendingActions());
     expect(pending!.first['action'], 'record_transfer');
+  });
+
+  testWidgets('a stalled connection does not hold the day off an administrator\'s home',
+      (tester) async {
+    // A contribution already on the phone, from before the signal went.
+    await tester.runAsync(() => db.recordEntry(
+        orgId: orgId, amount: 2000, direction: 'in', label: 'Cotisation'));
+    tester.view.physicalSize = const Size(480, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(MaterialApp(
+      locale: const Locale('fr'),
+      localizationsDelegates: Strings.localizationsDelegates,
+      supportedLocales: Strings.supportedLocales,
+      home: ChurchHomeScreen(
+        db: db,
+        orgId: orgId,
+        orgName: 'Association Wend-Kuuni',
+        org: const OrgSummary(
+            id: orgId,
+            name: 'Association Wend-Kuuni',
+            profile: 'association',
+            roles: ['owner']),
+        retail: _StalledRequests(),
+      ),
+    ));
+    await flush(tester);
+
+    // Before: the vitrine's badge was awaited ahead of the day, so the
+    // home sat on its spinner with the figures already on the phone.
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.text('Cotisation'), findsOneWidget);
   });
 }

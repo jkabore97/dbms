@@ -5,6 +5,7 @@ import 'package:kaj_app/core/accounting/accounting_repository.dart';
 import 'package:kaj_app/core/admin/admin_repository.dart';
 import 'package:kaj_app/core/auth/auth_repository.dart';
 import 'package:kaj_app/core/auth/models.dart';
+import 'package:kaj_app/core/cauris/feature_states.dart';
 import 'package:kaj_app/core/db/local_db.dart';
 import 'package:kaj_app/core/nav/session.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -34,6 +35,17 @@ class _FastAdmin extends AdminRepository {
 
   @override
   Future<int> claimMyInvitations() async => 0;
+}
+
+/// Every question about a business's tools goes out; none comes back.
+class _StalledTools extends _FastAdmin {
+  @override
+  Future<FeatureStates?> featureStates(String orgId) =>
+      Completer<FeatureStates?>().future;
+
+  @override
+  Future<Map<String, String>> featureRulesForTier(String orgId, String tier) =>
+      Completer<Map<String, String>>().future;
 }
 
 void main() {
@@ -76,5 +88,34 @@ void main() {
     expect(session.orgs.map((o) => o.id).toList(), ['o1'],
         reason: 'a stalled fetch should fall back to the cached businesses');
     expect(session.orgsFromCache, isTrue);
+  });
+
+  test('a stalled question about the tools does not hold reloadFeatures for good',
+      () async {
+    await db.cacheOrgs(const [
+      OrgSummary(
+          id: 'o1', name: 'Boutique Sanou', profile: 'retail', roles: ['cashier']),
+    ]);
+    await db.saveIdentity(const LocalIdentity(userId: 'u1'));
+    final session = SessionController(
+      db: db,
+      // No live token: the phone that opened offline, on the device's list.
+      auth: AuthRepository(null),
+      admin: _StalledTools(),
+      accounting: AccountingRepository(null),
+      resolveTimeout: const Duration(milliseconds: 50),
+    );
+    await session.resolveOrgs();
+    expect(session.orgById('o1'), isNotNull);
+
+    // Back from Le Chemin, a setup, an unlock: the screen awaits this.
+    // Before, it never returned on a stalled connection.
+    await session.reloadFeatures('o1').timeout(
+          const Duration(seconds: 5),
+          onTimeout: () => fail('reloadFeatures hung on a stalled question'),
+        );
+    // A member's dial, unanswered, is the server's defaults — never
+    // everything open.
+    expect(session.accessFor('o1').canEdit('reports'), isFalse);
   });
 }

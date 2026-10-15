@@ -158,6 +158,23 @@ void main() {
     expect(session.phase, SessionPhase.locked);
   });
 
+  test('opened offline, the code, then the business from the device — a shop, a farm, an association',
+      () async {
+    for (final org in const [_shop, _farm, _asso]) {
+      await oldCode();
+      await db.cacheOrgs([org]);
+      // The token went stale while out of range: nothing can be asked.
+      final session = on(_Server()..live = false);
+      await session.boot();
+      expect(session.phase, SessionPhase.locked, reason: org.profile);
+      await session.unlock();
+      expect(session.phase, SessionPhase.ready, reason: org.profile);
+      expect(session.lastOrgId, org.id, reason: org.profile);
+      expect(session.orgsFromCache, isTrue, reason: org.profile);
+      session.dispose();
+    }
+  });
+
   // A1: a platform admin with no business keeps the device code — the
   // console is the platform's books — after the second step, as before.
   group('a platform admin with no business', () {

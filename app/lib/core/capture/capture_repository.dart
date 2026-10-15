@@ -38,9 +38,20 @@ class CaptureRepository {
     String uploadsUrl = '',
     http.Client? httpClient,
     int photoCacheBudget = 24 * 1024 * 1024,
+    this.sendTimeout = const Duration(seconds: 60),
   })  : _uploads = _trimSlash(uploadsUrl),
         _http = httpClient ?? http.Client(),
         _photoBudget = photoCacheBudget;
+
+  /// How long [capture]'s one try may take before the photograph is left
+  /// to the queue. The caller waits on that try — the expense flow's
+  /// « Enregistrer », after the expense itself is already on the phone — and
+  /// on a stalled connection it never ended: the flow spun with its work
+  /// done, and a person who gave up and entered it again recorded the
+  /// expense twice. Bounded, a stall is a photo « en attente de réseau »,
+  /// sent by [drain] like any other (its client_uuid keeps it to one
+  /// document).
+  final Duration sendTimeout;
 
   // ----------------------------------------------------------------
   // Photographs already fetched
@@ -143,7 +154,7 @@ class CaptureRepository {
         caption: caption,
         ocrText: ocrText,
         capturedAt: capturedAt ?? DateTime.now(),
-      );
+      ).timeout(sendTimeout);
     } catch (error) {
       await _db.captureFailed(clientUuid, '$error');
       return null;

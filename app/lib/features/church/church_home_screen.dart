@@ -178,14 +178,12 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
     final entries = await widget.db.entriesForDay(widget.orgId, today);
     final pending = await widget.db.pendingCount();
     final closed = await widget.db.isDayClosed(widget.orgId, today);
-    // Best-effort, like the till's badge: no signal is no badge.
-    var requests = _requests;
-    if (_showVitrine) {
-      try {
-        requests = await widget.retail!.pendingOrders(widget.orgId);
-      } catch (_) {}
-    }
 
+    // The device's figures first, before anything is asked of the network:
+    // the badge below used to be awaited ahead of them, so on a stalled
+    // connection an administrator's home sat on its spinner with the day
+    // already on the phone — and every entry recorded meanwhile stayed off
+    // the screen.
     if (!mounted) return;
     setState(() {
       _dayClosed = closed;
@@ -193,9 +191,16 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
       _moneyOut = totals.moneyOut;
       _entries = entries;
       _pending = pending;
-      _requests = requests;
       _loading = false;
     });
+
+    // Best-effort, like the till's badge: no signal is no badge.
+    if (_showVitrine) {
+      try {
+        final requests = await widget.retail!.pendingOrders(widget.orgId);
+        if (mounted) setState(() => _requests = requests);
+      } catch (_) {}
+    }
   }
 
   /// « Recette » and « Dépense » (115): each its own flow, one question a

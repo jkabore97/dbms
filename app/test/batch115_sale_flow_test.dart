@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -21,12 +22,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// with no signal (package 7) — and what is new: one question per screen,
 /// RULE M, the customer or « client de passage », the receipt.
 class _Till extends RetailRepository {
-  _Till({this.merchant, this.rates = const [], super.outbox, this.offline = false})
+  _Till({this.merchant, this.rates = const [], super.outbox, this.offline = false,
+      this.stall = false})
       : super(null);
 
   final String? merchant;
   final List<CurrencyRate> rates;
   final bool offline;
+
+  /// The market connection: the request goes out, the answer never comes.
+  final bool stall;
   final calls = <Map<String, Object?>>[];
   String? confirmedSender;
   String? tenderCurrency;
@@ -56,6 +61,7 @@ class _Till extends RetailRepository {
     if (offline) {
       throw const SocketException('Failed host lookup: dkrtntrcbhuuouctfyug');
     }
+    if (stall) return Completer<String>().future;
     calls.add({
       'lines': [for (final l in lines) l.toJson()],
       'method': method,
@@ -540,6 +546,36 @@ void main() {
       expect((sent.single['p_lines'] as List).single['name'], 'Savon');
       await tester.runAsync(sync.syncNow);
       expect(sent, hasLength(1), reason: 'sent once, not again');
+    });
+
+    testWidgets('a stalled connection: « Enregistrer » does not spin for good — the sale is kept',
+        (tester) async {
+      await _phone(tester);
+      final db = (await tester.runAsync(() => LocalDb.open(path: inMemoryDatabasePath)))!;
+      addTearDown(() => tester.runAsync(db.close));
+      await tester.pumpWidget(_app(SaleFlow(
+          orgId: 'o1',
+          retail: _Till(outbox: db, stall: true),
+          store: MemoryFlowStore(),
+          products: const [Product(id: 'p1', name: 'Savon', salePrice: 450, quantity: 5)])));
+      await tester.pumpAndSettle();
+      await _sell(tester, 'p1', '1');
+      await _next(tester);
+      await _next(tester);
+      await _next(tester);
+      await tester.tap(find.byKey(const Key('flow-save')));
+      await tester.pump();
+      // Before: the reply never came, so neither an error nor the outbox —
+      // the button spun for as long as the phone stayed on the page.
+      await tester.pump(const Duration(seconds: 21));
+      for (var i = 0; i < 5; i++) {
+        await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 30)));
+        await tester.pump();
+      }
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('sale-done-queued')), findsOneWidget);
+      final pending = await tester.runAsync(() => db.pendingActions());
+      expect(pending!.single['action'], 'record_sale');
     });
 
     testWidgets('the till counts the sales still waiting on the phone (101)',

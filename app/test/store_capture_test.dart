@@ -125,6 +125,11 @@ void main() {
     // The camera is still there, but now the small icon-only one: no label.
     expect(find.widgetWithText(FloatingActionButton, 'Photo'), findsNothing);
     expect(find.byIcon(Icons.photo_camera), findsOneWidget);
+    // The photo drain, asked beside the day, is bounded (12 s): let that
+    // bound run out rather than leave its timer behind.
+    for (var i = 0; i < 4; i++) {
+      await tester.pump(const Duration(seconds: 13));
+    }
   });
 
   testWidgets('a build with no server draws neither button', (tester) async {

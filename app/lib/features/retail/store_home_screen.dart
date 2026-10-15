@@ -148,6 +148,10 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
 
   static const _doorbellEvery = Duration(seconds: 90);
 
+  /// How long one question to the server may stall before the home stops
+  /// waiting and says there is no connection.
+  static const _askFor = Duration(seconds: 12);
+
   @override
   void dispose() {
     _doorbell?.cancel();
@@ -222,22 +226,35 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
     });
 
     // The phone's own count first: it answers with no signal at all, which
-    // is exactly when it matters. A drain is tried on the way.
-    try {
-      await sync?.syncNow();
-      final waiting = await retail.pendingSales(widget.org.id);
-      final refused = [
-        for (final r in await retail.refusedSales(widget.org.id))
-          RefusedAction.fromRow(r),
-      ];
-      if (mounted) {
-        setState(() {
-          _salesWaiting = waiting;
-          _refused = refused;
-        });
-      }
-    } catch (_) {}
+    // is exactly when it matters.
+    Future<void> readWaiting() async {
+      try {
+        final waiting = await retail.pendingSales(widget.org.id);
+        final refused = [
+          for (final r in await retail.refusedSales(widget.org.id))
+            RefusedAction.fromRow(r),
+        ];
+        if (mounted) {
+          setState(() {
+            _salesWaiting = waiting;
+            _refused = refused;
+          });
+        }
+      } catch (_) {}
+    }
 
+    await readWaiting();
+    // A drain is tried on the way, and the count read again once it ends —
+    // never waited for first: on a stalled line each queued sale takes the
+    // whole of its timeout, one after the other, and the home used to show
+    // nothing of the phone's own sales until every one had.
+    if (sync != null) {
+      unawaited(sync.syncNow().then((_) => readWaiting(), onError: (Object _) {}));
+    }
+
+    // Each question to the server is bounded: a stalled connection (the
+    // request out, no answer, no error) left the home on its progress bar
+    // for good, with no word that the network was the reason.
     try {
       // Every question at once (none needs another's answer): on 3G each is
       // a round trip of half a second or more, and the day used to wait for
@@ -245,14 +262,14 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
       // first failure is still the one said; the others' are heard there,
       // or not at all — never as an error nobody caught.
       final id = widget.org.id;
-      final askedDay = retail.day(id)..ignore();
-      final askedExpiring = retail.expiring(id)..ignore();
-      final askedProducts = retail.products(id)..ignore();
-      final askedAvoided = retail.lossesAvoided(id)..ignore();
+      final askedDay = retail.day(id).timeout(_askFor)..ignore();
+      final askedExpiring = retail.expiring(id).timeout(_askFor)..ignore();
+      final askedProducts = retail.products(id).timeout(_askFor)..ignore();
+      final askedAvoided = retail.lossesAvoided(id).timeout(_askFor)..ignore();
       // A database one migration behind has no orders; the badge stays
       // quiet rather than failing the home screen.
       final askedPending =
-          retail.pendingOrders(id).then((n) => n, onError: (Object _) => 0);
+          retail.pendingOrders(id).timeout(_askFor).then((n) => n, onError: (Object _) => 0);
 
       // Photographs taken before there was signal go now, quietly. Failing to
       // send them must not fail the home screen — the bytes are still on the
@@ -261,7 +278,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
       final askedWaiting = capture != null && capture.isConfigured
           ? (() async {
               try {
-                await capture.drain();
+                await capture.drain().timeout(_askFor);
               } catch (_) {
                 // Reported by the count, not by an error.
               }
@@ -280,6 +297,7 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
         unawaited(cauris.milestones(id));
         askedPath = cauris
             .pathState(id, onMissing: () => pathMissing = true)
+            .timeout(_askFor)
             .then<PathState?>((p) => p, onError: (Object _) => null);
       }
 

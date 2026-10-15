@@ -160,6 +160,13 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
   /// The server has no path yet (before 097): the fallback card.
   bool _pathMissing = false;
 
+  /// How long a question to the server may stall before the farm stops
+  /// waiting for it. At the farm gate the connection more often stalls than
+  /// fails: without a bound « Vente » did nothing at all when tapped (it was
+  /// waiting for the list of produce), and the banner saying the counts are
+  /// this device's alone never showed.
+  static const _askFor = Duration(seconds: 12);
+
   Future<void> _openLivestock({int tab = 0}) async {
     final farm = widget.farm;
     if (farm == null) return;
@@ -236,7 +243,8 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
     try {
       var missing = false;
       final path = await CaurisRepository(client)
-          .pathState(widget.org.id, onMissing: () => missing = true);
+          .pathState(widget.org.id, onMissing: () => missing = true)
+          .timeout(_askFor);
       if (mounted) {
         setState(() {
           _path = path;
@@ -255,14 +263,16 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
 
     try {
       // Asked at once; awaited in turn, so a failure is heard here and
-      // never as an error nobody caught.
-      final askedItems = farm.stockOnHand(widget.org.id)..ignore();
-      final askedFlocks = farm.flocks(widget.org.id)..ignore();
+      // never as an error nobody caught. Each gives up in time: a stalled
+      // line says the counts are this device's rather than spinning.
+      final askedItems = farm.stockOnHand(widget.org.id).timeout(_askFor)..ignore();
+      final askedFlocks = farm.flocks(widget.org.id).timeout(_askFor)..ignore();
       // 019: what this farm actually keeps and grows. Best-effort — a
       // database without it yet leaves the shape empty, and the screen then
       // behaves exactly as it did before.
       final askedShape = farm
           .shape(widget.org.id)
+          .timeout(_askFor)
           .then<FarmShape?>((s) => s, onError: (Object _) => null);
       final items = await askedItems;
       final flocks = await askedFlocks;
@@ -530,7 +540,7 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
     if (retail == null) return;
     List<Product> products = const [];
     try {
-      products = await retail.products(widget.org.id);
+      products = await retail.products(widget.org.id).timeout(_askFor);
     } catch (_) {}
     if (!mounted) return;
     final sold = await StepFlow.push(
