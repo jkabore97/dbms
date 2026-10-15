@@ -122,7 +122,7 @@ class Support {
     await _launch(
       context,
       Uri.parse('https://wa.me/$number?text='
-          '${Uri.encodeComponent(text ?? context.tr('Bonjour, j\'ai besoin d\'aide avec Mara.'))}'),
+          '${Uri.encodeComponent(text ?? context.tr('Bonjour, j\'ai besoin d\'aide avec Marakaj.'))}'),
       context.tr('Impossible d\'ouvrir WhatsApp sur cet appareil.'),
     );
   }
@@ -134,7 +134,7 @@ class Support {
         Uri(
             scheme: 'mailto',
             path: contacts.value.email,
-            query: 'subject=${Uri.encodeComponent(subject ?? 'Aide Mara')}'),
+            query: 'subject=${Uri.encodeComponent(subject ?? 'Aide Marakaj')}'),
         context.tr('Aucune application d\'e-mail : écrivez à {email}.', {'email': contacts.value.email}),
       );
 
@@ -203,7 +203,7 @@ class _SupportCardState extends State<SupportCard> {
                   Icon(Icons.support_agent_outlined, color: theme.colorScheme.primary),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Text(context.tr('Aide Mara'),
+                    child: Text(context.tr('Aide Marakaj'),
                         style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
                   ),
                 ],

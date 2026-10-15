@@ -38,7 +38,7 @@ class MaraMark extends StatelessWidget {
         width: size,
         height: size,
         fit: BoxFit.contain,
-        semanticLabel: 'Mara',
+        semanticLabel: 'Marakaj',
         filterQuality: FilterQuality.medium,
       );
 }
@@ -60,7 +60,7 @@ class MaraWordmark extends StatelessWidget {
         height: height,
         // The file is 3:1; the height decides.
         fit: BoxFit.contain,
-        semanticLabel: 'Mara',
+        semanticLabel: 'Marakaj',
         filterQuality: FilterQuality.medium,
       );
 }
@@ -78,7 +78,7 @@ class MaraStacked extends StatelessWidget {
         asset,
         height: height,
         fit: BoxFit.contain,
-        semanticLabel: 'Mara',
+        semanticLabel: 'Marakaj',
         filterQuality: FilterQuality.medium,
       );
 }

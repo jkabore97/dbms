@@ -140,7 +140,7 @@ const retailPalette = KajPalette(
 /// browns and greys with two muted hues so neighbouring tiles differ.
 const kajPalette = KajPalette(
   name: 'mara',
-  label: 'Mara',
+  label: 'Marakaj',
   seed: Color(0xFF8B5A3C),
   ink: Color(0xFF3B3A38),
   hero: [Color(0xFFF2F1EF), Color(0xFFEDE3D7)],

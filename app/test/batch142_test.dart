@@ -78,7 +78,7 @@ const _cfa = OrgSummary(
 
 const _terms = SpotTerms(
   wave: '+226 70 00 00 00',
-  waveName: 'Mara',
+  waveName: 'Marakaj',
   maxLive: 8,
   zones: {
     'XOF': (article: 1000, shop: 2500),
@@ -572,7 +572,7 @@ void main() {
                 store: SpotStoreSide(billing: billing, notices: notices),
                 pay: _Pay()));
         expect(find.text('Prix : ${products.first.price}'), findsOneWidget, reason: 'the store\'s own price');
-        expect(find.text('Prix : ${zonePriceText(1000, 'XOF')}'), findsNothing, reason: 'never Mara\'s');
+        expect(find.text('Prix : ${zonePriceText(1000, 'XOF')}'), findsNothing, reason: 'never Marakaj\'s');
         expect(find.textContaining(name), findsOneWidget);
         expect(find.text('Continuer vers le paiement'), findsNothing);
         await _scrollTo(tester, find.byKey(const Key('spot-go')));
@@ -713,7 +713,7 @@ void main() {
         );
 
     for (final platform in ['apple', 'google']) {
-      test('$platform: a spot is verified as a spot, never as Mara Pro', () async {
+      test('$platform: a spot is verified as a spot, never as Marakaj Pro', () async {
         final store = _ProStore(platform);
         var pro = 0;
         final spots = <String?>[];
@@ -899,7 +899,7 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
-  group('7. Mara Pro by card at the zone price', () {
+  group('7. Marakaj Pro by card at the zone price', () {
     const zoned = PlanTerms(
       stripeOn: true,
       priceMonth: 2900,
@@ -994,14 +994,14 @@ void main() {
       });
     }
 
-    testWidgets('Mara Pro\'s card: its zone prices and the same line', (tester) async {
+    testWidgets('Marakaj Pro\'s card: its zone prices and the same line', (tester) async {
       await _size(tester, 390, 1600);
       final center = _Center()
         ..values = {for (final d in platformSettingDefs) d.key: const SettingValue(value: 1)};
       await tester.pumpWidget(_app(SettingsSection(center: center, card: 'pro')));
       await tester.pumpAndSettle();
-      expect(find.text('Prix de Mara Pro, par mois — euros (zone euro)'), findsOneWidget);
-      expect(find.text('Prix de Mara Pro, par an — dollars (reste du monde)'), findsOneWidget);
+      expect(find.text('Prix de Marakaj Pro, par mois — euros (zone euro)'), findsOneWidget);
+      expect(find.text('Prix de Marakaj Pro, par an — dollars (reste du monde)'), findsOneWidget);
       expect(find.byKey(const Key('settings-note-pro-prices')), findsOneWidget);
     });
   });

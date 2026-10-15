@@ -196,7 +196,7 @@ class _Center extends CommandCenterRepository {
             topic: 'vitrine',
             message: 'Des photos qui n\'ont rien à voir avec la boutique.',
             at: DateTime(2026, 10, 14, 9, 30),
-            reporter: 'Client Mara',
+            reporter: 'Client Marakaj',
             contact: '+22670000000',
             orgId: 'b150-shop',
             orgName: 'Atelier Lumière',
@@ -374,8 +374,8 @@ void main() {
     for (final (label, session) in [
       ('its owner', (LocalDb d) => _Session(d, mine: const [_ownShop], phase: SessionPhase.ready)),
       ('its employee', (LocalDb d) => _Session(d, mine: [_as(_ownShop, const ['employee'])], phase: SessionPhase.ready)),
-      ('Mara\'s admin', (LocalDb d) => _Session(d, mine: [_as(_ownShop, const ['platform_admin'])], phase: SessionPhase.ready)),
-      ('Mara\'s admin, by the platform\'s word', (LocalDb d) => _Session(d, platform: true, phase: SessionPhase.noOrg)),
+      ('Marakaj\'s admin', (LocalDb d) => _Session(d, mine: [_as(_ownShop, const ['platform_admin'])], phase: SessionPhase.ready)),
+      ('Marakaj\'s admin, by the platform\'s word', (LocalDb d) => _Session(d, platform: true, phase: SessionPhase.noOrg)),
     ]) {
       testWidgets('$label: no menu, the vitrine itself there', (tester) async {
         await pump(tester, session(db));

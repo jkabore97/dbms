@@ -518,7 +518,7 @@ void main() {
           expect(find.byKey(const Key('help-nudge')), findsOneWidget);
           expect(
             find.text(
-              'Obtenez une réponse plus rapide et un meilleur accompagnement avec Mara Pro',
+              'Obtenez une réponse plus rapide et un meilleur accompagnement avec Marakaj Pro',
             ),
             findsOneWidget,
           );
@@ -536,7 +536,7 @@ void main() {
           expect(opened.single, startsWith('https://wa.me/18623354492?text='));
           expect(
             _textOf(opened.single),
-            startsWith('Bonjour Mara'),
+            startsWith('Bonjour Marakaj'),
             reason: 'Basic: no [PRO]',
           );
 
@@ -691,7 +691,7 @@ void main() {
         await faq(tester, _farmBasic);
         expect(find.byKey(const Key('faq-pro-banner')), findsOneWidget);
         expect(
-          find.text('Une aide plus rapide, un formateur, avec Mara Pro'),
+          find.text('Une aide plus rapide, un formateur, avec Marakaj Pro'),
           findsOneWidget,
         );
         expect(find.byKey(const Key('faq-pro-banner-go')), findsOneWidget);
@@ -779,7 +779,7 @@ void main() {
     testWidgets('English', (tester) async {
       await faq(tester, _shopBasic, lang: 'en');
       expect(
-        find.text('Faster help, a trainer, with Mara Pro'),
+        find.text('Faster help, a trainer, with Marakaj Pro'),
         findsOneWidget,
       );
       expect(find.text('Go Pro'), findsOneWidget);
@@ -810,7 +810,7 @@ void main() {
           await _tapWhatsApp(tester);
           expect(find.byKey(const Key('help-nudge')), findsNothing);
           expect(opened, hasLength(1));
-          expect(_textOf(opened.single), startsWith('[PRO] Bonjour Mara'));
+          expect(_textOf(opened.single), startsWith('[PRO] Bonjour Marakaj'));
           expect(_textOf(opened.single), contains('· Pro)'));
         },
       );
@@ -1205,14 +1205,14 @@ void main() {
       final c = await ctx(tester, 'fr');
       expect(
         helpWhatsAppText(c, _farmPro, pro: true, page: 'Aide'),
-        '[PRO] Bonjour Mara, j\'ai besoin d\'aide.\n'
+        '[PRO] Bonjour Marakaj, j\'ai besoin d\'aide.\n'
         'Entreprise : Ferme Horizon Vert (Ferme · Pro)\n'
         'Réf. : 14300000\n'
         'Page : Aide',
       );
       expect(
         helpWhatsAppText(c, _shopBasic, pro: false, page: 'Compte'),
-        'Bonjour Mara, j\'ai besoin d\'aide.\n'
+        'Bonjour Marakaj, j\'ai besoin d\'aide.\n'
         'Entreprise : Maison Élégance (Boutique · Basic)\n'
         'Réf. : 14300000\n'
         'Page : Compte',
@@ -1223,11 +1223,11 @@ void main() {
       );
       expect(
         helpEmailSubject(c, _shopPro, pro: true),
-        'Aide Mara — Maison Élégance · Réf. 3F2A91C0 · PRO',
+        'Aide Marakaj — Maison Élégance · Réf. 3F2A91C0 · PRO',
       );
       expect(
         helpEmailSubject(c, _assocBasic, pro: false),
-        'Aide Mara — Cercle des Bâtisseurs · Réf. 14300000',
+        'Aide Marakaj — Cercle des Bâtisseurs · Réf. 14300000',
       );
       expect(helpRef(_shopPro.id), '3F2A91C0');
     });
@@ -1236,7 +1236,7 @@ void main() {
       final c = await ctx(tester, 'en');
       expect(
         helpWhatsAppText(c, _assocPro, pro: true, page: 'Help'),
-        '[PRO] Hello Mara, I need help.\n'
+        '[PRO] Hello Marakaj, I need help.\n'
         'Business: Fondation Espoir (Association · Pro)\n'
         'Ref.: 14300000\n'
         'Page: Help',
@@ -1244,7 +1244,7 @@ void main() {
       expect(
         helpWhatsAppText(c, _farmBasic, pro: false),
         startsWith(
-          'Hello Mara, I need help.\nBusiness: Domaine des Acacias (Farm · Basic)',
+          'Hello Marakaj, I need help.\nBusiness: Domaine des Acacias (Farm · Basic)',
         ),
       );
     });
@@ -1302,7 +1302,7 @@ void main() {
     }
 
     testWidgets(
-      'the switch: off, then « Formateur Mara » on after the confirmation',
+      'the switch: off, then « Formateur Marakaj » on after the confirmation',
       (tester) async {
         final help = _Help(
           trainer: const TrainerSwitch(isTrainer: false, phone: '22670143143'),
@@ -1314,7 +1314,7 @@ void main() {
         await tester.tap(sw);
         await _settle(tester);
         expect(
-          find.text('Faire de Futur Formateur un formateur Mara ?'),
+          find.text('Faire de Futur Formateur un formateur Marakaj ?'),
           findsOneWidget,
         );
         await tester.tap(find.byKey(const Key('trainer-confirm')));
@@ -1402,7 +1402,7 @@ void main() {
           fullName: 'Sans Numéro',
         ),
       );
-      expect(find.text('Mara trainer'), findsOneWidget);
+      expect(find.text('Marakaj trainer'), findsOneWidget);
       expect(find.textContaining('No number on their profile'), findsOneWidget);
     });
   });
@@ -1775,7 +1775,7 @@ void main() {
       for (final fr in const [
         'Choisissez un moment dans les 14 jours qui viennent.',
         'Choisissez un jour et une heure, s\'il vous plaît.',
-        'Seule l\'équipe Mara choisit les formateurs.',
+        'Seule l\'équipe Marakaj choisit les formateurs.',
         'Formateur : oui ou non.',
         'Ce compte n\'existe pas.',
         'Ce compte n\'a pas de numéro : il pourra devenir formateur une fois le serveur à jour.',

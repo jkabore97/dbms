@@ -56,12 +56,12 @@ void main() {
     expect(find.byKey(const Key('pillar-verified')), findsOneWidget);
     expect(find.text('Des dépenses justifiées'), findsOneWidget);
     expect(find.text('9 dépenses sur 10 ont leur reçu.'), findsOneWidget);
-    expect(find.textContaining('Demandez-le à votre contact Mara'), findsOneWidget);
+    expect(find.textContaining('Demandez-le à votre contact Marakaj'), findsOneWidget);
     expect(find.byKey(const Key('trust-verify')), findsNothing,
-        reason: 'only Mara verifies');
+        reason: 'only Marakaj verifies');
   });
 
-  testWidgets('a platform admin ticks « Vérifiée par Mara »', (tester) async {
+  testWidgets('a platform admin ticks « Vérifiée par Marakaj »', (tester) async {
     tester.view.physicalSize = const Size(500, 1400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -73,7 +73,7 @@ void main() {
     await pumpFor(tester);
     expect(repo.calls, [true]);
     expect(find.text('Exemplaire'), findsOneWidget);
-    expect(find.text('Mara a vérifié qui vous êtes.'), findsOneWidget);
+    expect(find.text('Marakaj a vérifié qui vous êtes.'), findsOneWidget);
   });
 
   testWidgets('nothing at all when the server has no level', (tester) async {

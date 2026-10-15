@@ -1021,7 +1021,7 @@ class _EditProductSheetState extends State<_EditProductSheet> {
                 onChanged: _busy ? null : (v) => setState(() => _tracked = v),
                 title: Text(context.tr('Suivre le stock')),
                 subtitle: Text(_tracked
-                    ? context.tr('Mara compte ce qu\'il reste ; à zéro, il est épuisé.')
+                    ? context.tr('Marakaj compte ce qu\'il reste ; à zéro, il est épuisé.')
                     : context.tr('Pas de compte : toujours disponible sur la vitrine.')),
               ),
             const SizedBox(height: 16),

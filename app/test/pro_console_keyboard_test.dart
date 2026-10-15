@@ -40,7 +40,7 @@ void main() {
   setUpAll(() => initializeDateFormatting('fr_FR'));
 
   for (final size in const [Size(412, 915), Size(360, 640)]) {
-    testWidgets('« Mara Pro » stays drawn with the keyboard up (${size.width.toInt()})',
+    testWidgets('« Marakaj Pro » stays drawn with the keyboard up (${size.width.toInt()})',
         (tester) async {
       tester.view.physicalSize = size;
       tester.view.devicePixelRatio = 1;

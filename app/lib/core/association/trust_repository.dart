@@ -87,11 +87,11 @@ class TrustPillar {
   final int? of;
 
   String get title => switch (key) {
-        'verified' => 'Vérifiée par Mara',
+        'verified' => 'Vérifiée par Marakaj',
         'regular' => 'Des comptes tenus chaque semaine',
         'justified' => 'Des dépenses justifiées',
         'clean' => 'Peu de corrections',
-        'lasting' => 'Six mois sur Mara',
+        'lasting' => 'Six mois sur Marakaj',
         _ => key,
       };
 
@@ -101,8 +101,8 @@ class TrustPillar {
     final args = {'v': v, 'of': of ?? 0, 'months': (v / 30).floor()};
     return translate(trCurrent, switch (key) {
       'verified' => met
-          ? 'Mara a vérifié qui vous êtes.'
-          : 'Mara vérifie l\'association (récépissé, responsables). Demandez-le à votre contact Mara.',
+          ? 'Marakaj a vérifié qui vous êtes.'
+          : 'Marakaj vérifie l\'association (récépissé, responsables). Demandez-le à votre contact Marakaj.',
       'regular' => met
           ? '{v} semaines sur les 8 dernières ont leurs entrées.'
           : v > 1
@@ -119,8 +119,8 @@ class TrustPillar {
               ? (v > 1 ? '{v} corrections pour {of} entrées.' : '{v} correction pour {of} entrées.')
               : '{v} corrections pour {of} entrées : vérifiez avant d\'enregistrer (moins d\'une sur 10).',
       'lasting' => met
-          ? 'Sur Mara depuis {months} mois.'
-          : 'Sur Mara depuis {months} mois : la confiance se gagne avec le temps.',
+          ? 'Sur Marakaj depuis {months} mois.'
+          : 'Sur Marakaj depuis {months} mois : la confiance se gagne avec le temps.',
       _ => '',
     }, args);
   }

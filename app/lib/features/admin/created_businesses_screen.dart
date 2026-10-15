@@ -151,7 +151,7 @@ class _CreatedBusinessesScreenState extends State<CreatedBusinessesScreen> {
             .firstOrNull;
     final day = b.at == null ? null : DateFormat('d MMM y', intlLocale()).format(b.at!);
     final how = switch (b.how) {
-      'approved' => context.tr('Demande validée par Mara'),
+      'approved' => context.tr('Demande validée par Marakaj'),
       'rejected' => context.tr('Demande refusée : {reason}', {'reason': b.note ?? ''}),
       _ => context.tr('Créée par la personne'),
     };

@@ -27,8 +27,8 @@ export const LINKS = {
 
 const COPY = {
   fr: {
-    subject: (n) => (n ? `Bienvenue sur Mara, ${n} !` : "Bienvenue sur Mara !"),
-    hello: (n) => (n ? `Bienvenue sur Mara, ${n} !` : "Bienvenue sur Mara !"),
+    subject: (n) => (n ? `Bienvenue sur Marakaj, ${n} !` : "Bienvenue sur Marakaj !"),
+    hello: (n) => (n ? `Bienvenue sur Marakaj, ${n} !` : "Bienvenue sur Marakaj !"),
     preheader: "Trois pas pour commencer — votre vitrine vous attend.",
     lead: "Votre compte est prêt. Trois pas pour commencer :",
     steps: [
@@ -36,18 +36,18 @@ const COPY = {
       ["🏪", "Ouvrez votre vitrine"],
       ["💰", "Faites votre première vente"],
     ],
-    button: "Ouvrir Mara",
-    play: "Sur Android : Mara sur Google Play",
+    button: "Ouvrir Marakaj",
+    play: "Sur Android : Marakaj sur Google Play",
     question: "Une question ? Répondez simplement à cet e-mail.",
     privacy: "Confidentialité",
-    signature: "Mara — Au Service du Peuple · KAJ Consulting LLC",
-    logoAlt: "Mara",
+    signature: "Marakaj — Au Service du Peuple · KAJ Consulting LLC",
+    logoAlt: "Marakaj",
     // Said when the language is not known: the person may not read French.
-    english: "Welcome to Mara! Prefer English? Reply to this e-mail and we will help.",
+    english: "Welcome to Marakaj! Prefer English? Reply to this e-mail and we will help.",
   },
   en: {
-    subject: (n) => (n ? `Welcome to Mara, ${n}!` : "Welcome to Mara!"),
-    hello: (n) => (n ? `Welcome to Mara, ${n}!` : "Welcome to Mara!"),
+    subject: (n) => (n ? `Welcome to Marakaj, ${n}!` : "Welcome to Marakaj!"),
+    hello: (n) => (n ? `Welcome to Marakaj, ${n}!` : "Welcome to Marakaj!"),
     preheader: "Three steps to get started — your shop window is waiting.",
     lead: "Your account is ready. Three steps to get started:",
     steps: [
@@ -55,12 +55,12 @@ const COPY = {
       ["🏪", "Open your shop window"],
       ["💰", "Make your first sale"],
     ],
-    button: "Open Mara",
-    play: "On Android: Mara on Google Play",
+    button: "Open Marakaj",
+    play: "On Android: Marakaj on Google Play",
     question: "A question? Just reply to this e-mail.",
     privacy: "Privacy",
-    signature: "Mara — Au Service du Peuple · KAJ Consulting LLC",
-    logoAlt: "Mara",
+    signature: "Marakaj — Au Service du Peuple · KAJ Consulting LLC",
+    logoAlt: "Marakaj",
     english: null,
   },
 };

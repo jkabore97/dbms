@@ -419,15 +419,15 @@ void main() {
 
     testWidgets('P1: on Basic, the Pro part is there, locked', (tester) async {
       await card(tester, const {});
-      expect(find.text('Voir Mara Pro'), findsOneWidget);
+      expect(find.text('Voir Marakaj Pro'), findsOneWidget);
       expect(find.byKey(const Key('vitrine-plus-hidden')), findsNothing);
     });
 
     testWidgets('hidden: the free basics only, no door to Pro', (tester) async {
       await card(tester, const {'vitrine_plus'});
       expect(find.byKey(const Key('vitrine-plus-hidden')), findsOneWidget);
-      expect(find.text('Voir Mara Pro'), findsNothing);
-      expect(find.text('AVEC MARA PRO'), findsNothing);
+      expect(find.text('Voir Marakaj Pro'), findsNothing);
+      expect(find.text('AVEC MARAKAJ PRO'), findsNothing);
       expect(find.text('POUR TOUTES LES VITRINES'), findsOneWidget);
       expect(find.byKey(const Key('dressing-save')), findsOneWidget);
     });

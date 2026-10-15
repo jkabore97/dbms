@@ -637,7 +637,7 @@ void main() {
       expect(find.text('Bientôt disponible'), findsNothing);
       expect(find.textContaining(RegExp(r'F / (an|mois)')), findsNothing);
       expect(find.textContaining('par mois, ou'), findsNothing);
-      expect(find.textContaining('passer à Mara Pro'), findsNothing);
+      expect(find.textContaining('passer à Marakaj Pro'), findsNothing);
     }
 
     testWidgets('the Pro page: what each plan gives, and no price, no way to pay',
@@ -647,7 +647,7 @@ void main() {
       noSale(tester);
       expect(find.textContaining('Pointages et paie'), findsOneWidget,
           reason: 'what Pro includes is still said');
-      expect(find.text('Mara Pro'), findsWidgets);
+      expect(find.text('Marakaj Pro'), findsWidgets);
     });
 
     testWidgets('an employee is not told to ask the owner to buy', (tester) async {
@@ -655,14 +655,14 @@ void main() {
       await plans(tester, const OrgSummary(
           id: 'o1', name: 'Elim Shop', profile: 'retail', roles: ['employee']));
       noSale(tester);
-      expect(find.text('Seul le propriétaire peut passer à Mara Pro.'), findsNothing);
+      expect(find.text('Seul le propriétaire peut passer à Marakaj Pro.'), findsNothing);
     });
 
-    testWidgets('a Pro business: « Vous êtes sur Mara Pro », no Stripe page',
+    testWidgets('a Pro business: « Vous êtes sur Marakaj Pro », no Stripe page',
         (tester) async {
       debugSellsDigitalInApp = false;
       await plans(tester, _pro);
-      expect(find.text('Vous êtes sur Mara Pro'), findsOneWidget);
+      expect(find.text('Vous êtes sur Marakaj Pro'), findsOneWidget);
       expect(find.byKey(const Key('card-manage')), findsNothing);
     });
 
@@ -699,7 +699,7 @@ void main() {
       expect(find.textContaining('Pointages et paie'), findsOneWidget);
       await panel(_pro);
       expect(find.text('Active'), findsOneWidget);
-      expect(find.text('Cette entreprise est sur Mara Pro. Tous les outils ci-dessous sont ouverts.'),
+      expect(find.text('Cette entreprise est sur Marakaj Pro. Tous les outils ci-dessous sont ouverts.'),
           findsOneWidget);
 
       debugSellsDigitalInApp = true;
@@ -741,7 +741,7 @@ void main() {
       await tester.tap(find.text('Analyses'));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('pro-only')), findsOneWidget);
-      expect(find.text('Cette fonction fait partie de Mara Pro.'), findsOneWidget);
+      expect(find.text('Cette fonction fait partie de Marakaj Pro.'), findsOneWidget);
       expect(find.byType(FilledButton), findsOneWidget);
       expect(find.byType(TextButton).hitTestable(), findsNothing);
       expect(find.textContaining(RegExp(r'F CFA|Stripe|Wave|carte')), findsNothing);
@@ -757,7 +757,7 @@ void main() {
       expect(find.text('la page Pro'), findsOneWidget);
     });
 
-    testWidgets('cauris still open a tool; only « Ou passer à Mara Pro » goes', (tester) async {
+    testWidgets('cauris still open a tool; only « Ou passer à Marakaj Pro » goes', (tester) async {
       debugSellsDigitalInApp = false;
       final states = FeatureStates.fromJson({
         'plan': 'free',

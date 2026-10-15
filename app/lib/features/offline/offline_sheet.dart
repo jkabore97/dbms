@@ -165,9 +165,9 @@ class _OfflineSheetState extends State<OfflineSheet> {
                     Text(
                       _phase == _Phase.done
                           ? (_failed.isEmpty
-                              ? context.tr('Prêt : Mara fonctionne sans connexion')
+                              ? context.tr('Prêt : Marakaj fonctionne sans connexion')
                               : context.tr('Presque prêt'))
-                          : context.tr('Utiliser Mara sans connexion ?'),
+                          : context.tr('Utiliser Marakaj sans connexion ?'),
                       key: const Key('offline-title'),
                       textAlign: TextAlign.center,
                       style: theme.textTheme.titleLarge,
@@ -178,7 +178,7 @@ class _OfflineSheetState extends State<OfflineSheet> {
                           ? (_failed.isEmpty
                               ? context.tr('Sans réseau, vos écritures restent sur ce téléphone et partent dès que la connexion revient.')
                               : context.tr('Certaines parties n\'ont pas pu être téléchargées. Réessayez avec une meilleure connexion.'))
-                          : context.tr('Mara peut garder sur ce téléphone de quoi travailler sans réseau. Les clients de votre vitrine, eux, n\'en ont pas besoin.'),
+                          : context.tr('Marakaj peut garder sur ce téléphone de quoi travailler sans réseau. Les clients de votre vitrine, eux, n\'en ont pas besoin.'),
                       textAlign: TextAlign.center,
                       style: muted,
                     ),

@@ -195,7 +195,7 @@ class Invitation {
   /// enough to read on a lock screen.
   String get message => translate(
       trCurrent,
-      'Bonjour ! Vous êtes invité(e) à rejoindre « {org} » sur Mara.\n\n1. Installez l\'application\n2. Créez votre compte\n3. Entrez ce code :\n\n{code}\n\nLe code expire dans {delay}.',
+      'Bonjour ! Vous êtes invité(e) à rejoindre « {org} » sur Marakaj.\n\n1. Installez l\'application\n2. Créez votre compte\n3. Entrez ce code :\n\n{code}\n\nLe code expire dans {delay}.',
       {
         'org': orgName,
         'code': code,

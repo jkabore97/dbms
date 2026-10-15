@@ -239,7 +239,7 @@ void main() {
           style: StorefrontStyle(accent: accent));
       expect(shop(theme: 'prune', accent: own).accent, own);
       expect(shop(theme: 'prune').accent, prunePalette.ink);
-      expect(shop().accent, isNull, reason: 'neither chosen: Mara\'s black');
+      expect(shop().accent, isNull, reason: 'neither chosen: Marakaj\'s black');
       expect(shop(theme: 'not-a-palette').accent, isNull);
     });
 
@@ -279,7 +279,7 @@ void main() {
     testWidgets('the street\'s strip and a section label read English', (tester) async {
       await tester.pumpWidget(_app(
           ShopPage(
-            title: 'Mara',
+            title: 'Marakaj',
             announcements: ShopPage.street,
             body: Builder(builder: (context) => ShopSectionLabel(context.tr('Passées'))),
           ),

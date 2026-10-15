@@ -189,7 +189,7 @@ class _CheminScreenState extends State<CheminScreen> {
 
   Future<void> _share(String code) async {
     final text = context.tr(
-        'Rejoignez Mara, les boutiques près de chez vous. Quand on vous demande qui vous a parrainé, donnez le code « {code} ».',
+        'Rejoignez Marakaj, les boutiques près de chez vous. Quand on vous demande qui vous a parrainé, donnez le code « {code} ».',
         {'code': code});
     await launchUrl(
       Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}'),
@@ -364,12 +364,12 @@ class _CheminScreenState extends State<CheminScreen> {
               ListTile(
                 key: Key('chemin-spend-${e.key}'),
                 title: Text(e.key == 'pro_all'
-                    ? context.tr('Mara Pro complet : tous les outils, sans limite')
+                    ? context.tr('Marakaj Pro complet : tous les outils, sans limite')
                     : PlanTerms.labelOf(e.key)),
                 subtitle: e.value.until != null
                     ? Text(e.value.gift
                         // Opened by Mara, not with the business's cauris.
-                        ? context.tr('Offert par Mara jusqu\'au {date}', {
+                        ? context.tr('Offert par Marakaj jusqu\'au {date}', {
                             'date': DateFormat('d MMMM', _dateLocale)
                                 .format(e.value.until!.toLocal()),
                           })

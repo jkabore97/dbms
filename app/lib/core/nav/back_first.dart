@@ -184,7 +184,7 @@ class BackFirst with WidgetsBindingObserver {
         context: context,
         builder: (dialog) => AlertDialog(
           key: const Key('leave-mara'),
-          title: Text(dialog.tr('Quitter Mara ?')),
+          title: Text(dialog.tr('Quitter Marakaj ?')),
           actions: [
             TextButton(
               key: const Key('leave-stay'),

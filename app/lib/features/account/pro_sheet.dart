@@ -103,7 +103,7 @@ class _ProPayPanelState extends State<ProPayPanel> {
                   Icon(Icons.workspace_premium_outlined,
                       color: theme.colorScheme.primary, size: 28),
                   const SizedBox(width: 10),
-                  Text(context.tr('Mara Pro'), style: theme.textTheme.headlineSmall),
+                  Text(context.tr('Marakaj Pro'), style: theme.textTheme.headlineSmall),
                   const Spacer(),
                   if (widget.org.isPro)
                     Chip(
@@ -115,8 +115,8 @@ class _ProPayPanelState extends State<ProPayPanel> {
               const SizedBox(height: 12),
               Text(
                 widget.org.isPro
-                    ? context.tr('Cette entreprise est sur Mara Pro. Tous les outils ci-dessous sont ouverts.')
-                    : context.tr('Mara reste gratuit pour le quotidien : le stock, les ventes, le carnet de crédit, la vitrine et {freeMaxStaff} personne(s) en plus du propriétaire, une fois la mise en route faite. Mara Pro ajoute ce dont une entreprise qui grandit a besoin :', {'freeMaxStaff': terms.freeMaxStaff}),
+                    ? context.tr('Cette entreprise est sur Marakaj Pro. Tous les outils ci-dessous sont ouverts.')
+                    : context.tr('Marakaj reste gratuit pour le quotidien : le stock, les ventes, le carnet de crédit, la vitrine et {freeMaxStaff} personne(s) en plus du propriétaire, une fois la mise en route faite. Marakaj Pro ajoute ce dont une entreprise qui grandit a besoin :', {'freeMaxStaff': terms.freeMaxStaff}),
                 style: muted,
               ),
               const SizedBox(height: 12),
@@ -172,7 +172,7 @@ class _ProPayPanelState extends State<ProPayPanel> {
                 // card is open, the sheet says so.
                 if (!widget.canRequest)
                   Text(
-                    context.tr('Seul le propriétaire peut passer à Mara Pro.'),
+                    context.tr('Seul le propriétaire peut passer à Marakaj Pro.'),
                     style: muted,
                   )
                 else if (_cardReady(context) && widget.top != null)

@@ -109,7 +109,7 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _saved = context.tr('Enregistré. Les prochains écrans Mara Pro le disent.');
+        _saved = context.tr('Enregistré. Les prochains écrans Marakaj Pro le disent.');
       });
     } catch (error) {
       if (!mounted) return;
@@ -159,7 +159,7 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.tr('Mara Pro')),
+        title: Text(context.tr('Marakaj Pro')),
         actions: [
           IconButton(
             onPressed: _loading ? null : _load,
@@ -262,7 +262,7 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
                 Text(context.tr('Le numéro et le prix'), style: theme.textTheme.titleMedium),
                 const SizedBox(height: 4),
                 Text(
-                  context.tr('Ce que la fenêtre Mara Pro dit aux propriétaires : où payer et combien. Sans numéro, elle dit de contacter Mara.'),
+                  context.tr('Ce que la fenêtre Marakaj Pro dit aux propriétaires : où payer et combien. Sans numéro, elle dit de contacter Marakaj.'),
                   style: theme.textTheme.bodySmall
                       ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),
@@ -272,7 +272,7 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
                   enabled: !_saving,
                   keyboardType: TextInputType.phone,
                   decoration: InputDecoration(
-                    labelText: context.tr('Numéro Wave / Orange Money de Mara'),
+                    labelText: context.tr('Numéro Wave / Orange Money de Marakaj'),
                     hintText: '+226 70 00 00 00',
                     border: const OutlineInputBorder(),
                   ),
@@ -342,7 +342,7 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
                   onChanged: _stripeSaving ? null : _setStripe,
                   title: Text(context.tr('Abonnement par carte (Stripe)')),
                   subtitle: Text(
-                    context.tr('Les propriétaires s\'abonnent par carte, au prix ci-dessus, renouvelé chaque mois ou chaque année. À ouvrir une fois les clés Stripe installées (README, « Mara Pro by card »). Un nouveau prix vaut pour les nouveaux abonnements.'),
+                    context.tr('Les propriétaires s\'abonnent par carte, au prix ci-dessus, renouvelé chaque mois ou chaque année. À ouvrir une fois les clés Stripe installées (README, « Marakaj Pro by card »). Un nouveau prix vaut pour les nouveaux abonnements.'),
                     style: theme.textTheme.bodySmall
                         ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                   ),

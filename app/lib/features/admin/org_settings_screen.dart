@@ -549,7 +549,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         builder: (context) => AlertDialog(
           // The keyboard up on a small phone: the dialog scrolls (A6).
           scrollable: true,
-          title: Text(context.tr('Mara Pro sans date de fin ?')),
+          title: Text(context.tr('Marakaj Pro sans date de fin ?')),
           content: Text(
             context.tr('Sans date, cette entreprise reste Pro jusqu\'à ce que vous changiez sa formule à la main. Pour un paiement, indiquez plutôt la date de fin.'),
           ),
@@ -585,8 +585,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         _savingPlan = false;
         _markSaved([_planNoteController]);
         _planMessage = _planRaw == 'pro'
-            ? context.tr('Entreprise passée sur Mara Pro.')
-            : context.tr('Entreprise repassée sur Mara (gratuit).');
+            ? context.tr('Entreprise passée sur Marakaj Pro.')
+            : context.tr('Entreprise repassée sur Marakaj (gratuit).');
       });
     } catch (error) {
       if (!mounted) return;
@@ -896,7 +896,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
             style: theme.textTheme.labelLarge),
         const SizedBox(height: 4),
         Text(
-            context.tr('Quand un client paie sa commande par Wave ou par carte dans Mara, l\'argent est envoyé sur ce numéro Wave quelques instants après. Un numéro Wave ordinaire suffit.'),
+            context.tr('Quand un client paie sa commande par Wave ou par carte dans Marakaj, l\'argent est envoyé sur ce numéro Wave quelques instants après. Un numéro Wave ordinaire suffit.'),
             style: theme.textTheme.bodySmall
                 ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
         const SizedBox(height: 8),
@@ -959,7 +959,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       Text(context.tr('Verrouillage des téléphones'), style: theme.textTheme.titleSmall),
       const SizedBox(height: 4),
       Text(
-          context.tr('Chaque membre a un code sur son téléphone. Fixez le délai maximal après lequel Mara le redemande : personne de l\'équipe ne pourra choisir plus long, ni « Jamais ».'),
+          context.tr('Chaque membre a un code sur son téléphone. Fixez le délai maximal après lequel Marakaj le redemande : personne de l\'équipe ne pourra choisir plus long, ni « Jamais ».'),
           style: muted),
       const SizedBox(height: 12),
       DropdownButtonFormField<int?>(
@@ -1258,7 +1258,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     // Pro tools are badged and held on a Free business.
     _ReadOnlyRow(
       label: context.tr('Formule'),
-      value: widget.plan == 'pro' ? context.tr('Mara Pro') : context.tr('Mara (gratuit)'),
+      value: widget.plan == 'pro' ? context.tr('Marakaj Pro') : context.tr('Marakaj (gratuit)'),
     ),
   ];
 
@@ -1544,7 +1544,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     if (_hidden('online_orders')) ...[
       _SwitchedOff(
         key: const Key('vitrine-orders-closed'),
-        text: context.tr('Commandes fermées par Mara pour le moment : vos clients voient votre vitrine sans pouvoir commander. Les commandes déjà reçues restent dans Commandes.'),
+        text: context.tr('Commandes fermées par Marakaj pour le moment : vos clients voient votre vitrine sans pouvoir commander. Les commandes déjà reçues restent dans Commandes.'),
       ),
       const SizedBox(height: 16),
     ],
@@ -1684,16 +1684,16 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         key: const Key('delivery-pro-note'),
         child: ListTile(
           leading: const Icon(Icons.workspace_premium_outlined),
-          title: Text(context.tr('La livraison fait partie de Mara Pro')),
+          title: Text(context.tr('La livraison fait partie de Marakaj Pro')),
           // The iPhone app invites to no purchase (125): what delivery
           // is part of, not a call to upgrade.
           subtitle: Text(!sellsDigitalInApp
               ? (_profile == 'farm'
-                  ? context.tr('Votre vitrine propose le retrait à la ferme. La livraison, avec le prix calculé selon la distance, fait partie de Mara Pro.')
-                  : context.tr('Votre vitrine propose le retrait en boutique. La livraison, avec le prix calculé selon la distance, fait partie de Mara Pro.'))
+                  ? context.tr('Votre vitrine propose le retrait à la ferme. La livraison, avec le prix calculé selon la distance, fait partie de Marakaj Pro.')
+                  : context.tr('Votre vitrine propose le retrait en boutique. La livraison, avec le prix calculé selon la distance, fait partie de Marakaj Pro.'))
               : _profile == 'farm'
-              ? context.tr('Votre vitrine propose le retrait à la ferme. Passez à Mara Pro pour livrer vos clients, avec le prix calculé selon la distance.')
-              : context.tr('Votre vitrine propose le retrait en boutique. Passez à Mara Pro pour livrer vos clients, avec le prix calculé selon la distance.')),
+              ? context.tr('Votre vitrine propose le retrait à la ferme. Passez à Marakaj Pro pour livrer vos clients, avec le prix calculé selon la distance.')
+              : context.tr('Votre vitrine propose le retrait en boutique. Passez à Marakaj Pro pour livrer vos clients, avec le prix calculé selon la distance.')),
           trailing: const Icon(Icons.chevron_right),
           onTap: _openPro,
         ),
@@ -1927,7 +1927,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       Text(context.tr('Formule (plateforme)'), style: theme.textTheme.titleSmall),
       const SizedBox(height: 4),
       Text(
-        context.tr('Mara Pro se règle à la main pour l\'instant : quand le paiement est arrivé sur Wave, passez l\'entreprise en Pro jusqu\'à la date payée. Passée cette date elle redevient gratuite, sans rien perdre.'),
+        context.tr('Marakaj Pro se règle à la main pour l\'instant : quand le paiement est arrivé sur Wave, passez l\'entreprise en Pro jusqu\'à la date payée. Passée cette date elle redevient gratuite, sans rien perdre.'),
         style: theme.textTheme.bodySmall?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,
         ),
@@ -1935,8 +1935,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       const SizedBox(height: 12),
       SegmentedButton<String>(
         segments: [
-          ButtonSegment(value: 'free', label: Text(context.tr('Mara'))),
-          ButtonSegment(value: 'pro', label: Text(context.tr('Mara Pro'))),
+          ButtonSegment(value: 'free', label: Text(context.tr('Marakaj'))),
+          ButtonSegment(value: 'pro', label: Text(context.tr('Marakaj Pro'))),
         ],
         selected: {_planRaw},
         onSelectionChanged: _savingPlan
@@ -2176,7 +2176,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         final reach = _deliveryReachController.text.trim();
         final included = _deliveryIncludedController.text.trim();
         return [
-          if (widget.plan != 'pro') 'Mara Pro',
+          if (widget.plan != 'pro') 'Marakaj Pro',
           base.isEmpty && perKm.isEmpty
               // The platform's tariff is in francs CFA (061's
               // delivery_currency): a business in another money has none.
@@ -2201,7 +2201,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
             : context.tr('Placée sur la carte');
       case _Part.platform:
         return [
-          widget.plan == 'pro' ? context.tr('Mara Pro') : context.tr('Mara (gratuit)'),
+          widget.plan == 'pro' ? context.tr('Marakaj Pro') : context.tr('Marakaj (gratuit)'),
           if (widget.canSuspend) _suspended ? context.tr('suspendue') : context.tr('active'),
         ].join(' · ');
     }
@@ -2339,7 +2339,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
               Icon(Icons.workspace_premium, size: 16, color: theme.colorScheme.primary),
               const SizedBox(width: 6),
               Text(
-                context.tr('MARA PRO'),
+                context.tr('MARAKAJ PRO'),
                 key: const Key('settings-pro-group'),
                 style: theme.textTheme.labelSmall?.copyWith(
                   letterSpacing: 1.2,
@@ -2355,7 +2355,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
             for (final part in _parts.where(_proParts.contains))
               _PartRow(
                 part: part,
-                state: _toolLocked('delivery') ? context.tr('Réservé à Mara Pro') : _stateOf(part),
+                state: _toolLocked('delivery') ? context.tr('Réservé à Marakaj Pro') : _stateOf(part),
                 proCost: _toolLocked('delivery') ? (_costOf('delivery') ?? 0) : null,
                 selected: wide && _open == part,
                 onTap: () => setState(() {
@@ -2367,7 +2367,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
               icon: Icons.groups_outlined,
               label: context.tr('Équipe et accès'),
               state: _toolLocked('team_access')
-                  ? context.tr('Réservé à Mara Pro')
+                  ? context.tr('Réservé à Marakaj Pro')
                   : context.tr('Qui voit et modifie quoi'),
               proCost: _toolLocked('team_access') ? (_costOf('team_access') ?? 0) : null,
               onTap: _toolLocked('team_access')

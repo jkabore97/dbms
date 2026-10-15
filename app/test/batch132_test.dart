@@ -500,7 +500,7 @@ void main() {
     });
   });
 
-  group('4. a store account that already holds Mara Pro', () {
+  group('4. a store account that already holds Marakaj Pro', () {
     for (final (platform, account, where) in [
       ('google', 'Google Play', 'Google Play'),
       ('apple', 'Apple', 'l\'App Store'),
@@ -512,7 +512,7 @@ void main() {
         expect(find.byKey(const Key('store-buy-month')), findsNothing);
         expect(find.byKey(const Key('store-buy-year')), findsNothing);
         expect(
-            find.text('Ce compte $account a déjà un abonnement Mara Pro, pour une autre entreprise ou refusé. '
+            find.text('Ce compte $account a déjà un abonnement Marakaj Pro, pour une autre entreprise ou refusé. '
                 'Gérez-le ou annulez-le dans $where, puis réessayez.'),
             findsOneWidget);
         expect(find.byKey(const Key('store-manage')), findsOneWidget);
@@ -520,7 +520,7 @@ void main() {
       });
     }
 
-    testWidgets('for this business but refused by Mara (a test purchase): the same — the store would refuse a second',
+    testWidgets('for this business but refused by Marakaj (a test purchase): the same — the store would refuse a second',
         (tester) async {
       final store = _Store('google')
         ..held = const [StoreOwned(productId: 'mara_pro', orgId: '52000000-0000-0000-0000-0000000000a1', token: 'tok-elim')];

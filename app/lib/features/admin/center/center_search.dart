@@ -240,7 +240,7 @@ class _CenterSearchState extends State<CenterSearch> {
                           context.tr('{n} entreprise(s)', {'n': p.businesses}),
                         ].join(' · ')),
                         trailing: p.platform
-                            ? Chip(label: Text(context.tr('Mara')), visualDensity: VisualDensity.compact)
+                            ? Chip(label: Text(context.tr('Marakaj')), visualDensity: VisualDensity.compact)
                             : const Icon(Icons.chevron_right),
                         onTap: () => _openPerson(p),
                       ),

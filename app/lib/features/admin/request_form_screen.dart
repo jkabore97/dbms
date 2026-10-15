@@ -259,7 +259,7 @@ class _RequestFormScreenState extends State<RequestFormScreen> {
         ],
         Text(
           _saved
-              ? context.tr('Le parcours de création est celui de Mara.')
+              ? context.tr('Le parcours de création est celui de Marakaj.')
               : context.tr('Le parcours de création est celui d\'origine.'),
           key: const Key('form-state'),
           style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),

@@ -1,4 +1,4 @@
-# Mara — kit de marque, noir · blanc · brun · gris
+# Marakaj — kit de marque, noir · blanc · brun · gris
 
 Le sceau de lumière, dans une palette sans rouge ni bleu. Le sceau porte
 toujours **MMXXVI** (2026 en chiffres romains, l'année de fondation) — sur
@@ -32,7 +32,7 @@ Ces fichiers sont générés : `python3 ../build_mara_neutre.py` les refait
 | `youtube/watermark-150.png` | Filigrane des vidéos |
 | `youtube/thumbnail-template-1280x720.png` | Modèle de miniature |
 | `web/icons/`, `web/favicon.*` | Mêmes noms que les icônes de `app/web/` |
-| `logo/seal`, `logo/horizontal`, `logo/stacked` | Sceau seul, sceau + mara, sceau au-dessus de mara |
+| `logo/seal`, `logo/horizontal`, `logo/stacked` | Sceau seul, sceau + marakaj, sceau au-dessus de marakaj |
 
 `-transparent.png` = sans fond · `-on-background.png` = avec fond ·
 `.svg` / `.pdf` = vectoriel, pour l'impression et les grandes tailles.
@@ -40,7 +40,11 @@ Ces fichiers sont générés : `python3 ../build_mara_neutre.py` les refait
 Branché dans l'app : `app/assets/brand/` (sceau blanc, horizontal blanc et
 noir, empilé brun), `app/web/icons/`, `favicon.png`, `brand/og.jpg` et
 l'écran de démarrage (brun), les icônes Android (`mipmap-*`, brun), et les
-couleurs de `core/theme/mara_mark.dart` et `kaj_theme.dart`.
+couleurs de `core/theme/mara_mark.dart` et `kaj_theme.dart`. Les copies de
+l'app qui portent le mot (logos horizontal et empilé, `og.jpg`,
+`mara-stacked.png`, le logo du démarrage dans `index.html`, les images de
+lancement Android et iPhone) sont refaites par `../build_app_brand.py` ;
+les noms de fichiers gardent « mara ».
 
 ## Couleurs
 
@@ -54,4 +58,4 @@ couleurs de `core/theme/mara_mark.dart` et `kaj_theme.dart`.
 | Gris | `#A3A09B` |
 | Gris foncé | `#3B3A38` |
 
-Polices : Unbounded (mot « mara »), Cinzel (MMXXVI), Space Grotesk (textes).
+Polices : Unbounded Bold (mot « marakaj »), Cinzel Bold (MMXXVI), Space Grotesk (textes).

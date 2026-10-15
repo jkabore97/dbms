@@ -111,14 +111,14 @@ export function googleState(state) {
 /// What store_settle() needs, from a SubscriptionPurchaseV2.
 export function googleSettlement(token, sub) {
   const items = (sub.lineItems || []).filter((l) => l.productId === GOOGLE_PRODUCT);
-  if (!items.length) throw new StoreError("Cet achat n'est pas Mara Pro.", 422, "product");
+  if (!items.length) throw new StoreError("Cet achat n'est pas Marakaj Pro.", 422, "product");
   const latest = items.reduce((a, b) =>
     (Date.parse(b.expiryTime || 0) > Date.parse(a.expiryTime || 0) ? b : a));
   const basePlan = latest.offerDetails?.basePlanId || null;
   // Mara Pro is sold as one of its two base plans, and only so: a line
   // with none (or another) is not a purchase of ours.
   if (!basePlan || !GOOGLE_BASE_PLANS.includes(basePlan)) {
-    throw new StoreError("Cet achat n'est pas Mara Pro.", 422, "base_plan");
+    throw new StoreError("Cet achat n'est pas Marakaj Pro.", 422, "base_plan");
   }
   return {
     platform: "google",

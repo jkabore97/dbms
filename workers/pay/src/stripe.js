@@ -31,7 +31,7 @@ export async function createCheckout(env, args, fetchImpl = fetch) {
     "line_items[0][price_data][unit_amount]": String(Math.round(Number(args.amount))),
     "line_items[0][price_data][recurring][interval]": args.period === "year" ? "year" : "month",
     "line_items[0][price_data][product_data][name]":
-      ["Mara Pro", label, price, args.orgName].filter(Boolean).join(" · "),
+      ["Marakaj Pro", label, price, args.orgName].filter(Boolean).join(" · "),
     "metadata[org_id]": args.orgId,
     "metadata[period]": args.period,
     "subscription_data[metadata][org_id]": args.orgId,

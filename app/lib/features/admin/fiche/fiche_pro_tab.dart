@@ -91,8 +91,8 @@ class _FicheProTabState extends State<FicheProTab> {
         center: widget.center,
         actionId: id,
         done: _plan == 'pro'
-            ? context.tr('{name} est sur Mara Pro.', {'name': _o.name})
-            : context.tr('{name} est sur Mara (gratuit).', {'name': _o.name}),
+            ? context.tr('{name} est sur Marakaj Pro.', {'name': _o.name})
+            : context.tr('{name} est sur Marakaj (gratuit).', {'name': _o.name}),
         onUndone: widget.onChanged,
       );
       widget.onChanged();
@@ -130,15 +130,15 @@ class _FicheProTabState extends State<FicheProTab> {
                 Text(
                   _o.isPro
                       ? (_o.planUntil == null
-                          ? context.tr('Mara Pro, sans date de fin')
-                          : context.tr('Mara Pro jusqu\'au {date}',
+                          ? context.tr('Marakaj Pro, sans date de fin')
+                          : context.tr('Marakaj Pro jusqu\'au {date}',
                               {'date': dayLine(context, _o.planUntil!)}))
-                      : context.tr('Mara (gratuit)'),
+                      : context.tr('Marakaj (gratuit)'),
                   key: const Key('pro-plan-now'),
                   style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 if (_o.isPro && _o.planRaw != 'pro')
-                  Text(context.tr('Ouvert par « Mara Pro complet », pas par la formule.'),
+                  Text(context.tr('Ouvert par « Marakaj Pro complet », pas par la formule.'),
                       style: theme.textTheme.bodySmall),
                 const SizedBox(height: 14),
                 SegmentedButton<String>(
@@ -149,7 +149,7 @@ class _FicheProTabState extends State<FicheProTab> {
                     ButtonSegment(
                         value: 'pro',
                         icon: const Icon(Icons.workspace_premium_outlined),
-                        label: Text(context.tr('Mara Pro'))),
+                        label: Text(context.tr('Marakaj Pro'))),
                   ],
                   selected: {_plan},
                   onSelectionChanged:
@@ -173,7 +173,7 @@ class _FicheProTabState extends State<FicheProTab> {
                   enabled: !_saving,
                   onChanged: (_) => setState(() {}),
                   decoration: InputDecoration(
-                    labelText: context.tr('Note (vue par Mara seulement)'),
+                    labelText: context.tr('Note (vue par Marakaj seulement)'),
                     border: const OutlineInputBorder(),
                   ),
                 ),
@@ -215,11 +215,11 @@ class _FicheProTabState extends State<FicheProTab> {
                         leading: Icon(u.gift ? Icons.redeem_outlined : Icons.lock_open,
                             color: u.gift ? maraBrown : maraGreen),
                         title: Text(u.feature == 'pro_all'
-                            ? context.tr('Mara Pro complet')
+                            ? context.tr('Marakaj Pro complet')
                             : PlanTerms.labelOf(u.feature)),
                         subtitle: Text([
                           context.tr('jusqu\'au {date}', {'date': dayLine(context, u.until)}),
-                          u.gift ? context.tr('Offert par Mara') : context.tr('Payé en cauris'),
+                          u.gift ? context.tr('Offert par Marakaj') : context.tr('Payé en cauris'),
                         ].join(' · ')),
                       ),
                     ],

@@ -248,7 +248,7 @@ void main() {
       expect(sent.single.transactionId, '2000000111');
       expect(fake.completed, hasLength(1), reason: 'completed once the Worker said yes');
       expect(pro, 1);
-      expect(find.text('Merci ! Mara Pro est actif.'), findsOneWidget);
+      expect(find.text('Merci ! Marakaj Pro est actif.'), findsOneWidget);
     });
 
     testWidgets('the Worker unreachable: the purchase stays open; refused: closed, its reason said',
@@ -258,7 +258,7 @@ void main() {
       var answer = 0;
       await page(tester, org: _farm, store: fake, verify: (p) async {
         answer++;
-        if (answer == 1) throw StateError('Pas de connexion au serveur de Mara.');
+        if (answer == 1) throw StateError('Pas de connexion au serveur de Marakaj.');
         throw const StoreVerifyRefused('Cet achat a été fait pour une autre entreprise.', 'wrong_org');
       });
       const bought = StorePurchase(
@@ -267,7 +267,7 @@ void main() {
       await tester.pump();
       await tester.pump();
       expect(fake.completed, isEmpty, reason: 'not completed: the store hands it back');
-      expect(find.textContaining('Mara n\'a pas encore pu le vérifier'), findsOneWidget);
+      expect(find.textContaining('Marakaj n\'a pas encore pu le vérifier'), findsOneWidget);
       fake.controller.add(const [bought]);
       await tester.pump();
       await tester.pump();
@@ -290,7 +290,7 @@ void main() {
       ]);
       await tester.pump();
       await tester.pump();
-      expect(find.textContaining('Ce compte Google Play paie déjà Mara Pro'), findsOneWidget);
+      expect(find.textContaining('Ce compte Google Play paie déjà Marakaj Pro'), findsOneWidget);
       fake.controller.add(const [
         StorePurchase(status: StorePurchaseStatus.error, productId: 'mara_pro', errorCode: 'network'),
       ]);
@@ -308,7 +308,7 @@ void main() {
       expect(fake.restores, 1);
       expect(find.textContaining('Recherche de vos achats sur App Store'), findsOneWidget);
       await tester.pump(const Duration(seconds: 5));
-      expect(find.text('Aucun abonnement Mara Pro à restaurer sur ce compte App Store.'), findsOneWidget);
+      expect(find.text('Aucun abonnement Marakaj Pro à restaurer sur ce compte App Store.'), findsOneWidget);
     });
 
     testWidgets('S4 a second business: nothing to buy, the business paid named, « Gérer » offered',
@@ -319,7 +319,7 @@ void main() {
         await page(tester, org: _farm, store: fake,
             standing: () async => StoreStanding(elsewhereName: 'Elim Shop', elsewherePlatform: platform));
         expect(find.byKey(const Key('store-elsewhere')), findsOneWidget);
-        expect(find.textContaining('paie déjà Mara Pro pour « Elim Shop »'), findsOneWidget);
+        expect(find.textContaining('paie déjà Marakaj Pro pour « Elim Shop »'), findsOneWidget);
         // On Apple the other period would only crossgrade Elim Shop's:
         // neither period is offered.
         expect(find.byKey(const Key('store-buy-month')), findsNothing, reason: platform);
@@ -342,12 +342,12 @@ void main() {
           org: const OrgSummary(id: 'o9', name: 'Elim Shop', profile: 'retail', roles: ['employee']),
           store: FakeStore('apple'));
       expect(find.byKey(const Key('store-buy-month')), findsNothing);
-      expect(find.text('Seul un administrateur de l\'entreprise peut l\'abonner à Mara Pro.'), findsOneWidget);
+      expect(find.text('Seul un administrateur de l\'entreprise peut l\'abonner à Marakaj Pro.'), findsOneWidget);
       await page(tester,
           org: const OrgSummary(id: 'o8', name: 'Elim Shop', profile: 'retail', roles: ['owner'], plan: 'pro'),
           store: FakeStore('apple'),
           standing: () async => const StoreStanding(platform: 'apple', state: 'active'));
-      expect(find.text('Vous êtes sur Mara Pro'), findsOneWidget);
+      expect(find.text('Vous êtes sur Marakaj Pro'), findsOneWidget);
       expect(find.byKey(const Key('store-buy-month')), findsNothing);
       expect(find.byKey(const Key('store-restore')), findsOneWidget);
       expect(find.byKey(const Key('store-manage')), findsOneWidget);
@@ -475,7 +475,7 @@ void main() {
       expect(fake.completed, hasLength(1));
       // 132: the farm's page draws only the farm's notices — the shop's
       // is said outside (a snackbar in the app), never on another's page.
-      expect(find.text('Merci ! Mara Pro est actif.'), findsNothing, reason: 'the shop\'s notice, not the farm\'s');
+      expect(find.text('Merci ! Marakaj Pro est actif.'), findsNothing, reason: 'the shop\'s notice, not the farm\'s');
       expect(outside.last.orgId, _shop.id);
     });
 
@@ -484,7 +484,7 @@ void main() {
         const StoreVerifyRefused('Votre session a expiré', 'session', status: 401),
         const StoreVerifyRefused('Seul un administrateur…', 'not_admin', status: 403),
         const StoreVerifyRefused('', '', status: 409),
-        StateError('Pas de connexion au serveur de Mara.'),
+        StateError('Pas de connexion au serveur de Marakaj.'),
       ]) {
         final fake = FakeStore('google');
         final logged = <String>[];
@@ -504,7 +504,7 @@ void main() {
       }
     });
 
-    test('a refusal for good — another business, a test purchase, not Mara Pro — finished, said, logged', () async {
+    test('a refusal for good — another business, a test purchase, not Marakaj Pro — finished, said, logged', () async {
       for (final code in ['wrong_org', 'replayed', 'sandbox', 'product', 'bundle', 'no_org']) {
         final fake = FakeStore('apple');
         final logged = <String>[];

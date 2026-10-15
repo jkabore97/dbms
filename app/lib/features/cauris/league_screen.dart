@@ -74,7 +74,7 @@ class _LeagueScreenState extends State<LeagueScreen> {
   Future<void> _share(LeagueBoard b) async {
     final place = b.rank == 1 ? context.tr('1er') : context.tr('{n}e', {'n': b.rank});
     final slug = widget.org.slug;
-    final brag = context.tr('Je suis {place} cette semaine sur Mara, en {league} ! 🏆',
+    final brag = context.tr('Je suis {place} cette semaine sur Marakaj, en {league} ! 🏆',
         {'place': place, 'league': context.tr(b.label)});
     final text = slug == null
         ? brag

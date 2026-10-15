@@ -57,7 +57,7 @@ class FicheOverviewTab extends StatelessWidget {
           width: w,
           key: const Key('fiche-plan'),
           value: o.isPro ? context.tr('Pro') : context.tr('Gratuit'),
-          label: context.tr('Formule Mara'),
+          label: context.tr('Formule Marakaj'),
           hint: o.isPro && o.planUntil != null
               ? context.tr('jusqu\'au {date}', {'date': dayLine(context, o.planUntil!)})
               : null,
@@ -98,7 +98,7 @@ class FicheOverviewTab extends StatelessWidget {
           width: w,
           key: const Key('fiche-rules'),
           value: '${o.rules}',
-          label: context.tr('réglages Mara'),
+          label: context.tr('réglages Marakaj'),
           hint: o.actions > 0
               ? context.tr('{n} au journal', {'n': o.actions})
               : null,
@@ -234,7 +234,7 @@ class _Alerts extends StatelessWidget {
           context.tr('Mise en avant à décider ({n})', {'n': n}),
           () => context.push(Routes.consoleFeatured)),
       'pro_ending' => _Alert(kind, Icons.workspace_premium_outlined, soon,
-          context.tr('Mara Pro se termine le {date}', {
+          context.tr('Marakaj Pro se termine le {date}', {
             'date': when('until') == null ? '—' : dayLine(context, when('until')!),
           }),
           () => onTab(FicheTab.pro)),
@@ -242,7 +242,7 @@ class _Alerts extends StatelessWidget {
           context.tr('Outil ouvert qui se ferme dans 7 jours ({n})', {'n': n}),
           () => onTab(FicheTab.pro)),
       'rule_ending' => _Alert(kind, Icons.toggle_off_outlined, soon,
-          context.tr('Réglage Mara qui se termine dans 7 jours ({n})', {'n': n}),
+          context.tr('Réglage Marakaj qui se termine dans 7 jours ({n})', {'n': n}),
           () => onTab(FicheTab.features)),
       'silent' => _Alert(kind, Icons.notifications_paused_outlined, const Color(0xFFB1541A),
           context.tr('Silencieuse depuis {n} jours', {'n': a['days'] ?? '—'})),
@@ -349,12 +349,12 @@ class _Facts extends StatelessWidget {
       (context.tr('Adresse'), o.address ?? '—'),
       if (o.city != null) (context.tr('Ville'), o.city!),
       if (o.isAssociation)
-        (context.tr('Vérifiée par Mara'),
+        (context.tr('Vérifiée par Marakaj'),
             o.verifiedAt == null ? context.tr('Non') : dayLine(context, o.verifiedAt!)),
       (context.tr('Paiements Wave'), o.waveAllowed ? context.tr('Autorisés') : context.tr('Espèces seulement')),
       for (final u in o.unlocks.take(3))
         (context.tr('Outil ouvert'),
-            '${u.feature == 'pro_all' ? context.tr('Mara Pro complet') : PlanTerms.labelOf(u.feature)} · '
+            '${u.feature == 'pro_all' ? context.tr('Marakaj Pro complet') : PlanTerms.labelOf(u.feature)} · '
             '${context.tr('jusqu\'au {date}', {'date': dayLine(context, u.until)})}'),
       if (o.showcase) (context.tr('Vitrine d\'exemple'), context.tr('Oui')),
       if (o.isArchived) (context.tr('Archivée'), dayLine(context, o.archivedAt!)),

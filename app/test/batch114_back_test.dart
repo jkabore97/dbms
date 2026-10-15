@@ -362,7 +362,7 @@ void main() {
       // Mara ? » first (122), then the phone's back, out.
       await _back(tester);
       expect(engine.phonePops, 0);
-      expect(find.text('Quitter Mara ?'), findsOneWidget);
+      expect(find.text('Quitter Marakaj ?'), findsOneWidget);
       await tester.tap(find.byKey(const Key('leave-quit')));
       await _settle(tester);
       expect(engine.phonePops, 1);

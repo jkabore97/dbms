@@ -53,7 +53,7 @@ Map<String, dynamic> overviewJson(String profile) => {
         {'points': 100, 'until': '2026-12-31'},
       ],
       'unlocks': [
-        {'feature': 'accounting', 'until': '2026-11-01T00:00:00Z', 'gift': true, 'note': 'Offert par Mara'},
+        {'feature': 'accounting', 'until': '2026-11-01T00:00:00Z', 'gift': true, 'note': 'Offert par Marakaj'},
       ],
       'vitrine': {'open': true, 'published': 7},
       'rules': 1,
@@ -130,7 +130,7 @@ class _Center extends CommandCenterRepository {
           at: DateTime(2026, 10, 7, 9, 30),
           kind: 'vitrine',
           summary: 'Vitrine : présentation, logo',
-          actor: 'Mara Une',
+          actor: 'Marakaj Une',
           orgId: orgId,
           undoable: true,
         ),
@@ -172,7 +172,7 @@ void main() {
         expect(find.text('Awa Sanou'), findsWidgets);
         expect(find.text('420'), findsOneWidget);
         expect(find.text('Gratuit'), findsOneWidget);
-        expect(find.text('Formule Mara'), findsOneWidget);
+        expect(find.text('Formule Marakaj'), findsOneWidget);
         expect(find.byKey(const Key('fiche-alert-paid_claim')), findsOneWidget);
         expect(find.text('Silencieuse depuis 34 jours'), findsOneWidget);
         expect(find.byKey(const Key('fiche-preview')), findsOneWidget);
@@ -218,7 +218,7 @@ void main() {
       expect(find.text('Annuler'), findsWidgets);
     });
 
-    testWidgets('an association shows Mara\'s verification', (tester) async {
+    testWidgets('an association shows Marakaj\'s verification', (tester) async {
       await _open(tester, _Fiche('association'), _Center(), tab: 'identite');
       expect(find.byKey(const Key('identity-verified')), findsOneWidget);
     });
@@ -251,7 +251,7 @@ void main() {
     });
   });
 
-  testWidgets('the Journal: Mara\'s lines with « Annuler », for this business', (tester) async {
+  testWidgets('the Journal: Marakaj\'s lines with « Annuler », for this business', (tester) async {
     final center = _Center();
     await _open(tester, _Fiche('retail'), center, tab: 'journal');
     await tester.pump(const Duration(milliseconds: 100));
@@ -272,7 +272,7 @@ void main() {
       roles: ['platform_admin'],
     );
 
-    test('the owner\'s role, the plan\'s locks, what Mara hides', () {
+    test('the owner\'s role, the plan\'s locks, what Marakaj hides', () {
       final owner = ownerOf(shop);
       expect(owner.roles, ['owner']);
       expect(owner.isAdmin, isTrue);
@@ -356,7 +356,7 @@ void main() {
     NotificationRow row(String kind, Map<String, dynamic> params) => NotificationRow(
           id: 'n',
           kind: kind,
-          message: 'Mara a modifié votre vitrine',
+          message: 'Marakaj a modifié votre vitrine',
           createdAt: DateTime.utc(2026, 10, 7),
           orgId: 'o1',
           params: params,
@@ -376,26 +376,26 @@ void main() {
       return said;
     }
 
-    testWidgets('says what Mara changed, and opens where it is', (tester) async {
-      expect(await line(tester, row('mara_edited', {'what': 'vitrine'})), 'Mara changed your vitrine');
+    testWidgets('says what Marakaj changed, and opens where it is', (tester) async {
+      expect(await line(tester, row('mara_edited', {'what': 'vitrine'})), 'Marakaj changed your vitrine');
       expect(
           await line(tester, row('mara_edited', {
             'what': 'identity',
             'fields': ['name', 'phone', 'verified_at', 'verified_by'],
           })),
-          'Mara changed your business\'s identity: name, phone, verification');
+          'Marakaj changed your business\'s identity: name, phone, verification');
       expect(await line(tester, row('mara_undone', {'what': 'vitrine'})),
-          'Mara took back her change to your vitrine');
+          'Marakaj took back her change to your vitrine');
       expect(notificationTarget(row('mara_edited', {'what': 'vitrine'})),
           Routes.orgSettings('o1', part: 'vitrine'));
       expect(notificationTarget(row('mara_undone', {'what': 'identity'})),
           Routes.orgSettings('o1', part: 'identite'));
     });
 
-    testWidgets('says a Pro tool went when the payment ended, and opens Mara Pro', (tester) async {
+    testWidgets('says a Pro tool went when the payment ended, and opens Marakaj Pro', (tester) async {
       final n = row('feature_lapsed', {'feature': 'analytics', 'label': 'Analyses'});
       expect(await line(tester, n),
-          'Your Mara Pro has ended: Analytics is no longer available for your business.');
+          'Your Marakaj Pro has ended: Analytics is no longer available for your business.');
       expect(notificationTarget(n), Routes.inside('o1', 'kaj-pro'));
     });
   });

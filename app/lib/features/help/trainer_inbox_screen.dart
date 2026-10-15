@@ -246,7 +246,7 @@ class _TrainerInboxScreenState extends State<TrainerInboxScreen> {
               Padding(
                 padding: const EdgeInsets.only(top: 24),
                 child: Text(
-                  context.tr('Réservé à l\'équipe de formation de Mara.'),
+                  context.tr('Réservé à l\'équipe de formation de Marakaj.'),
                   key: const Key('help-inbox-not-trainer'),
                   textAlign: TextAlign.center,
                 ),

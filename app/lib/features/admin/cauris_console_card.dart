@@ -142,7 +142,7 @@ class _CaurisConsoleCardState extends State<CaurisConsoleCard> {
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   labelText: context.tr('Attente, en jours'),
-                  helperText: context.tr('Jours sur Mara avant de pouvoir l\'acheter. 0 : dès le premier jour.'),
+                  helperText: context.tr('Jours sur Marakaj avant de pouvoir l\'acheter. 0 : dès le premier jour.'),
                   helperMaxLines: 3,
                 ),
               ),
@@ -241,10 +241,10 @@ class _CaurisConsoleCardState extends State<CaurisConsoleCard> {
                 contentPadding: EdgeInsets.zero,
                 dense: true,
                 title: Text(c.feature == 'pro_all'
-                    ? context.tr('Mara Pro complet')
+                    ? context.tr('Marakaj Pro complet')
                     : PlanTerms.labelOf(c.feature)),
                 subtitle: c.minDays > 0
-                    ? Text(context.tr('après {minDays} jours sur Mara', {'minDays': c.minDays}))
+                    ? Text(context.tr('après {minDays} jours sur Marakaj', {'minDays': c.minDays}))
                     : null,
                 trailing: CaurisAmount(c.cost,
                     style: const TextStyle(fontWeight: FontWeight.w700)),

@@ -182,13 +182,13 @@ begin
     select status into v_status from my_org_application();
     if v_status is distinct from 'rejected'
        or (select decision_note from my_org_application())
-          is distinct from 'Mettez à jour Mara : vous créez maintenant votre activité vous-même' then
+          is distinct from 'Mettez à jour Marakaj : vous créez maintenant votre activité vous-même' then
         raise exception 'FAIL: the application is %, not answered at once', v_status;
     end if;
     if not exists (select 1 from notifications
                     where recipient_id = '83838383-0000-0000-0000-000000000002'
                       and kind = 'application_update_app' and params ->> 'to' = 'applicant') then
-        raise exception 'FAIL: the applicant is not told to update Mara';
+        raise exception 'FAIL: the applicant is not told to update Marakaj';
     end if;
 
     -- And create_org() is still refused directly, which is the door the
@@ -202,7 +202,7 @@ begin
             raise notice 'PASS: refused — %', sqlerrm;
     end;
 
-    raise notice 'PASS: asked for a business, given nothing — answered at once « Mettez à jour Mara »';
+    raise notice 'PASS: asked for a business, given nothing — answered at once « Mettez à jour Marakaj »';
 end $$;
 -- A request an older app wrote before 111, still waiting: what the
 -- approval tests below decide.

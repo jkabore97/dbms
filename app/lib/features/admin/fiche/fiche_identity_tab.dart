@@ -160,7 +160,7 @@ class _FicheIdentityTabState extends State<FicheIdentityTab> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               MaraAsBanner(
-                title: context.tr('Vous modifiez l\'identité de {name} en tant que Mara',
+                title: context.tr('Vous modifiez l\'identité de {name} en tant que Marakaj',
                     {'name': _o.name}),
                 line: context.tr('Le propriétaire est prévenu. Chaque changement va au journal, avec « Annuler ».'),
               ),
@@ -266,7 +266,7 @@ class _FicheIdentityTabState extends State<FicheIdentityTab> {
                   value: _verified,
                   onChanged: _saving ? null : (v) => setState(() => _verified = v),
                   secondary: const Icon(Icons.verified_user_outlined, color: maraBrown),
-                  title: Text(context.tr('Vérifiée par Mara')),
+                  title: Text(context.tr('Vérifiée par Marakaj')),
                   subtitle: Text(context.tr('Le sceau de confiance de l\'association, sur sa vitrine.')),
                 ),
               ],

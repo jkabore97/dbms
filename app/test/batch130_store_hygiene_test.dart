@@ -150,8 +150,8 @@ void main() {
         .replaceAll(RegExp(r"'\s*\n\s*'"), '')
         .replaceAll(r"\'", "'");
     expect(legal, contains('votre date de naissance si vous la donnez (elle n\'est jamais obligatoire)'));
-    expect(legal, contains('Apple (l\'App Store) et Google (Google Play) pour l\'abonnement Mara Pro'));
+    expect(legal, contains('Apple (l\'App Store) et Google (Google Play) pour l\'abonnement Marakaj Pro'));
     expect(legal, contains('Si vous êtes le seul propriétaire d\'une activité, elle est supprimée avec votre compte'));
-    expect(legal, contains("'# Mara Pro'"));
+    expect(legal, contains("'# Marakaj Pro'"));
   });
 }

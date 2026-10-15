@@ -11,7 +11,7 @@ import { test } from "node:test";
 
 import site from "../src/index.js";
 
-const PAGE = "<!DOCTYPE html><html><head><title>Mara</title></head><body></body></html>";
+const PAGE = "<!DOCTYPE html><html><head><title>Marakaj</title></head><body></body></html>";
 const files = {
   "/index.html": [PAGE, "text/html; charset=utf-8"],
   "/app/0123456789ab/main.dart.js": ["main()", "text/javascript"],

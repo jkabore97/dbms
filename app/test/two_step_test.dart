@@ -111,7 +111,7 @@ class _Step extends TwoStep {
       const TwoStepEnrollment(
         factorId: 'f1',
         secret: 'JBSWY3DPEHPK3PXP',
-        uri: 'otpauth://totp/Mara:admin?secret=JBSWY3DPEHPK3PXP&issuer=Mara',
+        uri: 'otpauth://totp/Marakaj:admin?secret=JBSWY3DPEHPK3PXP&issuer=Marakaj',
       );
 
   @override

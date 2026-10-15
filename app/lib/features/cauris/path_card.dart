@@ -120,7 +120,7 @@ String pathToolGoal(BuildContext context, OrgSummary org, String feature,
       return context.tr('{n} commandes terminées',
           {'n': p?.step('three_orders')?.goal ?? 3});
     case 'second_business':
-      return 'Mara Pro';
+      return 'Marakaj Pro';
   }
   return '';
 }
@@ -687,7 +687,7 @@ class _PathGateSheetState extends State<PathGateSheet> {
                     ? Icons.workspace_premium
                     : Icons.route),
                 label: Text(feature == 'second_business'
-                    ? context.tr('Voir Mara Pro')
+                    ? context.tr('Voir Marakaj Pro')
                     : context.tr('Mon chemin')),
               ),
             ),
@@ -699,7 +699,7 @@ class _PathGateSheetState extends State<PathGateSheet> {
                 onPressed: widget.onProAll,
                 icon: const CauriIcon(size: 18),
                 label: Text(
-                    context.tr('Ou tout ouvrir maintenant : Mara Pro complet, {cost} cauris',
+                    context.tr('Ou tout ouvrir maintenant : Marakaj Pro complet, {cost} cauris',
                         {'cost': widget.proAllCost}),
                     textAlign: TextAlign.center),
               ),

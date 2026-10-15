@@ -158,7 +158,7 @@ class _SettlementScreenState extends State<SettlementScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            context.tr('Le client paie le livreur à la porte ; la part de Mara sur chaque livraison est due par le livreur à la fin du mois, par Wave. Ce que chaque livreur doit, ce mois-ci :'),
+            context.tr('Le client paie le livreur à la porte ; la part de Marakaj sur chaque livraison est due par le livreur à la fin du mois, par Wave. Ce que chaque livreur doit, ce mois-ci :'),
             style: theme.textTheme.bodySmall
                 ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           ),
@@ -180,7 +180,7 @@ class _SettlementScreenState extends State<SettlementScreen> {
               color: theme.colorScheme.primaryContainer,
               child: ListTile(
                 leading: const Icon(Icons.account_balance_wallet_outlined),
-                title: Text(context.tr('{amount} dus à Mara', {'amount': owed}),
+                title: Text(context.tr('{amount} dus à Marakaj', {'amount': owed}),
                     style: theme.textTheme.titleMedium),
                 subtitle: Text(context.tr(
                     _rows.length > 1 ? '{n} livreurs · {c} courses' : '{n} livreur · {c} courses',
@@ -224,7 +224,7 @@ class _SettlementScreenState extends State<SettlementScreen> {
           const SizedBox(height: 28),
           const Divider(),
           const SizedBox(height: 12),
-          Text(context.tr('La part de Mara'), style: theme.textTheme.titleMedium),
+          Text(context.tr('La part de Marakaj'), style: theme.textTheme.titleMedium),
           const SizedBox(height: 4),
           Text(
             context.tr('En pourcentage des frais de livraison. Fixée sur chaque commande au moment où elle est passée : changer le taux ne change que les prochaines. Aujourd\'hui : {deliverySharePct} %.', {'deliverySharePct': _terms.deliverySharePct}),

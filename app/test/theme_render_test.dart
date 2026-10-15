@@ -65,7 +65,7 @@ void main() {
       expect(await appBarColourFor(tester, 'church'), graphitePalette.ink);
     });
 
-    testWidgets('the shop is Mara brown', (tester) async {
+    testWidgets('the shop is Marakaj brown', (tester) async {
       expect(await appBarColourFor(tester, 'retail'), kajPalette.ink);
     });
 

@@ -263,7 +263,7 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
                     ? context.tr(
                         'Vitrine enregistrée, en grille. Vos choix Pro sont gardés : ils s\'activent dès que vous passez à Pro.')
                     : context.tr(
-                        'Vitrine enregistrée, en grille. Vos choix Pro sont gardés : ils font partie de Mara Pro.')
+                        'Vitrine enregistrée, en grille. Vos choix Pro sont gardés : ils font partie de Marakaj Pro.')
                 : context.tr(
                     'Vitrine enregistrée, en grille. Vos choix Pro n\'ont pas pu être gardés pour le moment.');
       });
@@ -479,7 +479,7 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
           else ...[
             Row(
               children: [
-                Flexible(child: _SectionTitle(text: context.tr('AVEC MARA PRO'))),
+                Flexible(child: _SectionTitle(text: context.tr('AVEC MARAKAJ PRO'))),
                 const SizedBox(width: 8),
                 const _ProSeal(),
               ],
@@ -502,7 +502,7 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
                     Expanded(
                       child: Text(
                         context.tr(
-                          'Ces options s\'activent avec Mara Pro. Essayez-les : l\'aperçu vous montre le résultat.',
+                          'Ces options s\'activent avec Marakaj Pro. Essayez-les : l\'aperçu vous montre le résultat.',
                         ),
                         style: theme.textTheme.bodyMedium,
                       ),
@@ -518,7 +518,7 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
                     key: const Key('dressing-pro-go'),
                     onPressed: _openPro,
                     icon: const Icon(Icons.workspace_premium, size: 18),
-                    label: Text(context.tr('Voir Mara Pro')),
+                    label: Text(context.tr('Voir Marakaj Pro')),
                   ),
                 ),
             ] else
@@ -1158,7 +1158,7 @@ class VitrinePreview extends StatelessWidget {
                     const SizedBox(width: 6),
                     Flexible(
                       child: Text(
-                        translate(lang, 'Aperçu — avec Mara Pro'),
+                        translate(lang, 'Aperçu — avec Marakaj Pro'),
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 12,

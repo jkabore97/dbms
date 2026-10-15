@@ -9,7 +9,7 @@ class StringsFr extends Strings {
   StringsFr([String locale = 'fr']) : super(locale);
 
   @override
-  String get appTitle => 'Mara';
+  String get appTitle => 'Marakaj';
 
   @override
   String get languageName => 'Français';

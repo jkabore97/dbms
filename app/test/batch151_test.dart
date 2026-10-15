@@ -101,14 +101,14 @@ OrgSummary _as(OrgSummary o, List<String> roles) => OrgSummary(
 
 const _cashFr = 'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez à la livraison ou au retrait.';
 const _cashWaveFr =
-    'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez à la livraison, au retrait, ou par Wave dans Mara.';
+    'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez à la livraison, au retrait, ou par Wave dans Marakaj.';
 const _pickupFr = 'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez au retrait.';
 const _pickupWaveFr =
-    'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez au retrait, ou par Wave dans Mara.';
+    'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez au retrait, ou par Wave dans Marakaj.';
 const _deliveryFr =
     'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez à la livraison, quand vous recevez la commande.';
 const _waveFr =
-    'Payez par Wave seulement depuis Mara, une fois la commande acceptée — jamais à un numéro reçu par message ou par appel.';
+    'Payez par Wave seulement depuis Marakaj, une fois la commande acceptée — jamais à un numéro reçu par message ou par appel.';
 
 /// An amount as the app writes it (fr_FR grouping, « FCFA »).
 String _f(num n) => moneyFormat('XOF').format(n);
@@ -576,7 +576,7 @@ void main() {
       expect(find.text(_waveFr), findsNothing);
       await tester.tap(find.text('Wave'));
       await tester.pumpAndSettle();
-      expect(find.text(_waveFr), findsOneWidget, reason: 'Wave through Mara is never « d\'avance »');
+      expect(find.text(_waveFr), findsOneWidget, reason: 'Wave through Marakaj is never « d\'avance »');
       expect(find.text(_pickupFr), findsNothing);
       await tester.ensureVisible(find.byKey(const Key('pay-safety-report')));
       await tester.tap(find.byKey(const Key('pay-safety-report')));
@@ -613,7 +613,7 @@ void main() {
       expect(find.byKey(const Key('pay-safety')), findsNothing);
     });
 
-    testWidgets('a vitrine taking Wave: « ou par Wave dans Mara »', (tester) async {
+    testWidgets('a vitrine taking Wave: « ou par Wave dans Marakaj »', (tester) async {
       await pumpVitrine(tester, _Session(db), wave: 'https://pay.wave.com/m/kiosque');
       expect(find.text(_pickupWaveFr), findsOneWidget);
     });

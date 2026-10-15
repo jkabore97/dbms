@@ -143,7 +143,7 @@ class _JournalSectionState extends State<JournalSection> {
     if (e.kind == 'cauris_cost') {
       final f = '${e.after?['feature'] ?? e.before?['feature'] ?? ''}';
       return context.tr('Cauris, {tool} : {c0} → {c1} cauris, attente {d0} → {d1} jours', {
-        'tool': f == 'pro_all' ? context.tr('Mara Pro complet') : PlanTerms.labelOf(f),
+        'tool': f == 'pro_all' ? context.tr('Marakaj Pro complet') : PlanTerms.labelOf(f),
         'c0': e.before?['cost'] ?? '',
         'c1': e.after?['cost'] ?? '',
         'd0': e.before?['min_days'] ?? '',
@@ -291,7 +291,7 @@ class _JournalSectionState extends State<JournalSection> {
                             if (e.undoneAt != null)
                               Text(
                                 context.tr('Annulée par {who} le {date}', {
-                                  'who': e.undoneBy ?? 'Mara',
+                                  'who': e.undoneBy ?? 'Marakaj',
                                   'date': when.format(e.undoneAt!),
                                 }),
                                 style: theme.textTheme.bodySmall?.copyWith(color: maraBrown),

@@ -140,7 +140,7 @@ class _ShopperProfileScreenState extends State<ShopperProfileScreen> {
   /// « Parrainer un ami »: shoppers have no referral code (a code names a
   /// business, 084), so the street's own address travels, on WhatsApp.
   void _invite() => _open(whatsappShareUrl(context.tr(
-      'Je fais mes achats sur Mara : les vitrines des boutiques, des fermes et des associations de chez nous. {url}',
+      'Je fais mes achats sur Marakaj : les vitrines des boutiques, des fermes et des associations de chez nous. {url}',
       {'url': siteOrigin})));
 
   Future<void> _download() async {
@@ -152,10 +152,10 @@ class _ShopperProfileScreenState extends State<ShopperProfileScreen> {
           XFile.fromData(
             utf8.encode(text),
             mimeType: 'application/json',
-            name: 'mes-donnees-mara.json',
+            name: 'mes-donnees-marakaj.json',
           ),
         ],
-        fileNameOverrides: const ['mes-donnees-mara.json'],
+        fileNameOverrides: const ['mes-donnees-marakaj.json'],
       ));
     } catch (e) {
       if (mounted) _say(context.tr('Téléchargement impossible : {error}', {'error': describeError(e)}));
@@ -174,7 +174,7 @@ class _ShopperProfileScreenState extends State<ShopperProfileScreen> {
         delete: () async {
           if (!scope.admin.canManageAccounts) {
             throw StateError(
-                'La suppression en ligne n\'est pas encore ouverte : écrivez à Mara et votre compte sera supprimé.');
+                'La suppression en ligne n\'est pas encore ouverte : écrivez à Marakaj et votre compte sera supprimé.');
           }
           // An Apple account, on the iPhone: Apple's sheet once more, for
           // the code that revokes Apple's token (130); on the website,
@@ -354,7 +354,7 @@ class _ShopperProfileScreenState extends State<ShopperProfileScreen> {
           onTap: () => context.push(Routes.language),
         ),
       ]),
-      _Section(context.tr('Avec Mara'), [
+      _Section(context.tr('Avec Marakaj'), [
         _Row(
           key: const Key('shopper-courier'),
           icon: Icons.sports_motorsports_outlined,
@@ -376,7 +376,7 @@ class _ShopperProfileScreenState extends State<ShopperProfileScreen> {
           key: const Key('shopper-invite'),
           icon: Icons.share_outlined,
           title: context.tr('Parrainer un ami'),
-          subtitle: context.tr('Envoyez-lui Mara sur WhatsApp'),
+          subtitle: context.tr('Envoyez-lui Marakaj sur WhatsApp'),
           onTap: _invite,
         ),
       ]),

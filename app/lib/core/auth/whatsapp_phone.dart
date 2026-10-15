@@ -97,7 +97,7 @@ String whatsAppProblem(String language, Object error, {bool confirming = false})
     final code = error.code ?? '';
     final message = error.message;
     if (code == 'phone_exists' || message.contains('already been registered')) {
-      return say('Ce numéro est déjà celui d\'un autre compte Mara.');
+      return say('Ce numéro est déjà celui d\'un autre compte Marakaj.');
     }
     if (code == 'otp_expired' || message.contains('expired or is invalid')) {
       return say('Code faux ou expiré. Vérifiez les 6 chiffres, ou demandez un nouveau code.');

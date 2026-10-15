@@ -1007,7 +1007,7 @@ void main() {
       }
     });
 
-    test('« Revenus de Mara »: francs CFA, the other moneys beside, never added', () {
+    test('« Revenus de Marakaj »: francs CFA, the other moneys beside, never added', () {
       final t = PlatformToday.fromJson(const {
         'money': {
           'currency': 'XOF', 'pro': 15000, 'spots': 0, 'delivery_cut': 240, 'shops_sold': 17500,

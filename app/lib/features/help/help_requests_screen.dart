@@ -170,7 +170,7 @@ class _HelpRequestsScreenState extends State<HelpRequestsScreen> {
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
                     context.tr(
-                      'Vous avez fait toutes vos demandes pour aujourd\'hui. Réessayez demain, ou écrivez à Mara.',
+                      'Vous avez fait toutes vos demandes pour aujourd\'hui. Réessayez demain, ou écrivez à Marakaj.',
                     ),
                     key: const Key('help-none-left'),
                     style: TextStyle(color: theme.colorScheme.error),
@@ -207,7 +207,7 @@ class _HelpRequestsScreenState extends State<HelpRequestsScreen> {
 /// … », « Résolue », « Fermée ».
 String helpStatusText(BuildContext context, HelpRequest r) => switch (r.status) {
   'taken' => context.tr('Prise en charge par {name}', {
-    'name': r.trainer?.firstName ?? 'Mara',
+    'name': r.trainer?.firstName ?? 'Marakaj',
   }),
   'resolved' => context.tr('Résolue'),
   'closed' => context.tr('Fermée'),

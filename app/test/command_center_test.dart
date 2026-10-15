@@ -412,7 +412,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(center.calls, contains('list:unlocks_ending'));
       expect(find.text('Ferme du Nord'), findsOneWidget);
-      expect(find.text('Analyses jusqu\'au 10/10 · offert par Mara'), findsOneWidget);
+      expect(find.text('Analyses jusqu\'au 10/10 · offert par Marakaj'), findsOneWidget);
       await tester.tap(find.text('Ferme du Nord'));
       await tester.pumpAndSettle();
       expect(find.text('page ${Routes.consoleOrg('f1')}'), findsOneWidget);
@@ -537,26 +537,26 @@ void main() {
       final center = _Center()
         ..entries = [
           JournalEntry(id: 'a1', at: DateTime(2026, 10, 7, 14, 30), kind: 'setting',
-              summary: 'Réglage pro_price_month : 2500 → 3000', actor: 'Mara',
+              summary: 'Réglage pro_price_month : 2500 → 3000', actor: 'Marakaj',
               before: const {'key': 'pro_price_month', 'value': 2500},
               after: const {'key': 'pro_price_month', 'value': 3000}, undoable: true),
           JournalEntry(id: 'a2', at: DateTime(2026, 10, 7, 14), kind: 'message',
-              summary: 'Message à Ferme du Nord : « Bonjour »', actor: 'Mara',
+              summary: 'Message à Ferme du Nord : « Bonjour »', actor: 'Marakaj',
               orgId: 'f1', orgName: 'Ferme du Nord'),
           JournalEntry(id: 'a3', at: DateTime(2026, 10, 6), kind: 'archive',
-              summary: 'Entreprise archivée : Entraide', actor: 'Mara',
-              undoneAt: DateTime(2026, 10, 6, 9), undoneBy: 'Mara'),
+              summary: 'Entreprise archivée : Entraide', actor: 'Marakaj',
+              undoneAt: DateTime(2026, 10, 6, 9), undoneBy: 'Marakaj'),
         ];
       await tester.pumpWidget(MaterialApp(home: JournalSection(center: center)));
       await tester.pumpAndSettle();
       final n = NumberFormat.decimalPattern('fr_FR');
-      expect(find.text('Prix de Mara Pro, par mois — FCFA (zone franc CFA) : ${n.format(2500)} → ${n.format(3000)}'),
+      expect(find.text('Prix de Marakaj Pro, par mois — FCFA (zone franc CFA) : ${n.format(2500)} → ${n.format(3000)}'),
           findsOneWidget,
           reason: 'a setting is named, its values written as numbers');
       expect(find.byKey(const Key('journal-undo-a1')), findsOneWidget);
       expect(find.byKey(const Key('journal-undo-a2')), findsNothing, reason: 'a message is not unsent');
       expect(find.byKey(const Key('journal-undo-a3')), findsNothing, reason: 'undone already');
-      expect(find.textContaining('Annulée par Mara'), findsOneWidget);
+      expect(find.textContaining('Annulée par Marakaj'), findsOneWidget);
       await tester.tap(find.byKey(const Key('journal-undo-a1')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('journal-undo-confirm')));
@@ -570,15 +570,15 @@ void main() {
       await _size(tester, 1280);
       final center = _Center()
         ..values = {
-          'pro_price_month': SettingValue(value: 2500, updatedAt: DateTime(2026, 10, 1), changedBy: 'Mara'),
+          'pro_price_month': SettingValue(value: 2500, updatedAt: DateTime(2026, 10, 1), changedBy: 'Marakaj'),
           'wave_checkout': const SettingValue(value: false),
           'path_gates_open': const SettingValue(value: 0),
           'admin_two_step': const SettingValue(value: false),
         };
       await tester.pumpWidget(MaterialApp(home: SettingsSection(center: center, card: 'pro')));
       await tester.pumpAndSettle();
-      expect(find.text('Prix de Mara Pro, par mois — FCFA (zone franc CFA)'), findsOneWidget);
-      expect(find.text('Changé par Mara le 01/10/2026'), findsOneWidget);
+      expect(find.text('Prix de Marakaj Pro, par mois — FCFA (zone franc CFA)'), findsOneWidget);
+      expect(find.text('Changé par Marakaj le 01/10/2026'), findsOneWidget);
       await tester.tap(find.byKey(const Key('setting-pro_price_month')));
       await tester.pumpAndSettle();
       await tester.enterText(find.byKey(const Key('setting-field')), '-5');

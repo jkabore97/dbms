@@ -481,7 +481,7 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
     final phone = widget.whatsApp;
     if (phone == null) return;
     final proved = await Navigator.of(context).push(WhatsAppVerifyScreen.route(phone,
-        intro: context.tr('Avant de créer votre activité, Mara vérifie votre numéro WhatsApp.')));
+        intro: context.tr('Avant de créer votre activité, Marakaj vérifie votre numéro WhatsApp.')));
     if (!mounted || proved == null) return;
     final country = countryOfNumber(proved) ?? defaultCountry;
     setState(() {
@@ -577,12 +577,12 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
       body = _Message(
         key: const Key('create-locked'),
         icon: Icons.lock_outline,
-        title: context.tr('Une deuxième activité : avec Mara Pro'),
+        title: context.tr('Une deuxième activité : avec Marakaj Pro'),
         // The iPhone app sells no Pro (125): what a second activity needs,
         // said plainly, with no way to buy it.
         line: sellsProInApp
-            ? context.tr('Vous avez déjà une activité sur Mara. Passez-la à Mara Pro pour en créer une deuxième.')
-            : context.tr('Vous avez déjà une activité sur Mara. Une deuxième activité fait partie de Mara Pro.'),
+            ? context.tr('Vous avez déjà une activité sur Marakaj. Passez-la à Marakaj Pro pour en créer une deuxième.')
+            : context.tr('Vous avez déjà une activité sur Marakaj. Une deuxième activité fait partie de Marakaj Pro.'),
         // Never a dead end (122): the way to Pro on the activity owned,
         // beside the way back.
         action: Column(
@@ -1090,7 +1090,7 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(context.tr('Mara demande un numéro WhatsApp vérifié pour créer une activité.'),
+              Text(context.tr('Marakaj demande un numéro WhatsApp vérifié pour créer une activité.'),
                   style: theme.textTheme.bodyLarge),
               const SizedBox(height: 10),
               FilledButton.icon(

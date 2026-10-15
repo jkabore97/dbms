@@ -116,7 +116,7 @@ void main() {
         await pump(tester, o, ActivitySwitchMode.pro);
         await tester.tap(find.byKey(const Key('switch-activity')));
         await tester.pumpAndSettle();
-        expect(find.text('Une deuxième activité demande Mara Pro'), findsOneWidget);
+        expect(find.text('Une deuxième activité demande Marakaj Pro'), findsOneWidget);
         expect(find.byKey(const Key('activity-create')), findsNothing);
         final go = find.byKey(const Key('activity-go-pro'));
         expect(tester.widget<FilledButton>(go).onPressed, isNotNull, reason: 'never a dead button');

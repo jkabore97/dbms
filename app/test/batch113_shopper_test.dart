@@ -524,7 +524,7 @@ void main() {
       await tester.tap(find.byKey(const Key('report-send')));
       await settle(tester);
       expect(me.reports.single, {'topic': 'delivery', 'message': 'Le livreur ne trouve pas ma maison.', 'slug': null, 'order': null});
-      expect(find.text('Merci : Mara a reçu votre signalement et vous répondra dans vos notifications.'), findsOneWidget);
+      expect(find.text('Merci : Marakaj a reçu votre signalement et vous répondra dans vos notifications.'), findsOneWidget);
     });
 
     testWidgets('« Supprimer mon compte »: the word first; the server\'s refusal said; done, signed out', (tester) async {
@@ -548,10 +548,10 @@ void main() {
           findsOneWidget);
       expect(admin.deleted, 0);
       // The Worker's 409 when GoTrue could not delete (a key nobody checked).
-      admin.refuse = StateError('La suppression n\'a pas pu se faire — écrivez à Mara.');
+      admin.refuse = StateError('La suppression n\'a pas pu se faire — écrivez à Marakaj.');
       await tester.tap(confirm);
       await settle(tester);
-      expect(find.text('La suppression n\'a pas pu se faire — écrivez à Mara.'), findsOneWidget);
+      expect(find.text('La suppression n\'a pas pu se faire — écrivez à Marakaj.'), findsOneWidget);
       expect(admin.deleted, 0);
       admin.refuse = null;
       await tester.tap(confirm);
@@ -569,7 +569,7 @@ void main() {
       await tester.pump();
       await tester.tap(find.byKey(const Key('delete-confirm')));
       await settle(tester);
-      expect(find.text('La suppression en ligne n\'est pas encore ouverte : écrivez à Mara et votre compte sera supprimé.'),
+      expect(find.text('La suppression en ligne n\'est pas encore ouverte : écrivez à Marakaj et votre compte sera supprimé.'),
           findsOneWidget);
       expect(admin.deleted, 0);
     });
@@ -858,7 +858,7 @@ void main() {
       );
       expect(notificationTarget(news, isAdminOf: (_) => false), Routes.storefront('boutique-awa'));
       final answered = NotificationRow(
-        id: 'n2', kind: 'report_handled', message: 'Mara a traité votre signalement.', createdAt: DateTime(2026, 10, 8));
+        id: 'n2', kind: 'report_handled', message: 'Marakaj a traité votre signalement.', createdAt: DateTime(2026, 10, 8));
       expect(notificationTarget(answered), isNull);
     });
 

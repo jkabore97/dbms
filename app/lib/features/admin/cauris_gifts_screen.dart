@@ -286,7 +286,7 @@ class _OrgGiftsState extends State<OrgGifts> {
             key: const Key('gift-unlock'),
             icon: Icons.lock_open_outlined,
             title: context.tr('Ouvrir un outil jusqu\'à une date'),
-            line: context.tr('Offert par Mara : aucun cauri dépensé.'),
+            line: context.tr('Offert par Marakaj : aucun cauri dépensé.'),
             onTap: () => _give(GiftKind.unlock),
           ),
         ],
@@ -338,7 +338,7 @@ class _WalletCard extends StatelessWidget {
           for (final e in open)
             Text(
               context.tr('{tool} ouvert jusqu\'au {date}', {
-                'tool': e.key == 'pro_all' ? context.tr('Mara Pro complet') : PlanTerms.labelOf(e.key),
+                'tool': e.key == 'pro_all' ? context.tr('Marakaj Pro complet') : PlanTerms.labelOf(e.key),
                 'date': DateFormat('dd/MM').format(e.value.until!.toLocal()),
               }),
               style: theme.textTheme.bodySmall?.copyWith(color: maraPaper),
@@ -555,7 +555,7 @@ class _GiftSheetState extends State<GiftSheet> {
                       value: t.feature,
                       child: Text(
                         t.feature == 'pro_all'
-                            ? context.tr('Mara Pro complet')
+                            ? context.tr('Marakaj Pro complet')
                             : PlanTerms.labelOf(t.feature),
                         overflow: TextOverflow.ellipsis,
                       ),

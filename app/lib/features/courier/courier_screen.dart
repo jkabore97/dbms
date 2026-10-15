@@ -642,7 +642,7 @@ class _EarningsStrip extends StatelessWidget {
         Text(
             '${(today?.courses ?? 0) > 1 ? context.tr('{n} courses', {'n': today!.courses}) : context.tr('{n} course', {'n': today?.courses ?? 0})}'
             ' · ${(today?.km ?? 0).toStringAsFixed(1)} km'
-            '${(today?.share ?? 0) > 0 ? ' · ${context.tr('part Mara {amount}', {'amount': money.format(today!.share)})}' : ''}',
+            '${(today?.share ?? 0) > 0 ? ' · ${context.tr('part Marakaj {amount}', {'amount': money.format(today!.share)})}' : ''}',
             style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
       ],
     );
@@ -1102,7 +1102,7 @@ class _CashStrip extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
                   child: Text(
-                      context.tr('La boutique confirme dans Mara quand elle a reçu l\'argent ; la ligne disparaît alors d\'ici.'),
+                      context.tr('La boutique confirme dans Marakaj quand elle a reçu l\'argent ; la ligne disparaît alors d\'ici.'),
                       style: const TextStyle(fontSize: 13, color: ShopStyle.mist)),
                 ),
               ],

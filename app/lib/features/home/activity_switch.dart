@@ -142,12 +142,12 @@ class ActivitySwitchSheet extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(context.tr('Une deuxième activité demande Mara Pro'),
+                            Text(context.tr('Une deuxième activité demande Marakaj Pro'),
                                 style: theme.textTheme.titleSmall
                                     ?.copyWith(fontWeight: FontWeight.w700)),
                             const SizedBox(height: 4),
                             Text(
-                              context.tr('Avec Mara Pro, vous gérez plusieurs activités depuis le même compte et passez de l\'une à l\'autre ici.'),
+                              context.tr('Avec Marakaj Pro, vous gérez plusieurs activités depuis le même compte et passez de l\'une à l\'autre ici.'),
                               style: theme.textTheme.bodyMedium,
                             ),
                           ],

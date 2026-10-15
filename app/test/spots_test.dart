@@ -33,7 +33,7 @@ class _Admin extends AdminRepository {
 
   @override
   Future<SpotTerms> spotTerms() async =>
-      const SpotTerms(wave: '+226 70 11 22 33', waveName: 'Mara');
+      const SpotTerms(wave: '+226 70 11 22 33', waveName: 'Marakaj');
 
   @override
   Future<String> requestPromotion(String orgId,

@@ -150,12 +150,12 @@ class _GateNavigator extends StatelessWidget {
 
 /// The key points of the terms, said at the gate (5–7 lines).
 List<String> termsSummary(BuildContext context) => [
-      context.tr('Mara est une plateforme exploitée par KAJ Consulting LLC : chaque entreprise vend elle-même et répond de ses articles, de ses prix et de ses livraisons.'),
-      context.tr('Un compte par personne, avec des informations vraies. Gardez secrets votre mot de passe et vos codes : Mara ne les demande jamais.'),
+      context.tr('Marakaj est une plateforme exploitée par KAJ Consulting LLC : chaque entreprise vend elle-même et répond de ses articles, de ses prix et de ses livraisons.'),
+      context.tr('Un compte par personne, avec des informations vraies. Gardez secrets votre mot de passe et vos codes : Marakaj ne les demande jamais.'),
       context.tr('Interdits : la fraude, les fausses commandes, les articles illégaux, contrefaits ou volés, et se faire passer pour quelqu\'un d\'autre.'),
-      context.tr('Payez une commande seulement par les moyens convenus dans Mara, et ne donnez le code de livraison qu\'à la remise.'),
+      context.tr('Payez une commande seulement par les moyens convenus dans Marakaj, et ne donnez le code de livraison qu\'à la remise.'),
       context.tr('Les cauris n\'ont pas de valeur en argent ; ceux gagnés par la fraude sont annulés.'),
-      context.tr('Mara peut vérifier une identité, retirer un contenu et suspendre un compte en cas de fraude ou de plainte.'),
+      context.tr('Marakaj peut vérifier une identité, retirer un contenu et suspendre un compte en cas de fraude ou de plainte.'),
     ];
 
 /// « Engagements du vendeur » (142's seller, version 1): accepted before a
@@ -167,7 +167,7 @@ List<String> sellerCommitments(BuildContext context) => [
       context.tr('Mes photos, mes prix et mes stocks sont vrais et à jour.'),
       context.tr('J\'honore les commandes que j\'accepte, et je préviens le client en cas de problème.'),
       context.tr('Je ne demande jamais de payer en dehors des moyens convenus dans la commande.'),
-      context.tr('Mara peut vérifier mon identité et me demander des pièces ; en cas de fraude, mon activité peut être fermée.'),
+      context.tr('Marakaj peut vérifier mon identité et me demander des pièces ; en cas de fraude, mon activité peut être fermée.'),
     ];
 
 /// A titled list of lines with its box to tick: the seller's commitments,
@@ -377,8 +377,8 @@ class _TermsGatePageState extends State<TermsGatePage> {
                         const SizedBox(height: 6),
                         Text(
                           changed
-                              ? context.tr('Lisez ce qui change, puis acceptez la nouvelle version pour continuer à utiliser Mara.')
-                              : context.tr('Mara protège ses clients et ses entreprises contre la fraude. Lisez l\'essentiel, puis acceptez pour continuer.'),
+                              ? context.tr('Lisez ce qui change, puis acceptez la nouvelle version pour continuer à utiliser Marakaj.')
+                              : context.tr('Marakaj protège ses clients et ses entreprises contre la fraude. Lisez l\'essentiel, puis acceptez pour continuer.'),
                           style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                         ),
                         if (changes != null) ...[
@@ -431,7 +431,7 @@ class _TermsGatePageState extends State<TermsGatePage> {
                             key: const Key('terms-seller'),
                             checkKey: const Key('terms-seller-accept'),
                             title: context.tr('Engagements du vendeur'),
-                            intro: context.tr('Vous tenez une activité sur Mara : vous vous engagez à ceci.'),
+                            intro: context.tr('Vous tenez une activité sur Marakaj : vous vous engagez à ceci.'),
                             lines: sellerCommitments(context),
                             checkLabel: context.tr('J\'accepte les engagements du vendeur'),
                             checked: _seller,
@@ -444,7 +444,7 @@ class _TermsGatePageState extends State<TermsGatePage> {
                             key: const Key('terms-courier'),
                             checkKey: const Key('terms-courier-accept'),
                             title: context.tr('La charte du livreur'),
-                            intro: context.tr('Vous livrez avec Mara : la charte a changé.'),
+                            intro: context.tr('Vous livrez avec Marakaj : la charte a changé.'),
                             lines: courierCharter(context),
                             checkLabel: context.tr('J\'ai lu et j\'accepte la charte du livreur'),
                             checked: _courier,

@@ -200,7 +200,7 @@ class _UnlockSheetState extends State<UnlockSheet> {
     final theme = Theme.of(context);
     final tool = _tool;
     final label = widget.feature == 'pro_all'
-        ? context.tr('Mara Pro complet : tous les outils, sans limite')
+        ? context.tr('Marakaj Pro complet : tous les outils, sans limite')
         : PlanTerms.labelOf(widget.feature);
     final waits = tool.waitsDays;
     final canBuy = widget.org.isAdmin && !_reading && _missing == 0 && waits == null;
@@ -349,7 +349,7 @@ class _UnlockSheetState extends State<UnlockSheet> {
                     Navigator.of(context).pop();
                     context.push(Routes.inside(widget.org.id, 'kaj-pro'));
                   },
-                  child: Text(context.tr('Ou passer à Mara Pro')),
+                  child: Text(context.tr('Ou passer à Marakaj Pro')),
                 ),
             ],
           ],
@@ -396,7 +396,7 @@ class ProOnlySheet extends StatelessWidget {
                 Expanded(
                   child: Text(
                     f == null || f == 'pro_all'
-                        ? context.tr('Mara Pro')
+                        ? context.tr('Marakaj Pro')
                         : PlanTerms.labelOf(f),
                     style: theme.textTheme.titleMedium,
                   ),
@@ -404,7 +404,7 @@ class ProOnlySheet extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 14),
-            Text(context.tr('Cette fonction fait partie de Mara Pro.'),
+            Text(context.tr('Cette fonction fait partie de Marakaj Pro.'),
                 style: theme.textTheme.bodyLarge),
             const SizedBox(height: 18),
             FilledButton(

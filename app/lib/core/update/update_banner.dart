@@ -55,8 +55,8 @@ class UpdateBanner extends StatelessWidget {
                       Expanded(
                         child: Text(
                           check.isWeb
-                              ? context.tr('Une nouvelle version de Mara est en ligne.')
-                              : context.tr('Une nouvelle version de Mara est disponible.'),
+                              ? context.tr('Une nouvelle version de Marakaj est en ligne.')
+                              : context.tr('Une nouvelle version de Marakaj est disponible.'),
                           style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onInverseSurface),
                         ),

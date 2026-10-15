@@ -111,9 +111,9 @@ String courierDate(BuildContext context, DateTime at) =>
 /// together; ticking it is the courier's acceptance (142's trigger), and an
 /// approved courier accepts a new one at the gate (terms_gate.dart).
 List<String> courierCharter(BuildContext context) => [
-      context.tr('Je travaille à mon compte : je ne suis employé ni par Mara ni par la boutique.'),
+      context.tr('Je travaille à mon compte : je ne suis employé ni par Marakaj ni par la boutique.'),
       context.tr('Je livre ce que la boutique m\'a confié, sans l\'ouvrir ni rien en retirer.'),
-      context.tr('J\'encaisse le montant exact affiché dans Mara et je remets à la boutique ce qui lui revient, le jour même.'),
+      context.tr('J\'encaisse le montant exact affiché dans Marakaj et je remets à la boutique ce qui lui revient, le jour même.'),
       context.tr('Je respecte le client : je suis poli et à l\'heure, et je ne garde ni son numéro ni son adresse pour autre chose que sa livraison.'),
       context.tr('Je respecte le code de la route, je porte un casque à moto et je ne livre jamais après avoir bu de l\'alcool.'),
       context.tr('Je préviens la boutique et le client en cas de retard ou de problème.'),

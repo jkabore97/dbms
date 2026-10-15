@@ -53,15 +53,15 @@ class PaySafetyLine extends StatelessWidget {
           {bool alsoWave = false, PayAt at = PayAt.either}) =>
       switch ((way, at, alsoWave)) {
         (PayWay.wave, _, _) => context.tr(
-            'Payez par Wave seulement depuis Mara, une fois la commande acceptée — jamais à un numéro reçu par message ou par appel.'),
+            'Payez par Wave seulement depuis Marakaj, une fois la commande acceptée — jamais à un numéro reçu par message ou par appel.'),
         (PayWay.cash, PayAt.pickup, true) => context.tr(
-            'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez au retrait, ou par Wave dans Mara.'),
+            'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez au retrait, ou par Wave dans Marakaj.'),
         (PayWay.cash, PayAt.pickup, false) => context.tr(
             'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez au retrait.'),
         (PayWay.cash, PayAt.delivery, _) => context.tr(
             'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez à la livraison, quand vous recevez la commande.'),
         (PayWay.cash, PayAt.either, true) => context.tr(
-            'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez à la livraison, au retrait, ou par Wave dans Mara.'),
+            'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez à la livraison, au retrait, ou par Wave dans Marakaj.'),
         (PayWay.cash, PayAt.either, false) => context.tr(
             'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez à la livraison ou au retrait.'),
       };

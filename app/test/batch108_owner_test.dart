@@ -242,13 +242,13 @@ void main() {
       expect(enabled(tester), isTrue);
     });
 
-    testWidgets('Mara sets a tool\'s wait with its price; a photo slot has no wait', (tester) async {
+    testWidgets('Marakaj sets a tool\'s wait with its price; a photo slot has no wait', (tester) async {
       await _tall(tester);
       final prices = _Prices();
       await tester.pumpWidget(_app(SingleChildScrollView(child: CaurisConsoleCard(cauris: prices))));
       await tester.pump();
       await tester.pump();
-      expect(find.text('après 60 jours sur Mara'), findsOneWidget);
+      expect(find.text('après 60 jours sur Marakaj'), findsOneWidget);
       await tester.tap(find.byKey(const Key('cost-accounting')));
       await tester.pumpAndSettle();
       await tester.enterText(find.byKey(const Key('cost-wait')), '30');
@@ -264,7 +264,7 @@ void main() {
       expect(prices.saved.last, 'photo_slot 60 0');
     });
 
-    testWidgets('a tool on the path offers Mara Pro complet in cauris, when there is a price',
+    testWidgets('a tool on the path offers Marakaj Pro complet in cauris, when there is a price',
         (tester) async {
       Future<PathState?> none() async => null;
       await _tall(tester);
@@ -272,7 +272,7 @@ void main() {
           org: _shop, feature: 'invoices', load: none, onPath: () {},
           proAllCost: 1500, onProAll: () {})));
       await tester.pump();
-      expect(find.text('Ou tout ouvrir maintenant : Mara Pro complet, 1500 cauris'), findsOneWidget);
+      expect(find.text('Ou tout ouvrir maintenant : Marakaj Pro complet, 1500 cauris'), findsOneWidget);
       await tester.pumpWidget(_app(PathGateSheet(
           org: _shop, feature: 'invoices', load: none, onPath: () {})));
       await tester.pump();

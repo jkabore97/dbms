@@ -543,10 +543,10 @@ class _HelpRequestFlowState extends State<HelpRequestFlow> {
         footer: Text(
           none
               ? context.tr(
-                  'Vous avez fait toutes vos demandes pour aujourd\'hui. Réessayez demain, ou écrivez à Mara.',
+                  'Vous avez fait toutes vos demandes pour aujourd\'hui. Réessayez demain, ou écrivez à Marakaj.',
                 )
               : context.tr(
-                  'Mara joint l\'écran, l\'entreprise et la version de l\'app.',
+                  'Marakaj joint l\'écran, l\'entreprise et la version de l\'app.',
                 ),
           key: const Key('help-flow-footer'),
           textAlign: TextAlign.center,

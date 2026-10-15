@@ -593,7 +593,7 @@ void main() {
     test('what went wrong, in words: Supabase\'s codes and the Worker\'s sentences', () {
       String say(Object e, {bool confirming = false}) => whatsAppProblem('fr', e, confirming: confirming);
       expect(say(const AuthException('Phone number already registered', code: 'phone_exists')),
-          'Ce numéro est déjà celui d\'un autre compte Mara.');
+          'Ce numéro est déjà celui d\'un autre compte Marakaj.');
       expect(say(const AuthException('For security purposes, you can only request this after 42 seconds.',
               statusCode: '429', code: 'over_sms_send_rate_limit')),
           'Patientez une minute avant de demander un nouveau code.');
@@ -605,7 +605,7 @@ void main() {
       expect(say(StateError('x')), 'Le code n\'a pas pu partir sur WhatsApp. Réessayez dans un moment.');
       expect(say(StateError('x'), confirming: true), startsWith('Le code n\'a pas pu être vérifié'));
       expect(whatsAppProblem('en', const AuthException('x', code: 'phone_exists')),
-          'This number already belongs to another Mara account.');
+          'This number already belongs to another Marakaj account.');
     });
 
     testWidgets('a number refused by Supabase is said on the screen', (tester) async {
@@ -618,7 +618,7 @@ void main() {
       await tester.pump();
       await tester.pump();
       expect(find.byKey(const Key('whatsapp-error')), findsOneWidget);
-      expect(find.text('Ce numéro est déjà celui d\'un autre compte Mara.'), findsOneWidget);
+      expect(find.text('Ce numéro est déjà celui d\'un autre compte Marakaj.'), findsOneWidget);
       expect(find.byKey(const Key('whatsapp-code')), findsNothing, reason: 'still on the number');
     });
 

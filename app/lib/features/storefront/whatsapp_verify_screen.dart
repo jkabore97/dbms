@@ -162,7 +162,7 @@ class _WhatsAppVerifyScreenState extends State<WhatsAppVerifyScreen> {
                     const SizedBox(height: 12),
                     Text(
                       widget.intro ??
-                          context.tr('Avant votre première commande, Mara vérifie votre numéro : la boutique pourra vous joindre.'),
+                          context.tr('Avant votre première commande, Marakaj vérifie votre numéro : la boutique pourra vous joindre.'),
                       textAlign: TextAlign.center,
                       style: const TextStyle(fontSize: 16, color: ShopStyle.ink, height: 1.35),
                     ),

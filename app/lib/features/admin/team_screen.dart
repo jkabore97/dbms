@@ -867,9 +867,9 @@ class SeatCard extends StatelessWidget {
     if (seats.unlimited) {
       title = context.tr('Équipe sans limite');
       line = seats.until == null
-          ? context.tr('Avec Mara Pro, ajoutez autant de personnes que vous voulez.')
+          ? context.tr('Avec Marakaj Pro, ajoutez autant de personnes que vous voulez.')
           : seats.gift
-              ? context.tr('Offert par Mara jusqu\'au {date}', {'date': _date(seats.until!)})
+              ? context.tr('Offert par Marakaj jusqu\'au {date}', {'date': _date(seats.until!)})
               : context.tr('Débloquée avec vos cauris jusqu\'au {date}',
                   {'date': _date(seats.until!)});
     } else if (!seats.setupDone) {
@@ -890,7 +890,7 @@ class SeatCard extends StatelessWidget {
           ? context.tr('{used} personnes (limite : {free})',
               {'used': seats.used, 'free': seats.free})
           : context.tr('{used} / {free}', {'used': seats.used, 'free': seats.free});
-      line = context.tr('Pour ajouter quelqu\'un d\'autre : Mara Pro, ou l\'équipe débloquée avec des cauris.');
+      line = context.tr('Pour ajouter quelqu\'un d\'autre : Marakaj Pro, ou l\'équipe débloquée avec des cauris.');
     }
     final locked = !seats.unlimited && !seats.open;
     final setup = !seats.unlimited && !seats.setupDone && onFinishSetup != null;

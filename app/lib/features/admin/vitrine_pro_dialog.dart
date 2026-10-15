@@ -82,7 +82,7 @@ class VitrineProDialog extends StatelessWidget {
       scrollable: true,
       icon: const Icon(Icons.workspace_premium, color: maraCaramel, size: 30),
       title: Text(
-        context.tr('Ces choix viennent avec Mara Pro'),
+        context.tr('Ces choix viennent avec Marakaj Pro'),
         key: const Key('vitrine-pro-dialog-title'),
         textAlign: TextAlign.center,
         style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
@@ -113,7 +113,7 @@ class VitrineProDialog extends StatelessWidget {
                     ? context.tr(
                         'Sans Pro, votre vitrine reste en grille. Vos choix sont gardés : ils s\'activent dès que vous passez à Pro.')
                     : context.tr(
-                        'Sans Pro, votre vitrine reste en grille. Vos choix sont gardés : ils font partie de Mara Pro.')
+                        'Sans Pro, votre vitrine reste en grille. Vos choix sont gardés : ils font partie de Marakaj Pro.')
                 : context.tr(
                     'Sans Pro, votre vitrine reste en grille. Pour le moment, ces choix ne peuvent pas être gardés : il faudra les refaire une fois Pro activé.'),
             key: const Key('vitrine-pro-dialog-body'),

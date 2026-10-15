@@ -161,7 +161,7 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
                       Text(
                         _enrolling
                             ? context.tr('Ce compte gère toutes les entreprises. Pour l\'ouvrir, il faudra désormais votre mot de passe et un code à 6 chiffres donné par une application sur votre téléphone.')
-                            : context.tr('Ouvrez votre application d\'authentification et entrez le code à 6 chiffres affiché pour Mara.'),
+                            : context.tr('Ouvrez votre application d\'authentification et entrez le code à 6 chiffres affiché pour Marakaj.'),
                         textAlign: TextAlign.center,
                         style: t.textTheme.bodyMedium,
                       ),
@@ -218,7 +218,7 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
                       Text(
                         _enrolling
                             ? context.tr('À l’activation, les autres appareils connectés à ce compte sont déconnectés.')
-                            : context.tr('Téléphone perdu ? Dans le tableau de bord Supabase : Authentication › Users › ce compte › supprimez son facteur. Mara proposera alors d\'en ajouter un nouveau.'),
+                            : context.tr('Téléphone perdu ? Dans le tableau de bord Supabase : Authentication › Users › ce compte › supprimez son facteur. Marakaj proposera alors d\'en ajouter un nouveau.'),
                         textAlign: TextAlign.center,
                         style: t.textTheme.bodySmall,
                       ),
@@ -260,7 +260,7 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
       ),
       step(
         '2',
-        'Ajoutez Mara : scannez ce code depuis un autre écran, ou touchez le bouton sur ce téléphone.',
+        'Ajoutez Marakaj : scannez ce code depuis un autre écran, ou touchez le bouton sur ce téléphone.',
       ),
       const SizedBox(height: 8),
       Center(

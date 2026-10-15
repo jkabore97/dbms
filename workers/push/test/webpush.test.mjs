@@ -173,11 +173,19 @@ test("a tap lands where the bell points", () => {
     "https://dbms.kabore-boss.workers.dev/console/formateurs/aide");
 });
 
-test("the bell says Mara, whatever name the database's sentence was written in", () => {
+test("the bell says Marakaj, whatever name the database's sentence was written in", () => {
   const p = payloadFor({ kind: "pro_active", org_id: "o1",
     message: "Kaj Pro est actif jusqu'au 10/03/2030. Kaj Consulting vous remercie." }, {});
-  assert.equal(p.title, "Mara");
-  assert.equal(p.body, "Mara Pro est actif jusqu'au 10/03/2030. Kaj Consulting vous remercie.");
+  assert.equal(p.title, "Marakaj");
+  assert.equal(p.body, "Marakaj Pro est actif jusqu'au 10/03/2030. Kaj Consulting vous remercie.");
+  // A database before 147 says « Mara »; one after it says Marakaj, and a
+  // shop's own « Maraîchage » or a name already new is left alone.
+  assert.equal(payloadFor({ kind: "x", message: "Mara a arrêté votre mise en avant." }, {}).body,
+    "Marakaj a arrêté votre mise en avant.");
+  assert.equal(payloadFor({ kind: "x", message: "Marakaj a traité votre signalement. Merci !" }, {}).body,
+    "Marakaj a traité votre signalement. Merci !");
+  assert.equal(payloadFor({ kind: "x", message: "Nouvelle commande — Maraîchage Awa" }, {}).body,
+    "Nouvelle commande — Maraîchage Awa");
 });
 
 test("deliver counts what was sent, what was dead, and what failed", async () => {
@@ -317,7 +325,7 @@ test("deliver rings browsers and phones; phones stay dormant without the secret"
   assert.equal(sends.length, 2);
   assert.ok(sends.every((c) => c.init.headers.Authorization === "Bearer ya29.test"));
   const sent = JSON.parse(sends[0].init.body).message;
-  assert.deepEqual(sent.notification, { title: "Mara", body: "Prête" });
+  assert.deepEqual(sent.notification, { title: "Marakaj", body: "Prête" });
   assert.deepEqual(sent.data, { path: "/mes-commandes", url: "https://app.example/mes-commandes" });
   assert.equal(sent.android.notification.channel_id, "mara_alerts");
   // One token for both phones (cached), the gone one dropped by its endpoint.

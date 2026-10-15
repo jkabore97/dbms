@@ -104,7 +104,7 @@ void main() {
         'pro_price_month': 3000,
         'pro_price_year': '30000',
         'platform_wave': '+226 70 00 00 00',
-        'platform_wave_name': 'Mara',
+        'platform_wave_name': 'Marakaj',
       });
       expect(terms.proFeatures, ['analytics', 'payroll']);
       expect(terms.freeMaxStaff, 5);
@@ -124,7 +124,7 @@ void main() {
     test('a refusal for the plan is recognised by its first words', () {
       expect(
           isProRefusal(const PostgrestException(
-              message: 'Mara Pro : la formule gratuite garde 50 photos.',
+              message: 'Marakaj Pro : la formule gratuite garde 50 photos.',
               code: 'P0001')),
           isTrue);
       expect(
@@ -136,7 +136,7 @@ void main() {
 
   // The door to pay is the comparison page now (ProSheet.open pushes it);
   // the claims are the same, read where the owner meets them.
-  group('the paywall, on the Mara Pro page', () {
+  group('the paywall, on the Marakaj Pro page', () {
     Future<void> open(WidgetTester tester, _Admin admin,
         {required OrgSummary org}) async {
       tester.view.physicalSize = const Size(800, 3600);
@@ -167,7 +167,7 @@ void main() {
       expect(find.text('Bientôt disponible'), findsOneWidget);
       expect(find.text("J'ai payé"), findsNothing);
       expect(find.text('+226 70 00 00 00'), findsNothing,
-          reason: 'Mara Pro is paid by card only');
+          reason: 'Marakaj Pro is paid by card only');
     });
 
     testWidgets('an employee is told only the owner can, and has no button',
@@ -179,20 +179,20 @@ void main() {
               profile: _free.profile,
               roles: const ['employee']));
       expect(find.text("J'ai payé"), findsNothing);
-      expect(find.text('Seul le propriétaire peut passer à Mara Pro.'), findsOneWidget);
+      expect(find.text('Seul le propriétaire peut passer à Marakaj Pro.'), findsOneWidget);
     });
 
     testWidgets('on a Pro business it says so and asks for nothing',
         (tester) async {
       await open(tester, _Admin(), org: _pro);
-      expect(find.text('Vous êtes sur Mara Pro'), findsOneWidget);
+      expect(find.text('Vous êtes sur Marakaj Pro'), findsOneWidget);
       expect(find.text("J'ai payé"), findsNothing);
       expect(find.byKey(const Key('pro-price')), findsNothing);
       expect(find.byKey(const Key('pro-period')), findsNothing);
     });
   });
 
-  group('the platform\'s Mara Pro page', () {
+  group('the platform\'s Marakaj Pro page', () {
     testWidgets('lists the requests, closes one, and saves the number and prices',
         (tester) async {
       final admin = _Admin(
@@ -239,7 +239,7 @@ void main() {
       expect(find.text('Boutique Awa'), findsNothing);
 
       await tester.enterText(
-          find.widgetWithText(TextField, 'Nom affiché sur Wave'), 'Mara');
+          find.widgetWithText(TextField, 'Nom affiché sur Wave'), 'Marakaj');
       await tester.enterText(
           find.widgetWithText(TextField, 'Prix par mois (XOF)'), '3000');
       final save = find.text('Enregistrer le numéro et les prix');
@@ -249,7 +249,7 @@ void main() {
       await tester.pump();
 
       expect(admin.settings['platform_wave'], '+226 70 00 00 00');
-      expect(admin.settings['platform_wave_name'], 'Mara');
+      expect(admin.settings['platform_wave_name'], 'Marakaj');
       expect(admin.settings['pro_price_month'], 3000);
       expect(admin.settings['pro_price_year'], 25000);
       expect(find.textContaining('Enregistré.'), findsOneWidget);

@@ -54,7 +54,7 @@ Future<void> askAccountDeletion(
         final s = AppScope.of(context);
         if (!s.admin.canManageAccounts) {
           throw StateError(
-              'La suppression en ligne n\'est pas encore ouverte : écrivez à Mara et votre compte sera supprimé.');
+              'La suppression en ligne n\'est pas encore ouverte : écrivez à Marakaj et votre compte sera supprimé.');
         }
         // An Apple account, on the iPhone: Apple's sheet once more, for the
         // code that revokes Apple's token; on the website, Apple's popup
@@ -87,11 +87,11 @@ Future<void> askAccountDeletion(
 /// server's code (128's blocked_code) and the business it names; the
 /// server's own French only for a code this build does not know.
 String deletionBlockedText(BuildContext context, AccountDeletionPlan p) => switch (p.blockedCode) {
-      'platform' => context.tr('Ce compte gère la plateforme Mara : il ne peut pas être supprimé, sinon plus personne ne pourrait la gérer. Pour essayer la suppression, utilisez un autre compte.'),
+      'platform' => context.tr('Ce compte gère la plateforme Marakaj : il ne peut pas être supprimé, sinon plus personne ne pourrait la gérer. Pour essayer la suppression, utilisez un autre compte.'),
       'own_order' => context.tr('Une commande est en cours : attendez qu\'elle soit terminée, ou annulez-la, puis supprimez votre compte.'),
       'delivering' => context.tr('Une livraison est en cours : terminez-la, puis supprimez votre compte.'),
       'business_order' => context.tr('Une commande de « {name} » est en route ou déjà payée en ligne : livrez-la ou remboursez-la, puis supprimez votre compte.', {'name': p.blockedShop ?? ''}),
-      'payout' => context.tr('Mara doit encore verser à « {name} » l\'argent d\'une commande payée par Wave (versement en attente ou en échec) : attendez qu\'il arrive, ou écrivez à l\'aide Mara, puis supprimez votre compte.', {'name': p.blockedShop ?? ''}),
+      'payout' => context.tr('Marakaj doit encore verser à « {name} » l\'argent d\'une commande payée par Wave (versement en attente ou en échec) : attendez qu\'il arrive, ou écrivez à l\'aide Marakaj, puis supprimez votre compte.', {'name': p.blockedShop ?? ''}),
       _ => context.tr(p.blocked ?? ''),
     };
 
@@ -100,13 +100,13 @@ String deletionBlockedText(BuildContext context, AccountDeletionPlan p) => switc
 String accountRefusalText(BuildContext context, AccountRefused e) => switch (e.code) {
       'reauth' => context.tr('Par sécurité, reconnectez-vous avant de supprimer votre compte : la connexion doit dater de moins de 10 minutes.'),
       'not_stopped' => context.tr('Nous n\'avons pas pu arrêter l\'abonnement de « {name} » : rien n\'a été supprimé. Réessayez dans un moment ou écrivez à l\'aide.', {'name': e.name ?? ''}),
-      'platform' => context.tr('Ce compte gère la plateforme Mara : il ne peut pas être supprimé, sinon plus personne ne pourrait la gérer. Pour essayer la suppression, utilisez un autre compte.'),
+      'platform' => context.tr('Ce compte gère la plateforme Marakaj : il ne peut pas être supprimé, sinon plus personne ne pourrait la gérer. Pour essayer la suppression, utilisez un autre compte.'),
       'own_order' => context.tr('Une commande est en cours : attendez qu\'elle soit terminée, ou annulez-la, puis supprimez votre compte.'),
       'delivering' => context.tr('Une livraison est en cours : terminez-la, puis supprimez votre compte.'),
       'business_order' => context.tr('Une commande de « {name} » est en route ou déjà payée en ligne : livrez-la ou remboursez-la, puis supprimez votre compte.', {'name': e.name ?? ''}),
-      'payout' => context.tr('Mara doit encore verser à « {name} » l\'argent d\'une commande payée par Wave (versement en attente ou en échec) : attendez qu\'il arrive, ou écrivez à l\'aide Mara, puis supprimez votre compte.', {'name': e.name ?? ''}),
+      'payout' => context.tr('Marakaj doit encore verser à « {name} » l\'argent d\'une commande payée par Wave (versement en attente ou en échec) : attendez qu\'il arrive, ou écrivez à l\'aide Marakaj, puis supprimez votre compte.', {'name': e.name ?? ''}),
       'list_changed' => context.tr('La liste de vos activités a changé : relisez-la avant de supprimer votre compte.'),
-      'old_app' => context.tr('Mettez Mara à jour : la suppression d\'un compte qui tient une activité se confirme dans la dernière version de l\'application.'),
+      'old_app' => context.tr('Mettez Marakaj à jour : la suppression d\'un compte qui tient une activité se confirme dans la dernière version de l\'application.'),
       _ => context.tr(e.message),
     };
 
@@ -177,7 +177,7 @@ class DeletionSummary extends StatelessWidget {
               color: theme.colorScheme.errorContainer,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Text(context.tr('Votre abonnement Mara Pro de l\'App Store continue d\'être facturé par Apple tant que vous ne l\'annulez pas : Réglages › votre nom › Abonnements › Mara Pro. Mara ne peut pas l\'annuler pour vous.')),
+            child: Text(context.tr('Votre abonnement Marakaj Pro de l\'App Store continue d\'être facturé par Apple tant que vous ne l\'annulez pas : Réglages › votre nom › Abonnements › Marakaj Pro. Marakaj ne peut pas l\'annuler pour vous.')),
           ),
         ],
         if (plan.leaves.isNotEmpty) ...[

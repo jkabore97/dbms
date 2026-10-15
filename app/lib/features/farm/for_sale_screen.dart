@@ -203,14 +203,14 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
                 child: ListTile(
                   leading: const Icon(Icons.visibility_off_outlined),
                   title: Text(context.tr('Pas sur la vitrine pour le moment')),
-                  subtitle: Text(context.tr('Mara a retiré vos produits de la vitrine. Gardez-les ici : vous les vendez toujours à la ferme.')),
+                  subtitle: Text(context.tr('Marakaj a retiré vos produits de la vitrine. Gardez-les ici : vous les vendez toujours à la ferme.')),
                 ),
               )
             else
             Text(
               _association
                   ? context.tr('Livres, t-shirts, billets : ce que vous mettez ici, avec sa photo et son prix, est sur votre vitrine. Les gens commandent et viennent le chercher sur place.')
-                  : context.tr('Œufs, volailles, récoltes : ce que vous mettez ici, avec sa photo et son prix, est sur votre vitrine. Les clients commandent et viennent le chercher à la ferme ; la livraison vient avec Mara Pro.'),
+                  : context.tr('Œufs, volailles, récoltes : ce que vous mettez ici, avec sa photo et son prix, est sur votre vitrine. Les clients commandent et viennent le chercher à la ferme ; la livraison vient avec Marakaj Pro.'),
               style: theme.textTheme.bodyMedium
                   ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
@@ -657,7 +657,7 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
                 onChanged: _busy ? null : (v) => setState(() => _tracked = v),
                 title: Text(context.tr('Suivre le stock')),
                 subtitle: Text(_tracked
-                    ? context.tr('Mara compte ce qu\'il reste ; à zéro, il est épuisé.')
+                    ? context.tr('Marakaj compte ce qu\'il reste ; à zéro, il est épuisé.')
                     : context.tr('Pas de compte : toujours disponible sur la vitrine.')),
               ),
             if (_tracked) ...[

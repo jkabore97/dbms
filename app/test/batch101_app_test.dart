@@ -229,7 +229,7 @@ void main() {
           code: 'P0001'),
     )));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Mara Pro : les analyses'), findsOneWidget);
+    expect(find.textContaining('Marakaj Pro : les analyses'), findsOneWidget);
   });
 
   group('Équipe and the owner\'s settings (101 / 103)', () {

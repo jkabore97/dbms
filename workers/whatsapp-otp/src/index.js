@@ -193,7 +193,7 @@ export function hookTarget(payload) {
   }
   if (!String(user.email ?? "").trim()) {
     // A phone-only sign-up: not a way into Mara.
-    return { status: 403, error: "Un numéro se vérifie depuis un compte Mara existant." };
+    return { status: 403, error: "Un numéro se vérifie depuis un compte Marakaj existant." };
   }
   const phone = String(payload?.sms?.phone || user.new_phone || user.phone || "").replace(/\D/g, "");
   if (phone.length < 8 || phone.length > 15) {

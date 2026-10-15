@@ -250,7 +250,7 @@ void main() {
         seats: TeamSeats(free: 1, used: 2, unlimited: true, gift: true,
             until: DateTime(2026, 11, 30, 12)),
         onUnlock: () {})));
-    expect(find.text('Offert par Mara jusqu\'au 30/11'), findsOneWidget);
+    expect(find.text('Offert par Marakaj jusqu\'au 30/11'), findsOneWidget);
   });
 
   testWidgets('Compte: before the setup, what opens the seat; the payroll for staff who are not admins',
@@ -364,20 +364,20 @@ void main() {
       supportedLocales: Strings.supportedLocales,
       home: Builder(builder: (context) {
         gift = notificationLine(context, NotificationRow.fromRow({
-          'id': 'n1', 'kind': 'cauris_promo', 'org_id': 'a1', 'message': 'Mara vous offre…',
+          'id': 'n1', 'kind': 'cauris_promo', 'org_id': 'a1', 'message': 'Marakaj vous offre…',
           'created_at': '2026-10-07T10:00:00Z',
           'params': {'to': 'shop', 'points': 200, 'until': '2026-11-30', 'note': 'Fête'},
         }));
         tool = notificationLine(context, NotificationRow.fromRow({
-          'id': 'n2', 'kind': 'feature_gift', 'org_id': 'a1', 'message': 'Mara vous offre…',
+          'id': 'n2', 'kind': 'feature_gift', 'org_id': 'a1', 'message': 'Marakaj vous offre…',
           'created_at': '2026-10-07T10:00:00Z',
           'params': {'to': 'shop', 'feature': 'pro_all', 'until': '2026-11-30'},
         }));
         return const SizedBox();
       }),
     ));
-    expect(gift, 'Mara gives you 200 cauris, to spend before 30/11/2026: Fête.');
-    expect(tool, 'Mara gives you Full Mara Pro until 30/11/2026.');
+    expect(gift, 'Marakaj gives you 200 cauris, to spend before 30/11/2026: Fête.');
+    expect(tool, 'Marakaj gives you Full Marakaj Pro until 30/11/2026.');
     expect(
         notificationTarget(NotificationRow.fromRow({
           'id': 'n1', 'kind': 'cauris_gift', 'org_id': 'a1', 'message': '',

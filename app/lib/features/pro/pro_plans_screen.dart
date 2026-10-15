@@ -172,7 +172,7 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
     final sells = sellsDigitalInApp && !sellsProThroughStore;
 
     return Scaffold(
-      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Mara Pro'))),
+      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Marakaj Pro'))),
       body: ListView(
         padding: EdgeInsets.symmetric(horizontal: wide ? 48 : 20, vertical: 24),
         children: [
@@ -194,7 +194,7 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
                       children: [
                         Text(
                           org.isPro
-                              ? context.tr('Vous êtes sur Mara Pro')
+                              ? context.tr('Vous êtes sur Marakaj Pro')
                               : context.tr('Faites grandir {name}', {'name': org.name}),
                           textAlign: TextAlign.center,
                           style: theme.textTheme.headlineSmall
@@ -204,7 +204,7 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
                         Text(
                           org.isPro
                               ? context.tr('Tous les outils ci-dessous sont ouverts.')
-                              : context.tr('Mara reste gratuit pour le quotidien. Mara Pro ajoute la livraison, le paiement en ligne et les outils d\'une entreprise qui grandit.'),
+                              : context.tr('Marakaj reste gratuit pour le quotidien. Marakaj Pro ajoute la livraison, le paiement en ligne et les outils d\'une entreprise qui grandit.'),
                           textAlign: TextAlign.center,
                           style: muted,
                         ),
@@ -315,8 +315,8 @@ class _Returned extends StatelessWidget {
     final text = !paid
         ? context.tr('Paiement annulé : rien n\'a été prélevé.')
         : active
-            ? context.tr('Merci ! Mara Pro est actif.')
-            : context.tr('Merci ! Paiement reçu — Mara Pro s\'active dans quelques secondes.');
+            ? context.tr('Merci ! Marakaj Pro est actif.')
+            : context.tr('Merci ! Paiement reçu — Marakaj Pro s\'active dans quelques secondes.');
     return Container(
       key: const Key('stripe-returned'),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -375,7 +375,7 @@ class _EarnIt extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                    context.tr(sells ? 'Ou gagnez Mara Pro' : 'Gagnez Mara Pro'),
+                    context.tr(sells ? 'Ou gagnez Marakaj Pro' : 'Gagnez Marakaj Pro'),
                     style: theme.textTheme.titleMedium?.copyWith(
                         color: maraPaper, fontWeight: FontWeight.w700)),
               ),
@@ -383,7 +383,7 @@ class _EarnIt extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            context.tr('Vos commandes, vos clients fidèles et votre vitrine rapportent des cauris. Avec {cost} cauris, tout Mara Pro est à vous pour 30 jours — ou débloquez un seul outil pour moins.', {'cost': cost}),
+            context.tr('Vos commandes, vos clients fidèles et votre vitrine rapportent des cauris. Avec {cost} cauris, tout Marakaj Pro est à vous pour 30 jours — ou débloquez un seul outil pour moins.', {'cost': cost}),
             style: theme.textTheme.bodyMedium?.copyWith(color: maraPaper),
           ),
           const SizedBox(height: 12),
@@ -416,7 +416,7 @@ class _Header extends StatelessWidget {
           flex: 2,
           child: Column(
             children: [
-              Text(context.tr('Mara'), style: theme.textTheme.titleSmall),
+              Text(context.tr('Marakaj'), style: theme.textTheme.titleSmall),
               Text(context.tr('Gratuit'), style: theme.textTheme.bodySmall?.copyWith(color: kMist)),
             ],
           ),
@@ -431,7 +431,7 @@ class _Header extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Text(context.tr('Mara Pro'),
+                Text(context.tr('Marakaj Pro'),
                     style: theme.textTheme.titleSmall?.copyWith(color: kPaper)),
                 if (proPrice != null)
                   Text(proPrice!,
@@ -510,7 +510,7 @@ class ProPlansScreenRows {
           ],
         ),
         (
-          'Avec Mara Pro',
+          'Avec Marakaj Pro',
           [
             for (final f in t.proFeatures)
               PlanRow(PlanTerms.labelOf(f),

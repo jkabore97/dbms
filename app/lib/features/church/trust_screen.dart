@@ -207,9 +207,9 @@ class _TrustScreenState extends State<TrustScreen> {
                 key: const Key('trust-verify'),
                 value: t.verified,
                 onChanged: _busy ? null : _verify,
-                title: Text(context.tr('Vérifiée par Mara')),
+                title: Text(context.tr('Vérifiée par Marakaj')),
                 subtitle: Text(
-                    context.tr('Réservé à Mara : après avoir vu le récépissé et les responsables.')),
+                    context.tr('Réservé à Marakaj : après avoir vu le récépissé et les responsables.')),
               ),
             ],
           ],

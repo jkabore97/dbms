@@ -23,7 +23,7 @@ const ENV = {
   SUPABASE_SERVICE_ROLE_KEY: "service-key",
   MAIL_WEBHOOK_SECRET: "hook-secret",
   RESEND_API_KEY: "re_test_key",
-  MAIL_FROM: "Mara <bienvenue@marakaj.com>",
+  MAIL_FROM: "Marakaj <bienvenue@marakaj.com>",
   MAIL_REPLY_TO: "hello@kaj-consulting.com",
 };
 
@@ -96,7 +96,7 @@ test("without RESEND_API_KEY: nothing claimed, nothing sent, a clear log", async
   assert.match(f.logs[0], new RegExp(ID));
 });
 
-test("a claimed row is sent once, from Mara, replying to KAJ, and written back", async () => {
+test("a claimed row is sent once, from Marakaj, replying to KAJ, and written back", async () => {
   const f = fakes();
   const out = await welcome(ID, ENV, f.io);
   assert.deepEqual(out, { sent: true, id: "re_123" });
@@ -111,12 +111,12 @@ test("a claimed row is sent once, from Mara, replying to KAJ, and written back",
   assert.equal(claim.headers.apikey, "service-key");
   assert.equal(send.headers.Authorization, "Bearer re_test_key");
   assert.equal(send.headers["Idempotency-Key"], `welcome-${ID}`);
-  assert.equal(send.body.from, "Mara <bienvenue@marakaj.com>");
+  assert.equal(send.body.from, "Marakaj <bienvenue@marakaj.com>");
   assert.equal(send.body.reply_to, "hello@kaj-consulting.com");
   assert.deepEqual(send.body.to, ["awa@example.org"]);
-  assert.equal(send.body.subject, "Bienvenue sur Mara, Awa !");
+  assert.equal(send.body.subject, "Bienvenue sur Marakaj, Awa !");
   assert.match(send.body.html, /^<!DOCTYPE html>/);
-  assert.match(send.body.text, /Ouvrir Mara : https:\/\/marakaj\.com/);
+  assert.match(send.body.text, /Ouvrir Marakaj : https:\/\/marakaj\.com/);
   assert.deepEqual(done.body, { p_user: ID, p_ok: true, p_id: "re_123", p_error: null });
 });
 
@@ -124,15 +124,15 @@ test("the defaults hold without MAIL_FROM / MAIL_REPLY_TO", async () => {
   const f = fakes();
   await welcome(ID, { ...ENV, MAIL_FROM: undefined, MAIL_REPLY_TO: undefined }, f.io);
   const send = f.calls[1];
-  assert.equal(send.body.from, "Mara <bienvenue@marakaj.com>");
+  assert.equal(send.body.from, "Marakaj <bienvenue@marakaj.com>");
   assert.equal(send.body.reply_to, "hello@kaj-consulting.com");
 });
 
 test("English when the account's language is English", async () => {
   const f = fakes({ claim: { send: true, email: "j@example.org", first_name: "John", lang: "en" } });
   await welcome(ID, ENV, f.io);
-  assert.equal(f.calls[1].body.subject, "Welcome to Mara, John!");
-  assert.match(f.calls[1].body.html, /Open Mara/);
+  assert.equal(f.calls[1].body.subject, "Welcome to Marakaj, John!");
+  assert.match(f.calls[1].body.html, /Open Marakaj/);
 });
 
 test("a row that is not pending is not sent (never twice)", async () => {
@@ -201,11 +201,11 @@ test("the real door calls fetch unbound, as the Workers runtime demands", async 
 
 test("the e-mail, in French: the words, the three steps, the links, the colours, the logo", () => {
   const m = welcomeEmail({ firstName: "Awa", lang: "fr" });
-  assert.equal(m.subject, "Bienvenue sur Mara, Awa !");
-  for (const s of ["Bienvenue sur Mara, Awa !", "Ajoutez vos articles", "Ouvrez votre vitrine",
-                   "Faites votre première vente", "Ouvrir Mara",
+  assert.equal(m.subject, "Bienvenue sur Marakaj, Awa !");
+  for (const s of ["Bienvenue sur Marakaj, Awa !", "Ajoutez vos articles", "Ouvrez votre vitrine",
+                   "Faites votre première vente", "Ouvrir Marakaj",
                    "Une question ? Répondez simplement à cet e-mail.",
-                   "Mara — Au Service du Peuple · KAJ Consulting LLC"]) {
+                   "Marakaj — Au Service du Peuple · KAJ Consulting LLC"]) {
     assert.ok(m.html.replaceAll("&nbsp;", " ").includes(s), s);
     assert.ok(m.text.includes(s), `text: ${s}`);
   }
@@ -215,29 +215,29 @@ test("the e-mail, in French: the words, the three steps, the links, the colours,
   }
   assert.equal(LINKS.logo, "https://marakaj.com/brand/mara-stacked.png");
   assert.ok(m.html.includes(`src="${LINKS.logo}"`));
-  assert.ok(m.html.includes('alt="Mara"'));
+  assert.ok(m.html.includes('alt="Marakaj"'));
   for (const colour of [BRAND.graphite, BRAND.caramel, BRAND.paper]) assert.ok(m.html.includes(colour), colour);
   assert.match(m.html, /<html lang="fr"/);
   assert.match(m.html, /max-width:560px/);
   assert.doesNotMatch(m.html, /<script|<link |<style/i, "inline styles only, nothing a client strips");
-  assert.doesNotMatch(m.html, /Welcome to Mara/, "a known French reader gets no English line");
+  assert.doesNotMatch(m.html, /Welcome to Marakaj/, "a known French reader gets no English line");
 });
 
 test("the e-mail, in English, equivalent", () => {
   const m = welcomeEmail({ firstName: "John", lang: "en" });
-  assert.equal(m.subject, "Welcome to Mara, John!");
-  for (const s of ["Welcome to Mara, John!", "Add your items", "Open your shop window",
-                   "Make your first sale", "Open Mara", "A question? Just reply to this e-mail.",
-                   "Mara — Au Service du Peuple · KAJ Consulting LLC"]) {
+  assert.equal(m.subject, "Welcome to Marakaj, John!");
+  for (const s of ["Welcome to Marakaj, John!", "Add your items", "Open your shop window",
+                   "Make your first sale", "Open Marakaj", "A question? Just reply to this e-mail.",
+                   "Marakaj — Au Service du Peuple · KAJ Consulting LLC"]) {
     assert.ok(m.html.replaceAll("&nbsp;", " ").includes(s), s);
   }
   assert.match(m.html, /<html lang="en"/);
-  assert.match(m.text, /Open Mara: https:\/\/marakaj\.com/);
+  assert.match(m.text, /Open Marakaj: https:\/\/marakaj\.com/);
 });
 
 test("language unknown: French, with one short English line", () => {
   const m = welcomeEmail({ firstName: "Awa", lang: null });
-  assert.equal(m.subject, "Bienvenue sur Mara, Awa !");
+  assert.equal(m.subject, "Bienvenue sur Marakaj, Awa !");
   assert.match(m.html, /Prefer English\? Reply to this e-mail/);
   assert.match(m.text, /Prefer English\?/);
   const odd = welcomeEmail({ firstName: "Awa", lang: "mos" });
@@ -245,9 +245,9 @@ test("language unknown: French, with one short English line", () => {
 });
 
 test("no first name: a subject that still reads", () => {
-  assert.equal(welcomeEmail({ firstName: "", lang: "fr" }).subject, "Bienvenue sur Mara !");
-  assert.equal(welcomeEmail({ firstName: null, lang: "en" }).subject, "Welcome to Mara!");
-  assert.equal(welcomeEmail({ firstName: "   ", lang: null }).subject, "Bienvenue sur Mara !");
+  assert.equal(welcomeEmail({ firstName: "", lang: "fr" }).subject, "Bienvenue sur Marakaj !");
+  assert.equal(welcomeEmail({ firstName: null, lang: "en" }).subject, "Welcome to Marakaj!");
+  assert.equal(welcomeEmail({ firstName: "   ", lang: null }).subject, "Bienvenue sur Marakaj !");
 });
 
 test("a name cannot break the markup or the subject line", () => {

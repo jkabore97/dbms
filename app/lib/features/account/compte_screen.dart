@@ -360,8 +360,8 @@ class CompteScreen extends StatelessWidget {
                   // The iPhone app invites to no purchase (125): the plan's
                   // name, and the page that says what it includes.
                   title: org.isPro || !sellsProInApp
-                      ? context.tr('Mara Pro')
-                      : context.tr('Passer à Mara Pro'),
+                      ? context.tr('Marakaj Pro')
+                      : context.tr('Passer à Marakaj Pro'),
                   subtitle: org.isPro
                       ? context.tr('Formule active')
                       : context.tr('Paie, analyses, comptabilité, équipe sans limite…'),
@@ -546,7 +546,7 @@ class CompteScreen extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(4, 16, 4, 8),
-            child: Text(context.tr('Mara'), style: const TextStyle(fontWeight: FontWeight.w600)),
+            child: Text(context.tr('Marakaj'), style: const TextStyle(fontWeight: FontWeight.w600)),
           ),
         ],
       ),

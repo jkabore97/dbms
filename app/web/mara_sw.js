@@ -79,7 +79,7 @@ const PASS = new Set(['/mara_sw.js', '/push_sw.js', '/push_handlers.js',
 self.addEventListener('install', (event) => event.waitUntil(install()));
 
 async function install() {
-  if (!BUILD) throw new Error('Mara: this worker was not prepared by the deploy.');
+  if (!BUILD) throw new Error('Marakaj: this worker was not prepared by the deploy.');
   const shell = await caches.open(SHELL);
   const older = (await caches.keys()).filter((k) => k.startsWith('mara-shell-') && k !== SHELL);
   for (const [path, hash] of Object.entries(BUILD.shell)) {
@@ -104,7 +104,7 @@ async function holds(cache, path, hash) {
 
 async function fetchVerified(path, hash) {
   const response = await fetch(path, { cache: 'no-cache' });
-  if (!response.ok) throw new Error(`Mara: ${path} answered ${response.status}`);
+  if (!response.ok) throw new Error(`Marakaj: ${path} answered ${response.status}`);
   const body = await response.arrayBuffer();
   // The page is known by the build it names: Cloudflare may rewrite an
   // HTML page on its way (e-mail obfuscation, https links), never the
@@ -112,7 +112,7 @@ async function fetchVerified(path, hash) {
   const ours = path === '/'
     ? new TextDecoder().decode(body).includes(`var VERSION = ${JSON.stringify(BUILD.version)};`)
     : hex(await crypto.subtle.digest('SHA-256', body)) === hash;
-  if (!ours) throw new Error(`Mara: ${path} is not this build's`);
+  if (!ours) throw new Error(`Marakaj: ${path} is not this build's`);
   const headers = new Headers();
   headers.set('content-type', response.headers.get('content-type') || 'application/octet-stream');
   headers.set('x-mara-hash', hash);
@@ -153,7 +153,7 @@ async function carryOver() {
 
 async function keep(files, path) {
   const response = await fetch(path);
-  if (!usable(response)) throw new Error(`Mara: ${path} answered ${response.status}`);
+  if (!usable(response)) throw new Error(`Marakaj: ${path} answered ${response.status}`);
   await files.put(self.location.origin + path, response);
 }
 

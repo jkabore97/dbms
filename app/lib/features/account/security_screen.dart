@@ -184,7 +184,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
         builder: (context) => AlertDialog(
           title: Text(context.tr('Activer la validation en deux étapes ?')),
           content: Text(
-            context.tr('Le compte de la plateforme demandera, à chaque connexion, un code à 6 chiffres de Google Authenticator ou Microsoft Authenticator. Mara vous montre tout de suite comment l\'ajouter. Les comptes des boutiques ne changent pas : mot de passe, puis le code de l\'appareil.'),
+            context.tr('Le compte de la plateforme demandera, à chaque connexion, un code à 6 chiffres de Google Authenticator ou Microsoft Authenticator. Marakaj vous montre tout de suite comment l\'ajouter. Les comptes des boutiques ne changent pas : mot de passe, puis le code de l\'appareil.'),
           ),
           actions: [
             TextButton(
@@ -289,7 +289,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
             _Group(
               title: context.tr('Verrouillage du téléphone'),
               note: settings.policy == null
-                  ? context.tr('Après ce délai hors de l\'application, Mara redemande le code de l\'appareil.')
+                  ? context.tr('Après ce délai hors de l\'application, Marakaj redemande le code de l\'appareil.')
                   : context.tr('Votre entreprise demande le code après {delay} au plus.',
                       {'delay': context.tr(SecuritySettings.label(settings.policy))}),
               children: [

@@ -460,7 +460,7 @@ class _ShopOrdersScreenState extends State<ShopOrdersScreen>
                                   child: ListTile(
                                     leading: const Icon(Icons.storefront_outlined),
                                     title: Text(context.tr('Commandes fermées pour le moment')),
-                                    subtitle: Text(context.tr('Mara a fermé les commandes de votre vitrine : vos clients la regardent sans commander. Celles déjà reçues restent ici.')),
+                                    subtitle: Text(context.tr('Marakaj a fermé les commandes de votre vitrine : vos clients la regardent sans commander. Celles déjà reçues restent ici.')),
                                   ),
                                 ),
                                 ?cash,
@@ -1087,7 +1087,7 @@ class _CouriersSheetState extends State<_CouriersSheet> {
                     keyboardType: TextInputType.phone,
                     decoration: InputDecoration(
                       labelText: context.tr('Numéro du livreur'),
-                      hintText: context.tr('Inscrit et validé comme livreur Mara'),
+                      hintText: context.tr('Inscrit et validé comme livreur Marakaj'),
                       border: const OutlineInputBorder(),
                     ),
                   ),
@@ -1103,7 +1103,7 @@ class _CouriersSheetState extends State<_CouriersSheet> {
             Text(context.tr('Mes livreurs'), style: theme.textTheme.titleLarge),
             const SizedBox(height: 4),
             Text(
-                context.tr('Vos commandes prêtes leur sont proposées en premier, seuls, pendant 10 minutes ; ensuite à tous les livreurs Mara.'),
+                context.tr('Vos commandes prêtes leur sont proposées en premier, seuls, pendant 10 minutes ; ensuite à tous les livreurs Marakaj.'),
                 style: theme.textTheme.bodySmall),
             const SizedBox(height: 8),
             for (final c in _list)

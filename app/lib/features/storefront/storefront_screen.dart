@@ -484,7 +484,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       title: Text(dialog.tr('Pas à proximité')),
       content: Text(
         dialog.tr(
-          'Cette boutique ne prend pas de commandes près de chez vous. C\'est une vitrine d\'exemple de Mara : regardez, inspirez-vous, et commandez dans les boutiques de votre quartier.',
+          'Cette boutique ne prend pas de commandes près de chez vous. C\'est une vitrine d\'exemple de Marakaj : regardez, inspirez-vous, et commandez dans les boutiques de votre quartier.',
         ),
       ),
       actions: [
@@ -3882,7 +3882,7 @@ class ArticleSheet extends StatelessWidget {
     final count = quantity.round();
     final ask = whatsappUrl(
       phone,
-      text: context.tr('Bonjour {shop}, une question sur « {item} » vu sur votre vitrine Mara.',
+      text: context.tr('Bonjour {shop}, une question sur « {item} » vu sur votre vitrine Marakaj.',
           {'shop': shopName, 'item': item.name}),
     );
     final accent = Theme.of(context).colorScheme.primary;

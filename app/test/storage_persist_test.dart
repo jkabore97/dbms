@@ -45,7 +45,7 @@ void main() {
     await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 200)));
     await tester.pump();
     expect(asked, 1);
-    expect(find.text('Prêt : Mara fonctionne sans connexion'), findsOneWidget);
+    expect(find.text('Prêt : Marakaj fonctionne sans connexion'), findsOneWidget);
   });
 
   test('a browser that never answers does not hold the preparation', () async {

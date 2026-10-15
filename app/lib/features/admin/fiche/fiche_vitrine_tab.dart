@@ -44,7 +44,7 @@ class FicheVitrineTab extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         MaraAsBanner(
-          title: context.tr('Vous modifiez la vitrine de {name} en tant que Mara',
+          title: context.tr('Vous modifiez la vitrine de {name} en tant que Marakaj',
               {'name': o.name}),
           line: context.tr('C\'est l\'éditeur du propriétaire. Il est prévenu, et chaque changement va au journal, avec « Annuler ».'),
         ),
@@ -186,7 +186,7 @@ class _MaraVitrineEditorState extends State<MaraVitrineEditor> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        context.tr('Vous modifiez la vitrine de {name} en tant que Mara',
+                        context.tr('Vous modifiez la vitrine de {name} en tant que Marakaj',
                             {'name': widget.org.name}),
                         style: const TextStyle(
                             color: maraCaramel, fontWeight: FontWeight.w800),

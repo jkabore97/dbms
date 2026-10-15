@@ -126,7 +126,7 @@ void main() {
         home: UpdateBanner(
             check: phone, child: const Scaffold(body: Text('la page'))),
       ));
-      expect(find.text('Une nouvelle version de Mara est disponible.'),
+      expect(find.text('Une nouvelle version de Marakaj est disponible.'),
           findsOneWidget);
       expect(find.text('Télécharger'), findsOneWidget);
       expect(find.text('la page'), findsOneWidget);
@@ -147,7 +147,7 @@ void main() {
         home: UpdateBanner(
             check: tab, child: const Scaffold(body: Text('la page'))),
       ));
-      expect(find.text('Une nouvelle version de Mara est en ligne.'),
+      expect(find.text('Une nouvelle version de Marakaj est en ligne.'),
           findsOneWidget);
       expect(find.text('Recharger'), findsOneWidget);
     });

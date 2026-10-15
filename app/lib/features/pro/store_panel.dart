@@ -187,7 +187,7 @@ class _StorePanelState extends State<StorePanel> {
       final owned = await _readOwned();
       if (mounted) setState(() => _owned = owned);
       if (_watcher.heard == before) {
-        _say((context) => context.tr('Aucun abonnement Mara Pro à restaurer sur ce compte {store}.', {'store': _store}));
+        _say((context) => context.tr('Aucun abonnement Marakaj Pro à restaurer sur ce compte {store}.', {'store': _store}));
       }
     } catch (_) {
       _say((context) => context.tr('{store} n\'a pas répondu. Réessayez dans un moment.', {'store': _store}));
@@ -253,21 +253,21 @@ class _StorePanelState extends State<StorePanel> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (!org.isPro && !org.isAdmin)
-          Text(context.tr('Seul un administrateur de l\'entreprise peut l\'abonner à Mara Pro.'),
+          Text(context.tr('Seul un administrateur de l\'entreprise peut l\'abonner à Marakaj Pro.'),
               textAlign: TextAlign.center, style: theme.textTheme.bodyMedium)
         else if (!org.isPro) ...[
           if (products == null && !_unavailable)
             const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator()))
           else if (_unavailable)
             Text(
-              context.tr('{store} ne propose pas Mara Pro sur cet appareil pour le moment. Réessayez plus tard.', {'store': _store}),
+              context.tr('{store} ne propose pas Marakaj Pro sur cet appareil pour le moment. Réessayez plus tard.', {'store': _store}),
               key: const Key('store-unavailable'),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
             )
           else if (paidElsewhere) ...[
             Text(
-              context.tr('Votre abonnement {store} paie déjà Mara Pro pour « {name} ». Un abonnement couvre une seule entreprise : il ne peut pas payer aussi celle-ci depuis ce compte {store}. Pour changer d\'entreprise, ou l\'arrêter, gérez-le dans {store}.', {'name': elsewhere, 'store': _store}),
+              context.tr('Votre abonnement {store} paie déjà Marakaj Pro pour « {name} ». Un abonnement couvre une seule entreprise : il ne peut pas payer aussi celle-ci depuis ce compte {store}. Pour changer d\'entreprise, ou l\'arrêter, gérez-le dans {store}.', {'name': elsewhere, 'store': _store}),
               key: const Key('store-elsewhere'),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
@@ -276,7 +276,7 @@ class _StorePanelState extends State<StorePanel> {
           ]
           else if (ownedElsewhere) ...[
             Text(
-              context.tr('Ce compte {account} a déjà un abonnement Mara Pro, pour une autre entreprise ou refusé. Gérez-le ou annulez-le dans {store}, puis réessayez.', {
+              context.tr('Ce compte {account} a déjà un abonnement Marakaj Pro, pour une autre entreprise ou refusé. Gérez-le ou annulez-le dans {store}, puis réessayez.', {
                 'account': widget.billing.platform == 'apple' ? 'Apple' : 'Google Play',
                 'store': widget.billing.platform == 'apple' ? context.tr('l\'App Store') : 'Google Play',
               }),
@@ -288,7 +288,7 @@ class _StorePanelState extends State<StorePanel> {
           ]
           else if (ownedHere) ...[
             Text(
-              context.tr('Ce compte {store} a déjà un abonnement Mara Pro pour cette entreprise : touchez « Restaurer mes achats » pour l\'activer.', {'store': _store}),
+              context.tr('Ce compte {store} a déjà un abonnement Marakaj Pro pour cette entreprise : touchez « Restaurer mes achats » pour l\'activer.', {'store': _store}),
               key: const Key('store-owned-here'),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
@@ -340,7 +340,7 @@ class _StorePanelState extends State<StorePanel> {
         ],
         const SizedBox(height: 10),
         Text(
-          context.tr('Mara Pro est un abonnement à renouvellement automatique{prices}. Le paiement est débité sur votre compte {store} à la confirmation de l\'achat. L\'abonnement se renouvelle automatiquement au même prix et pour la même durée, sauf s\'il est annulé au moins 24 heures avant la fin de la période en cours. Gérez-le ou annulez-le à tout moment dans les réglages de votre compte {store}.', {
+          context.tr('Marakaj Pro est un abonnement à renouvellement automatique{prices}. Le paiement est débité sur votre compte {store} à la confirmation de l\'achat. L\'abonnement se renouvelle automatiquement au même prix et pour la même durée, sauf s\'il est annulé au moins 24 heures avant la fin de la période en cours. Gérez-le ou annulez-le à tout moment dans les réglages de votre compte {store}.', {
             'store': _store,
             'prices': [
               if (month != null) context.tr(' : 1 mois à {price}', {'price': month.price}),
@@ -410,7 +410,7 @@ class _ProductTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(year ? context.tr('Mara Pro · 1 an') : context.tr('Mara Pro · 1 mois'),
+                Text(year ? context.tr('Marakaj Pro · 1 an') : context.tr('Marakaj Pro · 1 mois'),
                     style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
                 const SizedBox(height: 2),
                 Text(

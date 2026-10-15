@@ -198,7 +198,7 @@ void main() {
     // 134: a worded door to have one (« ＋ Vendre sur Mara », straight to
     // the creation form), and the person; the delivery helmet moved into
     // the person's menu as « Espace livreur ».
-    expect(find.text('Vendre sur Mara'), findsOneWidget);
+    expect(find.text('Vendre sur Marakaj'), findsOneWidget);
     expect(find.byTooltip('Espace livreur'), findsNothing);
     expect(find.byIcon(Icons.person_outline), findsOneWidget);
 

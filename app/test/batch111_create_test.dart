@@ -46,7 +46,7 @@ class _Api implements BusinessCreation {
   Future<AddressCheck> checkAddress(String slug) async {
     checked.add(slug);
     if (reserved.contains(slug)) {
-      return AddressCheck(slug: slug, problem: 'Cette adresse est réservée à Mara : choisissez-en une autre.');
+      return AddressCheck(slug: slug, problem: 'Cette adresse est réservée à Marakaj : choisissez-en une autre.');
     }
     return taken.contains(slug)
         ? AddressCheck(slug: slug, taken: true, suggestion: '$slug-2')
@@ -297,7 +297,7 @@ void main() {
       expect(next(tester), isNull);
     });
 
-    testWidgets('an address reserved for Mara is said in its words; Suivant stays off', (tester) async {
+    testWidgets('an address reserved for Marakaj is said in its words; Suivant stays off', (tester) async {
       phone(tester);
       final api = _Api(reserved: {'support'});
       await pumpFlow(tester, api);
@@ -307,7 +307,7 @@ void main() {
       await tester.enterText(find.byKey(const Key('create-name')), 'Support');
       await settle(tester);
       expect(api.checked, contains('support'));
-      expect(find.text('Cette adresse est réservée à Mara : choisissez-en une autre.'), findsOneWidget);
+      expect(find.text('Cette adresse est réservée à Marakaj : choisissez-en une autre.'), findsOneWidget);
       expect(next(tester), isNull);
       await tester.enterText(find.byKey(const Key('create-name')), 'Support Awa');
       await settle(tester);
@@ -328,9 +328,9 @@ void main() {
       ));
       final row = NotificationRow(
         id: 'n', kind: 'application_update_app',
-        message: 'Mettez à jour Mara : vous créez maintenant votre activité vous-même',
+        message: 'Mettez à jour Marakaj : vous créez maintenant votre activité vous-même',
         createdAt: DateTime(2026, 10, 8), params: const {'to': 'applicant', 'name': 'Chez Awa'});
-      expect(notificationLine(ctx, row), 'Update Mara: you now create your business yourself');
+      expect(notificationLine(ctx, row), 'Update Marakaj: you now create your business yourself');
       expect(notificationTarget(row), Routes.createBusiness);
     });
 
@@ -367,7 +367,7 @@ void main() {
 
     testWidgets('a refusal from the server is said, the answers kept', (tester) async {
       phone(tester);
-      final api = _Api()..fail = Exception('Une deuxième entreprise : avec Mara Pro.');
+      final api = _Api()..fail = Exception('Une deuxième entreprise : avec Marakaj Pro.');
       final drafts = _Drafts(BusinessDraft(
           step: 5, profile: 'retail', name: 'Chez Awa', slug: 'chez-awa', activity: 'autre',
           city: 'Kaya', phone: '70112233'));
@@ -589,9 +589,9 @@ void main() {
     });
   });
 
-  group('Mara\'s creation page (107\'s form)', () {
+  group('Marakaj\'s creation page (107\'s form)', () {
     const form = ApplicationForm(
-      welcome: 'Bienvenue chez Mara.',
+      welcome: 'Bienvenue chez Marakaj.',
       kinds: ['farm', 'retail'],
       questions: [
         FormQuestion(id: 'ville', label: 'Votre marché', required: true),
@@ -606,7 +606,7 @@ void main() {
       phone(tester);
       final api = _Api(start_: const BusinessStart(form: form));
       await pumpFlow(tester, api);
-      expect(find.text('Bienvenue chez Mara.'), findsOneWidget);
+      expect(find.text('Bienvenue chez Marakaj.'), findsOneWidget);
       expect(find.byKey(const Key('create-kind-association')), findsNothing);
       expect(find.text('1 / 10'), findsOneWidget);
       await tester.tap(find.byKey(const Key('create-kind-farm')));
@@ -657,7 +657,7 @@ void main() {
       phone(tester);
       final api = _Api();
       await pumpFlow(tester, api, preview: form);
-      expect(find.text('Bienvenue chez Mara.'), findsOneWidget);
+      expect(find.text('Bienvenue chez Marakaj.'), findsOneWidget);
       expect(find.text('Aperçu de la création'), findsOneWidget);
       expect(api.checked, isEmpty);
     });

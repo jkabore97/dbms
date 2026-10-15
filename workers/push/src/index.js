@@ -186,9 +186,11 @@ export function payloadFor(row, env) {
   }
   else if (row.org_id) path = `/o/${row.org_id}`;
   return {
-    title: "Mara",
-    // The database's sentences were written when the app was Kaj.
-    body: (row.message || "").replace(/\bKaj\b(?![\s-]+[Cc]onsulting)(?![-_/\w])(?!\.\w)/g, "Mara"),
+    title: "Marakaj",
+    // The database's sentences were written when the app was Kaj, and
+    // before 147 some said « Mara »: both are read as Marakaj (a sentence
+    // that already says Marakaj is the new database's, left as it is).
+    body: oldName(row.message || "").replace(/\bKaj\b(?![\s-]+[Cc]onsulting)(?![-_/\w])(?!\.\w)/g, "Marakaj"),
     url: `${origin}${path}`,
     // The app's own address, for the Android app's tap (115).
     path,
@@ -267,4 +269,10 @@ function json(body, status, headers) {
     status,
     headers: { "Content-Type": "application/json", ...headers },
   });
+}
+
+// « Mara » was the product's name before « Marakaj » (147): a sentence
+// still saying it is read with the new name; « Maraîchage » is not it.
+export function oldName(text) {
+  return text.includes("Marakaj") ? text : text.replace(/(?<![\wÀ-ÿ])Mara(?![\wÀ-ÿ])/g, "Marakaj");
 }
