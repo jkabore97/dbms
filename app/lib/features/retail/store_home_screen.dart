@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+
+import 'till_close_sheet.dart';
 import '../../core/help/help_repository.dart';
 import '../help/help_button.dart';
 import '../home/vitrine_button.dart';
@@ -735,6 +737,21 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
                           fontSize: 16, fontWeight: FontWeight.w700)),
                 ),
               ),
+              const SizedBox(height: 12),
+              // « Clôturer la caisse » (batch 151): the day's cash counted
+              // against what the till should hold, kept for the owner.
+              if (widget.retail != null)
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 52),
+                  child: OutlinedButton.icon(
+                    key: const Key('home-close-till'),
+                    onPressed: () =>
+                        TillCloseSheet.open(context, widget.org, widget.retail!.guards),
+                    icon: const Icon(Icons.lock_clock_outlined),
+                    label: Text(context.tr('Clôturer la caisse'),
+                        style: const TextStyle(fontSize: 16)),
+                  ),
+                ),
               const SizedBox(height: 16),
             ],
 

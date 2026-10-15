@@ -805,7 +805,10 @@ declare
         -- 135: read by sign_in_options(), which the website's sign-in asks.
         'apple_web_signin',
         -- 136: read by item_photo_limit(), which the item's gallery asks.
-        'max_item_photos_pro'];
+        'max_item_photos_pro',
+        -- 146: read by trg_orders_guard() (every order's door), by
+        -- courier_cash_cap_for() (take_delivery) and review_queue_rows().
+        'order_open_max_per_shop', 'order_first_open_max', 'courier_cash_cap', 'till_gap_review'];
     v_dead text;
     v_missing text;
 begin

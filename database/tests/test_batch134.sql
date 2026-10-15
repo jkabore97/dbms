@@ -36,6 +36,11 @@
 -- ============================================================
 \set ON_ERROR_STOP on
 
+-- 146's order limits are test_batch146's; this suite tests other rules,
+-- so they are off while it runs (and back to their defaults at its end).
+update platform_settings set value = '0'
+ where key in ('order_open_max_per_shop', 'order_first_open_max');
+
 do $$ begin
     if not exists (select 1 from pg_roles where rolname = 'anon') then
         create role anon nologin;
@@ -1052,3 +1057,7 @@ do $$ begin
 end $$;
 
 revoke usage on schema auth from authenticated;
+
+-- 146's order limits back to their defaults.
+update platform_settings set value = (case key when 'order_open_max_per_shop' then '3' else '2' end)::jsonb
+ where key in ('order_open_max_per_shop', 'order_first_open_max');

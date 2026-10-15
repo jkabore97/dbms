@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../orders/blocked_customers_screen.dart';
+
 import '../../core/l10n/locale_controller.dart';
 import '../../core/theme/kaj_card.dart';
 import 'package:go_router/go_router.dart';
@@ -314,6 +316,17 @@ class CompteScreen extends StatelessWidget {
                     pro: access.isProLocked('payroll'),
                     proCost: costOf('payroll'),
                     onTap: gated('payroll', () => context.push(inside('personnel'))),
+                  ),
+                // « Clients bloqués » (batch 151): whom « Bloquer ce
+                // client » stopped, and « Débloquer » — every kind's admins.
+                if (admin)
+                  _Tile(
+                    key: const Key('compte-blocked'),
+                    icon: Icons.block_outlined,
+                    title: context.tr('Clients bloqués'),
+                    subtitle: context.tr('Ceux qui ne peuvent plus commander chez vous'),
+                    onTap: () => Navigator.of(context)
+                        .push(BlockedCustomersScreen.route(org, scope.retail.guards)),
                   ),
                 // An association earns no cauris (084), but spends what Mara
                 // gives it (100): its wallet shows once there is something

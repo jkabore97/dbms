@@ -913,6 +913,12 @@ jobs:
         run: |
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch145.sql
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch145.sql
+      - name: "Prove the fraud guards — a new account holds 2 open orders, then 3 per business (shop, farm, association), 0 turns each off, a seed not asked; « Bloquer ce client » by the owner alone, the shopper refused in each kind's words without « bloqué », seen by the admins alone, no stranger or self, unblocked, journaled; a courier's cash cap of 50 000 FCFA at take_delivery (Wave and euros not counted, « reçu » frees it); a return the owner's; « Clôturer la caisse » blind against the server's expected, the gap kept, read by the owner and the cashier, written by nobody by hand, an association refused; Mara's review queue; the four settings in range and journaled; definers and invokers pinned, nothing for anon; run twice the same (146)"
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch146.sql
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch146.sql
 
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each

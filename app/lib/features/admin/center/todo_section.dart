@@ -13,6 +13,7 @@ import '../../auth/org_picker_screen.dart' show iconForProfile, kindColour, kind
 import '../console_today.dart';
 import 'center_search.dart' show orderStatusLabel;
 import 'reports_sheet.dart';
+import 'review_sheet.dart';
 import '../../../core/notify/bell_room.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
 
@@ -118,6 +119,11 @@ class _TodoSectionState extends State<TodoSection> {
         await showReportsSheet(context, center: widget.center);
         if (mounted) await _load();
       }, hint: context.tr('des clients, à lire'), urgent: true),
+      // 146 (batch 151): what the fraud guards raised.
+      _Count('review', context.tr('À vérifier : fraude'), Icons.policy_outlined, () async {
+        await ReviewQueueSheet.open(context, widget.center);
+        if (mounted) await _load();
+      }, hint: context.tr('blocages, livreurs au plafond, écarts de caisse'), urgent: true),
       _Count('payouts_failed', context.tr('Versements Wave échoués'), Icons.sync_problem_outlined,
           () => context.go(Routes.consoleWave),
           hint: context.tr('à relancer dans Paiements'), urgent: true),
