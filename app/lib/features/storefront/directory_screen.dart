@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../notify/notifications_screen.dart' show ShopperBell;
+import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
@@ -15,6 +16,7 @@ import '../../core/theme/mara_mark.dart';
 import '../../core/theme/motion.dart';
 import '../../core/nav/session.dart';
 import '../admin/admin_pill.dart';
+import '../../core/storefront/hidden_vitrines.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../../core/shopper/shopper_repository.dart';
 import '../shopper/follow_heart.dart';
@@ -112,6 +114,29 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   List<ProductHit> _hits = const [];
   bool _hunting = false;
 
+  /// The vitrines hidden on this device (batch 150): out of the list, the
+  /// map, « À la une », the search and the paid spots.
+  late final HiddenVitrines _hiddenStore = HiddenVitrines(widget.session.db);
+  Set<String> _hidden = const {};
+
+  /// A change on this device, or the first read landing: what is known now.
+  void _onHiddenChanged() {
+    final hidden = _hiddenStore.known ?? const <String>{};
+    if (mounted && !setEquals(hidden, _hidden)) setState(() => _hidden = hidden);
+  }
+
+  List<DirectoryEntry> get _shownEntries =>
+      _hidden.isEmpty ? _entries : [for (final e in _entries) if (!_hidden.contains(e.slug)) e];
+  List<FeaturedItem> get _shownFeatured =>
+      _hidden.isEmpty ? _featured : [for (final f in _featured) if (!_hidden.contains(f.shopSlug)) f];
+  List<ProductHit> get _shownHits =>
+      _hidden.isEmpty ? _hits : [for (final h in _hits) if (!_hidden.contains(h.shopSlug)) h];
+
+  Future<void> _openHidden() async {
+    await context.push(Routes.hiddenVitrines);
+    _onHiddenChanged();
+  }
+
   /// The ♥ on the cards (113): known once the shopper is signed in.
   late final Follows _follows = Follows(widget.shopper);
   bool? _signedIn;
@@ -171,6 +196,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   void initState() {
     super.initState();
     _readInvite();
+    HiddenVitrines.changes.addListener(_onHiddenChanged);
     _load();
     unawaited(_quietPosition());
     widget.session.addListener(_onSession);
@@ -180,6 +206,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   @override
   void dispose() {
     widget.session.removeListener(_onSession);
+    HiddenVitrines.changes.removeListener(_onHiddenChanged);
     _follows.dispose();
     _debounce?.cancel();
     _search.dispose();
@@ -250,7 +277,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   final Set<String> _counted = {};
 
   void _countSeen() {
-    final fresh = [for (final f in _featured) if (_counted.add(f.id)) f.id];
+    // A hidden vitrine's spot is not seen, so it is not counted (150).
+    final fresh = [for (final f in _shownFeatured) if (_counted.add(f.id)) f.id];
     if (fresh.isNotEmpty) unawaited(widget.storefront.recordSeen(fresh));
   }
 
@@ -284,6 +312,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       });
       return;
     }
+    // What this phone hid (150), as read at the app's start (main.dart):
+    // known at once, never a wait on the device to draw. Read before that
+    // read lands, the street hears it when it does ([HiddenVitrines.changes]).
+    _hidden = _hiddenStore.known ?? const {};
     // The street as this phone last saw it, at once (street_cache.dart):
     // on a slow line the shops show while the fresh list comes.
     final kept = _entries.isEmpty ? await widget.storefront.keptStreet() : null;
@@ -488,7 +520,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     if (!mounted) return;
     await Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (_) => street_map.DirectoryMapPage(
-        entries: _entries,
+        entries: _shownEntries,
         previews: _previews,
         here: _here,
         fallback: _ouaga,
@@ -536,10 +568,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       );
                     },
                   ),
-                  entries: _entries,
+                  entries: _shownEntries,
                   previews: _previews,
-                  featured: _featured,
-                  spotlights: _spotlights,
+                  featured: _shownFeatured,
+                  spotlights: _spotlights.difference(_hidden),
+                  hiddenCount: _hidden.length,
+                  onHidden: _openHidden,
                   showcases: _showcases,
                   follows: _follows,
                   capture: widget.capture,
@@ -551,7 +585,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   onOpen: _open,
                   search: _search,
                   query: _query,
-                  hits: _hits,
+                  hits: _shownHits,
                   hunting: _hunting,
                   onSearchChanged: _onSearchChanged,
                   onClearSearch: _clearSearch,
@@ -787,7 +821,14 @@ class _Street extends StatelessWidget {
     required this.hunting,
     required this.onSearchChanged,
     required this.onClearSearch,
+    this.hiddenCount = 0,
+    this.onHidden,
   });
+
+  /// How many vitrines this device hid (150), and the way to their list —
+  /// at the street's foot, where somebody with no account finds it.
+  final int hiddenCount;
+  final VoidCallback? onHidden;
 
   /// « Créer mon activité » (134), first in the list; null or empty for
   /// whoever has a business.
@@ -826,7 +867,10 @@ class _Street extends StatelessWidget {
       // « Devenir livreur » at the street's foot (112), and the footer on
       // the page's bottom edge however few the shops (122).
       footer: ShopWidth(
-          child: ShopFooter(onBecomeCourier: () => context.go(Routes.becomeCourier))),
+          child: ShopFooter(
+              onBecomeCourier: () => context.go(Routes.becomeCourier),
+              hiddenCount: hiddenCount,
+              onHidden: onHidden)),
       children: [
         // The hero settles in as the page opens.
         Reveal(

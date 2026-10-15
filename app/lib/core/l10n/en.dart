@@ -7793,8 +7793,8 @@ const enStrings = <String, String>{
       'Mara cooperates with the authorities: on a lawful request, or to protect a person, Mara may pass the relevant information on to them.',
   '# Signaler un problème':
       '# Reporting a problem',
-  'Une vitrine, un article, une commande ou une personne vous semble frauduleux ? Touchez « Signaler un problème » sur la vitrine, ou écrivez à {email}. Mara examine chaque signalement.':
-      'Does a vitrine, an item, an order or a person look fraudulent to you? Tap “Signaler un problème” on the vitrine, or write to {email}. Mara reviews every report.',
+  'Une vitrine, un article, une commande ou une personne vous semble frauduleux ? Touchez « Signaler cette vitrine » dans le menu ⋮ de la vitrine, ou écrivez à {email}. Mara examine chaque signalement.':
+      'Does a vitrine, an item, an order or a person look fraudulent to you? Tap “Report this vitrine” in the vitrine’s ⋮ menu, or write to {email}. Mara reviews every report.',
   'Mara ne garantit aucune vente, aucun nombre de visiteurs et aucun revenu. Mara ne répond pas des articles, des services, des prix ni du comportement des entreprises, des clients ou des livreurs, ni des pertes indirectes (manque à gagner, perte de clientèle).':
       'Mara guarantees no sale, no number of visitors and no income. Mara does not answer for the goods, services or prices, nor for the conduct of businesses, customers or couriers, nor for indirect losses (loss of profit, loss of customers).',
   'Si la responsabilité de Mara est engagée, elle est limitée, dans la mesure où la loi le permet, à ce que vous avez payé à Mara pendant les 12 derniers mois. Rien dans ces conditions ne vous retire un droit que la loi vous donne et qu\'un contrat ne peut pas écarter.':
@@ -8055,4 +8055,33 @@ const enStrings = <String, String>{
       'A Wave payment is in progress for this request: try again in an hour',
   'Seule une mise en avant en cours s\'arrête': 'Only a running promotion can be stopped',
   'Seule une mise en avant en cours ou programmée s\'arrête': 'Only a running or scheduled promotion can be stopped',
+  // Batch 150: report and hide a vitrine (App Store 1.2).
+  'Signaler cette vitrine': 'Report this vitrine',
+  'Masquer cette vitrine': 'Hide this vitrine',
+  'Masquer cette vitrine ?': 'Hide this vitrine?',
+  'Vous ne la verrez plus dans la rue. Vous pourrez l\'afficher à nouveau depuis votre profil.':
+      'You will no longer see it on the street. You can show it again from your profile.',
+  '{name} est masquée.': '{name} is hidden.',
+  'La vitrine n\'a pas pu être masquée sur cet appareil.': 'The vitrine could not be hidden on this device.',
+  'Vous avez masqué cette vitrine': 'You hid this vitrine',
+  'Afficher à nouveau': 'Show again',
+  'Afficher à nouveau {name}': 'Show {name} again',
+  'Bonjour, je voudrais signaler la vitrine « {name} » ({link}).':
+      'Hello, I would like to report the vitrine “{name}” ({link}).',
+  'Signalement : {name}': 'Report: {name}',
+  'Connectez-vous pour signaler': 'Sign in to report',
+  'Mara vous répond dans vos notifications. Vous revenez ici juste après.':
+      'Mara answers you in your notifications. You come straight back here.',
+  'ou écrivez-nous': 'or write to us',
+  'Vitrines masquées': 'Hidden vitrines',
+  'Vitrines masquées ({n})': 'Hidden vitrines ({n})',
+  '{name} est de nouveau visible dans la rue.': '{name} is visible on the street again.',
+  'Les vitrines que vous avez masquées n\'apparaissent plus dans la rue, sur ce téléphone.':
+      'The vitrines you hid no longer appear on the street, on this phone.',
+  'Aucune vitrine masquée.': 'No hidden vitrines.',
+  'Aucune : « Masquer » est dans le menu ⋮ d\'une vitrine': 'None: “Hide” is in a vitrine’s ⋮ menu',
+  '1 vitrine masquée sur ce téléphone': '1 vitrine hidden on this phone',
+  '{n} vitrines masquées sur ce téléphone': '{n} vitrines hidden on this phone',
+  'Vitrine signalée : {name}': 'Reported vitrine: {name}',
+  'Suspendre…': 'Suspend…',
 };

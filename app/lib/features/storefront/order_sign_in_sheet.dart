@@ -32,6 +32,8 @@ Future<OrderSignIn?> showOrderSignInSheet(
   Future<bool> Function()? appleAvailable,
   Future<bool> Function()? appleWebAvailable,
   Color? accent,
+  bool report = false,
+  void Function(BuildContext context)? onWriteUs,
 }) {
   return showMaraSheet<OrderSignIn>(
     context: context,
@@ -44,6 +46,8 @@ Future<OrderSignIn?> showOrderSignInSheet(
       data: ShopStyle.theme(sheet, accent: accent),
       child: OrderSignInSheet(
         booking: booking,
+        report: report,
+        onWriteUs: onWriteUs,
         googleAvailable: googleAvailable,
         appleAvailable: appleAvailable,
         appleWebAvailable: appleWebAvailable,
@@ -59,9 +63,19 @@ class OrderSignInSheet extends StatefulWidget {
     required this.googleAvailable,
     this.appleAvailable,
     this.appleWebAvailable,
+    this.report = false,
+    this.onWriteUs,
   });
 
   final bool booking;
+
+  /// « Signaler cette vitrine » (150): the same doors, its own words — the
+  /// report sheet opens again once the person is back.
+  final bool report;
+
+  /// « ou écrivez-nous »: Mara's help, for somebody who would rather not
+  /// make an account. Null: not drawn.
+  final void Function(BuildContext context)? onWriteUs;
   final Future<bool> Function() googleAvailable;
 
   /// The project's Apple switch; asked on an iPhone only. Null: no Apple.
@@ -127,7 +141,9 @@ class _OrderSignInSheetState extends State<OrderSignInSheet> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              widget.booking
+              widget.report
+                  ? context.tr('Connectez-vous pour signaler')
+                  : widget.booking
                   ? context.tr('Connectez-vous pour réserver')
                   : context.tr('Connectez-vous pour commander'),
               textAlign: TextAlign.center,
@@ -140,7 +156,9 @@ class _OrderSignInSheetState extends State<OrderSignInSheet> {
             const SizedBox(height: 8),
             Text(
               // A booking (125) is kept as the basket is, with its day and time.
-              widget.booking
+              widget.report
+                  ? context.tr('Mara vous répond dans vos notifications. Vous revenez ici juste après.')
+                  : widget.booking
                   ? context.tr('Votre réservation est gardée : vous revenez ici juste après.')
                   : context.tr('Votre panier est gardé : vous revenez ici juste après.'),
               textAlign: TextAlign.center,
@@ -244,6 +262,21 @@ class _OrderSignInSheetState extends State<OrderSignInSheet> {
                 );
               },
             ),
+            if (widget.onWriteUs != null) ...[
+              const SizedBox(height: 12),
+              Center(
+                child: TextButton.icon(
+                  key: const Key('order-sign-in-write-us'),
+                  onPressed: () {
+                    // From the tap itself: a browser opens a chat only so.
+                    widget.onWriteUs!(context);
+                    Navigator.of(context).pop();
+                  },
+                  icon: const Icon(Icons.support_agent_outlined, size: 18),
+                  label: Text(context.tr('ou écrivez-nous')),
+                ),
+              ),
+            ],
           ],
         ),
       ),

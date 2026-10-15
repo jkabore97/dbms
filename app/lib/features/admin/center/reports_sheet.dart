@@ -232,6 +232,44 @@ class _ReportsSheetState extends State<ReportsSheet> {
                                 ),
                             ],
                           ),
+                          // A vitrine reported (150, App Store 1.2): which one,
+                          // the page itself as the street sees it, and the
+                          // platform's existing suspend (Paramètres ›
+                          // « Formule et modération », with its confirmation).
+                          if (r.slug != null)
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 2,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                if (r.topic == 'vitrine')
+                                  Text(
+                                    context.tr('Vitrine signalée : {name}',
+                                        {'name': r.orgName ?? r.slug}),
+                                    key: Key('report-vitrine-${r.id}'),
+                                    style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
+                                  ),
+                                TextButton.icon(
+                                  key: Key('report-open-vitrine-${r.id}'),
+                                  onPressed: () {
+                                    if (!widget.asPage) Navigator.of(context).pop();
+                                    widget.outer.push(Routes.storefront(r.slug!));
+                                  },
+                                  icon: const Icon(Icons.open_in_new, size: 16),
+                                  label: Text(context.tr('Voir la vitrine')),
+                                ),
+                                if (r.topic == 'vitrine' && r.orgId != null)
+                                  TextButton.icon(
+                                    key: Key('report-suspend-${r.id}'),
+                                    onPressed: () {
+                                      if (!widget.asPage) Navigator.of(context).pop();
+                                      widget.outer.push(Routes.orgSettings(r.orgId!, part: 'plateforme'));
+                                    },
+                                    icon: const Icon(Icons.lock_outline, size: 16),
+                                    label: Text(context.tr('Suspendre…')),
+                                  ),
+                              ],
+                            ),
                           if (r.handled)
                             Text(
                               r.answer == null

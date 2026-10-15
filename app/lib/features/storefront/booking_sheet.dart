@@ -411,8 +411,10 @@ const streetResumeKey = 'street_order_after_sign_in';
 /// The note [streetResumeKey] keeps: this vitrine, now, and whether a
 /// booking ([booking]) or the basket's order asked for the sign-in — so a
 /// booking forgotten on the device never takes the place of an order.
-String streetResumeNote(String slug, {required bool booking}) =>
-    '$slug|${DateTime.now().toIso8601String()}|${booking ? 'booking' : 'order'}';
+/// [report] (150): « Signaler cette vitrine » asked for it — the report
+/// sheet opens again, never an order.
+String streetResumeNote(String slug, {required bool booking, bool report = false}) =>
+    '$slug|${DateTime.now().toIso8601String()}|${report ? 'report' : booking ? 'booking' : 'order'}';
 
 /// Where a booking chosen before a sign-in sleeps on the device, per
 /// vitrine (125), as the basket does (`street_basket_<slug>`).

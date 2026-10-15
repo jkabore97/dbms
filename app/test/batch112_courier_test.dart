@@ -650,7 +650,8 @@ void main() {
       expect(find.byKey(const Key('footer-become-courier')), findsNothing);
       final street = File('lib/features/storefront/directory_screen.dart').readAsStringSync();
       final vitrine = File('lib/features/storefront/storefront_screen.dart').readAsStringSync();
-      expect(RegExp(r'ShopFooter\(onBecomeCourier: \(\) => context\.go\(Routes\.becomeCourier\)\)')
+      // (150: the foot also carries « Vitrines masquées » when there are any.)
+      expect(RegExp(r'ShopFooter\(\s*onBecomeCourier: \(\) => context\.go\(Routes\.becomeCourier\)')
           .allMatches(street).length, 1,
           reason: 'one foot under the list and the search results alike (122: ShopScroll)');
       expect(vitrine.contains('onBecomeCourier'), isFalse);

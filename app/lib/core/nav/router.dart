@@ -26,6 +26,7 @@ import '../notify/notifications_repository.dart' show NotifyScope;
 import '../../features/shopper/addresses_screen.dart';
 import '../../features/shopper/arrival_screen.dart';
 import '../../features/shopper/favourites_screen.dart';
+import '../../features/shopper/hidden_vitrines_screen.dart';
 import '../../features/shopper/shopper_profile_screen.dart';
 import '../shopper/shopper_repository.dart';
 import '../site/app_download.dart' show AppDownloadPrompt;
@@ -171,6 +172,10 @@ abstract final class Routes {
 
   /// Every open vitrine, as a list or a map — the street's front door.
   static const directory = '/vitrines';
+
+  /// « Vitrines masquées » (batch 150): the vitrines hidden on this device,
+  /// public like the street — the hiding needs no account.
+  static const hiddenVitrines = '/vitrines/masquees';
   static String inside(String id, String rest) => '/o/$id/$rest';
 
   /// A business's settings. Named once here: the vitrine card on the shop
@@ -660,6 +665,12 @@ GoRouter buildRouter(SessionController session) {
             shopper: ShopperRepository(scope.auth.client),
           ));
         },
+      ),
+      // « Vitrines masquées » (150): public like the street — the hiding is
+      // the device's and needs no account.
+      GoRoute(
+        path: Routes.hiddenVitrines,
+        builder: (context, _) => HiddenVitrinesScreen(db: AppScope.of(context).db),
       ),
 
       // « Vous êtes ici pour… » (134), opened by the market once for a new

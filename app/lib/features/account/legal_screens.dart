@@ -431,7 +431,7 @@ class _TermsScreenState extends State<TermsScreen> {
             'informations utiles.',
         '# Signaler un problème',
         'Une vitrine, un article, une commande ou une personne vous semble '
-            'frauduleux ? Touchez « Signaler un problème » sur la vitrine, '
+            'frauduleux ? Touchez « Signaler cette vitrine » dans le menu ⋮ de la vitrine, '
             'ou écrivez à {email}. Mara examine chaque signalement.',
         '# Responsabilité',
         'Nous faisons de notre mieux pour que le service reste disponible, '

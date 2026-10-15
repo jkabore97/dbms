@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import '../help/trainer_inbox_tile.dart';
 
@@ -14,6 +15,7 @@ import '../../core/nav/router.dart';
 import '../../core/onboarding/business_creation.dart' show suggestedTowns, townCountry;
 import '../../core/shopper/shopper_repository.dart';
 import '../../core/site/site.dart';
+import '../../core/storefront/hidden_vitrines.dart';
 import '../../core/storefront/storefront_repository.dart' show whatsappShareUrl;
 import '../../core/theme/mara_mark.dart';
 import '../../l10n/strings.dart';
@@ -53,6 +55,16 @@ class _ShopperProfileScreenState extends State<ShopperProfileScreen> {
   String? _error;
   bool _busy = false;
 
+  /// How many vitrines this device hid (150).
+  int _hidden = 0;
+
+  Future<void> _readHidden() async {
+    final db = AppScope.read(context)?.db;
+    if (db == null) return;
+    final n = (await HiddenVitrines(db).list()).length;
+    if (mounted && n != _hidden) setState(() => _hidden = n);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -60,6 +72,7 @@ class _ShopperProfileScreenState extends State<ShopperProfileScreen> {
   }
 
   Future<void> _load() async {
+    unawaited(_readHidden());
     if (!widget.shopper.isConfigured) {
       setState(() => _error = context.tr('Votre compte a besoin d\'une connexion.'));
       return;
@@ -279,6 +292,21 @@ class _ShopperProfileScreenState extends State<ShopperProfileScreen> {
           onTap: () async {
             await context.push(Routes.favourites);
             if (mounted) await _load();
+          },
+        ),
+        // « Vitrines masquées » (150): hidden on this device, shown again here.
+        _Row(
+          key: const Key('shopper-hidden'),
+          icon: Icons.visibility_off_outlined,
+          title: context.tr('Vitrines masquées'),
+          subtitle: _hidden == 0
+              ? context.tr('Aucune : « Masquer » est dans le menu ⋮ d\'une vitrine')
+              : _hidden == 1
+              ? context.tr('1 vitrine masquée sur ce téléphone')
+              : context.tr('{n} vitrines masquées sur ce téléphone', {'n': _hidden}),
+          onTap: () async {
+            await context.push(Routes.hiddenVitrines);
+            if (mounted) await _readHidden();
           },
         ),
         _Row(

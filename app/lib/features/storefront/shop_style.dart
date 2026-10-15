@@ -481,9 +481,20 @@ class ShopSectionLabel extends StatelessWidget {
 /// help page, inside the app when there is a router, the site's /aide
 /// otherwise), and under it « POWERED BY KAJ », KAJ in bold.
 class ShopFooter extends StatelessWidget {
-  const ShopFooter({super.key, this.onDirectory, this.onBecomeCourier});
+  const ShopFooter({
+    super.key,
+    this.onDirectory,
+    this.onBecomeCourier,
+    this.hiddenCount = 0,
+    this.onHidden,
+  });
 
   final VoidCallback? onDirectory;
+
+  /// The street's foot only (150): « Vitrines masquées (n) », when this
+  /// device hid any — the way back for somebody with no account.
+  final int hiddenCount;
+  final VoidCallback? onHidden;
 
   /// The street's foot only (112): « Devenir livreur ». A vitrine's foot
   /// is the shop's, and keeps to its own way back.
@@ -518,6 +529,16 @@ class ShopFooter extends StatelessWidget {
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: ShopStyle.ink)),
+          ),
+        ],
+        if (onHidden != null && hiddenCount > 0) ...[
+          const SizedBox(height: 18),
+          Center(
+            child: UnderlineLink(
+                key: const Key('footer-hidden'),
+                label: context.tr('Vitrines masquées ({n})', {'n': hiddenCount}),
+                onTap: onHidden,
+                style: const TextStyle(fontSize: 14, color: ShopStyle.ink)),
           ),
         ],
         const SizedBox(height: 28),
