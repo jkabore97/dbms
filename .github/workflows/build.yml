@@ -160,8 +160,9 @@ jobs:
       # Every build of main goes to Google Play by itself: nobody uploads an
       # .aab by hand after the very first one (Google requires that one
       # through the Play Console). The track is the repository variable
-      # PLAY_TRACK — production unless it says otherwise (internal testing:
-      # internal; closed testing: alpha) — and the version code is the run number, so
+      # PLAY_TRACK — internal unless it says otherwise (closed testing: alpha;
+      # production) — the owner promotes a release to production from
+      # the Play Console — and the version code is the run number, so
       # each upload is newer than the last. Only with the upload key: a
       # debug-signed bundle would be refused anyway.
       - name: Send to Google Play
@@ -171,13 +172,13 @@ jobs:
           serviceAccountJsonPlainText: ${{ env.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: bf.kaj.app
           releaseFiles: app/out/kaj.aab
-          track: ${{ vars.PLAY_TRACK || 'production' }}
+          track: ${{ vars.PLAY_TRACK || 'internal' }}
           status: ${{ vars.PLAY_STATUS || 'completed' }}
 
       - name: Say where the bundle went
         run: |
           if [ -n "$PLAY_SERVICE_ACCOUNT_JSON" ] && [ -n "$KAJ_KEYSTORE_BASE64" ]; then
-            echo "Sent to Google Play, track ${{ vars.PLAY_TRACK || 'production' }}." >> "$GITHUB_STEP_SUMMARY"
+            echo "Sent to Google Play, track ${{ vars.PLAY_TRACK || 'internal' }}." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "Not sent to Google Play: PLAY_SERVICE_ACCOUNT_JSON or the upload key is missing." >> "$GITHUB_STEP_SUMMARY"
           fi

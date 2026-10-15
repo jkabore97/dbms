@@ -414,9 +414,10 @@ Once:
    tracks*.
 5. Repository secret `PLAY_SERVICE_ACCOUNT_JSON` = the whole JSON file.
 
-Repository variables (optional): `PLAY_TRACK` — `production` by default
-(the store listing is approved); `internal` or `alpha` sends builds to a
-testing track instead. `PLAY_STATUS` — `completed` by default; `draft` leaves each
+Repository variables (optional): `PLAY_TRACK` — `internal` by default:
+each build lands on internal testing and the owner promotes it to
+production in the Play Console; `alpha` or `production` sends builds
+there directly. `PLAY_STATUS` — `completed` by default; `draft` leaves each
 release for a person to roll out in the Console.
 
 Without `PLAY_SERVICE_ACCOUNT_JSON` the bundle is only attached to the
