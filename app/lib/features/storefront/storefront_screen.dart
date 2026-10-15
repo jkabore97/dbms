@@ -18,6 +18,8 @@ import '../../core/format/money.dart';
 import '../../core/format/money_text.dart';
 import '../../core/nav/router.dart';
 import '../../core/nav/session.dart';
+import '../../core/site/site.dart' show siteOrigin;
+import '../../core/storefront/hidden_vitrines.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../../core/storefront/visitor_id.dart';
 import '../../core/retail/duration.dart';
@@ -25,8 +27,10 @@ import '../../core/retail/stock_rule.dart';
 import '../../core/shopper/shopper_repository.dart';
 import '../../core/theme/motion.dart';
 import '../../core/theme/mara_mark.dart';
+import '../account/support.dart';
 import '../common/owned_controller.dart';
 import '../shopper/follow_heart.dart';
+import '../shopper/report_sheet.dart';
 import '../shopper/shopper_profile_screen.dart' show addressName;
 import '../../core/orders/booking.dart';
 import 'booking_sheet.dart';
@@ -91,6 +95,11 @@ class StorefrontScreen extends StatefulWidget {
 
 class _StorefrontScreenState extends State<StorefrontScreen> {
   PublicShop? _shop;
+
+  /// This device hid this vitrine (batch 150): the page says so, with the
+  /// way to show it again, and asks the server nothing.
+  late final HiddenVitrines _hiddenStore = HiddenVitrines(widget.session.db);
+  bool _hiddenHere = false;
   List<PublicItem> _items = const [];
   bool _loading = true;
   bool _sending = false;
@@ -278,6 +287,22 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       });
       return;
     }
+    // Hidden on this device (150): the notice, no visit counted. Its own
+    // people never hid it from the menu, which they are not shown. Known
+    // at once after the first read of the run; else read beside the
+    // network and heard before any visit is counted.
+    final known = _hiddenStore.known;
+    if (_ownOrg == null && (known?.contains(widget.slug) ?? false)) {
+      setState(() {
+        _hiddenHere = true;
+        _loading = false;
+      });
+      return;
+    }
+    if (_hiddenHere) setState(() => _hiddenHere = false);
+    final hiddenAsked = _ownOrg != null || known != null
+        ? Future.value(false)
+        : _hiddenStore.contains(widget.slug);
     // The shop as this phone last saw it, at once (street_cache.dart): on
     // a slow line the shelf shows while the fresh answer comes.
     final kept = _shop == null ? await widget.storefront.keptVitrine(widget.slug) : null;
@@ -310,6 +335,12 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
         _items = shop == null ? const [] : _shelfOf(shop, items, showcase);
         _loading = false;
       });
+      // Hidden here after all (150, the first read of the run): the notice.
+      if (await hiddenAsked) {
+        if (mounted) setState(() => _hiddenHere = true);
+        return;
+      }
+      if (!mounted) return;
       // No network: the last look, said as such.
       if (keptAt != null) _sayKept();
       // The street's counter (071): a window opened. Never in the way.
@@ -320,6 +351,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       await _restoreBasket(items);
       await _readPendingBooking();
       unawaited(_resumeOrder());
+      unawaited(_resumeReport());
     } catch (error) {
       if (!mounted) return;
       if (_shop != null) {
@@ -500,6 +532,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     if (!mounted) return;
     _followsFor();
     unawaited(_resumeOrder());
+    unawaited(_resumeReport());
   }
 
   Future<void> _resumeOrder() async {
@@ -529,6 +562,8 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       final at = parts.length > 1 ? DateTime.tryParse(parts[1]) : null;
       final forBooking = parts.length > 2 && parts[2] == 'booking';
       if (slug != widget.slug) return;
+      // A report's note (150) is [_resumeReport]'s.
+      if (parts.length > 2 && parts[2] == 'report') return;
       if (at == null || DateTime.now().difference(at) > _resumeFresh) {
         await db.writePref(_resumeKey, null);
         return;
@@ -576,10 +611,13 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
   /// « Commander » signed out (F1): Google first, the two other doors at
   /// the bottom. The basket is already on the device; the way back is this
   /// vitrine, and the order opens again once they are in (_resumeOrder).
-  Future<void> _askSignIn({bool booking = false}) async {
+  Future<void> _askSignIn({bool booking = false, bool report = false}) async {
     final choice = await showOrderSignInSheet(
       context,
       booking: booking,
+      report: report,
+      // « ou écrivez-nous » (150): Mara's own help, no account needed.
+      onWriteUs: report ? _writeUs : null,
       googleAvailable: widget.session.auth.googleAvailable,
       // The iPhone, with Apple on (125); the website, with « Connexion
       // Apple sur le site » on too (139).
@@ -595,7 +633,7 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
       try {
         await widget.session.db.writePref(
           _resumeKey,
-          streetResumeNote(widget.slug, booking: booking),
+          streetResumeNote(widget.slug, booking: booking, report: report),
         );
       } catch (_) {}
     }();
@@ -990,6 +1028,207 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
     if (go == true && mounted) context.go(Routes.myOrders);
   }
 
+  // ---------------------------------------------------------------------
+  // « Signaler cette vitrine » and « Masquer cette vitrine » (batch 150:
+  // App Store guideline 1.2 — a way to report what one finds objectionable,
+  // and a way to stop seeing it). For visitors only: never its own people
+  // on their own vitrine, never Mara's admin, who moderates from the console.
+  // ---------------------------------------------------------------------
+
+  /// Mara's admin: the platform's word, or the platform_admin role that
+  /// my_orgs() gives them on every business.
+  bool get _platformAdmin =>
+      widget.session.isPlatformAdmin ||
+      widget.session.orgs.any((o) => o.roles.contains('platform_admin'));
+
+  /// The ⋮ in the header: somebody who is neither of the business nor Mara.
+  bool _visitorOf(PublicShop shop) => !_isOwn(shop) && !_platformAdmin;
+
+  bool get _inside {
+    final phase = widget.session.phase;
+    return phase == SessionPhase.noOrg ||
+        phase == SessionPhase.picking ||
+        phase == SessionPhase.ready;
+  }
+
+  /// « Signaler cette vitrine »: the report sheet, about this vitrine. A
+  /// report needs an account (113's report_problem is the signed-in's: Mara
+  /// answers in the bell), so somebody signed out is offered the sign-in —
+  /// and the sheet opens again once they are back — or Mara's help.
+  Future<void> _report() async {
+    switch (widget.session.phase) {
+      case SessionPhase.signedOut:
+        // Mara's numbers, asked while the sheet is read: « ou écrivez-nous »
+        // opens straight from its tap.
+        unawaited(Support.warm(widget.session.auth.client));
+        await _askSignIn(report: true);
+        return;
+      case SessionPhase.locked:
+      case SessionPhase.choosingPin:
+      case SessionPhase.twoStep:
+        // A gate on the way: through it, then back here to the sheet.
+        try {
+          await widget.session.db.writePref(
+              _resumeKey, streetResumeNote(widget.slug, booking: false, report: true));
+        } catch (_) {}
+        if (!mounted) return;
+        widget.session.stashReturnTo(Routes.storefront(widget.slug));
+        context.go(widget.session.phase == SessionPhase.twoStep ? Routes.twoStep : Routes.pin);
+        return;
+      case SessionPhase.booting:
+      case SessionPhase.resolving:
+        return;
+      case SessionPhase.noOrg:
+      case SessionPhase.picking:
+      case SessionPhase.ready:
+        await _openReport();
+    }
+  }
+
+  Future<void> _openReport() => showReportSheet(
+        context,
+        shopper: widget.shopper ?? ShopperRepository(widget.session.auth.client),
+        slug: widget.slug,
+      );
+
+  /// « ou écrivez-nous »: Mara's WhatsApp when the platform set one, its
+  /// e-mail otherwise — straight from the tap (a browser opens a chat only
+  /// from a gesture).
+  void _writeUs(BuildContext context) {
+    final name = _shop?.name ?? widget.slug;
+    if (Support.contacts.value.whatsapp != null) {
+      unawaited(Support.openWhatsApp(context,
+          text: context.tr('Bonjour, je voudrais signaler la vitrine « {name} » ({link}).',
+              {'name': name, 'link': '$siteOrigin${Routes.storefront(widget.slug)}'})));
+    } else {
+      unawaited(Support.openEmail(context,
+          subject: context.tr('Signalement : {name}', {'name': name})));
+    }
+  }
+
+  bool _resumingReport = false;
+
+  /// Back signed in after « Signaler cette vitrine » (within the half hour,
+  /// on this vitrine): the report sheet again, by itself.
+  Future<void> _resumeReport() async {
+    if (_resumingReport || _loading || _shop == null || !_inside) return;
+    _resumingReport = true;
+    try {
+      final db = widget.session.db;
+      String? raw;
+      try {
+        raw = await db.readPref(_resumeKey);
+      } catch (_) {}
+      if (raw == null || !mounted) return;
+      final parts = raw.split('|');
+      if (parts.length < 3 || parts[2] != 'report' || parts.first != widget.slug) return;
+      final at = DateTime.tryParse(parts[1]);
+      await db.writePref(_resumeKey, null);
+      // The vitrine left itself as the way back; it is here now.
+      final stashed = widget.session.takeReturnTo();
+      if (stashed != null && stashed != Routes.storefront(widget.slug)) {
+        widget.session.stashReturnTo(stashed);
+      }
+      if (at == null || DateTime.now().difference(at) > _resumeFresh) return;
+      if (!mounted || !(ModalRoute.of(context)?.isCurrent ?? true)) return;
+      await _openReport();
+    } finally {
+      _resumingReport = false;
+    }
+  }
+
+  /// « Masquer cette vitrine »: one short question, then gone from this
+  /// device's street, and back to the street.
+  Future<void> _hide() async {
+    final shop = _shop;
+    if (shop == null) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      // In the street's own look, like the report sheet.
+      builder: (dialog) => Theme(
+        data: ShopStyle.theme(dialog, accent: shop.accent),
+        child: AlertDialog(
+          key: const Key('vitrine-hide-confirm'),
+          scrollable: true,
+          icon: const Icon(Icons.visibility_off_outlined),
+          title: Text(dialog.tr('Masquer cette vitrine ?')),
+          content: Text(dialog.tr(
+              'Vous ne la verrez plus dans la rue. Vous pourrez l\'afficher à nouveau depuis votre profil.')),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialog, false),
+              child: Text(dialog.tr('Annuler')),
+            ),
+            FilledButton(
+              key: const Key('vitrine-hide-yes'),
+              onPressed: () => Navigator.pop(dialog, true),
+              child: Text(dialog.tr('Masquer')),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (ok != true || !mounted) return;
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    final said = context.tr('{name} est masquée.', {'name': shop.name});
+    final undo = context.tr('Annuler');
+    final failed = context.tr('La vitrine n\'a pas pu être masquée sur cet appareil.');
+    final kept = await _hiddenStore.hide(shop.slug, name: shop.name);
+    if (!mounted) return;
+    if (!kept) {
+      messenger?.showSnackBar(SnackBar(content: Text(failed)));
+      return;
+    }
+    final store = _hiddenStore;
+    messenger
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text(said),
+        action: SnackBarAction(label: undo, onPressed: () => unawaited(store.show(shop.slug))),
+      ));
+    _directory();
+  }
+
+  /// « Afficher à nouveau » on the notice: the vitrine, read as usual.
+  Future<void> _showAgain() async {
+    await _hiddenStore.show(widget.slug);
+    if (!mounted) return;
+    setState(() => _hiddenHere = false);
+    await _load();
+  }
+
+  Widget _menu() => PopupMenuButton<String>(
+        key: const Key('vitrine-menu'),
+        tooltip: context.tr('Plus d\'actions'),
+        icon: const Icon(Icons.more_vert),
+        onSelected: (choice) {
+          switch (choice) {
+            case 'report':
+              unawaited(_report());
+            case 'hide':
+              unawaited(_hide());
+          }
+        },
+        itemBuilder: (menu) => [
+          PopupMenuItem(
+            key: const Key('vitrine-report'),
+            value: 'report',
+            child: ListTile(
+              leading: const Icon(Icons.flag_outlined),
+              title: Text(menu.tr('Signaler cette vitrine')),
+            ),
+          ),
+          PopupMenuItem(
+            key: const Key('vitrine-hide'),
+            value: 'hide',
+            child: ListTile(
+              leading: const Icon(Icons.visibility_off_outlined),
+              title: Text(menu.tr('Masquer cette vitrine')),
+            ),
+          ),
+        ],
+      );
+
   @override
   Widget build(BuildContext context) {
     // Measured after this frame: has the basket's place in the page come
@@ -1076,8 +1315,11 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
         icon: const Icon(Icons.arrow_back),
         onPressed: _directory,
       ),
-      // The shopper's bell (115), once signed in.
-      trailing: const ShopperBell(),
+      // The shopper's bell (115), once signed in; for a visitor, the ⋮
+      // with « Signaler » and « Masquer » (150).
+      trailing: shop != null && !_loading && !_hiddenHere && _visitorOf(shop)
+          ? Row(mainAxisSize: MainAxisSize.min, children: [const ShopperBell(), _menu()])
+          : const ShopperBell(),
       overlay: _basket.isEmpty || _inlineShown
           ? null
           : basketBar(floating: true),
@@ -1090,6 +1332,29 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
           : null,
       body: _loading
           ? const ShopSkeleton.shelf()
+          : _hiddenHere
+          // Hidden on this device (150): said, with the way back — never
+          // a dead end.
+          ? ShopNotice(
+              key: const Key('vitrine-hidden-notice'),
+              text: context.tr('Vous avez masqué cette vitrine'),
+              action: Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 10,
+                runSpacing: 8,
+                children: [
+                  FilledButton(
+                    key: const Key('vitrine-show-again'),
+                    onPressed: _showAgain,
+                    child: Text(context.tr('Afficher à nouveau')),
+                  ),
+                  OutlinedButton(
+                    onPressed: _directory,
+                    child: Text(context.tr('Voir les autres vitrines')),
+                  ),
+                ],
+              ),
+            )
           : _error != null
           ? ShopNotice(
               text: _error!,

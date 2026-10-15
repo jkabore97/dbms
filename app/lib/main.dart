@@ -10,6 +10,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'core/storefront/hidden_vitrines.dart';
 import 'core/auth/two_step.dart';
 import 'core/nav/app_scope.dart';
 import 'core/nav/back_first.dart';
@@ -149,6 +150,9 @@ Future<void> _startup() async {
     client = Supabase.instance.client;
   }
   final db = await opening;
+  // The vitrines this phone hid (150), read once now: the street and the
+  // vitrines know them at once, never waiting on the device to draw.
+  unawaited(HiddenVitrines(db).list());
   if (client != null) {
     // Started by the session once someone is actually signed in — draining
     // the outbox before then would post entries with no author.
