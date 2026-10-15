@@ -37,6 +37,7 @@ import '../onboarding/business_creation.dart';
 import '../../features/pay/payment_screen.dart';
 import '../../features/settings/language_screen.dart';
 import '../theme/kaj_theme.dart';
+import '../association/members.dart' show AssociationMember, MembersList;
 import '../accounting/models.dart';
 import '../auth/models.dart';
 import '../access/org_access.dart';
@@ -1452,6 +1453,9 @@ GoRouter buildRouter(SessionController session) {
                     orgId: org.id,
                     orgName: org.name,
                     currency: org.currency,
+                    // One member's, from their page (148).
+                    memberId: state.uri.queryParameters['membre'],
+                    onAddMembers: () => context.push(Routes.inside(org.id, 'membres')),
                   ),
                 ),
               ),
@@ -1460,8 +1464,37 @@ GoRouter buildRouter(SessionController session) {
                 builder: (context, state) => _withOrg(
                   context,
                   state,
-                  // A farm's own analyses (101); a shop's, as before.
-                  (scope, org) => org.profile == 'farm'
+                  // A farm's own analyses (101); an association's (148);
+                  // a shop's, as before.
+                  (scope, org) => org.isAssociation
+                      ? biz.AssociationAnalyticsScreen(
+                          org: org,
+                          load: (from, to) => scope.reports
+                              .associationAnalytics(org.id, from: from, to: to),
+                          // A category's entries: the ledger of its account,
+                          // unless the platform hid the books (104).
+                          openCategory: scope.session.accessFor(org.id).isHidden('accounting')
+                              ? null
+                              : (c, type, period) => Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) => biz.AccountLedgerScreen(
+                                        accounting: scope.accounting,
+                                        org: org,
+                                        initialPeriod: period,
+                                        account: LedgerAccount(
+                                          id: c.accountId,
+                                          code: c.code,
+                                          name: c.name,
+                                          type: type,
+                                          isActive: true,
+                                          balance: c.amount,
+                                          entryCount: c.entries,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                        )
+                      : org.profile == 'farm'
                       ? biz.FarmAnalyticsScreen(
                           analytics: scope.analytics,
                           orgId: org.id,
@@ -1475,6 +1508,48 @@ GoRouter buildRouter(SessionController session) {
                           currency: org.currency,
                         ),
                   feature: 'analytics',
+                ),
+              ),
+            ],
+          ),
+          // « Membres » (148): an association's list, and one member.
+          GoRoute(
+            path: 'membres',
+            builder: (context, state) => _withOrg(
+              context,
+              state,
+              (scope, org) => biz.MembersScreen(
+                api: scope.reports,
+                org: org,
+                db: scope.db,
+                books: scope.reports,
+                openMember: (m, list) => context.push(
+                    Routes.inside(org.id, 'membres/${m.id}'),
+                    extra: MemberArg(m, list)),
+              ),
+              allow: (org) => org.isAssociation,
+            ),
+            routes: [
+              GoRoute(
+                path: ':memberId',
+                builder: (context, state) => _withOrg(
+                  context,
+                  state,
+                  (scope, org) {
+                    final arg = state.extra;
+                    if (arg is! MemberArg) {
+                      return _MissingContext(backTo: Routes.inside(org.id, 'membres'));
+                    }
+                    return biz.MemberScreen(
+                      api: scope.reports,
+                      org: org,
+                      member: arg.member,
+                      list: arg.list,
+                      openStatement: (m) => context.push(
+                          Routes.inside(org.id, 'rapports/dons?membre=${m.id}')),
+                    );
+                  },
+                  allow: (org) => org.isAssociation,
                 ),
               ),
             ],
@@ -2319,6 +2394,13 @@ class _Splash extends StatelessWidget {
 /// The typed payloads for the few pages opened with an object rather than an
 /// id. Typed rather than raw so a builder can tell "opened from the list" from
 /// "opened cold" without guessing at a Map.
+/// A member opened from the list (148): the row and the list it came from.
+class MemberArg {
+  const MemberArg(this.member, this.list);
+  final AssociationMember member;
+  final MembersList list;
+}
+
 class LedgerAccountArg {
   const LedgerAccountArg(this.account);
   final LedgerAccount account;

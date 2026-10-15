@@ -8257,4 +8257,165 @@ const enStrings = <String, String>{
       'Never pay in advance to someone you do not know. Pay at pickup.',
   'Ne payez jamais d\'avance à quelqu\'un que vous ne connaissez pas. Payez à la livraison, quand vous recevez la commande.':
       'Never pay in advance to someone you do not know. Pay on delivery, when you receive the order.',
+  // Batch 152 (148): an association's « Membres » and « Analyses ».
+  'Ce numéro est déjà enregistré':
+      'This number is already on the list',
+  'Enregistrer quand même':
+      'Save anyway',
+  'Ajouter quand même':
+      'Add anyway',
+  'Ce numéro est déjà celui de {name}.':
+      'This number already belongs to {name}.',
+  'Il faut du réseau pour enregistrer un membre : la liste est gardée sur le serveur. Ce que vous avez tapé reste ici.':
+      'Saving a member needs a connection: the list is kept on the server. What you typed stays here.',
+  'Modifier le membre':
+      'Edit member',
+  'Ajouter un membre':
+      'Add a member',
+  '{name} ajouté. Le suivant ?':
+      '{name} added. Next one?',
+  '{n} membres ajoutés. Le suivant ?':
+      '{n} members added. Next one?',
+  'Rôle ou note':
+      'Role or note',
+  'Facultatif':
+      'Optional',
+  'Trésorier, section jeunes…':
+      'Treasurer, youth section…',
+  'Membre depuis':
+      'Member since',
+  'Enregistrer et ajouter un autre':
+      'Save and add another',
+  'Retirer {name} de la liste ?':
+      'Remove {name} from the list?',
+  'Ses cotisations et ses dons restent enregistrés à son nom, et son relevé reste disponible. Il n\'apparaîtra plus dans la liste ni dans « De qui ? ».':
+      'Their dues and gifts stay recorded under their name, and their statement stays available. They will no longer appear in the list or in “From whom?”.',
+  '{name} a été retiré de la liste.':
+      '{name} was removed from the list.',
+  'Il faut du réseau pour retirer un membre.':
+      'Removing a member needs a connection.',
+  'Cotisation habituelle : {usual}':
+      'Usual dues: {usual}',
+  'Payée jusqu\'au {date}':
+      'Paid up to {date}',
+  'Rappeler sur WhatsApp':
+      'Remind on WhatsApp',
+  'Le détail des cotisations et des dons est réservé aux responsables.':
+      'The detail of dues and gifts is for the association\'s leaders only.',
+  'Pas de réseau : l\'historique s\'affichera au retour du réseau.':
+      'No connection: the history will show when the connection is back.',
+  'Aucune cotisation ni aucun don à son nom pour l\'instant.':
+      'No dues or gifts under their name yet.',
+  'Par année':
+      'By year',
+  'annulé':
+      'cancelled',
+  'Membre depuis {date}':
+      'Member since {date}',
+  'le {date}':
+      '{date}',
+  'À jour':
+      'Up to date',
+  'À payer cette semaine':
+      'Due this week',
+  'À payer ce mois-ci':
+      'Due this month',
+  'À payer cette année':
+      'Due this year',
+  'En retard depuis {since}':
+      'Late since {since}',
+  '{amount} par semaine':
+      '{amount} a week',
+  '{amount} par mois':
+      '{amount} a month',
+  '{amount} par an':
+      '{amount} a year',
+  'Bonjour {name}, ici {org}.':
+      'Hello {name}, this is {org}.',
+  'Petit rappel amical : votre cotisation ({amount}) est en attente depuis {since}. Merci beaucoup, et à bientôt !':
+      'A friendly reminder: your dues ({amount}) have been waiting since {since}. Thank you very much, and see you soon!',
+  'Petit rappel : la cotisation ({amount}) peut être versée quand vous le pourrez. Merci beaucoup !':
+      'A small reminder: the dues ({amount}) can be paid whenever you can. Thank you very much!',
+  'Pas de réseau, et la liste des membres n\'a pas encore été lue sur ce téléphone.':
+      'No connection, and the members\' list has not been read on this phone yet.',
+  'Hors connexion : la dernière liste lue sur ce téléphone.':
+      'Offline: the last list read on this phone.',
+  'Hors connexion : la liste du {date}.':
+      'Offline: the list as of {date}.',
+  'Chercher un nom ou un numéro':
+      'Search a name or a number',
+  '1 membre':
+      '1 member',
+  '{shown} sur {n}':
+      '{shown} of {n}',
+  '{ok} à jour · {late} en retard':
+      '{ok} up to date · {late} late',
+  'Personne ne correspond.':
+      'Nobody matches.',
+  'Les totaux, les cotisations et la note arrivent avec la prochaine mise à jour du serveur.':
+      'Totals, dues and notes come with the next server update.',
+  'cette année':
+      'this year',
+  'Aucun membre pour l\'instant':
+      'No members yet',
+  'Inscrivez les membres pour leur attribuer cotisations et dons, et leur remettre un relevé.':
+      'Add your members to record their dues and gifts under their name, and give them a statement.',
+  'Ajouter des membres':
+      'Add members',
+  'Les analyses de l\'association arrivent avec la prochaine mise à jour du serveur.':
+      'The association\'s analyses come with the next server update.',
+  'Les analyses ont besoin du réseau. Réessayez quand il revient.':
+      'Analyses need a connection. Try again when it is back.',
+  'Entrées et sorties':
+      'Money in and out',
+  'Par mois, sur les 12 derniers mois':
+      'By month, over the last 12 months',
+  'Ce que l\'association détient':
+      'What the association holds',
+  'Caisse, banque et mobile money à la fin de chaque mois':
+      'Cash, bank and mobile money at the end of each month',
+  'Recettes par catégorie':
+      'Income by category',
+  'Sur la période choisie':
+      'Over the chosen period',
+  'Dépenses par catégorie':
+      'Expenses by category',
+  'Les membres':
+      'Members',
+  'Ceux qui donnent le plus':
+      'Top givers',
+  'Sur la période choisie · visible des responsables seulement':
+      'Over the chosen period · visible to leaders only',
+  'Sorties':
+      'Money out',
+  'Entrées sur 12 mois':
+      'In over 12 months',
+  'Sorties sur 12 mois':
+      'Out over 12 months',
+  'Fin {month}':
+      'End of {month}',
+  '1 opération':
+      '1 entry',
+  '{n} opérations':
+      '{n} entries',
+  'Inscrits':
+      'Registered',
+  'Ont donné sur la période':
+      'Gave in the period',
+  'Sans cotisation habituelle, personne n\'est « en retard ».':
+      'Without usual dues, nobody is “late”.',
+  'Nouveaux membres par mois : {n} sur 12 mois':
+      'New members by month: {n} over 12 months',
+  'Aucun don attribué à un membre sur la période.':
+      'No gift recorded under a member in the period.',
+  'Entrées et sorties par mois':
+      'Money in and out by month',
+  'Solde à la fin de chaque mois':
+      'Balance at the end of each month',
+  'La liste, ce que chacun a donné, les cotisations à jour':
+      'The list, what each one gave, who is up to date',
+  'Entrées et sorties par mois, catégories, membres · Marakaj Pro':
+      'Money in and out by month, categories, members · Marakaj Pro',
+  'Entrées et sorties par mois, catégories, membres':
+      'Money in and out by month, categories, members',
 };

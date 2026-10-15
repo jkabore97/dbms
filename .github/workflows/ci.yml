@@ -925,6 +925,12 @@ jobs:
         run: |
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_marakaj_name.sql
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_marakaj_name.sql
+      - name: "Prove an association's « Membres » and « Analyses » — church_members' note and removal, an INSERT and an UPDATE policy and no DELETE (a delete would un-name every gift), the guard (a member stays in its association, a name, a note of 80, no date in the future); the owner and an employee add, edit and remove softly (the gifts stay theirs and on the « Relevé de dons »), the same phone warned (MA148) then allowed; an observer, an approver and a summary observer write nothing, another association, anon, a farm and a shop refused; the list's total given this year, its cotisations and dons, an undone gift out of the totals and the statement; where each member stands on the usual cotisation (due, late since, up to date, counted from the day entered); the analyses' 12 months in, out and held, income and expenses by category, the members' counts, the top givers an administrator's alone, a summary's totals only, Marakaj Pro, the switchboard and the dial; invoker doors pinned, authenticated only; run twice the same (148)"
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch148.sql
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch148.sql
 
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each

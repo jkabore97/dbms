@@ -4,11 +4,14 @@ import '../../../core/theme/kaj_card.dart';
 import '../../../l10n/strings.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/access/org_access.dart';
 import '../../../core/auth/models.dart';
 import '../../../core/reports/reports_repository.dart';
 import '../../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../../core/notify/bell_room.dart';
+import '../../../core/nav/app_scope.dart';
+import '../../account/pro_sheet.dart';
 
 /// The reports, and who is allowed to see which.
 ///
@@ -35,6 +38,9 @@ class ReportsHubScreen extends StatelessWidget {
   final OrgSummary org;
 
   bool get _summaryOnly => org.visibility == 'summary';
+
+  OrgAccess? _access(BuildContext context) =>
+      AppScope.maybeOf(context)?.session.accessFor(org.id);
 
   @override
   Widget build(BuildContext context) {
@@ -68,6 +74,38 @@ class ReportsHubScreen extends StatelessWidget {
               onTap: () => context.push(Routes.inside(org.id, 'rapports/dons')),
             ),
 
+          // « Membres » and « Analyses » (148), an association's.
+          if (org.isAssociation)
+            _ReportTile(
+              key: const Key('hub-members'),
+              icon: Icons.groups_2_outlined,
+              title: context.tr('Membres'),
+              subtitle: context.tr('La liste, ce que chacun a donné, les cotisations à jour'),
+              onTap: () => context.push(Routes.inside(org.id, 'membres')),
+            ),
+          if (org.isAssociation && !(_access(context)?.isHidden('analytics') ?? false))
+            _ReportTile(
+              key: const Key('hub-analytics'),
+              icon: Icons.insights_outlined,
+              title: context.tr('Analyses'),
+              subtitle: (_access(context)?.isProLocked('analytics') ?? false)
+                  ? context.tr('Entrées et sorties par mois, catégories, membres · Marakaj Pro')
+                  : context.tr('Entrées et sorties par mois, catégories, membres'),
+              onTap: () {
+                final scope = AppScope.maybeOf(context);
+                if (scope != null && (_access(context)?.isProLocked('analytics') ?? false)) {
+                  ProSheet.open(context,
+                      org: org,
+                      terms: scope.session.planTerms,
+                      admin: scope.admin,
+                      canRequest: org.isAdmin,
+                      feature: 'analytics');
+                  return;
+                }
+                context.push(Routes.inside(org.id, 'rapports/analyse'));
+              },
+            ),
+
           if (_summaryOnly) ...[
             const SizedBox(height: 16),
             Container(
@@ -98,6 +136,7 @@ class ReportsHubScreen extends StatelessWidget {
 
 class _ReportTile extends StatelessWidget {
   const _ReportTile({
+    super.key,
     required this.icon,
     required this.title,
     required this.subtitle,

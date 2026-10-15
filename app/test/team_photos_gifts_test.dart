@@ -274,7 +274,8 @@ void main() {
   test('an association is offered only its own tools; a farm its own analyses (101)', () {
     expect(PlanTerms.fits('delivery', 'association'), isFalse);
     expect(PlanTerms.fits('delivery', 'church'), isFalse);
-    expect(PlanTerms.fits('analytics', 'association'), isFalse);
+    // Its own analyses since 148 (batch 152).
+    expect(PlanTerms.fits('analytics', 'association'), isTrue);
     expect(PlanTerms.fits('analytics', 'farm'), isTrue);
     expect(PlanTerms.fits('analytics', 'retail'), isTrue);
     expect(PlanTerms.fits('accounting', 'association'), isTrue);
@@ -351,8 +352,10 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('gift-tool')));
     await tester.pumpAndSettle();
-    // Analyses are a shop's: not in the list for an association; its books are.
-    expect(find.text(PlanTerms.labelOf('analytics')), findsNothing);
+    // An association has its own analyses since 148 (batch 152), and its
+    // books; never the delivery.
+    expect(find.text(PlanTerms.labelOf('analytics')), findsWidgets);
+    expect(find.text(PlanTerms.labelOf('delivery')), findsNothing);
     expect(find.text(PlanTerms.labelOf('accounting')), findsWidgets);
   });
 

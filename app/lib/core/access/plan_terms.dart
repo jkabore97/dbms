@@ -216,12 +216,10 @@ class PlanTerms {
       });
 
   /// Whether a Pro tool means anything to a business of [profile] — what
-  /// the cauris screens offer to open. The analyses are a shop's and a
-  /// farm's (101: Compte draws them for both); an association keeps to its
-  /// own tools (099): no analyses, and no delivery — its services are
-  /// booked, not carried.
+  /// the cauris screens offer to open. The analyses are every kind's (a
+  /// shop's and a farm's since 101, an association's since 148); an
+  /// association has no delivery — its services are booked, not carried.
   static bool fits(String feature, String profile) => switch (feature) {
-        'analytics' => profile == 'retail' || profile == 'farm',
         'delivery' => profile != 'association' && profile != 'church',
         _ => true,
       };

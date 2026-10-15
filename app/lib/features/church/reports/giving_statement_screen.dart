@@ -28,9 +28,18 @@ class GivingStatementScreen extends StatefulWidget {
     required this.orgId,
     required this.orgName,
     this.currency = 'XOF',
+    this.memberId,
+    this.onAddMembers,
   });
 
   final ReportsRepository reports;
+
+  /// The member to open on (from their page, 148).
+  final String? memberId;
+
+  /// « Ajouter des membres » when nobody is on the list yet (148): the
+  /// members' page; the list is read again on the way back.
+  final Future<void> Function()? onAddMembers;
   final String orgId;
   final String orgName;
   final String currency;
@@ -66,10 +75,19 @@ class _GivingStatementScreenState extends State<GivingStatementScreen> {
     try {
       final members = await widget.reports.members(widget.orgId);
       if (!mounted) return;
+      final wanted = widget.memberId;
+      ChurchMember? chosen;
+      if (wanted != null) {
+        for (final m in members) {
+          if (m.id == wanted) chosen = m;
+        }
+      }
       setState(() {
         _members = members;
         _loadingMembers = false;
+        if (chosen != null && _member == null) _member = chosen;
       });
+      if (chosen != null && _lines == null) _loadStatement();
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -176,8 +194,25 @@ class _GivingStatementScreenState extends State<GivingStatementScreen> {
                 if (_members.isEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Text(
-                      context.tr('Aucun membre enregistré. Les relevés sont établis pour les personnes inscrites au registre de l\'association.'),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.tr('Aucun membre enregistré. Les relevés sont établis pour les personnes inscrites au registre de l\'association.'),
+                        ),
+                        if (widget.onAddMembers != null) ...[
+                          const SizedBox(height: 12),
+                          FilledButton.icon(
+                            key: const Key('statement-add-members'),
+                            onPressed: () async {
+                              await widget.onAddMembers!();
+                              if (mounted) await _loadMembers();
+                            },
+                            icon: const Icon(Icons.person_add_alt_1),
+                            label: Text(context.tr('Ajouter des membres')),
+                          ),
+                        ],
+                      ],
                     ),
                   )
                 else

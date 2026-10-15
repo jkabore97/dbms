@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../core/association/books_start.dart';
+import '../../core/association/members.dart';
 import '../../core/db/local_db.dart';
 import '../../core/format/money.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/reports/models.dart' show ChurchMember, accountLabel;
 import '../../core/reports/reports_repository.dart';
+import '../church/members/member_form_screen.dart';
 import '../common/step_flow.dart';
 import 'money_steps.dart';
 
@@ -37,9 +39,14 @@ class IncomeFlow extends StatefulWidget {
     this.reports,
     this.store,
     this.books,
+    this.canAddMembers = false,
   });
 
   final LocalDb db;
+
+  /// « Ajouter un membre » in « De qui ? » (148): somebody not on the list
+  /// yet is added there and picked — for those who may write the list.
+  final bool canAddMembers;
   final String orgId;
   final String currency;
 
@@ -115,13 +122,47 @@ class _IncomeFlowState extends State<IncomeFlow> {
     ];
     if (mounted) setState(() => _others = kept);
     final reports = widget.reports;
-    if (reports == null || !reports.isConfigured) return;
+    if (reports == null) return;
+    // The server's list, or with no signal the one this phone last read
+    // (148's MembersBook): a gift recorded offline is still attributed.
     try {
-      final members = await reports.members(widget.orgId);
-      if (mounted) setState(() => _members = members);
+      final list = await MembersBook(reports, widget.db).load(widget.orgId);
+      if (mounted) {
+        setState(() {
+          _list = list;
+          _members = [for (final m in list.members) m.asChurchMember];
+        });
+      }
     } catch (_) {
-      // No signal: the name is typed.
+      // No signal and no copy: the name is typed.
     }
+  }
+
+  MembersList? _list;
+
+  /// « Ajouter un membre »: the form, then the new member picked.
+  Future<void> _addMember() async {
+    final reports = widget.reports;
+    if (reports == null) return;
+    final saved = await Navigator.of(context).push<AssociationMember>(
+      MaterialPageRoute(
+        builder: (_) => MemberFormScreen(
+          api: reports,
+          orgId: widget.orgId,
+          others: _list?.members ?? const [],
+          notesKept: _list?.serverReady ?? true,
+          single: true,
+        ),
+      ),
+    );
+    if (saved == null || !mounted) return;
+    setState(() {
+      final m = saved.asChurchMember;
+      _members = [..._members.where((x) => x.id != m.id), m]
+        ..sort((a, b) => a.fullName.toLowerCase().compareTo(b.fullName.toLowerCase()));
+      _member = m;
+      _who.clear();
+    });
   }
 
   /// The usual cotisation: this run's last answer at once, the server's
@@ -317,6 +358,16 @@ class _IncomeFlowState extends State<IncomeFlow> {
           builder: (_) => Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              if (widget.canAddMembers && widget.reports != null) ...[
+                OutlinedButton.icon(
+                  key: const Key('income-add-member'),
+                  onPressed: _addMember,
+                  style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+                  icon: const Icon(Icons.person_add_alt_1_outlined),
+                  label: Text(context.tr('Ajouter un membre')),
+                ),
+                const SizedBox(height: 12),
+              ],
               if (_members.isNotEmpty) ...[
                 for (final m in _members)
                   Card(

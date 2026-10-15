@@ -29,9 +29,13 @@ class AccountLedgerScreen extends StatefulWidget {
     required this.accounting,
     required this.org,
     required this.account,
+    this.initialPeriod = Period.thisYear,
   });
 
   final AccountingRepository accounting;
+
+  /// The period it opens on: the analyses' own when opened from them (148).
+  final Period initialPeriod;
   final OrgSummary org;
   final LedgerAccount account;
 
@@ -40,7 +44,7 @@ class AccountLedgerScreen extends StatefulWidget {
 }
 
 class _AccountLedgerScreenState extends State<AccountLedgerScreen> {
-  Period _period = Period.thisYear;
+  late Period _period = widget.initialPeriod;
   List<LedgerMovement> _movements = const [];
   bool _loading = true;
   Object? _error;
