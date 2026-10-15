@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -283,12 +284,15 @@ class _SaleFlowState extends State<SaleFlow> {
 
   Future<void> _loadPaymentOptions() async {
     // Tolerated separately: no Wave handle, no rates, no signal — fewer
-    // choices, never the reason a sale cannot be recorded.
+    // choices, never the reason a sale cannot be recorded. Asked at once:
+    // the rates no longer wait a round trip behind the Wave handle.
     if (widget.allowWave) {
-      try {
-        final merchant = await widget.retail.waveMerchant(widget.orgId);
-        if (mounted) setState(() => _waveMerchant = merchant);
-      } catch (_) {}
+      unawaited(() async {
+        try {
+          final merchant = await widget.retail.waveMerchant(widget.orgId);
+          if (mounted) setState(() => _waveMerchant = merchant);
+        } catch (_) {}
+      }());
     }
     try {
       final rates = await widget.retail.currencyRates(widget.orgId);

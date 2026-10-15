@@ -239,46 +239,57 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
     } catch (_) {}
 
     try {
-      final day = await retail.day(widget.org.id);
-      final expiring = await retail.expiring(widget.org.id);
-      final products = await retail.products(widget.org.id);
-      final avoided = await retail.lossesAvoided(widget.org.id);
+      // Every question at once (none needs another's answer): on 3G each is
+      // a round trip of half a second or more, and the day used to wait for
+      // six or seven of them in turn. Awaited below in the old order, so the
+      // first failure is still the one said; the others' are heard there,
+      // or not at all — never as an error nobody caught.
+      final id = widget.org.id;
+      final askedDay = retail.day(id)..ignore();
+      final askedExpiring = retail.expiring(id)..ignore();
+      final askedProducts = retail.products(id)..ignore();
+      final askedAvoided = retail.lossesAvoided(id)..ignore();
       // A database one migration behind has no orders; the badge stays
       // quiet rather than failing the home screen.
-      var pending = 0;
-      try {
-        pending = await retail.pendingOrders(widget.org.id);
-      } catch (_) {
-        pending = 0;
-      }
+      final askedPending =
+          retail.pendingOrders(id).then((n) => n, onError: (Object _) => 0);
 
       // Photographs taken before there was signal go now, quietly. Failing to
       // send them must not fail the home screen — the bytes are still on the
       // device and the banner below says so.
-      var waiting = 0;
       final capture = widget.capture;
-      if (capture != null && capture.isConfigured) {
-        try {
-          await capture.drain();
-        } catch (_) {
-          // Reported by the count, not by an error.
-        }
-        waiting = (await capture.queueHealth(widget.org.id)).waiting;
-      }
+      final askedWaiting = capture != null && capture.isConfigured
+          ? (() async {
+              try {
+                await capture.drain();
+              } catch (_) {
+                // Reported by the count, not by an error.
+              }
+              return (await capture.queueHealth(id)).waiting;
+            }()
+            ..ignore())
+          : null;
 
       // The owner's next step (097): best-effort, never in the way of the
       // day.
-      PathState? path;
       var pathMissing = false;
+      Future<PathState?>? askedPath;
       if (widget.org.isAdmin) {
         final cauris = widget.cauris ?? CaurisRepository(scopeClient);
         // Cauris for a complete vitrine (084), read where it is seen.
-        unawaited(cauris.milestones(widget.org.id));
-        try {
-          path = await cauris.pathState(widget.org.id,
-              onMissing: () => pathMissing = true);
-        } catch (_) {}
+        unawaited(cauris.milestones(id));
+        askedPath = cauris
+            .pathState(id, onMissing: () => pathMissing = true)
+            .then<PathState?>((p) => p, onError: (Object _) => null);
       }
+
+      final day = await askedDay;
+      final expiring = await askedExpiring;
+      final products = await askedProducts;
+      final avoided = await askedAvoided;
+      final pending = await askedPending;
+      final waiting = askedWaiting == null ? 0 : await askedWaiting;
+      final path = askedPath == null ? null : await askedPath;
 
       if (!mounted) return;
       setState(() {
