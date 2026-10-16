@@ -6,6 +6,8 @@ import '../../core/accounting/accounting_repository.dart';
 import '../../core/accounting/models.dart';
 import '../../core/auth/models.dart';
 import '../../core/db/local_db.dart';
+import 'report_download.dart';
+import 'report_exports.dart';
 import 'report_shell.dart';
 import '../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -185,6 +187,11 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
               ),
               onPressed: () => setState(() => _showRetired = !_showRetired),
             ),
+          ReportDownloadButton(
+            build: _loading || _error != null
+                ? null
+                : () async => chartExport(widget.org, _accounts),
+          ),
           bellRoom,
         ],
       ),

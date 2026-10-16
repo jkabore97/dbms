@@ -1,3 +1,4 @@
+import '../../core/money/money_types.dart' show canWriteTypes;
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -817,6 +818,8 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
         profile: widget.org.profile,
         currency: widget.org.currency,
         capture: widget.capture,
+        types: AppScope.read(context)?.reports,
+        canEditTypes: canWriteTypes(widget.org),
       ),
     );
     if (saved == true && mounted) await _load();

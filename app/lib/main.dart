@@ -420,6 +420,7 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
       auth: widget.auth,
       admin: widget.admin,
       accounting: widget.accounting,
+      moneyTypes: widget.reports,
       sync: widget.sync,
       twoStep: widget.twoStep ??
           (widget.auth.isConfigured ? TwoStep(widget.auth.client) : null),

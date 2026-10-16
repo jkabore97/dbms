@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import '../../core/accounting/accounting_repository.dart';
 import '../../core/accounting/models.dart';
 import '../../core/auth/models.dart';
+import 'report_download.dart';
+import 'report_exports.dart';
 import 'report_shell.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
@@ -99,7 +101,14 @@ class _BalanceSheetScreenState extends State<BalanceSheetScreen> {
     final balanced = (totalAssets - totalClaims).abs() < 1;
 
     return Scaffold(
-      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Bilan'))),
+      appBar: AppBar(actions: [
+        ReportDownloadButton(
+          build: _loading || _error != null
+              ? null
+              : () async => balanceSheetExport(widget.org, _lines),
+        ),
+        bellRoom,
+      ], title: Text(context.tr('Bilan'))),
       body: ReportBody(
         loading: _loading,
         error: _error,

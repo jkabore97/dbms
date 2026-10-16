@@ -4,6 +4,8 @@ import '../../core/theme/kaj_card.dart';
 import '../../core/accounting/accounting_repository.dart';
 import '../../core/accounting/models.dart';
 import '../../core/auth/models.dart';
+import 'report_download.dart';
+import 'report_exports.dart';
 import 'report_shell.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
@@ -103,7 +105,17 @@ class _IncomeStatementScreenState extends State<IncomeStatementScreen> {
         result < 0 ? theme.colorScheme.error : Colors.green.shade800;
 
     return Scaffold(
-      appBar: AppBar(actions: const [bellRoom], title: Text(context.tr('Compte de résultat'))),
+      appBar: AppBar(actions: [
+        ReportDownloadButton(
+          build: _loading || _error != null
+              ? null
+              : () async {
+                  final range = _period.range;
+                  return incomeStatementExport(widget.org, _lines, from: range.from, to: range.to);
+                },
+        ),
+        bellRoom,
+      ], title: Text(context.tr('Compte de résultat'))),
       body: Column(
         children: [
           const SizedBox(height: 12),

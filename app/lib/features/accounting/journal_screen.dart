@@ -4,6 +4,9 @@ import 'package:intl/intl.dart';
 import '../../core/accounting/accounting_repository.dart';
 import '../../core/accounting/models.dart';
 import '../../core/auth/models.dart';
+import 'report_download.dart';
+import 'report_exports.dart';
+import '../../core/export/report_export.dart';
 import 'report_shell.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
@@ -163,7 +166,10 @@ class _JournalScreenState extends State<JournalScreen> {
 
     return Scaffold(
       appBar: SectionHost.appBar(context,
-          actions: const [bellRoom],
+          actions: [
+            ReportDownloadButton(build: _loading || _error != null ? null : _export),
+            bellRoom,
+          ],
           title: Text(expenses ? context.tr('Dépenses') : context.tr('Journal'))),
       floatingActionButton: onAdd == null
           ? null
@@ -217,6 +223,22 @@ class _JournalScreenState extends State<JournalScreen> {
         ],
       )),
     );
+  }
+
+  /// The whole period, not only the pages read so far: the rest is read
+  /// first (500 at a time, 20 000 at most).
+  Future<ReportExport> _export() async {
+    final range = _period.range;
+    final all = [..._all];
+    var done = _exhausted;
+    while (!done && all.length < 20000) {
+      final more = await widget.accounting.journal(widget.org.id,
+          from: range.from, to: range.to, limit: 500, offset: all.length);
+      all.addAll(more);
+      done = more.length < 500;
+    }
+    return journalExport(widget.org, all,
+        from: range.from, to: range.to, expensesOnly: widget.direction == 'out');
   }
 
   Widget _footer() {

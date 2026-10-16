@@ -27,7 +27,11 @@ String moneyMethodLabel(BuildContext context, String method) =>
 /// The chosen « Autre » tile, before its name is typed.
 const otherHeading = '__other__';
 
-/// A grid of big tiles, two to a row: one per heading, and « Autre » last.
+/// A grid of big tiles, two to a row: one per heading, « Autre » next, and
+/// — when [onAdd] is given — « Ajouter un type de dépense » last (149).
+///
+/// Rows of two whose height follows their content, so a name on two lines
+/// and a description under it fit at 320 px with large text.
 class HeadingTiles extends StatelessWidget {
   const HeadingTiles({
     super.key,
@@ -35,6 +39,10 @@ class HeadingTiles extends StatelessWidget {
     required this.selected,
     required this.onSelect,
     this.labelFor,
+    this.detailFor,
+    this.onAdd,
+    this.addLabel,
+    this.onLongPress,
   });
 
   /// The names as the books hold them — what gets posted.
@@ -42,13 +50,25 @@ class HeadingTiles extends StatelessWidget {
   final String? selected;
   final ValueChanged<String> onSelect;
 
-  /// How a stored name is shown (the seeded chart is in English).
+  /// How a stored name is shown (the seeded chart is in English; a type
+  /// renamed after use shows its label, 149).
   final String Function(String)? labelFor;
+
+  /// A type's short description, under its name (149).
+  final String? Function(String)? detailFor;
+
+  /// « Ajouter un type de dépense » (149). Null draws no such tile.
+  final VoidCallback? onAdd;
+  final String? addLabel;
+
+  /// A long press on a heading's tile (149: « Gérer »).
+  final ValueChanged<String>? onLongPress;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    Widget tile(String value, String label, IconData icon) {
+    Widget tile(String value, String label, IconData icon,
+        {String? detail, VoidCallback? onTap, VoidCallback? onHold}) {
       final on = value == selected;
       return Material(
         color: on
@@ -63,38 +83,64 @@ class HeadingTiles extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           key: Key('heading-$value'),
-          onTap: () => onSelect(value),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 32),
-                const SizedBox(height: 8),
-                Text(label,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall
-                        ?.copyWith(fontWeight: FontWeight.w600)),
-              ],
+          onTap: onTap ?? () => onSelect(value),
+          onLongPress: onHold,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 88),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: 30),
+                  const SizedBox(height: 6),
+                  Text(label,
+                      textAlign: TextAlign.center,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w600)),
+                  if (detail != null && detail.isNotEmpty)
+                    Text(detail,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant)),
+                ],
+              ),
             ),
           ),
         ),
       );
     }
 
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 10,
-      crossAxisSpacing: 10,
-      childAspectRatio: 1.6,
+    final tiles = <Widget>[
+      for (final h in headings)
+        tile(h, labelFor?.call(h) ?? h, headingIcon(labelFor?.call(h) ?? h),
+            detail: detailFor?.call(h),
+            onHold: onLongPress == null ? null : () => onLongPress!(h)),
+      tile(otherHeading, context.tr('Autre'), Icons.edit_note_outlined),
+      if (onAdd != null)
+        tile('__add__', addLabel ?? context.tr('Ajouter'), Icons.add_circle_outline,
+            onTap: onAdd),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final h in headings)
-          tile(h, labelFor?.call(h) ?? h, headingIcon(labelFor?.call(h) ?? h)),
-        tile(otherHeading, context.tr('Autre'), Icons.add),
+        for (var i = 0; i < tiles.length; i += 2) ...[
+          if (i > 0) const SizedBox(height: 10),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: tiles[i]),
+                const SizedBox(width: 10),
+                Expanded(child: i + 1 < tiles.length ? tiles[i + 1] : const SizedBox()),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }

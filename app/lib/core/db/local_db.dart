@@ -1384,6 +1384,24 @@ class LocalDb {
     });
   }
 
+  /// A recette or dépense type added with no signal (149): sent by the
+  /// sync loop to save_money_type with p_adopt, so the account that exists
+  /// by then (opened by an entry under it, or by another phone) is taken
+  /// rather than refused. Sent with the generic path (p_recorded_by added
+  /// by SyncService), oldest first — before the entries recorded under it.
+  Future<void> queueMoneyType({
+    required String orgId,
+    required Map<String, dynamic> params,
+  }) async {
+    await _db.insert('outbox', {
+      'client_uuid': _uuid.v4(),
+      'org_id': orgId,
+      'action': 'save_money_type',
+      'payload': jsonEncode(params),
+      'created_at': DateTime.now().toUtc().toIso8601String(),
+    });
+  }
+
   /// Sales kept on this phone and not yet sent, for one business.
   Future<int> pendingSales(String orgId) async {
     final result = await _db.rawQuery(

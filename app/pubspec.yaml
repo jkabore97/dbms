@@ -184,3 +184,8 @@ flutter:
     # scripts/make-tones.py. WAV, so Android keeps it uncompressed in the
     # APK and MainActivity can open it as a file.
     - assets/sounds/carillon.wav
+    # Embedded in the accounting reports' PDF (153): the pdf package's own
+    # Helvetica holds Latin-1 only (no « œ », no « — »). Read only when a
+    # report is downloaded — on the web an asset is fetched on demand.
+    - assets/fonts/Roboto-Regular.ttf
+    - assets/fonts/Roboto-Bold.ttf

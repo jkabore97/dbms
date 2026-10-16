@@ -10,6 +10,8 @@ import '../../core/format/money.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import '../../core/reports/models.dart' show accountLabel;
+import '../accounting/report_download.dart';
+import '../accounting/report_exports.dart';
 import '../accounting/report_shell.dart' show Period, PeriodSelector;
 import 'members/member_words.dart' show isNarrow;
 
@@ -100,6 +102,14 @@ class _AssociationAnalyticsScreenState extends State<AssociationAnalyticsScreen>
       appBar: AppBar(
         title: Text(context.tr('Analyses')),
         actions: [
+          ReportDownloadButton(
+            build: _loading || _error != null || _data == null
+                ? null
+                : () async {
+                    final r = _period.range;
+                    return analyticsExport(widget.org, _data!, from: r.from, to: r.to);
+                  },
+          ),
           IconButton(
             onPressed: _loading ? null : _load,
             icon: const Icon(Icons.refresh),

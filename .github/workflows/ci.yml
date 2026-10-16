@@ -932,6 +932,13 @@ jobs:
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch148.sql
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch148.sql
 
+      - name: "Prove the recette and dépense types a business adds itself are its chart of accounts — accounts.label and sort_order; the owner and an employee add « Quête » and « Loyer de salle », an entry under « Quête » lands on that very account and the income statement and the analyses count it; a duplicate refused accents, case and spaces aside (MA149), adopt takes the existing account; an unused type renamed for real, a used one only labelled (its entries untouched); hiding keeps the account and its entries and an entry still posts to it; the order; an observer, an approver, a summary observer, another business, anon and a suspended business write nothing, an income type for a shop or a farm refused, an expense type for a farm taken; money_types INVOKER, the writers' doors DEFINER with their checks, authenticated only; run twice the same (149)"
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch149.sql
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch149.sql
+
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each
       # owner reads and every vitrine door (orders, bookings, delivery, Wave,

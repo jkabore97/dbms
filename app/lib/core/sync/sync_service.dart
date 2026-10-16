@@ -122,6 +122,14 @@ class SyncService {
             await _db.markSynced(clientUuid, serverId: serverId as String?);
           }
         } catch (e) {
+          // A type added offline (149) on a server that has not had 149
+          // yet: nothing to send it to. It stays on the phone, and its
+          // account opens with the first entry under it, as « Autre »'s
+          // does — the row is done, not retried for ever.
+          if (action == 'save_money_type' && isSchemaOutOfDate(e)) {
+            await _db.markSynced(clientUuid);
+            continue;
+          }
           // The stock is not there (101): a sale or a sack of feed recorded
           // offline that the server will refuse every time. Retrying forever
           // would hide it; it is set aside for the owner to read instead

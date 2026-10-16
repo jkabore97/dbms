@@ -317,11 +317,15 @@ class FlowChoice<T> extends StatelessWidget {
     required this.options,
     required this.value,
     required this.onChanged,
+    this.onLongPress,
   });
 
   final List<FlowOption<T>> options;
   final T? value;
   final ValueChanged<T> onChanged;
+
+  /// A long press on an option (149: a type's card opens « Gérer »).
+  final ValueChanged<T>? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -347,6 +351,8 @@ class FlowChoice<T> extends StatelessWidget {
             child: InkWell(
               key: Key('flow-option-${o.value}'),
               onTap: () => onChanged(o.value),
+              onLongPress:
+                  onLongPress == null ? null : () => onLongPress!(o.value),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(minHeight: 64),
                 child: Padding(
