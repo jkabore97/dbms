@@ -251,6 +251,18 @@ class CompteScreen extends StatelessWidget {
                   onTap: () => PathGate.guard(context, org, 'second_business',
                       () => context.push(Routes.createBusiness)),
                 ),
+              // Somebody else's business, by the code its owner sent: the
+              // same screen a shopper reaches from the street's account
+              // corner, which a member of a business never sees. Not
+              // second_business's Pro gate: that is for one's own.
+              if (live && !session.isPlatformAdmin)
+                _Tile(
+                  key: const Key('compte-join'),
+                  icon: Icons.vpn_key_outlined,
+                  title: context.tr('Rejoindre une autre activité'),
+                  subtitle: context.tr('Avec le code reçu de son responsable'),
+                  onTap: () => context.push(Routes.join),
+                ),
               // « Changer d'activité »: the picker with several; with one
               // that is the person's own (122), the sheet — a second one, or
               // why it needs Mara Pro.

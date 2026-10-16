@@ -4768,6 +4768,8 @@ const enStrings = <String, String>{
       'A second business needs Marakaj Pro',
   'Avec Marakaj Pro, vous gérez plusieurs activités depuis le même compte et passez de l\'une à l\'autre ici.':
       'With Marakaj Pro you run several businesses from the same account and switch between them here.',
+  'Rejoindre une autre activité': 'Join another business',
+  'Avec le code reçu de son responsable': 'With the code its manager sent you',
   'Passer à Pro':
       'Go Pro',
   'Notifications sur ce téléphone':

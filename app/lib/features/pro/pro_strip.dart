@@ -11,7 +11,7 @@ import '../../core/nav/router.dart';
 import '../../core/theme/kaj_theme.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
-/// The small « Pro » at the top of every page inside a business that is not
+/// The small « Passer à Pro » at the top of every page inside a business that is not
 /// on Kaj Pro, for the people who can change that — its owner and admins.
 /// One tap opens the Free and Pro side by side (`/o/<id>/kaj-pro`).
 ///
@@ -55,7 +55,7 @@ class ProStrip extends StatelessWidget {
             ),
             child: SizedBox(
               height: 34,
-              // « PRO » on the left, the Mara seal in the middle.
+              // « Passer à Pro » on the left, the seal in the middle.
               child: Stack(
                 fit: StackFit.expand,
                 alignment: Alignment.center,
@@ -89,7 +89,9 @@ class ProStrip extends StatelessWidget {
   }
 }
 
-/// The pill itself: ink and small capitals.
+/// The pill itself: an invitation, never a status — « Passer à Pro » with
+/// its arrow, so a business on the free plan does not read a bare « PRO »
+/// at the top of its pages as the plan it is on.
 class ProPill extends StatelessWidget {
   const ProPill({super.key, required this.onTap});
 
@@ -113,13 +115,15 @@ class ProPill extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                const Icon(Icons.arrow_upward_rounded, size: 14, color: kPaper),
+                const SizedBox(width: 4),
                 Text(
-                  context.tr('PRO'),
+                  context.tr('Passer à Pro'),
                   style: const TextStyle(
                     color: kPaper,
-                    fontSize: 12,
+                    fontSize: 12.5,
                     fontWeight: FontWeight.w700,
-                    letterSpacing: 1.6,
+                    letterSpacing: 0.2,
                   ),
                 ),
               ],

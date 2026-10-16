@@ -54,7 +54,10 @@ void main() {
       'opens Marakaj and Marakaj Pro side by side', (tester) async {
     await pump(tester, _owner);
     expect(find.byKey(const Key('pro-pill')), findsOneWidget);
-    expect(find.text('PRO'), findsOneWidget);
+    // An invitation, not a status: never a bare « PRO » a Free business
+    // could take for the plan it is on.
+    expect(find.text('Passer à Pro'), findsOneWidget);
+    expect(find.text('PRO'), findsNothing);
     expect(
       find.text('Articles'),
       findsOneWidget,
