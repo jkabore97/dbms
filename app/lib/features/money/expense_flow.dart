@@ -1,13 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../core/capture/capture_repository.dart';
 import '../../core/db/local_db.dart';
 import '../../core/format/money.dart';
 import '../../core/l10n/tr.dart';
+import '../../core/money/money_types.dart';
 import '../../core/reports/models.dart' show accountLabel;
 import '../capture/capture_action.dart';
 import '../common/step_flow.dart';
 import 'money_steps.dart';
+import 'money_types_ui.dart';
 
 /// « Dépense », one entry at a time (115) — for a shop, a farm and an
 /// association alike.
@@ -23,6 +27,12 @@ import 'money_steps.dart';
 /// comes. The photo goes through the capture queue (kind 'receipt',
 /// captioned with the expense), which also works offline. A shop and a
 /// farm had no way to record an expense before; their homes now open this.
+///
+/// The tiles are the business's expense types (149): its expense accounts,
+/// in the order it chose, each with its short description; a hidden one is
+/// not drawn (the account and its entries stay). « Ajouter un type de
+/// dépense » adds one — a shop, a farm and an association alike — and
+/// « Gérer » renames, orders and hides them. « Autre » stays for a one-off.
 class ExpenseFlow extends StatefulWidget {
   const ExpenseFlow({
     super.key,
@@ -32,7 +42,16 @@ class ExpenseFlow extends StatefulWidget {
     this.currency = 'XOF',
     this.capture,
     this.store,
+    this.types,
+    this.canEditTypes = false,
   });
+
+  /// The types' server (149). Null: the phone's copy only.
+  final MoneyTypesApi? types;
+
+  /// « Ajouter un type de dépense » and « Gérer »: for the people who
+  /// record (canWriteTypes) — never an observer.
+  final bool canEditTypes;
 
   final LocalDb db;
   final String orgId;
@@ -62,6 +81,10 @@ class _ExpenseFlowState extends State<ExpenseFlow> {
   String? _heading;
   String _method = 'cash';
   List<String> _headings = const [];
+
+  /// The business's expense types (149), as last read.
+  MoneyTypesList _types = const MoneyTypesList(types: []);
+  late final MoneyTypesBook _book = MoneyTypesBook(api: widget.types, db: widget.db);
 
   PickedPhoto? _photo;
 
@@ -94,15 +117,61 @@ class _ExpenseFlowState extends State<ExpenseFlow> {
   /// usual headings for its kind (typed names: record_entry opens the
   /// account the first time).
   Future<void> _loadHeadings() async {
-    var names = await widget.db.categoriesFor(widget.orgId, 'out');
-    if (names.isEmpty) {
+    _show(await _book.cached(widget.orgId));
+    _show(await _book.load(widget.orgId));
+  }
+
+  void _show(MoneyTypesList list) {
+    var names = [for (final t in list.cards('out')) t.name];
+    if (names.isEmpty && list.manageable('out').isEmpty) {
       names = switch (widget.profile) {
         'farm' => const ['Aliment', 'Vétérinaire', 'Main-d\'œuvre', 'Semences', 'Transport'],
         'retail' => const ['Loyer', 'Transport', 'Salaires', 'Eau et électricité'],
         _ => const ['Loyer', 'Eau et électricité', 'Entretien', 'Fournitures'],
       };
     }
-    if (mounted) setState(() => _headings = names);
+    if (mounted) {
+      setState(() {
+        _types = list;
+        _headings = names;
+      });
+    }
+  }
+
+  MoneyType? _typeNamed(String name) {
+    for (final t in _types.types) {
+      if (t.direction == 'out' && t.name == name) return t;
+    }
+    return null;
+  }
+
+  /// What a heading's tile says: its type's label, else the books' name.
+  String _labelOf(String name) => _typeNamed(name)?.display ?? accountLabel(name);
+
+  Future<void> _addType() async {
+    final added = await showAddTypeSheet(context,
+        book: _book, orgId: widget.orgId, current: _types, direction: 'out');
+    if (added == null || !mounted) return;
+    _show(MoneyTypesList(
+        types: [..._types.types.where((t) => t.id != added.id), added],
+        serverReady: _types.serverReady,
+        fromPhone: _types.fromPhone));
+    setState(() => _heading = added.name);
+    unawaited(_book.load(widget.orgId).then((l) {
+      if (mounted) _show(l);
+    }));
+  }
+
+  Future<void> _manage() async {
+    await Navigator.of(context).push<bool>(MaterialPageRoute(
+      builder: (_) => ManageTypesScreen(
+          book: _book, orgId: widget.orgId, direction: 'out', canEdit: widget.canEditTypes),
+    ));
+    if (!mounted) return;
+    _show(await _book.load(widget.orgId));
+    if (mounted && _heading != null && _heading != otherHeading && !_headings.contains(_heading)) {
+      setState(() => _heading = null);
+    }
   }
 
   /// What the expense is filed under, as the books hold it.
@@ -113,7 +182,7 @@ class _ExpenseFlowState extends State<ExpenseFlow> {
   String get _label {
     final note = _note.text.trim();
     if (note.isNotEmpty) return note;
-    return _heading == otherHeading ? _category : accountLabel(_category);
+    return _heading == otherHeading ? _category : _labelOf(_category);
   }
 
   Map<String, Object?> _save() => {
@@ -217,11 +286,33 @@ class _ExpenseFlowState extends State<ExpenseFlow> {
           id: 'heading',
           title: context.tr('Pour quoi ?'),
           isValid: () => _heading != null,
-          builder: (_) => HeadingTiles(
-            headings: _headings,
-            selected: _heading,
-            labelFor: accountLabel,
-            onSelect: (h) => setState(() => _heading = h),
+          builder: (_) => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              HeadingTiles(
+                headings: _headings,
+                selected: _heading,
+                labelFor: _labelOf,
+                detailFor: (h) => _typeNamed(h)?.description,
+                onSelect: (h) => setState(() => _heading = h),
+                onAdd: widget.canEditTypes ? _addType : null,
+                addLabel: context.tr('Ajouter un type de dépense'),
+                onLongPress: widget.canEditTypes ? (_) => _manage() : null,
+              ),
+              if (widget.canEditTypes && _types.manageable('out').isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      key: const Key('expense-manage-types'),
+                      onPressed: _manage,
+                      icon: const Icon(Icons.tune),
+                      label: Text(context.tr('Gérer les types de dépense')),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
         FlowStep(
@@ -332,7 +423,7 @@ class _ExpenseFlowState extends State<ExpenseFlow> {
       ],
       summary: (_) => FlowSummary(rows: [
         FlowSummaryRow(context.tr('Pour'),
-            _heading == otherHeading ? _category : accountLabel(_category),
+            _heading == otherHeading ? _category : _labelOf(_category),
             step: _heading == otherHeading ? 'other' : 'heading'),
         FlowSummaryRow(context.tr('Montant'), _money.format(_value),
             step: 'amount', bold: true),

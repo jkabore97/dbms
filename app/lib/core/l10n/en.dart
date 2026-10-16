@@ -8420,4 +8420,124 @@ const enStrings = <String, String>{
       'Money in and out by month, categories, members · Marakaj Pro',
   'Entrées et sorties par mois, catégories, membres':
       'Money in and out by month, categories, members',
+  'Ajouter un type de recette':
+      'Add an income type',
+  'Ajouter un type de dépense':
+      'Add an expense type',
+  'Modifier le type':
+      'Edit the type',
+  'Il aura sa carte à la première étape et son compte dans les livres.':
+      'It gets its own card on the first step and its own account in the books.',
+  'Il aura sa tuile à la première étape et son compte dans les livres.':
+      'It gets its own tile on the first step and its own account in the books.',
+  'Ce nom est déjà pris.':
+      'This name is already taken.',
+  'Description courte (facultatif)':
+      'Short description (optional)',
+  'Chaque premier samedi du mois':
+      'Every first Saturday of the month',
+  'Pompe, tuyaux, main-d\'œuvre':
+      'Pump, pipes, labour',
+  '{n} écriture(s) portent ce nom dans les livres : elles le gardent, seule la carte change.':
+      '{n} entry(ies) carry this name in the books: they keep it, only the card changes.',
+  'Types de recette':
+      'Income types',
+  'Types de dépense':
+      'Expense types',
+  'Glissez pour changer l\'ordre. Masquer retire la carte de la première étape : le compte et ses écritures restent.':
+      'Drag to change the order. Hiding takes the card off the first step: the account and its entries stay.',
+  'Vous pouvez ajouter des types. Renommer, masquer et ranger arrivent avec la prochaine mise à jour du serveur.':
+      'You can add types. Renaming, hiding and ordering come with the next server update.',
+  'Sans réseau : la liste est celle du téléphone. Les ajouts partiront au retour du réseau ; renommer, masquer et ranger attendent le réseau.':
+      'No signal: this is the phone\'s list. New types will be sent when the signal returns; renaming, hiding and ordering wait for the network.',
+  'Aucun type ajouté pour le moment.':
+      'No type added yet.',
+  'pas encore envoyé':
+      'not sent yet',
+  '{n} écriture(s)':
+      '{n} entry(ies)',
+  'masqué':
+      'hidden',
+  'Loyer de salle, kermesse… : sa propre carte, son compte':
+      'Hall rental, fair…: its own card, its own account',
+  'Gérer les types de recette':
+      'Manage income types',
+  'Gérer les types de dépense':
+      'Manage expense types',
+  'Depuis le début, jusqu\'au {date}':
+      'From the beginning, up to {date}',
+  'Du {from} au {to}':
+      'From {from} to {to}',
+  'Généré le {date}':
+      'Generated on {date}',
+  'Période':
+      'Period',
+  'Généré le':
+      'Generated on',
+  'Page {n} sur {total}':
+      'Page {n} of {total}',
+  'Code':
+      'Code',
+  'Total des recettes':
+      'Total income',
+  'Total des dépenses':
+      'Total expenses',
+  'Ligne':
+      'Line',
+  'Totaux':
+      'Totals',
+  'Sortie':
+      'Out',
+  'Date':
+      'Date',
+  'Sens':
+      'Direction',
+  'Enregistré par':
+      'Recorded by',
+  'Total (sans les écritures corrigées)':
+      'Total (corrected entries excluded)',
+  'Grand livre':
+      'Ledger',
+  'Les {n} mouvements les plus récents de la période. Choisissez une période plus courte pour le reste.':
+      'The {n} most recent movements of the period. Choose a shorter period for the rest.',
+  'Solde':
+      'Balance',
+  'Total de la période':
+      'Total for the period',
+  'Catégorie':
+      'Category',
+  'Les 12 derniers mois':
+      'The last 12 months',
+  'Mois':
+      'Month',
+  'Détenu en fin de mois':
+      'Held at month end',
+  'Plus gros donateurs':
+      'Top givers',
+  'Les montants ne vous sont pas communiqués.':
+      'The amounts are not shared with you.',
+  'Donné en {year}':
+      'Given in {year}',
+  'Dernier don':
+      'Last gift',
+  'PDF':
+      'PDF',
+  'Pour imprimer ou envoyer':
+      'To print or send',
+  'CSV (Excel)':
+      'CSV (Excel)',
+  'Pour un tableur':
+      'For a spreadsheet',
+  'Un type porte déjà ce nom : {name}.':
+      'A type already has this name: {name}.',
+  'Il faut du réseau pour modifier la liste. Réessayez quand le signal revient.':
+      'Changing the list needs the network. Try again when the signal returns.',
+  'Arrive avec la prochaine mise à jour du serveur.':
+      'Comes with the next server update.',
+  'Fichier prêt : {name}':
+      'File ready: {name}',
+  'Monnaie : {money}':
+      'Currency: {money}',
+  'Ex. : kermesse annuelle':
+      'E.g. annual fair',
 };

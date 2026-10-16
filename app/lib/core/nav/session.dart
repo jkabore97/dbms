@@ -15,6 +15,7 @@ import '../auth/auth_repository.dart';
 import '../auth/models.dart';
 import '../auth/pin_codec.dart';
 import '../auth/two_step.dart';
+import '../money/money_types.dart';
 import '../db/local_db.dart';
 import '../l10n/tr.dart';
 import '../sync/sync_service.dart';
@@ -63,6 +64,7 @@ class SessionController extends ChangeNotifier {
     required this.auth,
     required this.admin,
     required this.accounting,
+    this.moneyTypes,
     this.sync,
     this.twoStep,
     this.resolveTimeout = const Duration(seconds: 12),
@@ -86,6 +88,10 @@ class SessionController extends ChangeNotifier {
   final AuthRepository auth;
   final AdminRepository admin;
   final AccountingRepository accounting;
+
+  /// The recette and dépense types (149), read when a business opens so
+  /// Recette's and Dépense's first step shows them with no signal later.
+  final MoneyTypesApi? moneyTypes;
   final SyncService? sync;
 
   /// The platform admin's second step. Null in tests and in a build with no
@@ -1242,6 +1248,12 @@ class SessionController extends ChangeNotifier {
   /// screen.
   Future<void> cacheChart(OrgSummary org) async {
     if (!accounting.isConfigured || !auth.hasLiveSession) return;
+    // Not behind the chart's Pro switch: recording is free (149). The book
+    // keeps what it reads on the phone and never throws for want of signal.
+    final types = moneyTypes;
+    if (types != null && types.isConfigured) {
+      unawaited(MoneyTypesBook(api: types, db: db).load(org.id).then((_) {}, onError: (_) {}));
+    }
     try {
       final accounts = await accounting.chartOfAccounts(org.id);
       await db.cacheAccounts(

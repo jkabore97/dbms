@@ -1,3 +1,4 @@
+import '../../core/money/money_types.dart' show canWriteTypes;
 import 'package:flutter/material.dart';
 import '../../core/help/help_repository.dart';
 import '../help/help_button.dart';
@@ -193,6 +194,8 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
         profile: widget.org.profile,
         currency: widget.org.currency,
         capture: widget.capture,
+        types: AppScope.read(context)?.reports,
+        canEditTypes: canWriteTypes(widget.org),
       ),
     );
     if (saved == true && mounted) await _refresh();

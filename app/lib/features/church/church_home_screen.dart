@@ -1,3 +1,4 @@
+import '../../core/money/money_types.dart' show canWriteTypes;
 import 'package:flutter/material.dart';
 import '../../core/help/help_repository.dart';
 import '../help/help_button.dart';
@@ -219,6 +220,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
               currency: currency,
               reports: widget.reports,
               canAddMembers: widget.org != null && canWriteMembers(widget.org!),
+              canEditTypes: widget.org != null && canWriteTypes(widget.org!),
             )
           : ExpenseFlow(
               db: widget.db,
@@ -226,6 +228,8 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
               profile: widget.org?.profile ?? 'association',
               currency: currency,
               capture: widget.capture,
+              types: widget.reports,
+              canEditTypes: widget.org != null && canWriteTypes(widget.org!),
             ),
     );
 

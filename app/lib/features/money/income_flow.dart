@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../core/association/books_start.dart';
@@ -5,16 +7,19 @@ import '../../core/association/members.dart';
 import '../../core/db/local_db.dart';
 import '../../core/format/money.dart';
 import '../../core/l10n/tr.dart';
+import '../../core/money/money_types.dart';
 import '../../core/reports/models.dart' show ChurchMember, accountLabel;
 import '../../core/reports/reports_repository.dart';
 import '../church/members/member_form_screen.dart';
 import '../common/step_flow.dart';
 import 'money_steps.dart';
+import 'money_types_ui.dart';
 
 /// « Recette », one entry at a time (115) — an association's money in
 /// (a legacy 'church' org is an association and gets the same).
 ///
-/// What it is (Cotisation, Don, Vente, Autre) → the name, for « Autre » →
+/// What it is (Cotisation, Don, Vente, Autre, then the association's own
+/// types, 149, and « Ajouter un type de recette ») → the name, for « Autre » →
 /// who gave it (optional) → the amount → how → the summary →
 /// « Enregistrer » → « C'est fait ».
 ///
@@ -30,6 +35,14 @@ import 'money_steps.dart';
 /// attributed (p_member_id, the giving statement reads it); a name typed
 /// for somebody not on the list is kept with the entry (its details and
 /// the day's list) — the same as the sheet's free details did.
+///
+/// The association's own types (149) are income accounts of its chart: a
+/// card files the entry under the account's name exactly as « Autre » does
+/// (record_entry → ensure_account when the signal comes), so it works
+/// offline the same way, and the books, the reports and the analyses count
+/// it. The list is kept on the phone (MoneyTypesBook): step 1 shows it with
+/// no signal. The names « Autre » was given before are accounts already —
+/// they are cards now, and can be hidden from « Gérer les types ».
 class IncomeFlow extends StatefulWidget {
   const IncomeFlow({
     super.key,
@@ -40,7 +53,16 @@ class IncomeFlow extends StatefulWidget {
     this.store,
     this.books,
     this.canAddMembers = false,
+    this.types,
+    this.canEditTypes = false,
   });
+
+  /// The types' server (149). Null: [reports], which is it in the app.
+  final MoneyTypesApi? types;
+
+  /// « Ajouter un type de recette » and « Gérer les types »: for the people
+  /// who record (canWriteTypes) — never an observer.
+  final bool canEditTypes;
 
   final LocalDb db;
 
@@ -87,7 +109,16 @@ class _IncomeFlowState extends State<IncomeFlow> {
   String _method = 'cash';
   ChurchMember? _member;
   List<ChurchMember> _members = const [];
-  List<String> _others = const [];
+
+  /// The association's own types (149), as last read.
+  MoneyTypesList _types = const MoneyTypesList(types: []);
+  late final MoneyTypesBook _book =
+      MoneyTypesBook(api: widget.types ?? widget.reports, db: widget.db);
+
+  /// The account a type card files under, and what the card says — kept
+  /// apart from the list so a draft restored offline still has them.
+  String? _typeName;
+  String? _typeLabel;
 
   /// The association's usual cotisation (134), and the amount it last put
   /// in the field — only that is replaced or taken back.
@@ -114,13 +145,16 @@ class _IncomeFlowState extends State<IncomeFlow> {
     super.dispose();
   }
 
+  /// The phone's copy at once, then the server's when it answers.
+  Future<void> _loadTypes() async {
+    final kept = await _book.cached(widget.orgId);
+    if (mounted) setState(() => _types = kept);
+    final fresh = await _book.load(widget.orgId);
+    if (mounted) setState(() => _types = fresh);
+  }
+
   Future<void> _load() async {
-    final names = await widget.db.categoriesFor(widget.orgId, 'in');
-    final kept = [
-      for (final n in names)
-        if (!churchHeadings.contains(n) && !incomeKinds.values.contains(n)) n,
-    ];
-    if (mounted) setState(() => _others = kept);
+    unawaited(_loadTypes());
     final reports = widget.reports;
     if (reports == null) return;
     // The server's list, or with no signal the one this phone last read
@@ -197,15 +231,63 @@ class _IncomeFlowState extends State<IncomeFlow> {
     }
   }
 
-  void _choose(String? kind) => setState(() {
-        _kind = kind;
-        if (kind == 'cotisation') {
-          _prefill();
-        } else if (_filled != null && _amount.text == _filled) {
-          _amount.clear();
-          _filled = null;
-        }
-      });
+  void _choose(String? kind) {
+    if (kind == _addKind) {
+      _addType();
+      return;
+    }
+    setState(() {
+      _kind = kind;
+      final type = kind != null && kind.startsWith('type:') ? _typeOf(kind) : null;
+      _typeName = type?.name;
+      _typeLabel = type?.display;
+      if (kind == 'cotisation') {
+        _prefill();
+      } else if (_filled != null && _amount.text == _filled) {
+        _amount.clear();
+        _filled = null;
+      }
+    });
+  }
+
+  static const _addKind = '__add_type__';
+
+  MoneyType? _typeOf(String kind) {
+    final id = kind.substring('type:'.length);
+    for (final t in _types.types) {
+      if (t.id == id) return t;
+    }
+    return null;
+  }
+
+  bool get _isType => _kind?.startsWith('type:') ?? false;
+
+  /// « Ajouter un type de recette »: the form, then the new card chosen.
+  Future<void> _addType() async {
+    final added = await showAddTypeSheet(context,
+        book: _book, orgId: widget.orgId, current: _types, direction: 'in');
+    if (added == null || !mounted) return;
+    setState(() => _types = MoneyTypesList(
+        types: [..._types.types.where((t) => t.id != added.id), added],
+        serverReady: _types.serverReady,
+        fromPhone: _types.fromPhone));
+    _choose('type:${added.id}');
+  }
+
+  /// « Gérer les types »: the list, then step 1 read again.
+  Future<void> _manage() async {
+    await Navigator.of(context).push<bool>(MaterialPageRoute(
+      builder: (_) => ManageTypesScreen(
+          book: _book, orgId: widget.orgId, direction: 'in', canEdit: widget.canEditTypes),
+    ));
+    if (!mounted) return;
+    final fresh = await _book.load(widget.orgId);
+    if (!mounted) return;
+    setState(() {
+      _types = fresh;
+      if (_isType && _typeOf(_kind!) == null) _kind = null;
+    });
+  }
 
   String _usualLine(ContributionDefault c) {
     final amount = _money.format(c.amount);
@@ -223,20 +305,32 @@ class _IncomeFlowState extends State<IncomeFlow> {
         _ => context.tr('Autre'),
       };
 
-  String get _category =>
-      _kind == 'autre' ? _otherName.text.trim() : (incomeKinds[_kind] ?? '');
+  String get _category => _kind == 'autre'
+      ? _otherName.text.trim()
+      : _isType
+          ? (_typeName ?? '')
+          : (incomeKinds[_kind] ?? '');
+
+  /// What the entry is called: the type's card, « Autre »'s name, a
+  /// built-in card's word.
+  String get _what => _isType
+      ? (_typeLabel ?? accountLabel(_category))
+      : _kind == 'autre'
+          ? accountLabel(_category)
+          : _kindLabel(_kind ?? '');
 
   String get _whoName => _member?.fullName ?? _who.text.trim();
 
   /// « Cotisation — Awa Ouédraogo », « Location de la salle ».
   String get _label {
-    final what =
-        _kind == 'autre' ? accountLabel(_category) : _kindLabel(_kind ?? '');
+    final what = _what;
     return _whoName.isEmpty ? what : '$what — $_whoName';
   }
 
   Map<String, Object?> _save() => {
         'kind': _kind,
+        'type_name': _typeName,
+        'type_label': _typeLabel,
         'other': _otherName.text,
         'member': _member == null
             ? null
@@ -249,6 +343,11 @@ class _IncomeFlowState extends State<IncomeFlow> {
 
   void _restore(Map<String, Object?> a) => setState(() {
         _kind = a['kind'] as String?;
+        _typeName = a['type_name'] as String?;
+        _typeLabel = a['type_label'] as String?;
+        if ((_kind?.startsWith('type:') ?? false) && _typeName == null) {
+          _kind = null;
+        }
         _otherName.text = (a['other'] as String?) ?? '';
         final m = a['member'];
         _member = m is Map
@@ -296,7 +395,10 @@ class _IncomeFlowState extends State<IncomeFlow> {
           id: 'kind',
           title: context.tr('Qu\'est-ce que c\'est ?'),
           isValid: () => _kind != null,
-          builder: (_) => FlowChoice<String>(
+          builder: (_) => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              FlowChoice<String>(
             options: [
               FlowOption('cotisation', context.tr('Cotisation'),
                   icon: Icons.savings_outlined,
@@ -308,10 +410,34 @@ class _IncomeFlowState extends State<IncomeFlow> {
                   icon: Icons.sell_outlined,
                   detail: context.tr('Ce que l\'association a vendu')),
               FlowOption('autre', context.tr('Autre'),
-                  icon: Icons.add, detail: context.tr('Vous lui donnez un nom')),
+                  icon: Icons.edit_note_outlined, detail: context.tr('Vous lui donnez un nom')),
+              for (final t in _types.cards('in'))
+                FlowOption('type:${t.id}', t.display,
+                    icon: typeIcon(t), detail: t.description),
+              if (widget.canEditTypes)
+                FlowOption(_addKind, context.tr('Ajouter un type de recette'),
+                    icon: Icons.add_circle_outline,
+                    detail: context.tr('Loyer de salle, kermesse… : sa propre carte, son compte')),
             ],
             value: _kind,
             onChanged: _choose,
+            onLongPress: widget.canEditTypes
+                ? (v) {
+                    if (v.startsWith('type:')) _manage();
+                  }
+                : null,
+              ),
+              if (widget.canEditTypes && _types.manageable('in').isNotEmpty)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    key: const Key('income-manage-types'),
+                    onPressed: _manage,
+                    icon: const Icon(Icons.tune),
+                    label: Text(context.tr('Gérer les types de recette')),
+                  ),
+                ),
+            ],
           ),
         ),
         FlowStep(
@@ -333,21 +459,6 @@ class _IncomeFlowState extends State<IncomeFlow> {
                   border: const OutlineInputBorder(),
                 ),
               ),
-              if (_others.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final o in _others)
-                      ChoiceChip(
-                        label: Text(accountLabel(o)),
-                        selected: _otherName.text.trim() == o,
-                        onSelected: (_) => setState(() => _otherName.text = o),
-                      ),
-                  ],
-                ),
-              ],
             ],
           ),
         ),
@@ -458,7 +569,7 @@ class _IncomeFlowState extends State<IncomeFlow> {
       summary: (_) => FlowSummary(rows: [
         FlowSummaryRow(
             context.tr('Recette'),
-            _kind == 'autre' ? accountLabel(_category) : _kindLabel(_kind ?? ''),
+            _what,
             step: _kind == 'autre' ? 'other' : 'kind'),
         if (_whoName.isNotEmpty)
           FlowSummaryRow(context.tr('De'), _whoName, step: 'who'),

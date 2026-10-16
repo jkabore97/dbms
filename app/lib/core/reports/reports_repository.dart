@@ -4,6 +4,7 @@ import '../association/association_analytics.dart';
 import '../association/books_start.dart';
 import '../association/members.dart';
 import '../errors.dart' show isSchemaOutOfDate;
+import '../money/money_types.dart';
 import 'models.dart';
 
 /// The three reports the church module already had in SQL and never had a
@@ -18,7 +19,7 @@ import 'models.dart';
 /// Nothing here is cached. A report is a claim about money at a moment; a
 /// stale one shown without saying so is worse than no report at all, so these
 /// need signal and the screens say when there is none.
-class ReportsRepository implements BooksStartApi, MembersApi {
+class ReportsRepository implements BooksStartApi, MembersApi, MoneyTypesApi {
   ReportsRepository(this._client);
 
   final SupabaseClient? _client;
@@ -295,6 +296,89 @@ class ReportsRepository implements BooksStartApi, MembersApi {
   @override
   Future<void> dismissBooksStart(String orgId) async {
     await _requireClient().rpc('dismiss_books_start', params: {'p_org_id': orgId});
+  }
+
+  // ----------------------------------------------------------------
+  // Recette and dépense types (149)
+  // ----------------------------------------------------------------
+
+  /// The business's income and expense accounts (149's money_types,
+  /// SECURITY INVOKER: the chart as 004's RLS lets a member read it).
+  @override
+  Future<List<MoneyType>> moneyTypes(String orgId) async {
+    final client = _requireClient();
+    try {
+      final rows = await client.rpc('money_types', params: {'p_org_id': orgId}) as List<dynamic>;
+      return [
+        for (final r in rows) MoneyType.fromRow(Map<String, dynamic>.from(r as Map)),
+      ];
+    } on PostgrestException catch (e) {
+      if (isSchemaOutOfDate(e) || e.code == '42883') throw const TypesNotOnServer();
+      rethrow;
+    }
+  }
+
+  @override
+  Future<String> addMoneyType(String orgId,
+      {required String direction,
+      required String name,
+      String? description,
+      bool adopt = false}) async {
+    final client = _requireClient();
+    try {
+      final v = await client.rpc('save_money_type', params: {
+        'p_org_id': orgId,
+        'p_direction': direction,
+        'p_name': name,
+        'p_description': description,
+        'p_adopt': adopt,
+      });
+      return '$v';
+    } on PostgrestException catch (e) {
+      if (e.code == 'MA149') throw DuplicateTypeException(name);
+      if (isSchemaOutOfDate(e) || e.code == '42883') throw const TypesNotOnServer();
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> updateMoneyType(String orgId,
+      {required String direction,
+      required String id,
+      String? name,
+      String? description,
+      bool? active}) async {
+    final client = _requireClient();
+    try {
+      await client.rpc('save_money_type', params: {
+        'p_org_id': orgId,
+        'p_direction': direction,
+        'p_account_id': id,
+        'p_name': name,
+        'p_description': description,
+        'p_active': active,
+      });
+    } on PostgrestException catch (e) {
+      if (e.code == 'MA149') throw DuplicateTypeException(name ?? '');
+      if (isSchemaOutOfDate(e) || e.code == '42883') throw const TypesNotOnServer();
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> reorderMoneyTypes(String orgId,
+      {required String direction, required List<String> ids}) async {
+    final client = _requireClient();
+    try {
+      await client.rpc('reorder_money_types', params: {
+        'p_org_id': orgId,
+        'p_direction': direction,
+        'p_account_ids': ids,
+      });
+    } on PostgrestException catch (e) {
+      if (isSchemaOutOfDate(e) || e.code == '42883') throw const TypesNotOnServer();
+      rethrow;
+    }
   }
 
   static String _dateOnly(DateTime when) =>

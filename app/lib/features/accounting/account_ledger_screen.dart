@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import '../../core/accounting/accounting_repository.dart';
 import '../../core/accounting/models.dart';
 import '../../core/auth/models.dart';
+import 'report_download.dart';
+import 'report_exports.dart';
 import 'report_shell.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
@@ -90,7 +92,24 @@ class _AccountLedgerScreenState extends State<AccountLedgerScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        actions: const [bellRoom],
+        actions: [
+          ReportDownloadButton(
+            build: _loading || _error != null
+                ? null
+                : () async {
+                    final range = _period.range;
+                    // Every movement of the period, not the screen's 200 —
+                    // up to the 1 000 the server hands out in one answer.
+                    final all = _movements.length < 200
+                        ? _movements
+                        : await widget.accounting.accountLedger(widget.org.id, widget.account.id,
+                            from: range.from, to: range.to, limit: 1000);
+                    return ledgerExport(widget.org, widget.account, all,
+                        from: range.from, to: range.to, capped: all.length >= 1000);
+                  },
+          ),
+          bellRoom,
+        ],
         title: Text(widget.account.label),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(20),

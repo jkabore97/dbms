@@ -262,14 +262,12 @@ void main() {
     for (final word in ['Offrande', 'Offrandes', 'Dîme', 'Dîmes', 'Quête', 'Collectes spéciales']) {
       expect(find.textContaining(word), findsNothing, reason: word);
     }
-    await tester.tap(find.byKey(const Key('flow-option-autre')));
-    await tester.pump();
-    await next(tester);
-    // « Autre »: what the association named itself is offered back; the
-    // church headings are not.
-    expect(find.widgetWithText(ChoiceChip, 'Location de la salle'), findsOneWidget);
+    // What the association named itself before (« Autre ») is an account,
+    // so it is a card of its own on step 1 (149); the church headings are
+    // not, and « Dons » stays the built-in « Don » card.
+    expect(find.text('Location de la salle'), findsOneWidget);
     for (final word in ['Offrandes', 'Dîmes', 'Collectes spéciales', 'Dons']) {
-      expect(find.widgetWithText(ChoiceChip, word), findsNothing, reason: word);
+      expect(find.text(word), findsNothing, reason: word);
     }
   });
 

@@ -10,6 +10,8 @@ import '../../../core/format/money.dart';
 import '../../../core/l10n/tr.dart';
 import '../../../core/notify/bell_room.dart';
 import '../../../core/phone/country_codes.dart' show displayPhone;
+import '../../accounting/report_download.dart';
+import '../../accounting/report_exports.dart';
 import 'member_form_screen.dart';
 import 'member_screen.dart';
 import 'member_words.dart';
@@ -150,6 +152,10 @@ class _MembersScreenState extends State<MembersScreen> {
       appBar: AppBar(
         title: Text(context.tr('Membres')),
         actions: [
+          ReportDownloadButton(
+            csvOnly: true,
+            build: list == null ? null : () async => membersExport(widget.org, list),
+          ),
           IconButton(
             onPressed: _loading ? null : _load,
             icon: const Icon(Icons.refresh),

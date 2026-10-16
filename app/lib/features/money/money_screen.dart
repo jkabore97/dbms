@@ -1,3 +1,5 @@
+import '../../core/money/money_types.dart' show canWriteTypes;
+import '../../core/nav/app_scope.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/access/org_access.dart';
@@ -158,6 +160,8 @@ class _MoneyScreenState extends State<MoneyScreen> {
         profile: _org.profile,
         currency: _org.currency,
         capture: widget.capture,
+        types: AppScope.read(context)?.reports,
+        canEditTypes: canWriteTypes(_org),
       ),
     );
     if (saved == true) await _read();
