@@ -28,6 +28,7 @@ import '../home/home_counts.dart';
 import '../home/home_nav.dart';
 import '../notify/push_offer.dart';
 import 'books_start_card.dart';
+import 'members/member_words.dart' show canWriteMembers;
 import 'close_day_sheet.dart';
 import '../common/step_flow.dart';
 import '../money/expense_flow.dart';
@@ -217,6 +218,7 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
               orgId: widget.orgId,
               currency: currency,
               reports: widget.reports,
+              canAddMembers: widget.org != null && canWriteMembers(widget.org!),
             )
           : ExpenseFlow(
               db: widget.db,
@@ -596,7 +598,16 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
       ],
       more: [
         if (org != null) ...[
-          // OUTILS: the invoices, rare in an association.
+          // OUTILS: the members' list (148) — whom cotisations and dons
+          // are attributed to; every member of the association reads it.
+          HomeDestination(
+            icon: Icons.groups_2_outlined,
+            label: context.tr('Membres'),
+            route: 'membres',
+            group: PlusGroup.tools,
+            onTap: () => _open('membres'),
+          ),
+          // The invoices, rare in an association.
           if (widget.invoicing != null && widget.access.canSee('invoices'))
             HomeDestination(
               icon: Icons.receipt_long_outlined,

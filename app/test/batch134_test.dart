@@ -436,7 +436,7 @@ void main() {
       expect(headings, ['vitrine', 'team', 'me']);
     });
 
-    testWidgets('the association: Factures under Plus (OUTILS); « Recette » and « Dépense » stay',
+    testWidgets('the association: Membres (148) and Factures under Plus (OUTILS); « Recette » and « Dépense » stay',
         (tester) async {
       await _phone(tester, height: 1400);
       await tester.pumpWidget(_app(_home(_assoc, db)));
@@ -444,8 +444,8 @@ void main() {
       expect(find.text('Recette'), findsOneWidget);
       expect(find.text('Dépense'), findsOneWidget);
       final (lines, headings) = await _plus(tester);
-      expect(lines.first, 'Factures');
-      expect(lines, containsAllInOrder(['Factures', 'Voir ma vitrine', 'Administration', 'Compte']));
+      expect(lines.first, 'Membres');
+      expect(lines, containsAllInOrder(['Membres', 'Factures', 'Voir ma vitrine', 'Administration', 'Compte']));
       expect(headings, ['tools', 'vitrine', 'team', 'me']);
     });
 

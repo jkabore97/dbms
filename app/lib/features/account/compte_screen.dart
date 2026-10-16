@@ -58,9 +58,10 @@ class CompteScreen extends StatelessWidget {
   ///
   /// A shop and a farm see what they sell and make; an association keeps
   /// its books (comptabilité), its carnet — a cotisation, the hall's rent, a
-  /// loan to a member are debts with no article — and its tontines, and
+  /// loan to a member are debts with no article — its tontines and, since
+  /// 148, its own analyses (money in and out, categories, members), and
   /// never the shop's tools: no production (nothing is made from
-  /// ingredients), no analyses or corrections of sales and deliveries.
+  /// ingredients), no corrections of sales and deliveries.
   /// A tool Mara's switchboard hid here (104) is not listed: the carnet,
   /// the tontines and production through the dial's own keys, the rest
   /// by name.
@@ -69,8 +70,11 @@ class CompteScreen extends StatelessWidget {
       [
         // Owner-only, the same full visibility the server requires for the
         // analytics functions themselves. A shop's, and a farm's (101).
-        if (org.visibility == 'full' &&
-            (org.profile == 'retail' || org.profile == 'farm') &&
+        // An association's (148) for every member who reads the reports:
+        // its server answers a 'summary' caller with the totals only.
+        if (((org.visibility == 'full' &&
+                    (org.profile == 'retail' || org.profile == 'farm')) ||
+                (org.isAssociation && access.canSee('reports'))) &&
             !access.isHidden('analytics'))
           'analytics',
         if (access.canSee('reports') && !access.isHidden('accounting'))
@@ -246,6 +250,18 @@ class CompteScreen extends StatelessWidget {
                   locked: PathGate.locks(context, org, 'second_business'),
                   onTap: () => PathGate.guard(context, org, 'second_business',
                       () => context.push(Routes.createBusiness)),
+                ),
+              // Somebody else's business, by the code its owner sent: the
+              // same screen a shopper reaches from the street's account
+              // corner, which a member of a business never sees. Not
+              // second_business's Pro gate: that is for one's own.
+              if (live && !session.isPlatformAdmin)
+                _Tile(
+                  key: const Key('compte-join'),
+                  icon: Icons.vpn_key_outlined,
+                  title: context.tr('Rejoindre une autre activité'),
+                  subtitle: context.tr('Avec le code reçu de son responsable'),
+                  onTap: () => context.push(Routes.join),
                 ),
               // « Changer d'activité »: the picker with several; with one
               // that is the person's own (122), the sheet — a second one, or

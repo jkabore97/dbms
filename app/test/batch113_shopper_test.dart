@@ -369,7 +369,7 @@ void main() {
       for (final p in [
         Routes.myOrders, Routes.bookings, Routes.favourites, Routes.addresses, Routes.myNotifications,
         Routes.language, Routes.becomeCourier, Routes.courier, Routes.createBusiness, Routes.myProfile,
-        Routes.faq, Routes.privacy, Routes.terms, Routes.directory, '/s/:slug',
+        Routes.faq, Routes.privacy, Routes.terms, Routes.directory, Routes.join, '/s/:slug',
       ])
         if (!routes.any((r) => r is GoRoute && r.path == p))
           GoRoute(path: p, builder: (_, state) => Scaffold(body: Text('page ${state.uri}'))),
@@ -896,6 +896,33 @@ void main() {
         await tester.tap(find.byKey(const Key('compte-favourites')));
         await settle(tester);
         expect(find.text('page ${Routes.favourites}'), findsOneWidget);
+      });
+    }
+
+    // A member of a business joins somebody else's with the code its
+    // owner sent: from Compte, the street's account corner being a
+    // shopper's (it never offers « J'ai un code » to a member).
+    for (final profile in ['retail', 'farm', 'association']) {
+      testWidgets('Compte of a $profile: « Rejoindre une autre activité » opens the code screen', (tester) async {
+        final session = await shopper(tester);
+        final org = OrgSummary(id: 'o1', name: 'Maison Élégance', profile: profile, roles: const ['owner']);
+        await pump(tester, session, at: '/compte', routes: [
+          GoRoute(path: '/compte', builder: (_, _) => CompteScreen(org: org)),
+        ]);
+        final join = find.byKey(const Key('compte-join'));
+        if (join.evaluate().isEmpty) {
+          // The group folded: opened first.
+          final group = find.byKey(const Key('group-Mon compte'));
+          await tester.ensureVisible(group);
+          await settle(tester);
+          await tester.tap(group, warnIfMissed: false);
+          await settle(tester);
+        }
+        await tester.scrollUntilVisible(join, 300, scrollable: find.byType(Scrollable).first);
+        await settle(tester);
+        await tester.tap(join);
+        await settle(tester);
+        expect(find.text('page ${Routes.join}'), findsOneWidget);
       });
     }
 

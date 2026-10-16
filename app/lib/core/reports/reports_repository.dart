@@ -1,6 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../association/association_analytics.dart';
 import '../association/books_start.dart';
+import '../association/members.dart';
+import '../errors.dart' show isSchemaOutOfDate;
 import 'models.dart';
 
 /// The three reports the church module already had in SQL and never had a
@@ -15,11 +18,12 @@ import 'models.dart';
 /// Nothing here is cached. A report is a claim about money at a moment; a
 /// stale one shown without saying so is worse than no report at all, so these
 /// need signal and the screens say when there is none.
-class ReportsRepository implements BooksStartApi {
+class ReportsRepository implements BooksStartApi, MembersApi {
   ReportsRepository(this._client);
 
   final SupabaseClient? _client;
 
+  @override
   bool get isConfigured => _client != null;
 
   /// The Sunday summary. [weekEnding] defaults server-side to today; the
@@ -67,6 +71,170 @@ class ReportsRepository implements BooksStartApi {
     return (rows as List)
         .map((r) => ChurchMember.fromRow(Map<String, dynamic>.from(r as Map)))
         .toList();
+  }
+
+  /// The members' list (148's association_members): this year's amounts
+  /// for a caller with full visibility. Before 148, the table itself —
+  /// names, phones and dates, no amounts — so the screens keep working.
+  @override
+  Future<MembersList> listMembers(String orgId, {int? year}) async {
+    final client = _requireClient();
+    try {
+      final rows = await client.rpc('association_members', params: {
+        'p_org_id': orgId,
+        'p_year': ?year,
+      }) as List<dynamic>;
+      final members = [
+        for (final r in rows)
+          AssociationMember.fromRow(Map<String, dynamic>.from(r as Map)),
+      ];
+      return MembersList(
+        members: members,
+        withAmounts: members.any((m) => m.givenYear != null),
+        readAt: DateTime.now(),
+      );
+    } on PostgrestException catch (e) {
+      if (!isSchemaOutOfDate(e) && e.code != '42883') rethrow;
+    }
+    final rows = await client
+        .from('church_members')
+        .select('id, full_name, phone, joined_on, created_at')
+        .eq('org_id', orgId)
+        .eq('is_active', true)
+        .order('full_name');
+    return MembersList(
+      members: [
+        for (final r in rows as List)
+          AssociationMember.fromRow(Map<String, dynamic>.from(r as Map)),
+      ],
+      serverReady: false,
+      readAt: DateTime.now(),
+    );
+  }
+
+  /// Adds or edits a member (148's save_association_member, INVOKER: 148's
+  /// policies decide). Before 148, the table itself under 002's policy —
+  /// without the note, which has no column yet.
+  @override
+  Future<String> saveMember(
+    String orgId, {
+    String? id,
+    required String name,
+    String? phone,
+    String? note,
+    DateTime? joinedOn,
+    bool allowSamePhone = false,
+  }) async {
+    final client = _requireClient();
+    final cleanPhone = (phone ?? '').trim().isEmpty ? null : phone!.trim();
+    try {
+      final v = await client.rpc('save_association_member', params: {
+        'p_org_id': orgId,
+        'p_member_id': id,
+        'p_full_name': name.trim(),
+        'p_phone': cleanPhone,
+        'p_note': (note ?? '').trim().isEmpty ? null : note!.trim(),
+        'p_joined_on': joinedOn == null ? null : _dateOnly(joinedOn),
+        'p_allow_same_phone': allowSamePhone,
+      });
+      return '$v';
+    } on PostgrestException catch (e) {
+      if (e.code == 'MA148') throw SamePhoneException(e.message);
+      if (!isSchemaOutOfDate(e) && e.code != '42883') rethrow;
+    }
+    final row = {
+      'full_name': name.trim(),
+      'phone': cleanPhone,
+      'joined_on': ?(joinedOn == null ? null : _dateOnly(joinedOn)),
+    };
+    if (id == null) {
+      final created = await client
+          .from('church_members')
+          .insert({
+            ...row,
+            'org_id': orgId,
+            if (joinedOn == null) 'joined_on': _dateOnly(DateTime.now()),
+          })
+          .select('id')
+          .single();
+      return '${created['id']}';
+    }
+    await client.from('church_members').update(row).eq('id', id).eq('org_id', orgId);
+    return id;
+  }
+
+  /// Takes a member off the list (148's remove_association_member); before
+  /// 148 the same soft update under 002's policy. Never a delete.
+  @override
+  Future<void> removeMember(String orgId, String memberId) async {
+    final client = _requireClient();
+    try {
+      await client.rpc('remove_association_member', params: {'p_member_id': memberId});
+      return;
+    } on PostgrestException catch (e) {
+      if (!isSchemaOutOfDate(e) && e.code != '42883') rethrow;
+    }
+    await client
+        .from('church_members')
+        .update({'is_active': false})
+        .eq('id', memberId)
+        .eq('org_id', orgId);
+  }
+
+  /// Every gift of one member (148). Before 148: the giving statement of
+  /// this year and the two before it.
+  @override
+  Future<List<MemberGift>> memberHistory(String memberId) async {
+    final client = _requireClient();
+    try {
+      final rows = await client.rpc('association_member_history',
+          params: {'p_member_id': memberId}) as List<dynamic>;
+      return [
+        for (final r in rows) MemberGift.fromRow(Map<String, dynamic>.from(r as Map)),
+      ];
+    } on PostgrestException catch (e) {
+      if (!isSchemaOutOfDate(e) && e.code != '42883') rethrow;
+    }
+    final year = DateTime.now().year;
+    final out = <MemberGift>[];
+    for (var y = year; y >= year - 2; y--) {
+      for (final l in await givingStatement(memberId, year: y)) {
+        out.add(MemberGift(
+          entryId: '$y-${out.length}',
+          date: l.date,
+          accountName: l.kind,
+          kind: switch (l.kind.trim().toLowerCase()) {
+            'cotisations' => 'cotisation',
+            'donations' => 'don',
+            _ => 'autre',
+          },
+          amount: l.amount,
+        ));
+      }
+    }
+    out.sort((a, b) => b.date.compareTo(a.date));
+    return out;
+  }
+
+  /// « Analyses » of an association (148). Null on a database before 148.
+  Future<AssociationAnalytics?> associationAnalytics(
+    String orgId, {
+    DateTime? from,
+    DateTime? to,
+  }) async {
+    final client = _requireClient();
+    try {
+      final v = await client.rpc('association_analytics', params: {
+        'p_org_id': orgId,
+        'p_from': from == null ? null : _dateOnly(from),
+        'p_to': to == null ? null : _dateOnly(to),
+      });
+      if (v is! Map) return null;
+      return AssociationAnalytics.fromJson(Map<String, dynamic>.from(v));
+    } on PostgrestException catch (e) {
+      if (isSchemaOutOfDate(e) || e.code == '42883') return null;
+      rethrow;
+    }
   }
 
   /// One member's giving for a calendar year — the year-end document they take

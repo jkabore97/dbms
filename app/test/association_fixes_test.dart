@@ -125,10 +125,10 @@ void main() {
   setUpAll(() => initializeDateFormatting('fr_FR', null));
 
   group('an association\'s menus', () {
-    test('Compte › Outils: no production, its books, carnet and tontines', () {
+    test('Compte › Outils: no production, its analyses (148), books, carnet and tontines', () {
       for (final org in [_assoc, _church]) {
         expect(CompteScreen.toolsFor(org, OrgAccess.allEdit, admin: true),
-            ['accounting', 'credits', 'tontines'],
+            ['analytics', 'accounting', 'credits', 'tontines'],
             reason: '${org.profile} sees no shop or farm tool');
       }
       expect(CompteScreen.toolsFor(_shop, OrgAccess.allEdit, admin: true),
@@ -141,7 +141,13 @@ void main() {
           CompteScreen.toolsFor(
               _assoc, const OrgAccess.forTier({'credits': 'hidden'}),
               admin: false),
-          ['accounting', 'tontines']);
+          ['analytics', 'accounting', 'tontines']);
+      // The reports dial at hidden takes the analyses away too (148).
+      expect(
+          CompteScreen.toolsFor(
+              _assoc, const OrgAccess.forTier({'reports': 'hidden'}),
+              admin: false),
+          ['credits', 'tontines']);
     });
 
     test('an association is one, under either name', () {
