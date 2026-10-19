@@ -1,8 +1,8 @@
 [
  {
-  "file": "Iapetus__gI_r100_t1.wav",
+  "file": "Iapetus__f1_06_r100_u1.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Marakaj. Gratuit pour commencer.",
+  "text": "Les commandes et les rendez-vous arrivent dans Marakaj.",
   "speakingRate": 1.0,
   "pron": [
    {
@@ -10,622 +10,10 @@
     "ipa": "maʁakadʒ"
    }
   ],
-  "run": "lines"
+  "run": "topup"
  },
  {
-  "file": "Iapetus__gI_r100_t2.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Marakaj. Gratuit pour commencer.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__gI_r100_t3.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Marakaj. Gratuit pour commencer.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__gI_r100_t4.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Marakaj. Gratuit pour commencer.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__gI_r100_t5.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Marakaj. Gratuit pour commencer.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__gI_r100_t6.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Marakaj. Gratuit pour commencer.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__gI_r100_t7.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Marakaj. Gratuit pour commencer.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__gI_r100_t8.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Marakaj. Gratuit pour commencer.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__gI_r100_t9.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Marakaj. Gratuit pour commencer.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__gI_r100_t10.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Marakaj. Gratuit pour commencer.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__gZ_r100_t1.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Marakaj. Gratuit pour commencer.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__gZ_r100_t2.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Marakaj. Gratuit pour commencer.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__gZ_r100_t3.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Marakaj. Gratuit pour commencer.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__gZ_r100_t4.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Marakaj. Gratuit pour commencer.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__gZ_r100_t5.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Marakaj. Gratuit pour commencer.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__gZ_r100_t6.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Marakaj. Gratuit pour commencer.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__gZ_r100_t7.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Marakaj. Gratuit pour commencer.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__gZ_r100_t8.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Marakaj. Gratuit pour commencer.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__gZ_r100_t9.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Marakaj. Gratuit pour commencer.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__gZ_r100_t10.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Marakaj. Gratuit pour commencer.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__gZ_r104_t11.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Marakaj. Gratuit pour commencer.",
-  "speakingRate": 1.04,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__p4_06_r100_t1.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Avec Marakaj, chaque vente est notée.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__p4_06_r100_t2.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Avec Marakaj, chaque vente est notée.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__p4_06_r100_t3.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Avec Marakaj, chaque vente est notée.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__p4_06_r100_t4.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Avec Marakaj, chaque vente est notée.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__p4_06_r100_t5.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Avec Marakaj, chaque vente est notée.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__p4_06_r100_t6.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Avec Marakaj, chaque vente est notée.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__p6_05_r100_t1.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Marakaj vous prévient avant la rupture.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__p6_05_r100_t2.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Marakaj vous prévient avant la rupture.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__p6_05_r100_t3.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Marakaj vous prévient avant la rupture.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__p6_05_r100_t4.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Marakaj vous prévient avant la rupture.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__p6_05_r100_t5.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Marakaj vous prévient avant la rupture.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__p6_05_r100_t6.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Marakaj vous prévient avant la rupture.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__p7_05_r100_t1.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Avec Marakaj, chaque bande a ses chiffres : les morts, l'aliment, les vaccins.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__p7_05_r100_t2.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Avec Marakaj, chaque bande a ses chiffres : les morts, l'aliment, les vaccins.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__p7_05_r100_t3.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Avec Marakaj, chaque bande a ses chiffres : les morts, l'aliment, les vaccins.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__p7_05_r100_t4.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Avec Marakaj, chaque bande a ses chiffres : les morts, l'aliment, les vaccins.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__p7_05_r100_t5.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Avec Marakaj, chaque bande a ses chiffres : les morts, l'aliment, les vaccins.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__p7_05_r100_t6.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Avec Marakaj, chaque bande a ses chiffres : les morts, l'aliment, les vaccins.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__p8_05_r100_t1.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Avec Marakaj, chaque franc a sa trace.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__p8_05_r100_t2.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Avec Marakaj, chaque franc a sa trace.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__p8_05_r100_t3.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Avec Marakaj, chaque franc a sa trace.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__p8_05_r100_t4.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Avec Marakaj, chaque franc a sa trace.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__p8_05_r100_t5.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Avec Marakaj, chaque franc a sa trace.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__p8_05_r100_t6.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Avec Marakaj, chaque franc a sa trace.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__p8_05_r104_t7.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Avec Marakaj, chaque franc a sa trace.",
-  "speakingRate": 1.04,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__f1_02_r100_t1.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Mettez tout dans votre vitrine Marakaj.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__f1_02_r100_t2.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Mettez tout dans votre vitrine Marakaj.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__f1_02_r100_t3.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Mettez tout dans votre vitrine Marakaj.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__f1_02_r100_t4.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Mettez tout dans votre vitrine Marakaj.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__f1_02_r100_t5.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Mettez tout dans votre vitrine Marakaj.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__f1_02_r100_t6.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Mettez tout dans votre vitrine Marakaj.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__f1_06_r100_t1.wav",
+  "file": "Iapetus__f1_06_r100_u2.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
   "text": "Les commandes et les rendez-vous arrivent dans Marakaj.",
   "speakingRate": 1.0,
@@ -637,7 +25,7 @@
   ]
  },
  {
-  "file": "Iapetus__f1_06_r100_t2.wav",
+  "file": "Iapetus__f1_06_r100_u3.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
   "text": "Les commandes et les rendez-vous arrivent dans Marakaj.",
   "speakingRate": 1.0,
@@ -649,7 +37,7 @@
   ]
  },
  {
-  "file": "Iapetus__f1_06_r100_t3.wav",
+  "file": "Iapetus__f1_06_r100_u4.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
   "text": "Les commandes et les rendez-vous arrivent dans Marakaj.",
   "speakingRate": 1.0,
@@ -661,7 +49,7 @@
   ]
  },
  {
-  "file": "Iapetus__f1_06_r100_t4.wav",
+  "file": "Iapetus__f1_06_r100_u5.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
   "text": "Les commandes et les rendez-vous arrivent dans Marakaj.",
   "speakingRate": 1.0,
@@ -673,7 +61,7 @@
   ]
  },
  {
-  "file": "Iapetus__f1_06_r100_t5.wav",
+  "file": "Iapetus__f1_06_r100_u6.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
   "text": "Les commandes et les rendez-vous arrivent dans Marakaj.",
   "speakingRate": 1.0,
@@ -685,7 +73,7 @@
   ]
  },
  {
-  "file": "Iapetus__f1_06_r100_t6.wav",
+  "file": "Iapetus__f1_06_r100_u7.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
   "text": "Les commandes et les rendez-vous arrivent dans Marakaj.",
   "speakingRate": 1.0,
@@ -697,9 +85,9 @@
   ]
  },
  {
-  "file": "Iapetus__f2_04_r100_t1.wav",
+  "file": "Iapetus__f1_06_r100_u8.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "La commande arrive dans Marakaj.",
+  "text": "Les commandes et les rendez-vous arrivent dans Marakaj.",
   "speakingRate": 1.0,
   "pron": [
    {
@@ -709,391 +97,7 @@
   ]
  },
  {
-  "file": "Iapetus__f2_04_r100_t2.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "La commande arrive dans Marakaj.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__f2_04_r100_t3.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "La commande arrive dans Marakaj.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__f2_04_r100_t4.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "La commande arrive dans Marakaj.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__f2_04_r100_t5.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "La commande arrive dans Marakaj.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__f2_04_r100_t6.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "La commande arrive dans Marakaj.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__tb_01_r100_t1.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Créez votre boutique sur Marakaj. En deux minutes, c'est fait.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__tb_01_r100_t2.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Créez votre boutique sur Marakaj. En deux minutes, c'est fait.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__tb_01_r100_t3.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Créez votre boutique sur Marakaj. En deux minutes, c'est fait.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__tb_01_r100_t4.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Créez votre boutique sur Marakaj. En deux minutes, c'est fait.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__tb_01_r100_t5.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Créez votre boutique sur Marakaj. En deux minutes, c'est fait.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__tb_01_r100_t6.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Créez votre boutique sur Marakaj. En deux minutes, c'est fait.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__tb_01_r104_t7.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Créez votre boutique sur Marakaj. En deux minutes, c'est fait.",
-  "speakingRate": 1.04,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__vZ_r100_t1.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Touchez Vendre sur Marakaj.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__vZ_r100_t2.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Touchez Vendre sur Marakaj.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__vZ_r100_t3.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Touchez Vendre sur Marakaj.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__vZ_r100_t4.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Touchez Vendre sur Marakaj.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__vZ_r100_t5.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Touchez Vendre sur Marakaj.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__vZ_r100_t6.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Touchez Vendre sur Marakaj.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__vZ_r104_t7.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Touchez Vendre sur Marakaj.",
-  "speakingRate": 1.04,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__tb_09_r100_t1.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Et maintenant ? Marakaj vous guide.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__tb_09_r100_t2.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Et maintenant ? Marakaj vous guide.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__tb_09_r100_t3.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Et maintenant ? Marakaj vous guide.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__tb_09_r100_t4.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Et maintenant ? Marakaj vous guide.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__tb_09_r100_t5.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Et maintenant ? Marakaj vous guide.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__tb_09_r100_t6.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Et maintenant ? Marakaj vous guide.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__tb_09_r104_t7.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Et maintenant ? Marakaj vous guide.",
-  "speakingRate": 1.04,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__tf_01_r100_t1.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Créez votre ferme sur Marakaj, en quelques minutes.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__tf_01_r100_t2.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Créez votre ferme sur Marakaj, en quelques minutes.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__tf_01_r100_t3.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Créez votre ferme sur Marakaj, en quelques minutes.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__tf_01_r100_t4.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Créez votre ferme sur Marakaj, en quelques minutes.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__tf_01_r100_t5.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Créez votre ferme sur Marakaj, en quelques minutes.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__tf_01_r100_t6.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Créez votre ferme sur Marakaj, en quelques minutes.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__vI_r100_t1.wav",
+  "file": "Iapetus__vI_r100_u1.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
   "text": "Touchez Vendre sur Marakaj.",
   "speakingRate": 1.0,
@@ -1105,7 +109,7 @@
   ]
  },
  {
-  "file": "Iapetus__vI_r100_t2.wav",
+  "file": "Iapetus__vI_r100_u2.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
   "text": "Touchez Vendre sur Marakaj.",
   "speakingRate": 1.0,
@@ -1117,7 +121,7 @@
   ]
  },
  {
-  "file": "Iapetus__vI_r100_t3.wav",
+  "file": "Iapetus__vI_r100_u3.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
   "text": "Touchez Vendre sur Marakaj.",
   "speakingRate": 1.0,
@@ -1129,7 +133,7 @@
   ]
  },
  {
-  "file": "Iapetus__vI_r100_t4.wav",
+  "file": "Iapetus__vI_r100_u4.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
   "text": "Touchez Vendre sur Marakaj.",
   "speakingRate": 1.0,
@@ -1141,7 +145,7 @@
   ]
  },
  {
-  "file": "Iapetus__vI_r100_t5.wav",
+  "file": "Iapetus__vI_r100_u5.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
   "text": "Touchez Vendre sur Marakaj.",
   "speakingRate": 1.0,
@@ -1153,7 +157,7 @@
   ]
  },
  {
-  "file": "Iapetus__vI_r100_t6.wav",
+  "file": "Iapetus__vI_r100_u6.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
   "text": "Touchez Vendre sur Marakaj.",
   "speakingRate": 1.0,
@@ -1165,9 +169,9 @@
   ]
  },
  {
-  "file": "Iapetus__ta_01_r100_t1.wav",
+  "file": "Iapetus__vI_r100_u7.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Créez votre association sur Marakaj. C'est simple.",
+  "text": "Touchez Vendre sur Marakaj.",
   "speakingRate": 1.0,
   "pron": [
    {
@@ -1177,9 +181,9 @@
   ]
  },
  {
-  "file": "Iapetus__ta_01_r100_t2.wav",
+  "file": "Iapetus__vI_r100_u8.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Créez votre association sur Marakaj. C'est simple.",
+  "text": "Touchez Vendre sur Marakaj.",
   "speakingRate": 1.0,
   "pron": [
    {
@@ -1189,9 +193,9 @@
   ]
  },
  {
-  "file": "Iapetus__ta_01_r100_t3.wav",
+  "file": "Iapetus__p4_06_r100_u1.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Créez votre association sur Marakaj. C'est simple.",
+  "text": "Avec Marakaj, chaque vente est notée.",
   "speakingRate": 1.0,
   "pron": [
    {
@@ -1201,9 +205,9 @@
   ]
  },
  {
-  "file": "Iapetus__ta_01_r100_t4.wav",
+  "file": "Iapetus__p4_06_r100_u2.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Créez votre association sur Marakaj. C'est simple.",
+  "text": "Avec Marakaj, chaque vente est notée.",
   "speakingRate": 1.0,
   "pron": [
    {
@@ -1213,9 +217,9 @@
   ]
  },
  {
-  "file": "Iapetus__ta_01_r100_t5.wav",
+  "file": "Iapetus__p4_06_r100_u3.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Créez votre association sur Marakaj. C'est simple.",
+  "text": "Avec Marakaj, chaque vente est notée.",
   "speakingRate": 1.0,
   "pron": [
    {
@@ -1225,9 +229,9 @@
   ]
  },
  {
-  "file": "Iapetus__ta_01_r100_t6.wav",
+  "file": "Iapetus__p4_06_r100_u4.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Créez votre association sur Marakaj. C'est simple.",
+  "text": "Avec Marakaj, chaque vente est notée.",
   "speakingRate": 1.0,
   "pron": [
    {
@@ -1237,93 +241,9 @@
   ]
  },
  {
-  "file": "Zephyr__sb_01_r100_t1.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Votre boutique sur Marakaj, en deux minutes.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__sb_01_r100_t2.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Votre boutique sur Marakaj, en deux minutes.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__sb_01_r100_t3.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Votre boutique sur Marakaj, en deux minutes.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__sb_01_r100_t4.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Votre boutique sur Marakaj, en deux minutes.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__sb_01_r100_t5.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Votre boutique sur Marakaj, en deux minutes.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__sb_01_r100_t6.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Votre boutique sur Marakaj, en deux minutes.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Zephyr__sb_01_r104_t7.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Votre boutique sur Marakaj, en deux minutes.",
-  "speakingRate": 1.04,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__sf_01_r100_t1.wav",
+  "file": "Iapetus__p4_06_r100_u5.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Votre ferme sur Marakaj, en quelques minutes.",
+  "text": "Avec Marakaj, chaque vente est notée.",
   "speakingRate": 1.0,
   "pron": [
    {
@@ -1333,9 +253,9 @@
   ]
  },
  {
-  "file": "Iapetus__sf_01_r100_t2.wav",
+  "file": "Iapetus__p4_06_r100_u6.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Votre ferme sur Marakaj, en quelques minutes.",
+  "text": "Avec Marakaj, chaque vente est notée.",
   "speakingRate": 1.0,
   "pron": [
    {
@@ -1345,9 +265,9 @@
   ]
  },
  {
-  "file": "Iapetus__sf_01_r100_t3.wav",
+  "file": "Iapetus__p4_06_r100_u7.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Votre ferme sur Marakaj, en quelques minutes.",
+  "text": "Avec Marakaj, chaque vente est notée.",
   "speakingRate": 1.0,
   "pron": [
    {
@@ -1357,9 +277,9 @@
   ]
  },
  {
-  "file": "Iapetus__sf_01_r100_t4.wav",
+  "file": "Iapetus__p4_06_r100_u8.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Votre ferme sur Marakaj, en quelques minutes.",
+  "text": "Avec Marakaj, chaque vente est notée.",
   "speakingRate": 1.0,
   "pron": [
    {
@@ -1369,31 +289,7 @@
   ]
  },
  {
-  "file": "Iapetus__sf_01_r100_t5.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Votre ferme sur Marakaj, en quelques minutes.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__sf_01_r100_t6.wav",
-  "voice": "fr-FR-Chirp3-HD-Iapetus",
-  "text": "Votre ferme sur Marakaj, en quelques minutes.",
-  "speakingRate": 1.0,
-  "pron": [
-   {
-    "phrase": "Marakaj",
-    "ipa": "maʁakadʒ"
-   }
-  ]
- },
- {
-  "file": "Iapetus__sa_01_r100_t1.wav",
+  "file": "Iapetus__sa_01_r100_u1.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
   "text": "Votre association sur Marakaj, en quelques minutes.",
   "speakingRate": 1.0,
@@ -1405,7 +301,7 @@
   ]
  },
  {
-  "file": "Iapetus__sa_01_r100_t2.wav",
+  "file": "Iapetus__sa_01_r100_u2.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
   "text": "Votre association sur Marakaj, en quelques minutes.",
   "speakingRate": 1.0,
@@ -1417,7 +313,7 @@
   ]
  },
  {
-  "file": "Iapetus__sa_01_r100_t3.wav",
+  "file": "Iapetus__sa_01_r100_u3.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
   "text": "Votre association sur Marakaj, en quelques minutes.",
   "speakingRate": 1.0,
@@ -1429,7 +325,7 @@
   ]
  },
  {
-  "file": "Iapetus__sa_01_r100_t4.wav",
+  "file": "Iapetus__sa_01_r100_u4.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
   "text": "Votre association sur Marakaj, en quelques minutes.",
   "speakingRate": 1.0,
@@ -1441,7 +337,7 @@
   ]
  },
  {
-  "file": "Iapetus__sa_01_r100_t5.wav",
+  "file": "Iapetus__sa_01_r100_u5.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
   "text": "Votre association sur Marakaj, en quelques minutes.",
   "speakingRate": 1.0,
@@ -1453,7 +349,7 @@
   ]
  },
  {
-  "file": "Iapetus__sa_01_r100_t6.wav",
+  "file": "Iapetus__sa_01_r100_u6.wav",
   "voice": "fr-FR-Chirp3-HD-Iapetus",
   "text": "Votre association sur Marakaj, en quelques minutes.",
   "speakingRate": 1.0,
@@ -1465,157 +361,9 @@
   ]
  },
  {
-  "file": "Zephyr__p9_01_r100_t1.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "C'est combien ? Et celui-là ?",
-  "speakingRate": 1.0
- },
- {
-  "file": "Zephyr__p9_01_r100_t2.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "C'est combien ? Et celui-là ?",
-  "speakingRate": 1.0
- },
- {
-  "file": "Zephyr__p9_01_r100_t3.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "C'est combien ? Et celui-là ?",
-  "speakingRate": 1.0
- },
- {
-  "file": "Zephyr__p9_01_r104_t4.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "C'est combien ? Et celui-là ?",
-  "speakingRate": 1.04
- },
- {
-  "file": "Zephyr__p9_01_m100_t1.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "C'est combien ? Et celui-là ?",
-  "speakingRate": 1.0,
-  "markup": "C'est combien ? [pause short] Et celui-là ?"
- },
- {
-  "file": "Zephyr__p9_01_m100_t2.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "C'est combien ? Et celui-là ?",
-  "speakingRate": 1.0,
-  "markup": "C'est combien ? [pause short] Et celui-là ?"
- },
- {
-  "file": "Zephyr__p9_02_r100_t1.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Vos clients ne savent pas ce que vous vendez.",
-  "speakingRate": 1.0
- },
- {
-  "file": "Zephyr__p9_02_r100_t2.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Vos clients ne savent pas ce que vous vendez.",
-  "speakingRate": 1.0
- },
- {
-  "file": "Zephyr__p9_02_r100_t3.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Vos clients ne savent pas ce que vous vendez.",
-  "speakingRate": 1.0
- },
- {
-  "file": "Zephyr__p9_02_r104_t4.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Vos clients ne savent pas ce que vous vendez.",
-  "speakingRate": 1.04
- },
- {
-  "file": "Zephyr__p9_03_r100_t1.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Les prix, un par un, sur WhatsApp.",
-  "speakingRate": 1.0
- },
- {
-  "file": "Zephyr__p9_03_r100_t2.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Les prix, un par un, sur WhatsApp.",
-  "speakingRate": 1.0
- },
- {
-  "file": "Zephyr__p9_03_r100_t3.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Les prix, un par un, sur WhatsApp.",
-  "speakingRate": 1.0
- },
- {
-  "file": "Zephyr__p9_03_r104_t4.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Les prix, un par un, sur WhatsApp.",
-  "speakingRate": 1.04
- },
- {
-  "file": "Zephyr__p9_04_r100_t1.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Et vos photos se perdent dans les statuts.",
-  "speakingRate": 1.0
- },
- {
-  "file": "Zephyr__p9_04_r100_t2.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Et vos photos se perdent dans les statuts.",
-  "speakingRate": 1.0
- },
- {
-  "file": "Zephyr__p9_04_r100_t3.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Et vos photos se perdent dans les statuts.",
-  "speakingRate": 1.0
- },
- {
-  "file": "Zephyr__p9_04_r104_t4.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Et vos photos se perdent dans les statuts.",
-  "speakingRate": 1.04
- },
- {
-  "file": "Zephyr__p9_05_r100_t1.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Votre boutique ? Personne ne sait où la trouver.",
-  "speakingRate": 1.0
- },
- {
-  "file": "Zephyr__p9_05_r100_t2.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Votre boutique ? Personne ne sait où la trouver.",
-  "speakingRate": 1.0
- },
- {
-  "file": "Zephyr__p9_05_r100_t3.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Votre boutique ? Personne ne sait où la trouver.",
-  "speakingRate": 1.0
- },
- {
-  "file": "Zephyr__p9_05_r104_t4.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Votre boutique ? Personne ne sait où la trouver.",
-  "speakingRate": 1.04
- },
- {
-  "file": "Zephyr__p9_05_m100_t1.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Votre boutique ? Personne ne sait où la trouver.",
-  "speakingRate": 1.0,
-  "markup": "Votre boutique ? [pause short] Personne ne sait où la trouver."
- },
- {
-  "file": "Zephyr__p9_05_m100_t2.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Votre boutique ? Personne ne sait où la trouver.",
-  "speakingRate": 1.0,
-  "markup": "Votre boutique ? [pause short] Personne ne sait où la trouver."
- },
- {
-  "file": "Zephyr__p9_06_r100_t1.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Avec Marakaj, votre vitrine est en ligne.",
+  "file": "Iapetus__sa_01_r100_u7.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Votre association sur Marakaj, en quelques minutes.",
   "speakingRate": 1.0,
   "pron": [
    {
@@ -1625,9 +373,9 @@
   ]
  },
  {
-  "file": "Zephyr__p9_06_r100_t2.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Avec Marakaj, votre vitrine est en ligne.",
+  "file": "Iapetus__sa_01_r100_u8.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Votre association sur Marakaj, en quelques minutes.",
   "speakingRate": 1.0,
   "pron": [
    {
@@ -1637,9 +385,9 @@
   ]
  },
  {
-  "file": "Zephyr__p9_06_r100_t3.wav",
+  "file": "Zephyr__p8_05_r100_u1.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Avec Marakaj, votre vitrine est en ligne.",
+  "text": "Avec Marakaj, chaque franc a sa trace.",
   "speakingRate": 1.0,
   "pron": [
    {
@@ -1649,9 +397,9 @@
   ]
  },
  {
-  "file": "Zephyr__p9_06_r100_t4.wav",
+  "file": "Zephyr__p8_05_r100_u2.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Avec Marakaj, votre vitrine est en ligne.",
+  "text": "Avec Marakaj, chaque franc a sa trace.",
   "speakingRate": 1.0,
   "pron": [
    {
@@ -1661,9 +409,9 @@
   ]
  },
  {
-  "file": "Zephyr__p9_06_r100_t5.wav",
+  "file": "Zephyr__p8_05_r100_u3.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Avec Marakaj, votre vitrine est en ligne.",
+  "text": "Avec Marakaj, chaque franc a sa trace.",
   "speakingRate": 1.0,
   "pron": [
    {
@@ -1673,9 +421,9 @@
   ]
  },
  {
-  "file": "Zephyr__p9_06_r100_t6.wav",
+  "file": "Zephyr__p8_05_r100_u4.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Avec Marakaj, votre vitrine est en ligne.",
+  "text": "Avec Marakaj, chaque franc a sa trace.",
   "speakingRate": 1.0,
   "pron": [
    {
@@ -1685,10 +433,10 @@
   ]
  },
  {
-  "file": "Zephyr__p9_06_r104_t7.wav",
+  "file": "Zephyr__p8_05_r100_u5.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Avec Marakaj, votre vitrine est en ligne.",
-  "speakingRate": 1.04,
+  "text": "Avec Marakaj, chaque franc a sa trace.",
+  "speakingRate": 1.0,
   "pron": [
    {
     "phrase": "Marakaj",
@@ -1697,65 +445,519 @@
   ]
  },
  {
-  "file": "Zephyr__p9_07_r100_t1.wav",
+  "file": "Zephyr__p8_05_r100_u6.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "On commande. Et on vous trouve.",
-  "speakingRate": 1.0
- },
- {
-  "file": "Zephyr__p9_07_r100_t2.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "On commande. Et on vous trouve.",
-  "speakingRate": 1.0
- },
- {
-  "file": "Zephyr__p9_07_r100_t3.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "On commande. Et on vous trouve.",
-  "speakingRate": 1.0
- },
- {
-  "file": "Zephyr__p9_07_r104_t4.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "On commande. Et on vous trouve.",
-  "speakingRate": 1.04
- },
- {
-  "file": "Zephyr__p9_07_m100_t1.wav",
-  "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "On commande. Et on vous trouve.",
+  "text": "Avec Marakaj, chaque franc a sa trace.",
   "speakingRate": 1.0,
-  "markup": "On commande. [pause short] Et on vous trouve."
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
  },
  {
-  "file": "Zephyr__p9_07_m100_t2.wav",
+  "file": "Zephyr__p8_05_r100_u7.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "On commande. Et on vous trouve.",
+  "text": "Avec Marakaj, chaque franc a sa trace.",
   "speakingRate": 1.0,
-  "markup": "On commande. [pause short] Et on vous trouve."
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
  },
  {
-  "file": "Zephyr__p9_08_r100_t1.wav",
+  "file": "Zephyr__p8_05_r100_u8.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Boutique, ferme ou association.",
-  "speakingRate": 1.0
+  "text": "Avec Marakaj, chaque franc a sa trace.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
  },
  {
-  "file": "Zephyr__p9_08_r100_t2.wav",
+  "file": "Zephyr__vZ_r100_u1.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Boutique, ferme ou association.",
-  "speakingRate": 1.0
+  "text": "Touchez Vendre sur Marakaj.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
  },
  {
-  "file": "Zephyr__p9_08_r100_t3.wav",
+  "file": "Zephyr__vZ_r100_u2.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Boutique, ferme ou association.",
-  "speakingRate": 1.0
+  "text": "Touchez Vendre sur Marakaj.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
  },
  {
-  "file": "Zephyr__p9_08_r104_t4.wav",
+  "file": "Zephyr__vZ_r100_u3.wav",
   "voice": "fr-FR-Chirp3-HD-Zephyr",
-  "text": "Boutique, ferme ou association.",
-  "speakingRate": 1.04
+  "text": "Touchez Vendre sur Marakaj.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Zephyr__vZ_r100_u4.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Touchez Vendre sur Marakaj.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Zephyr__vZ_r100_u5.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Touchez Vendre sur Marakaj.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Zephyr__vZ_r100_u6.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Touchez Vendre sur Marakaj.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Zephyr__vZ_r100_u7.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Touchez Vendre sur Marakaj.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Zephyr__vZ_r100_u8.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Touchez Vendre sur Marakaj.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Zephyr__gZ_r100_u1.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Marakaj. Gratuit pour commencer.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Zephyr__gZ_r100_u2.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Marakaj. Gratuit pour commencer.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Zephyr__gZ_r100_u3.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Marakaj. Gratuit pour commencer.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Zephyr__gZ_r100_u4.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Marakaj. Gratuit pour commencer.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Zephyr__gZ_r100_u5.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Marakaj. Gratuit pour commencer.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Zephyr__gZ_r100_u6.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Marakaj. Gratuit pour commencer.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Zephyr__gZ_r100_u7.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Marakaj. Gratuit pour commencer.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Zephyr__gZ_r100_u8.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Marakaj. Gratuit pour commencer.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Iapetus__f1_02_r100_u1.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Mettez tout dans votre vitrine Marakaj.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Iapetus__f1_02_r100_u2.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Mettez tout dans votre vitrine Marakaj.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Iapetus__f1_02_r100_u3.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Mettez tout dans votre vitrine Marakaj.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Iapetus__f1_02_r100_u4.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Mettez tout dans votre vitrine Marakaj.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Iapetus__f2_04_r100_u1.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "La commande arrive dans Marakaj.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Iapetus__f2_04_r100_u2.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "La commande arrive dans Marakaj.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Iapetus__f2_04_r100_u3.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "La commande arrive dans Marakaj.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Iapetus__f2_04_r100_u4.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "La commande arrive dans Marakaj.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Iapetus__p7_05_r100_u1.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Avec Marakaj, chaque bande a ses chiffres : les morts, l'aliment, les vaccins.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Iapetus__p7_05_r100_u2.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Avec Marakaj, chaque bande a ses chiffres : les morts, l'aliment, les vaccins.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Iapetus__p7_05_r100_u3.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Avec Marakaj, chaque bande a ses chiffres : les morts, l'aliment, les vaccins.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Iapetus__p7_05_r100_u4.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Avec Marakaj, chaque bande a ses chiffres : les morts, l'aliment, les vaccins.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Iapetus__ta_01_r100_u1.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Créez votre association sur Marakaj. C'est simple.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Iapetus__ta_01_r100_u2.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Créez votre association sur Marakaj. C'est simple.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Iapetus__ta_01_r100_u3.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Créez votre association sur Marakaj. C'est simple.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Iapetus__ta_01_r100_u4.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Créez votre association sur Marakaj. C'est simple.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Iapetus__tf_01_r100_u1.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Créez votre ferme sur Marakaj, en quelques minutes.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Iapetus__tf_01_r100_u2.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Créez votre ferme sur Marakaj, en quelques minutes.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Iapetus__tf_01_r100_u3.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Créez votre ferme sur Marakaj, en quelques minutes.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Iapetus__tf_01_r100_u4.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Créez votre ferme sur Marakaj, en quelques minutes.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Zephyr__tb_01_r100_u1.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Créez votre boutique sur Marakaj. En deux minutes, c'est fait.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Zephyr__tb_01_r100_u2.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Créez votre boutique sur Marakaj. En deux minutes, c'est fait.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Zephyr__tb_01_r100_u3.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Créez votre boutique sur Marakaj. En deux minutes, c'est fait.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
+ },
+ {
+  "file": "Zephyr__tb_01_r100_u4.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Créez votre boutique sur Marakaj. En deux minutes, c'est fait.",
+  "speakingRate": 1.0,
+  "pron": [
+   {
+    "phrase": "Marakaj",
+    "ipa": "maʁakadʒ"
+   }
+  ]
  }
 ]
