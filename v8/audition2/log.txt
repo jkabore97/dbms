@@ -1,0 +1,96 @@
+ok Iapetus__au2_v1_a_t3.wav
+ok Iapetus__au2_v1_a_t1.wav
+ok Iapetus__au2_v1_a_t2.wav
+ok Iapetus__au2_v1_b_t1.wav
+ok Iapetus__au2_v1_b_t3.wav
+ok Iapetus__au2_v1_b_t2.wav
+ok Iapetus__au2_v1_c_t1.wav
+ok Iapetus__au2_v1_c_t2.wav
+ok Iapetus__au2_v1_c_t3.wav
+ok Iapetus__au2_v1_d_t1.wav
+ok Iapetus__au2_v1_d_t2.wav
+ok Iapetus__au2_v1_d_t3.wav
+fail Iapetus__au2_v2_a_t1.wav: The following custom pronunciation phrases are invalid: Marakaj. Please ensure the phrases are well-structured and that the phonemes are valid.
+fail Iapetus__au2_v2_a_t2.wav: The following custom pronunciation phrases are invalid: Marakaj. Please ensure the phrases are well-structured and that the phonemes are valid.
+fail Iapetus__au2_v2_a_t3.wav: The following custom pronunciation phrases are invalid: Marakaj. Please ensure the phrases are well-structured and that the phonemes are valid.
+fail Iapetus__au2_v2_b_t2.wav: The following custom pronunciation phrases are invalid: Marakaj. Please ensure the phrases are well-structured and that the phonemes are valid.
+fail Iapetus__au2_v2_b_t1.wav: The following custom pronunciation phrases are invalid: Marakaj. Please ensure the phrases are well-structured and that the phonemes are valid.
+fail Iapetus__au2_v2_b_t3.wav: The following custom pronunciation phrases are invalid: Marakaj. Please ensure the phrases are well-structured and that the phonemes are valid.
+fail Iapetus__au2_v2_c_t1.wav: The following custom pronunciation phrases are invalid: Marakaj. Please ensure the phrases are well-structured and that the phonemes are valid.
+fail Iapetus__au2_v2_c_t3.wav: The following custom pronunciation phrases are invalid: Marakaj. Please ensure the phrases are well-structured and that the phonemes are valid.
+fail Iapetus__au2_v2_c_t2.wav: The following custom pronunciation phrases are invalid: Marakaj. Please ensure the phrases are well-structured and that the phonemes are valid.
+fail Iapetus__au2_v2_d_t1.wav: The following custom pronunciation phrases are invalid: Marakaj. Please ensure the phrases are well-structured and that the phonemes are valid.
+fail Iapetus__au2_v2_d_t3.wav: The following custom pronunciation phrases are invalid: Marakaj. Please ensure the phrases are well-structured and that the phonemes are valid.
+fail Iapetus__au2_v2_d_t2.wav: The following custom pronunciation phrases are invalid: Marakaj. Please ensure the phrases are well-structured and that the phonemes are valid.
+ok Iapetus__au2_v3_a_t1.wav
+ok Iapetus__au2_v3_a_t3.wav
+ok Iapetus__au2_v3_a_t2.wav
+ok Iapetus__au2_v3_b_t1.wav
+ok Iapetus__au2_v3_b_t3.wav
+ok Iapetus__au2_v3_b_t2.wav
+ok Iapetus__au2_v3_c_t1.wav
+ok Iapetus__au2_v3_c_t3.wav
+ok Iapetus__au2_v3_c_t2.wav
+ok Iapetus__au2_v3_d_t1.wav
+ok Iapetus__au2_v3_d_t2.wav
+ok Iapetus__au2_v3_d_t3.wav
+ok Iapetus__au2_v4_a_t1.wav
+ok Iapetus__au2_v4_a_t2.wav
+ok Iapetus__au2_v4_a_t3.wav
+ok Iapetus__au2_v4_b_t1.wav
+ok Iapetus__au2_v4_b_t2.wav
+ok Iapetus__au2_v4_b_t3.wav
+ok Iapetus__au2_v4_c_t1.wav
+ok Iapetus__au2_v4_c_t2.wav
+ok Iapetus__au2_v4_c_t3.wav
+ok Iapetus__au2_v4_d_t1.wav
+ok Iapetus__au2_v4_d_t2.wav
+ok Iapetus__au2_v4_d_t3.wav
+ok Zephyr__au2_v1_a_t1.wav
+ok Zephyr__au2_v1_a_t2.wav
+ok Zephyr__au2_v1_a_t3.wav
+ok Zephyr__au2_v1_b_t1.wav
+ok Zephyr__au2_v1_b_t2.wav
+ok Zephyr__au2_v1_b_t3.wav
+ok Zephyr__au2_v1_c_t1.wav
+ok Zephyr__au2_v1_c_t2.wav
+ok Zephyr__au2_v1_c_t3.wav
+ok Zephyr__au2_v1_d_t1.wav
+fail Zephyr__au2_v2_a_t1.wav: The following custom pronunciation phrases are invalid: Marakaj. Please ensure the phrases are well-structured and that the phonemes are valid.
+ok Zephyr__au2_v1_d_t3.wav
+fail Zephyr__au2_v2_a_t2.wav: The following custom pronunciation phrases are invalid: Marakaj. Please ensure the phrases are well-structured and that the phonemes are valid.
+ok Zephyr__au2_v1_d_t2.wav
+fail Zephyr__au2_v2_a_t3.wav: The following custom pronunciation phrases are invalid: Marakaj. Please ensure the phrases are well-structured and that the phonemes are valid.
+fail Zephyr__au2_v2_b_t1.wav: The following custom pronunciation phrases are invalid: Marakaj. Please ensure the phrases are well-structured and that the phonemes are valid.
+fail Zephyr__au2_v2_b_t2.wav: The following custom pronunciation phrases are invalid: Marakaj. Please ensure the phrases are well-structured and that the phonemes are valid.
+fail Zephyr__au2_v2_b_t3.wav: The following custom pronunciation phrases are invalid: Marakaj. Please ensure the phrases are well-structured and that the phonemes are valid.
+fail Zephyr__au2_v2_c_t3.wav: The following custom pronunciation phrases are invalid: Marakaj. Please ensure the phrases are well-structured and that the phonemes are valid.
+fail Zephyr__au2_v2_c_t2.wav: The following custom pronunciation phrases are invalid: Marakaj. Please ensure the phrases are well-structured and that the phonemes are valid.
+fail Zephyr__au2_v2_c_t1.wav: The following custom pronunciation phrases are invalid: Marakaj. Please ensure the phrases are well-structured and that the phonemes are valid.
+fail Zephyr__au2_v2_d_t1.wav: The following custom pronunciation phrases are invalid: Marakaj. Please ensure the phrases are well-structured and that the phonemes are valid.
+fail Zephyr__au2_v2_d_t2.wav: The following custom pronunciation phrases are invalid: Marakaj. Please ensure the phrases are well-structured and that the phonemes are valid.
+fail Zephyr__au2_v2_d_t3.wav: The following custom pronunciation phrases are invalid: Marakaj. Please ensure the phrases are well-structured and that the phonemes are valid.
+ok Zephyr__au2_v3_a_t1.wav
+ok Zephyr__au2_v3_a_t3.wav
+ok Zephyr__au2_v3_a_t2.wav
+ok Zephyr__au2_v3_b_t3.wav
+ok Zephyr__au2_v3_b_t2.wav
+ok Zephyr__au2_v3_b_t1.wav
+ok Zephyr__au2_v3_c_t1.wav
+ok Zephyr__au2_v3_c_t2.wav
+ok Zephyr__au2_v3_c_t3.wav
+ok Zephyr__au2_v3_d_t1.wav
+ok Zephyr__au2_v3_d_t2.wav
+ok Zephyr__au2_v3_d_t3.wav
+ok Zephyr__au2_v4_a_t1.wav
+ok Zephyr__au2_v4_a_t2.wav
+ok Zephyr__au2_v4_a_t3.wav
+ok Zephyr__au2_v4_b_t1.wav
+ok Zephyr__au2_v4_b_t2.wav
+ok Zephyr__au2_v4_b_t3.wav
+ok Zephyr__au2_v4_c_t2.wav
+ok Zephyr__au2_v4_c_t1.wav
+ok Zephyr__au2_v4_c_t3.wav
+ok Zephyr__au2_v4_d_t2.wav
+ok Zephyr__au2_v4_d_t1.wav
+ok Zephyr__au2_v4_d_t3.wav
