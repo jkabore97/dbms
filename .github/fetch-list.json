@@ -1,0 +1,306 @@
+{
+ "run": "p1",
+ "fma": [
+  {
+   "url": "https://freemusicarchive.org/music/joseph-sacco/afrobeast-instrumentals/",
+   "download": true
+  },
+  {
+   "url": "https://freemusicarchive.org/music/joseph-sacco/",
+   "download": false,
+   "albums": true,
+   "pages": 2
+  },
+  {
+   "url": "https://freemusicarchive.org/music/elijah-k/",
+   "download": true,
+   "pages": 2
+  },
+  {
+   "url": "https://freemusicarchive.org/music/Ketsa/upbeat-street/",
+   "download": true
+  },
+  {
+   "url": "https://freemusicarchive.org/music/Ketsa/",
+   "download": false,
+   "albums": true,
+   "pages": 2
+  },
+  {
+   "url": "https://freemusicarchive.org/genre/Afrobeat/",
+   "download": false,
+   "pages": 3
+  },
+  {
+   "url": "https://freemusicarchive.org/genre/African/",
+   "download": false,
+   "pages": 2
+  }
+ ],
+ "max_tracks": 70,
+ "commons": [
+  {
+   "q": "boutique Ouagadougou",
+   "n": 40
+  },
+  {
+   "q": "shop Burkina Faso",
+   "n": 40
+  },
+  {
+   "q": "small shop West Africa",
+   "n": 40
+  },
+  {
+   "q": "grocery shop Africa shelves",
+   "n": 40
+  },
+  {
+   "q": "kiosk Ouagadougou",
+   "n": 40
+  },
+  {
+   "q": "CFA franc banknotes",
+   "n": 40
+  },
+  {
+   "q": "franc CFA",
+   "n": 40
+  },
+  {
+   "q": "West African CFA franc coins",
+   "n": 40
+  },
+  {
+   "q": "counting banknotes hands",
+   "n": 40
+  },
+  {
+   "q": "cash box money",
+   "n": 40
+  },
+  {
+   "q": "handwritten notebook",
+   "n": 40
+  },
+  {
+   "q": "ledger handwriting",
+   "n": 40
+  },
+  {
+   "q": "crumpled receipt",
+   "n": 40
+  },
+  {
+   "q": "wall clock",
+   "n": 40
+  },
+  {
+   "q": "calculator notebook",
+   "n": 40
+  },
+  {
+   "q": "Ouagadougou street",
+   "n": 40
+  },
+  {
+   "q": "Ouagadougou market",
+   "n": 40
+  },
+  {
+   "q": "market Burkina Faso",
+   "n": 40
+  },
+  {
+   "q": "market stall West Africa",
+   "n": 40
+  },
+  {
+   "q": "wax print fabric market",
+   "n": 40
+  },
+  {
+   "q": "poultry farm Burkina Faso",
+   "n": 40
+  },
+  {
+   "q": "broiler chickens farm",
+   "n": 40
+  },
+  {
+   "q": "chicks poultry house",
+   "n": 40
+  },
+  {
+   "q": "egg trays",
+   "n": 40
+  },
+  {
+   "q": "chicken feed bags",
+   "n": 40
+  },
+  {
+   "q": "poultry vaccination",
+   "n": 40
+  },
+  {
+   "q": "meeting Burkina Faso",
+   "n": 40
+  },
+  {
+   "q": "plastic chairs meeting",
+   "n": 40
+  },
+  {
+   "q": "association meeting Africa",
+   "n": 40
+  },
+  {
+   "q": "smartphone hands",
+   "n": 40
+  },
+  {
+   "q": "mobile phone Africa market",
+   "n": 40
+  },
+  {
+   "q": "wax print dress",
+   "n": 40
+  },
+  {
+   "q": "African print shirt",
+   "n": 40
+  },
+  {
+   "q": "leather handbag",
+   "n": 40
+  },
+  {
+   "q": "sack of rice",
+   "n": 40
+  },
+  {
+   "q": "cooking oil bottles",
+   "n": 40
+  },
+  {
+   "q": "fresh eggs",
+   "n": 40
+  },
+  {
+   "q": "shea butter",
+   "n": 40
+  },
+  {
+   "q": "Ouagadougou shop front",
+   "n": 40
+  },
+  {
+   "q": "tailor shop Africa",
+   "n": 40
+  },
+  {
+   "q": "phone screen photos",
+   "n": 40
+  }
+ ],
+ "openverse": [
+  {
+   "q": "shop counter Africa",
+   "n": 20
+  },
+  {
+   "q": "CFA franc",
+   "n": 20
+  },
+  {
+   "q": "banknotes counting",
+   "n": 20
+  },
+  {
+   "q": "cash drawer",
+   "n": 20
+  },
+  {
+   "q": "handwritten ledger",
+   "n": 20
+  },
+  {
+   "q": "crumpled receipt",
+   "n": 20
+  },
+  {
+   "q": "wall clock",
+   "n": 20
+  },
+  {
+   "q": "market stall Africa",
+   "n": 20
+  },
+  {
+   "q": "Ouagadougou",
+   "n": 20
+  },
+  {
+   "q": "poultry farm",
+   "n": 20
+  },
+  {
+   "q": "chicks",
+   "n": 20
+  },
+  {
+   "q": "egg tray",
+   "n": 20
+  },
+  {
+   "q": "feed sacks",
+   "n": 20
+  },
+  {
+   "q": "vaccine syringe",
+   "n": 20
+  },
+  {
+   "q": "meeting chairs",
+   "n": 20
+  },
+  {
+   "q": "smartphone hands",
+   "n": 20
+  },
+  {
+   "q": "grocery shelves",
+   "n": 20
+  },
+  {
+   "q": "rice bags",
+   "n": 20
+  },
+  {
+   "q": "wax print fabric",
+   "n": 20
+  },
+  {
+   "q": "african dress",
+   "n": 20
+  },
+  {
+   "q": "handbag",
+   "n": 20
+  },
+  {
+   "q": "cooking oil",
+   "n": 20
+  },
+  {
+   "q": "eggs basket",
+   "n": 20
+  }
+ ],
+ "pages_keep": [
+  "https://freemusicarchive.org/License_Guide",
+  "https://creativecommons.org/licenses/by/4.0/legalcode.txt",
+  "https://creativecommons.org/publicdomain/zero/1.0/legalcode.txt"
+ ]
+}
