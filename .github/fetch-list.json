@@ -1,280 +1,222 @@
 {
- "run": "p1",
- "fma": [
-  {
-   "url": "https://freemusicarchive.org/music/joseph-sacco/afrobeast-instrumentals/",
-   "download": true
-  },
-  {
-   "url": "https://freemusicarchive.org/music/joseph-sacco/",
-   "download": false,
-   "albums": true,
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/music/elijah-k/",
-   "download": true,
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/music/Ketsa/upbeat-street/",
-   "download": true
-  },
-  {
-   "url": "https://freemusicarchive.org/music/Ketsa/",
-   "download": false,
-   "albums": true,
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/genre/Afrobeat/",
-   "download": false,
-   "pages": 3
-  },
-  {
-   "url": "https://freemusicarchive.org/genre/African/",
-   "download": false,
-   "pages": 2
-  }
- ],
- "max_tracks": 70,
+ "run": "p2",
  "commons": [
   {
-   "q": "boutique Ouagadougou",
-   "n": 40
+   "q": "boutique Burkina filew:>1799",
+   "n": 50
   },
   {
-   "q": "shop Burkina Faso",
-   "n": 40
+   "q": "shop Ouagadougou filew:>1799",
+   "n": 50
   },
   {
-   "q": "small shop West Africa",
-   "n": 40
+   "q": "kiosk Burkina Faso filew:>1799",
+   "n": 50
   },
   {
-   "q": "grocery shop Africa shelves",
-   "n": 40
+   "q": "shop Mali filew:>1799",
+   "n": 50
   },
   {
-   "q": "kiosk Ouagadougou",
-   "n": 40
+   "q": "shop Senegal filew:>1799",
+   "n": 50
   },
   {
-   "q": "CFA franc banknotes",
-   "n": 40
+   "q": "shop Ghana filew:>1799",
+   "n": 50
   },
   {
-   "q": "franc CFA",
-   "n": 40
+   "q": "shopkeeper Africa filew:>1799",
+   "n": 50
   },
   {
-   "q": "West African CFA franc coins",
-   "n": 40
+   "q": "grocery store Africa filew:>1799",
+   "n": 50
   },
   {
-   "q": "counting banknotes hands",
-   "n": 40
+   "q": "Dakar shop filew:>1799",
+   "n": 50
   },
   {
-   "q": "cash box money",
-   "n": 40
+   "q": "Bamako market filew:>1799",
+   "n": 50
   },
   {
-   "q": "handwritten notebook",
-   "n": 40
+   "q": "Ouagadougou market filew:>1799",
+   "n": 50
   },
   {
-   "q": "ledger handwriting",
-   "n": 40
+   "q": "Rood Woko filew:>1799",
+   "n": 50
   },
   {
-   "q": "crumpled receipt",
-   "n": 40
+   "q": "market Ghana filew:>1799",
+   "n": 50
   },
   {
-   "q": "wall clock",
-   "n": 40
+   "q": "Kumasi market filew:>1799",
+   "n": 50
   },
   {
-   "q": "calculator notebook",
-   "n": 40
+   "q": "Abidjan market filew:>1799",
+   "n": 50
   },
   {
-   "q": "Ouagadougou street",
-   "n": 40
+   "q": "Lomé market filew:>1799",
+   "n": 50
   },
   {
-   "q": "Ouagadougou market",
-   "n": 40
+   "q": "CFA franc filew:>1799",
+   "n": 50
   },
   {
-   "q": "market Burkina Faso",
-   "n": 40
+   "q": "franc CFA billet filew:>1799",
+   "n": 50
   },
   {
-   "q": "market stall West Africa",
-   "n": 40
+   "q": "money counting hands filew:>1799",
+   "n": 50
   },
   {
-   "q": "wax print fabric market",
-   "n": 40
+   "q": "cash register filew:>1799",
+   "n": 50
   },
   {
-   "q": "poultry farm Burkina Faso",
-   "n": 40
+   "q": "notebook handwriting filew:>1799",
+   "n": 50
   },
   {
-   "q": "broiler chickens farm",
-   "n": 40
+   "q": "account book filew:>1799",
+   "n": 50
   },
   {
-   "q": "chicks poultry house",
-   "n": 40
+   "q": "receipt paper filew:>1799",
+   "n": 50
   },
   {
-   "q": "egg trays",
-   "n": 40
+   "q": "wall clock filew:>1799",
+   "n": 50
   },
   {
-   "q": "chicken feed bags",
-   "n": 40
+   "q": "calculator filew:>1799",
+   "n": 50
   },
   {
-   "q": "poultry vaccination",
-   "n": 40
+   "q": "poultry Burkina Faso filew:>1799",
+   "n": 50
   },
   {
-   "q": "meeting Burkina Faso",
-   "n": 40
+   "q": "poultry farm Ghana filew:>1799",
+   "n": 50
   },
   {
-   "q": "plastic chairs meeting",
-   "n": 40
+   "q": "chicken farm Nigeria filew:>1799",
+   "n": 50
   },
   {
-   "q": "association meeting Africa",
-   "n": 40
+   "q": "poultry Senegal filew:>1799",
+   "n": 50
   },
   {
-   "q": "smartphone hands",
-   "n": 40
+   "q": "day-old chicks filew:>1799",
+   "n": 50
   },
   {
-   "q": "mobile phone Africa market",
-   "n": 40
+   "q": "feed bags poultry filew:>1799",
+   "n": 50
   },
   {
-   "q": "wax print dress",
-   "n": 40
+   "q": "poultry vaccine filew:>1799",
+   "n": 50
   },
   {
-   "q": "African print shirt",
-   "n": 40
+   "q": "egg trays market filew:>1799",
+   "n": 50
   },
   {
-   "q": "leather handbag",
-   "n": 40
+   "q": "community meeting Burkina Faso filew:>1799",
+   "n": 50
   },
   {
-   "q": "sack of rice",
-   "n": 40
+   "q": "village meeting Mali filew:>1799",
+   "n": 50
   },
   {
-   "q": "cooking oil bottles",
-   "n": 40
+   "q": "community meeting Ghana filew:>1799",
+   "n": 50
   },
   {
-   "q": "fresh eggs",
-   "n": 40
+   "q": "plastic chairs filew:>1799",
+   "n": 50
   },
   {
-   "q": "shea butter",
-   "n": 40
+   "q": "mobile phone Burkina Faso filew:>1799",
+   "n": 50
   },
   {
-   "q": "Ouagadougou shop front",
-   "n": 40
+   "q": "mobile phone Ghana filew:>1799",
+   "n": 50
   },
   {
-   "q": "tailor shop Africa",
-   "n": 40
+   "q": "mobile phone Africa filew:>1799",
+   "n": 50
   },
   {
-   "q": "phone screen photos",
-   "n": 40
+   "q": "wax print filew:>1799",
+   "n": 50
+  },
+  {
+   "q": "kente cloth filew:>1799",
+   "n": 50
+  },
+  {
+   "q": "ankara fabric filew:>1799",
+   "n": 50
+  },
+  {
+   "q": "African fashion filew:>1799",
+   "n": 50
+  },
+  {
+   "q": "leather sandals filew:>1799",
+   "n": 50
+  },
+  {
+   "q": "leather handbag filew:>1799",
+   "n": 50
+  },
+  {
+   "q": "beaded bracelets filew:>1799",
+   "n": 50
+  },
+  {
+   "q": "guinea fowl filew:>1799",
+   "n": 50
+  },
+  {
+   "q": "tomatoes market Africa filew:>1799",
+   "n": 50
+  },
+  {
+   "q": "rice sack filew:>1799",
+   "n": 50
+  },
+  {
+   "q": "street food Ouagadougou filew:>1799",
+   "n": 50
+  },
+  {
+   "q": "grilled meat Africa filew:>1799",
+   "n": 50
+  },
+  {
+   "q": "maquis Abidjan filew:>1799",
+   "n": 50
   }
  ],
  "openverse": [
   {
-   "q": "shop counter Africa",
-   "n": 20
-  },
-  {
-   "q": "CFA franc",
-   "n": 20
-  },
-  {
-   "q": "banknotes counting",
-   "n": 20
-  },
-  {
-   "q": "cash drawer",
-   "n": 20
-  },
-  {
-   "q": "handwritten ledger",
-   "n": 20
-  },
-  {
-   "q": "crumpled receipt",
-   "n": 20
-  },
-  {
-   "q": "wall clock",
-   "n": 20
-  },
-  {
-   "q": "market stall Africa",
-   "n": 20
-  },
-  {
-   "q": "Ouagadougou",
-   "n": 20
-  },
-  {
-   "q": "poultry farm",
-   "n": 20
-  },
-  {
-   "q": "chicks",
-   "n": 20
-  },
-  {
-   "q": "egg tray",
-   "n": 20
-  },
-  {
-   "q": "feed sacks",
-   "n": 20
-  },
-  {
-   "q": "vaccine syringe",
-   "n": 20
-  },
-  {
-   "q": "meeting chairs",
-   "n": 20
-  },
-  {
-   "q": "smartphone hands",
-   "n": 20
-  },
-  {
-   "q": "grocery shelves",
-   "n": 20
-  },
-  {
-   "q": "rice bags",
+   "q": "African market fabric",
    "n": 20
   },
   {
@@ -282,25 +224,325 @@
    "n": 20
   },
   {
-   "q": "african dress",
+   "q": "ankara dress",
    "n": 20
   },
   {
-   "q": "handbag",
+   "q": "poultry farm Africa",
    "n": 20
   },
   {
-   "q": "cooking oil",
+   "q": "chicks farm",
    "n": 20
   },
   {
-   "q": "eggs basket",
+   "q": "egg tray",
+   "n": 20
+  },
+  {
+   "q": "guinea fowl",
+   "n": 20
+  },
+  {
+   "q": "tomatoes basket",
+   "n": 20
+  },
+  {
+   "q": "leather sandals",
+   "n": 20
+  },
+  {
+   "q": "handbag leather",
+   "n": 20
+  },
+  {
+   "q": "beaded bracelets",
+   "n": 20
+  },
+  {
+   "q": "smartphone hands",
+   "n": 20
+  },
+  {
+   "q": "phone in hand",
+   "n": 20
+  },
+  {
+   "q": "cash register drawer",
+   "n": 20
+  },
+  {
+   "q": "counting money",
+   "n": 20
+  },
+  {
+   "q": "notebook handwriting pen",
+   "n": 20
+  },
+  {
+   "q": "receipt paper",
+   "n": 20
+  },
+  {
+   "q": "empty plastic chairs",
+   "n": 20
+  },
+  {
+   "q": "outdoor meeting chairs",
+   "n": 20
+  },
+  {
+   "q": "shop counter",
+   "n": 20
+  },
+  {
+   "q": "small grocery shop",
+   "n": 20
+  },
+  {
+   "q": "market stall night",
+   "n": 20
+  },
+  {
+   "q": "street food grill",
+   "n": 20
+  },
+  {
+   "q": "clothing boutique rack",
+   "n": 20
+  },
+  {
+   "q": "tailor sewing machine",
+   "n": 20
+  },
+  {
+   "q": "brown eggs",
+   "n": 20
+  },
+  {
+   "q": "broiler chickens",
+   "n": 20
+  },
+  {
+   "q": "rice bags market",
+   "n": 20
+  },
+  {
+   "q": "cooking oil bottle",
    "n": 20
   }
  ],
- "pages_keep": [
-  "https://freemusicarchive.org/License_Guide",
-  "https://creativecommons.org/licenses/by/4.0/legalcode.txt",
-  "https://creativecommons.org/publicdomain/zero/1.0/legalcode.txt"
+ "get": [
+  {
+   "file": "cfa_notes.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Billet_de_monnaie_-_B%C3%A9nin.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original/2400px-Billet_de_monnaie_-_B%C3%A9nin.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:Billet_de_monnaie_-_B%C3%A9nin.jpg"
+  },
+  {
+   "file": "cfa_rolls.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/Coinrolls_Francs_CFA_BCEAO_XOF.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original/2400px-Coinrolls_Francs_CFA_BCEAO_XOF.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:Coinrolls_Francs_CFA_BCEAO_XOF.jpg"
+  },
+  {
+   "file": "coin200.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/d/da/200_francs_CFA_%28XOF%29_avers.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:200_francs_CFA_(XOF)_avers.png"
+  },
+  {
+   "file": "coin50.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/2/26/50_francs_CFA_%28XOF%29_avers.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:50_francs_CFA_(XOF)_avers.png"
+  },
+  {
+   "file": "coin25.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/8/84/25_francs_CFA_%28XOF%29_avers.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:25_francs_CFA_(XOF)_avers.png"
+  },
+  {
+   "file": "coin100.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/7/71/100_francs_CFA_%28XOF%29_avers.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:100_francs_CFA_(XOF)_avers.png"
+  },
+  {
+   "file": "coin500.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/5/58/500_francs_CFA_%28XOF%29_avers.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:500_francs_CFA_(XOF)_avers.png"
+  },
+  {
+   "file": "coin10.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/d/db/10_francs_CFA_%28XOF%29_avers.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:10_francs_CFA_(XOF)_avers.png"
+  },
+  {
+   "file": "coin5.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/8/8b/5_francs_CFA_%28XOF%29_avers.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:5_francs_CFA_(XOF)_avers.png"
+  },
+  {
+   "file": "cashbox.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/6/6e/Cash_box_%28AM_1992.135-3%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:Cash_box_(AM_1992.135-3).jpg"
+  },
+  {
+   "file": "drawer.jpg",
+   "url": "https://live.staticflickr.com/2618/3999463246_3fa1c94a1e_b.jpg",
+   "page": "https://www.flickr.com/photos/31320962@N05/3999463246"
+  },
+  {
+   "file": "notebook_a.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/2/24/%28Sherwin_Carlquist_field_notebook_from_1967_expedition_to_Hawaii%29_-_DPLA_-_79d7fb6852e60df9f8bdabe0c443b9c2_%28page_3%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:(Sherwin_Carlquist_field_notebook_from_1967_expedition_to_Hawaii)_-_DPLA_-_79d7fb6852e60df9f8bdabe0c443b9c2_(page_3).jpg"
+  },
+  {
+   "file": "notebook_b.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/4/4b/%28Sherwin_Carlquist_field_notebook_from_1966_expedition_to_Hawaii%29_-_DPLA_-_6cf6ec33d755d47e91a91bc1a00b7da2_%28page_58%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:(Sherwin_Carlquist_field_notebook_from_1966_expedition_to_Hawaii)_-_DPLA_-_6cf6ec33d755d47e91a91bc1a00b7da2_(page_58).jpg"
+  },
+  {
+   "file": "ledger.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/%D0%9A%D0%BD%D0%B8%D0%B6%D0%BA%D0%B0_%D1%81%D0%B1%D0%B5%D1%80%D0%B5%D0%B3%D0%B0%D1%82%D0%B5%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F_%E2%84%96_880054_%D0%BF%D0%BE%D0%BB%D1%8C%D1%81%D0%BA%D0%BE%D0%B9_%D0%BF%D0%BE%D1%87%D1%82%D0%BE%D0%B2%D0%BE-%D1%81%D0%B1%D0%B5%D1%80%D0%B5%D0%B3%D0%B0%D1%82%D0%B5%D0%BB%D1%8C%D0%BD%D0%BE%D0%B9_%D0%BA%D0%B0%D1%81%D1%81%D1%8B._%D0%9D%D0%B5%D0%B7%D0%B0%D0%BF%D0%BE%D0%BB%D0%BD%D0%B5%D0%BD%D0%BD%D0%B0%D1%8F_%D1%82%D0%B0%D0%B1%D0%BB%D0%B8%D1%86%D0%B0_%D0%BE%D0%BF%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D0%B9--moneymuseum-by.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original/2400px-%D0%9A%D0%BD%D0%B8%D0%B6%D0%BA%D0%B0_%D1%81%D0%B1%D0%B5%D1%80%D0%B5%D0%B3%D0%B0%D1%82%D0%B5%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F_%E2%84%96_880054_%D0%BF%D0%BE%D0%BB%D1%8C%D1%81%D0%BA%D0%BE%D0%B9_%D0%BF%D0%BE%D1%87%D1%82%D0%BE%D0%B2%D0%BE-%D1%81%D0%B1%D0%B5%D1%80%D0%B5%D0%B3%D0%B0%D1%82%D0%B5%D0%BB%D1%8C%D0%BD%D0%BE%D0%B9_%D0%BA%D0%B0%D1%81%D1%81%D1%8B._%D0%9D%D0%B5%D0%B7%D0%B0%D0%BF%D0%BE%D0%BB%D0%BD%D0%B5%D0%BD%D0%BD%D0%B0%D1%8F_%D1%82%D0%B0%D0%B1%D0%BB%D0%B8%D1%86%D0%B0_%D0%BE%D0%BF%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D0%B9--moneymuseum-by.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:%D0%9A%D0%BD%D0%B8%D0%B6%D0%BA%D0%B0_%D1%81%D0%B1%D0%B5%D1%80%D0%B5%D0%B3%D0%B0%D1%82%D0%B5%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F_%E2%84%96_880054_%D0%BF%D0%BE%D0%BB%D1%8C%D1%81%D0%BA%D0%BE%D0%B9_%D0%BF%D0%BE%D1%87%D1%82%D0%BE%D0%B2%D0%BE-%D1%81%D0%B1%D0%B5%D1%80%D0%B5%D0%B3%D0%B0%D1%82%D0%B5%D0%BB%D1%8C%D0%BD%D0%BE%D0%B9_%D0%BA%D0%B0%D1%81%D1%81%D1%8B._%D0%9D%D0%B5%D0%B7%D0%B0%D0%BF%D0%BE%D0%BB%D0%BD%D0%B5%D0%BD%D0%BD%D0%B0%D1%8F_%D1%82%D0%B0%D0%B1%D0%BB%D0%B8%D1%86%D0%B0_%D0%BE%D0%BF%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D0%B9--moneymuseum-by.jpg"
+  },
+  {
+   "file": "clock_a.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Antique_Wooden_SEC_Wall_Clock.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original/2400px-Antique_Wooden_SEC_Wall_Clock.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:Antique_Wooden_SEC_Wall_Clock.jpg"
+  },
+  {
+   "file": "clock_b.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/6/68/Antique_wall_clock.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:Antique_wall_clock.jpg"
+  },
+  {
+   "file": "broiler_a.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Chicken_farm_in_Iraq.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original/2400px-Chicken_farm_in_Iraq.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:Chicken_farm_in_Iraq.JPG"
+  },
+  {
+   "file": "broiler_b.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/%22_Fot.Andrew_Skowron_%2847949203827%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original/2400px-%22_Fot.Andrew_Skowron_%2847949203827%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:%22_Fot.Andrew_Skowron_(47949203827).jpg"
+  },
+  {
+   "file": "broiler_c.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/%22_Fot.Andrew_Skowron_%2847949253862%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original/2400px-%22_Fot.Andrew_Skowron_%2847949253862%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:%22_Fot.Andrew_Skowron_(47949253862).jpg"
+  },
+  {
+   "file": "broiler_d.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/%22_Fot.Andrew_Skowron_%2847949272731%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original/2400px-%22_Fot.Andrew_Skowron_%2847949272731%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:%22_Fot.Andrew_Skowron_(47949272731).jpg"
+  },
+  {
+   "file": "broiler_e.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/%22_Fot.Andrew_Skowron_%2847949250307%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original/2400px-%22_Fot.Andrew_Skowron_%2847949250307%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:%22_Fot.Andrew_Skowron_(47949250307).jpg"
+  },
+  {
+   "file": "broiler_f.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/%22_Fot.Andrew_Skowron_%2847949172267%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original/2400px-%22_Fot.Andrew_Skowron_%2847949172267%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:%22_Fot.Andrew_Skowron_(47949172267).jpg"
+  },
+  {
+   "file": "eggs_a.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/A_Tray_Of_Eggs.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original/2400px-A_Tray_Of_Eggs.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:A_Tray_Of_Eggs.jpg"
+  },
+  {
+   "file": "eggs_b.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/SZ_%E6%B7%B1%E5%9C%B3_Shenzhen_%E7%A6%8F%E7%94%B0_Futian_%E9%87%91%E7%94%B0%E8%B7%AF_Jintian_Road_%E4%B8%83%E9%AE%AE%E8%B6%85%E5%B8%82_Seven_Fresh_Supermarket_eggs_January_2024_R12S.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original/2400px-SZ_%E6%B7%B1%E5%9C%B3_Shenzhen_%E7%A6%8F%E7%94%B0_Futian_%E9%87%91%E7%94%B0%E8%B7%AF_Jintian_Road_%E4%B8%83%E9%AE%AE%E8%B6%85%E5%B8%82_Seven_Fresh_Supermarket_eggs_January_2024_R12S.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:SZ_%E6%B7%B1%E5%9C%B3_Shenzhen_%E7%A6%8F%E7%94%B0_Futian_%E9%87%91%E7%94%B0%E8%B7%AF_Jintian_Road_%E4%B8%83%E9%AE%AE%E8%B6%85%E5%B8%82_Seven_Fresh_Supermarket_eggs_January_2024_R12S.jpg"
+  },
+  {
+   "file": "meet_a.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Kibori_District_of_Zangon_Kataf_LGA_Kaduna_State_meeting_03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original/2400px-Kibori_District_of_Zangon_Kataf_LGA_Kaduna_State_meeting_03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:Kibori_District_of_Zangon_Kataf_LGA_Kaduna_State_meeting_03.jpg"
+  },
+  {
+   "file": "meet_b.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Kibori_District_of_Zangon_Kataf_LGA_Kaduna_State_meeting_04.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original/2400px-Kibori_District_of_Zangon_Kataf_LGA_Kaduna_State_meeting_04.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:Kibori_District_of_Zangon_Kataf_LGA_Kaduna_State_meeting_04.jpg"
+  },
+  {
+   "file": "meet_c.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Kibori_District_of_Zangon_Kataf_LGA_Kaduna_State_meeting_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original/2400px-Kibori_District_of_Zangon_Kataf_LGA_Kaduna_State_meeting_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:Kibori_District_of_Zangon_Kataf_LGA_Kaduna_State_meeting_02.jpg"
+  },
+  {
+   "file": "meet_d.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Cramped_meeting_room_%28Unsplash%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original/2400px-Cramped_meeting_room_%28Unsplash%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:Cramped_meeting_room_(Unsplash).jpg"
+  },
+  {
+   "file": "phone_a.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Person_holding_smartphone_with_camera_app_open_while_sitting_outdoors_on_a_sunny_day%2C_focused_on_taking_a_picture_of_the_scene.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original/2400px-Person_holding_smartphone_with_camera_app_open_while_sitting_outdoors_on_a_sunny_day%2C_focused_on_taking_a_picture_of_the_scene.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:Person_holding_smartphone_with_camera_app_open_while_sitting_outdoors_on_a_sunny_day,_focused_on_taking_a_picture_of_the_scene.jpg"
+  },
+  {
+   "file": "phone_b.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/5/57/Smartphone_Use.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:Smartphone_Use.jpg"
+  },
+  {
+   "file": "phone_c.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Woman_sits_on_a_chair_holding_a_smartphone_and_a_notebook_closeup.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original/2400px-Woman_sits_on_a_chair_holding_a_smartphone_and_a_notebook_closeup.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:Woman_sits_on_a_chair_holding_a_smartphone_and_a_notebook_closeup.jpg"
+  },
+  {
+   "file": "phone_d.jpg",
+   "url": "https://live.staticflickr.com/8670/16582225836_50beb86d2b_b.jpg",
+   "page": "https://www.flickr.com/photos/33227787@N05/16582225836"
+  },
+  {
+   "file": "street_a.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/6/65/Ouagadougou_street_in_2004_7.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:Ouagadougou_street_in_2004_7.jpg"
+  },
+  {
+   "file": "street_b.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/c/c6/July_2004_Ouagadougou_streets_14.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:July_2004_Ouagadougou_streets_14.jpg"
+  },
+  {
+   "file": "street_c.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/c/c0/July_2004_Ouagadougou_streets_11.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:July_2004_Ouagadougou_streets_11.jpg"
+  },
+  {
+   "file": "street_d.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/d/df/Ouagadougou_street_in_2004_5.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:Ouagadougou_street_in_2004_5.jpg"
+  },
+  {
+   "file": "stall_c.jpg",
+   "url": "https://live.staticflickr.com/3139/2758201684_c729a52161_b.jpg",
+   "page": "https://www.flickr.com/photos/40595948@N00/2758201684"
+  },
+  {
+   "file": "tailor_a.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/2013_08_05_Mogadishu_Life_Economy_008_%289457510526%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original/2400px-2013_08_05_Mogadishu_Life_Economy_008_%289457510526%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:2013_08_05_Mogadishu_Life_Economy_008_(9457510526).jpg"
+  },
+  {
+   "file": "tailor_b.org&",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/2013_08_05_Mogadishu_Life_Economy_010_%289454727801%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original/2400px-2013_08_05_Mogadishu_Life_Economy_010_%289454727801%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:2013_08_05_Mogadishu_Life_Economy_010_(9454727801).jpg"
+  },
+  {
+   "file": "badge-google-play-fr.png",
+   "url": "https://play.google.com/intl/en_us/badges/static/images/badges/fr_badge_web_generic.png"
+  },
+  {
+   "file": "badge-app-store-fr.svg",
+   "url": "https://tools.applemarketingtools.com/api/badges/download-on-the-app-store/black/fr-fr?size=250x83"
+  },
+  {
+   "file": "app-store-badge-guidelines.html",
+   "url": "https://developer.apple.com/app-store/marketing/guidelines/"
+  },
+  {
+   "file": "google-play-badge-guidelines.html",
+   "url": "https://partnermarketinghub.withgoogle.com/brands/google-play/visual-identity/badge-guidelines/"
+  }
  ]
 }
