@@ -1,0 +1,43 @@
+get phone_r2.jpg 1257233 https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Hands-coffee-smartphone-technology_%2823698591814%29.jpg/3840px-Hands-coffee-smartphone-technology_%2823698591814%29.jpg
+get wallet_a.jpg 161458 https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvaXMxNTAyMi1pbWFnZS1rd3lzY2JhaS5qcGc.jpg
+  retry 0 https://www.rawpixel.com/image/5969576/wallet-money HTTP Error 403: Forbidden
+  retry 1 https://www.rawpixel.com/image/5969576/wallet-money HTTP Error 403: Forbidden
+  retry 2 https://www.rawpixel.com/image/5969576/wallet-money HTTP Error 403: Forbidden
+get wallet_b.jpg 253382 https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvZnJzdGV2ZWJ1aXNzaW5uZTAwMTU5LWltYWdlLWt3eXNrYW42LmpwZw.jpg
+  retry 0 https://www.rawpixel.com/image/5971081/wallet-and-money-free-public-domain-cc0-photo HTTP Error 403: Forbidden
+  retry 1 https://www.rawpixel.com/image/5971081/wallet-and-money-free-public-domain-cc0-photo HTTP Error 403: Forbidden
+  retry 2 https://www.rawpixel.com/image/5971081/wallet-and-money-free-public-domain-cc0-photo HTTP Error 403: Forbidden
+get card_pay.jpg 648084 https://upload.wikimedia.org/wikipedia/commons/d/db/Card_Payment_%28176811287%29.jpeg
+  retry 0 https://cdn.stocksnap.io/img-thumbs/960w/XGXORJWZIX.jpg HTTP Error 403: Forbidden
+  retry 1 https://cdn.stocksnap.io/img-thumbs/960w/XGXORJWZIX.jpg HTTP Error 403: Forbidden
+  retry 2 https://cdn.stocksnap.io/img-thumbs/960w/XGXORJWZIX.jpg HTTP Error 403: Forbidden
+get nb_desk_a.jpg FAIL https://cdn.stocksnap.io/img-thumbs/960w/XGXORJWZIX.jpg
+  retry 0 https://stocksnap.io/photo/computer-office-XGXORJWZIX HTTP Error 403: Forbidden
+  retry 1 https://stocksnap.io/photo/computer-office-XGXORJWZIX HTTP Error 403: Forbidden
+  retry 2 https://stocksnap.io/photo/computer-office-XGXORJWZIX HTTP Error 403: Forbidden
+  retry 0 https://cdn.stocksnap.io/img-thumbs/960w/UUY821MG70.jpg HTTP Error 403: Forbidden
+  retry 1 https://cdn.stocksnap.io/img-thumbs/960w/UUY821MG70.jpg HTTP Error 403: Forbidden
+  retry 2 https://cdn.stocksnap.io/img-thumbs/960w/UUY821MG70.jpg HTTP Error 403: Forbidden
+get nb_desk_b.jpg FAIL https://cdn.stocksnap.io/img-thumbs/960w/UUY821MG70.jpg
+  retry 0 https://stocksnap.io/photo/notebook-notepad-UUY821MG70 HTTP Error 403: Forbidden
+  retry 1 https://stocksnap.io/photo/notebook-notepad-UUY821MG70 HTTP Error 403: Forbidden
+  retry 2 https://stocksnap.io/photo/notebook-notepad-UUY821MG70 HTTP Error 403: Forbidden
+get abidjan_night.jpg 3606102 https://upload.wikimedia.org/wikipedia/commons/0/06/Plateau_Abidjan_de_nuit.jpg
+get store_window.jpg 2972465 https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Mega_store%2C_Clothing_shop%2C_Rostov-on-Don%2C_Russia.jpg/3840px-Mega_store%2C_Clothing_shop%2C_Rostov-on-Don%2C_Russia.jpg
+get supermarket.jpg 1723014 https://upload.wikimedia.org/wikipedia/commons/7/7a/Accra_Mall_Supermarket_1.jpg
+get kigali_street.jpg 3677414 https://upload.wikimedia.org/wikipedia/commons/2/2c/Kigali%2C_the_cleanest_city_in_Africa.jpg
+get pos_drawer.jpg 1159092 https://upload.wikimedia.org/wikipedia/commons/6/60/Cash_register.jpeg
+get layer_house.jpg 304764 https://live.staticflickr.com/1913/45044852241_54feedd093_b.jpg
+get chicks_pen.jpg 221026 https://live.staticflickr.com/2260/2323537118_21f3360f6d_b.jpg
+get layer_house_b.jpg 304764 https://live.staticflickr.com/1913/45044852241_54feedd093_b.jpg
+get planning_desk.jpg 2777287 https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Working_on_a_planning_session_with_stationery_items%2C_notebook%2C_and_colorful_pencils_on_a_wooden_desk.jpg/3840px-Working_on_a_planning_session_with_stationery_items%2C_notebook%2C_and_colorful_pencils_on_a_wooden_desk.jpg
+get meeting_kigali.jpg 726876 https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Wikimedia_Rwanda_team_building_workshop_04.jpg/3840px-Wikimedia_Rwanda_team_building_workshop_04.jpg
+get meeting_empty.jpg 2011260 https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Chairs_in_a_meeting_room_%28Unsplash%29.jpg/3840px-Chairs_in_a_meeting_room_%28Unsplash%29.jpg
+get fashion_display.jpg 63444465 https://upload.wikimedia.org/wikipedia/commons/6/6b/%27Bjay%27_de_Ombre_Thomas-Fahm_%28Mus%C3%A9e_du_quai_Branly%2C_Paris%29_%2855219498450%29.png
+get abidjan_plateau.jpg 1435708 https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Le_Plateau_depuis_le_Pont_ADO_%E2%80%93_Abidjan.jpg/3840px-Le_Plateau_depuis_le_Pont_ADO_%E2%80%93_Abidjan.jpg
+get eggs_carton.jpg 118751 https://live.staticflickr.com/65535/49829839696_2234a9820a_b.jpg
+get eggs_carton_b.jpg 97969 https://live.staticflickr.com/3749/12710629754_4db6583844_b.jpg
+get rooster.jpg 399006 https://live.staticflickr.com/2317/2285486507_3c5b7c74c8_b.jpg
+get hen_portrait.jpg 213663 https://live.staticflickr.com/4013/5165590011_f9fa4f4b91_b.jpg
+get presenter_kigali.jpg 1284902 https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Afrocreative_Wikiproject_2024_in_Rwanda_08.jpg/3840px-Afrocreative_Wikiproject_2024_in_Rwanda_08.jpg
+get group_kigali.jpg 2522056 https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Afrocreative_Wikiproject_2024_in_Rwanda_09.jpg/3840px-Afrocreative_Wikiproject_2024_in_Rwanda_09.jpg
