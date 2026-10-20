@@ -1,0 +1,197 @@
+page https://freemusicarchive.org/search/?quicksearch=ndombolo 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=ndombolo&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=soukous 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=soukous&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=rumba+congolaise 1 tracks
+page https://freemusicarchive.org/search/?quicksearch=rumba+congolaise&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=congolese+rumba 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=congolese+rumba&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=sebene 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=sebene&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=seben 1 tracks
+page https://freemusicarchive.org/search/?quicksearch=seben&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=congo 4 tracks
+page https://freemusicarchive.org/search/?quicksearch=congo&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=kinshasa 1 tracks
+page https://freemusicarchive.org/search/?quicksearch=kinshasa&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=coupe+decale 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=coupe+decale&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=coup%C3%A9-d%C3%A9cal%C3%A9 2 tracks
+page https://freemusicarchive.org/search/?quicksearch=coup%C3%A9-d%C3%A9cal%C3%A9&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=zouglou 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=zouglou&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=ivoire 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=ivoire&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=abidjan 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=abidjan&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=afro+trap 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=afro+trap&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=afro+club 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=afro+club&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=afropop 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=afropop&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=makossa 2 tracks
+page https://freemusicarchive.org/search/?quicksearch=makossa&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=kuduro 1 tracks
+page https://freemusicarchive.org/search/?quicksearch=kuduro&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=highlife 2 tracks
+page https://freemusicarchive.org/search/?quicksearch=highlife&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=rumba 20 tracks
+page https://freemusicarchive.org/search/?quicksearch=rumba&page=2 1 tracks
+page https://freemusicarchive.org/search/?quicksearch=zouk 1 tracks
+page https://freemusicarchive.org/search/?quicksearch=zouk&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=afro+francais 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=afro+francais&page=2 0 tracks
+  retry 0 https://freemusicarchive.org/genre/Highlife/ HTTP Error 404: Not Found
+  retry 1 https://freemusicarchive.org/genre/Highlife/ HTTP Error 404: Not Found
+  retry 2 https://freemusicarchive.org/genre/Highlife/ HTTP Error 404: Not Found
+  retry 0 https://freemusicarchive.org/genre/Highlife/?page=2 HTTP Error 404: Not Found
+  retry 1 https://freemusicarchive.org/genre/Highlife/?page=2 HTTP Error 404: Not Found
+  retry 2 https://freemusicarchive.org/genre/Highlife/?page=2 HTTP Error 404: Not Found
+  retry 0 https://freemusicarchive.org/genre/Highlife/?page=3 HTTP Error 404: Not Found
+  retry 1 https://freemusicarchive.org/genre/Highlife/?page=3 HTTP Error 404: Not Found
+  retry 2 https://freemusicarchive.org/genre/Highlife/?page=3 HTTP Error 404: Not Found
+page https://freemusicarchive.org/genre/Latin/ 20 tracks
+  retry 0 https://freemusicarchive.org/music/sneaky-club//rumba-congolaise/ HTTP Error 404: Not Found
+  retry 1 https://freemusicarchive.org/music/sneaky-club//rumba-congolaise/ HTTP Error 404: Not Found
+  retry 2 https://freemusicarchive.org/music/sneaky-club//rumba-congolaise/ HTTP Error 404: Not Found
+track 4856 The Conet Project | hier ist dfc seben und dreizig | [] No No -
+track 195135 John Bartmann | Congo Bongo Stomp | ['creativecommons.org/publicdomain/zero/1.0'] No No -
+track 4122 Rainbow Arabia | Holiday in Congo | ['creativecommons.org/licenses/by-nc-sa/3.0'] No No -
+track 255777 Liberty Beats | KONGO SPIRIT (Congo Rainforest) | ['creativecommons.org/licenses/by-nc/4.0'] No Yes, this track (or part of it) was generated by AI -
+track 219407 Soularflair | 21 sec commercial jingle 39 (clean acoustic guitar, congo, focus - If I Were You) | ['creativecommons.org/licenses/by-nc-nd/4.0'] Yes No -
+track 28737 ZAUS / .E. | Lhasa (Kinshasa Mix) | ['creativecommons.org/licenses/by-nc-nd/3.0'] No No -
+  retry 0 https://freemusicarchive.org/music/barry-stock//things-that-feel/ HTTP Error 404: Not Found
+  retry 1 https://freemusicarchive.org/music/barry-stock//things-that-feel/ HTTP Error 404: Not Found
+  retry 2 https://freemusicarchive.org/music/barry-stock//things-that-feel/ HTTP Error 404: Not Found
+track 213139 Adeline Yeo (HP) | Golden Beach Scenery | ['creativecommons.org/licenses/by-nc-nd/4.0'] Yes No -
+  retry 0 https://freemusicarchive.org/music/sneaky-club//village-1/ HTTP Error 404: Not Found
+  retry 1 https://freemusicarchive.org/music/sneaky-club//village-1/ HTTP Error 404: Not Found
+  retry 2 https://freemusicarchive.org/music/sneaky-club//village-1/ HTTP Error 404: Not Found
+track 15512 Buraka Som Sistema | Sound Of Kuduro/Luanda-Lisboa (Live @ KEXP) | [] No No -
+track 31151 Jason Ajemian & The Highlife | Monsters | ['creativecommons.org/licenses/by-nc-nd/3.0'] No No -
+track 31152 Jason Ajemian & The Highlife | Soak up the Sun | ['creativecommons.org/licenses/by-nc-nd/3.0'] No No -
+track 169866 Dee Yan-Key | Rumba | ['creativecommons.org/licenses/by-nc-sa/4.0'] Yes No -
+track 3779 La Troba Kung-Fu | Rock Rumba | ['creativecommons.org/licenses/by-nc-sa/3.0'] No No -
+track 228278 Blue Dot Sessions | Rumba Desolato | ['creativecommons.org/licenses/by-nc/4.0'] No No -
+track 185683 Dee Yan-Key | Rumba: Windblown | ['creativecommons.org/licenses/by-nc-sa/4.0'] No No -
+track 257673 Blue Dot Sessions | Rumba Cotidiana | ['creativecommons.org/licenses/by-nc/4.0'] No No -
+track 184039 Dee Yan-Key | verano (rumba) | ['creativecommons.org/licenses/by-nc-sa/4.0'] Yes No -
+track 258598 Podington Bear | Vox Bubble Rumba | ['creativecommons.org/licenses/by-nc/4.0'] No No -
+track 81712 Podington Bear | Vox Bubble Rumba | ['creativecommons.org/licenses/by-nc/3.0'] Yes No -
+track 228317 Blue Dot Sessions | Timber Lodge Rumba | ['creativecommons.org/licenses/by-nc/4.0'] No No -
+track 173923 Yadi Camara | Afro rumba camara | ['creativecommons.org/licenses/by-nc-sa/4.0'] No No -
+  retry 0 https://freemusicarchive.org/music/yeah-music//cuban-dancemp3/ HTTP Error 404: Not Found
+  retry 1 https://freemusicarchive.org/music/yeah-music//cuban-dancemp3/ HTTP Error 404: Not Found
+  retry 2 https://freemusicarchive.org/music/yeah-music//cuban-dancemp3/ HTTP Error 404: Not Found
+  retry 0 https://freemusicarchive.org/music/yeah-music//cuban-dance-loopmp3/ HTTP Error 404: Not Found
+  retry 1 https://freemusicarchive.org/music/yeah-music//cuban-dance-loopmp3/ HTTP Error 404: Not Found
+  retry 2 https://freemusicarchive.org/music/yeah-music//cuban-dance-loopmp3/ HTTP Error 404: Not Found
+  retry 0 https://freemusicarchive.org/music/yeah-music//cuban-dance-edit-2mp3/ HTTP Error 404: Not Found
+  retry 1 https://freemusicarchive.org/music/yeah-music//cuban-dance-edit-2mp3/ HTTP Error 404: Not Found
+  retry 2 https://freemusicarchive.org/music/yeah-music//cuban-dance-edit-2mp3/ HTTP Error 404: Not Found
+  retry 0 https://freemusicarchive.org/music/yeah-music//cuban-dance-edit-1mp3/ HTTP Error 404: Not Found
+  retry 1 https://freemusicarchive.org/music/yeah-music//cuban-dance-edit-1mp3/ HTTP Error 404: Not Found
+  retry 2 https://freemusicarchive.org/music/yeah-music//cuban-dance-edit-1mp3/ HTTP Error 404: Not Found
+  retry 0 https://freemusicarchive.org/music/sneaky-club//zongo/ HTTP Error 404: Not Found
+  retry 1 https://freemusicarchive.org/music/sneaky-club//zongo/ HTTP Error 404: Not Found
+  retry 2 https://freemusicarchive.org/music/sneaky-club//zongo/ HTTP Error 404: Not Found
+track 174609 Lobo Loco | Night Emotions - Complete (ID 877) | ['creativecommons.org/licenses/by-nc-nd/4.0'] No No -
+track 201248 Lobo Loco | Noite de Tango (ID 1633) | ['creativecommons.org/licenses/by-nc-sa/4.0'] Yes No -
+track 145533 Lobo Loco | Nikola Teslas Dream (ID 338) | ['creativecommons.org/licenses/by-nc-sa/4.0'] No No -
+track 201242 Lobo Loco | Hippie Beatnix - Piano (ID 1654) | ['creativecommons.org/licenses/by-nc-sa/4.0'] Yes No -
+  retry 0 https://freemusicarchive.org/music/king-b//dis-moi-tout/ HTTP Error 404: Not Found
+  retry 1 https://freemusicarchive.org/music/king-b//dis-moi-tout/ HTTP Error 404: Not Found
+  retry 2 https://freemusicarchive.org/music/king-b//dis-moi-tout/ HTTP Error 404: Not Found
+track 174930 Chafouin | Zouk love c'est ça | ['creativecommons.org/licenses/by-nc-sa/3.0'] No No -
+  retry 0 https://freemusicarchive.org/music/marsanaryas//the-babies-of-the-revolutions-mix/ HTTP Error 404: Not Found
+  retry 1 https://freemusicarchive.org/music/marsanaryas//the-babies-of-the-revolutions-mix/ HTTP Error 404: Not Found
+  retry 2 https://freemusicarchive.org/music/marsanaryas//the-babies-of-the-revolutions-mix/ HTTP Error 404: Not Found
+track 277010 Alex Morgan | Carnaval Short Festival Burst | ['creativecommons.org/licenses/by/4.0'] Yes Yes, this track (or part of it) was generated by AI -
+track 276319 Alex Morgan | Latin Jazz Rainy Night Extended Cut | ['creativecommons.org/licenses/by/4.0'] Yes Yes, this track (or part of it) was generated by AI -
+track 276318 Alex Morgan | Samba Jazz Cocktail Bar Quick Warmth | ['creativecommons.org/licenses/by/4.0'] Yes Yes, this track (or part of it) was generated by AI -
+track 276317 Alex Morgan | Latin Jazz Restaurant Warm Service | ['creativecommons.org/licenses/by/4.0'] Yes Yes, this track (or part of it) was generated by AI -
+track 276316 Alex Morgan | Latin Salsa Caliente Dance Floor Cut | ['creativecommons.org/licenses/by/4.0'] Yes Yes, this track (or part of it) was generated by AI -
+track 276321 Alex Morgan | Samba Jazz Midnight Club Percussive Night | ['creativecommons.org/licenses/by/4.0'] Yes Yes, this track (or part of it) was generated by AI -
+track 276315 Alex Morgan | Latin Jazz Midnight Club Minor Groove | ['creativecommons.org/licenses/by/4.0'] Yes Yes, this track (or part of it) was generated by AI -
+track 276314 Alex Morgan | Latin Jazz Sunny Cafe Afternoon Groove | ['creativecommons.org/licenses/by/4.0'] Yes Yes, this track (or part of it) was generated by AI -
+track 276312 Alex Morgan | Latin Jazz Coffee Shop Short Bright Take | ['creativecommons.org/licenses/by/4.0'] Yes Yes, this track (or part of it) was generated by AI -
+track 276313 Alex Morgan | Latin Jazz Cocktail Bar Bright Montuno | ['creativecommons.org/licenses/by/4.0'] Yes Yes, this track (or part of it) was generated by AI -
+track 276278 Alex Morgan | Bossa Lounge Midnight Club Slow Sway | ['creativecommons.org/licenses/by/4.0'] Yes Yes, this track (or part of it) was generated by AI -
+track 276272 Alex Morgan | Bossa Nova Midnight Club Late Bossa | ['creativecommons.org/licenses/by/4.0'] Yes Yes, this track (or part of it) was generated by AI -
+track 276141 Alex Morgan | Latin Jazz Study Session With Light Percussion | ['creativecommons.org/licenses/by/4.0'] Yes Yes, this track (or part of it) was generated by AI -
+track 275996 Alex Morgan | Samba Jazz Study Session With Light Percussion | ['creativecommons.org/licenses/by/4.0'] Yes Yes, this track (or part of it) was generated by AI -
+  retry 0 https://freemusicarchive.org/music/hamidreza-ghorbani//hamidreza-ghorbani-stay-with-me/ HTTP Error 404: Not Found
+  retry 1 https://freemusicarchive.org/music/hamidreza-ghorbani//hamidreza-ghorbani-stay-with-me/ HTTP Error 404: Not Found
+  retry 2 https://freemusicarchive.org/music/hamidreza-ghorbani//hamidreza-ghorbani-stay-with-me/ HTTP Error 404: Not Found
+track 273037 Lobo Loco | Dance Disco (ID 2460) | ['creativecommons.org/licenses/by-nc-nd/4.0'] No No -
+track 272436 Yeah Music | Epic Latin Drums Edit 1.mp3 | ['creativecommons.org/licenses/by-nc/4.0'] Yes No -
+track 272433 Yeah Music | Epic Latin Drums.mp3 | ['creativecommons.org/licenses/by-nc/4.0'] Yes No -
+track 272434 Yeah Music | Epic Latin Drums Loop.mp3 | ['creativecommons.org/licenses/by-nc/4.0'] Yes No -
+  retry 0 https://api.openverse.org/v1/audio/?q=soukous&license=by%2Ccc0&page_size=50 HTTP Error 401: Unauthorized
+  retry 1 https://api.openverse.org/v1/audio/?q=soukous&license=by%2Ccc0&page_size=50 HTTP Error 401: Unauthorized
+page_keep https://api.openverse.org/v1/audio/?q=soukous&license=by%2Ccc0&page_size=50 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=ndombolo&license=by%2Ccc0&page_size=50 HTTP Error 401: Unauthorized
+  retry 1 https://api.openverse.org/v1/audio/?q=ndombolo&license=by%2Ccc0&page_size=50 HTTP Error 401: Unauthorized
+page_keep https://api.openverse.org/v1/audio/?q=ndombolo&license=by%2Ccc0&page_size=50 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=congolese&license=by%2Ccc0&page_size=50 HTTP Error 401: Unauthorized
+  retry 1 https://api.openverse.org/v1/audio/?q=congolese&license=by%2Ccc0&page_size=50 HTTP Error 401: Unauthorized
+page_keep https://api.openverse.org/v1/audio/?q=congolese&license=by%2Ccc0&page_size=50 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=congo+rumba&license=by%2Ccc0&page_size=50 HTTP Error 401: Unauthorized
+  retry 1 https://api.openverse.org/v1/audio/?q=congo+rumba&license=by%2Ccc0&page_size=50 HTTP Error 401: Unauthorized
+page_keep https://api.openverse.org/v1/audio/?q=congo+rumba&license=by%2Ccc0&page_size=50 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=sebene&license=by%2Ccc0&page_size=50 HTTP Error 401: Unauthorized
+  retry 1 https://api.openverse.org/v1/audio/?q=sebene&license=by%2Ccc0&page_size=50 HTTP Error 401: Unauthorized
+page_keep https://api.openverse.org/v1/audio/?q=sebene&license=by%2Ccc0&page_size=50 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=coupe+decale&license=by%2Ccc0&page_size=50 HTTP Error 429: Too Many Requests
+  retry 1 https://api.openverse.org/v1/audio/?q=coupe+decale&license=by%2Ccc0&page_size=50 HTTP Error 429: Too Many Requests
+page_keep https://api.openverse.org/v1/audio/?q=coupe+decale&license=by%2Ccc0&page_size=50 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=zouglou&license=by%2Ccc0&page_size=50 HTTP Error 429: Too Many Requests
+  retry 1 https://api.openverse.org/v1/audio/?q=zouglou&license=by%2Ccc0&page_size=50 HTTP Error 429: Too Many Requests
+page_keep https://api.openverse.org/v1/audio/?q=zouglou&license=by%2Ccc0&page_size=50 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=afro+trap&license=by%2Ccc0&page_size=50 HTTP Error 429: Too Many Requests
+  retry 1 https://api.openverse.org/v1/audio/?q=afro+trap&license=by%2Ccc0&page_size=50 HTTP Error 429: Too Many Requests
+page_keep https://api.openverse.org/v1/audio/?q=afro+trap&license=by%2Ccc0&page_size=50 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=afropop&license=by%2Ccc0&page_size=50 HTTP Error 429: Too Many Requests
+  retry 1 https://api.openverse.org/v1/audio/?q=afropop&license=by%2Ccc0&page_size=50 HTTP Error 429: Too Many Requests
+page_keep https://api.openverse.org/v1/audio/?q=afropop&license=by%2Ccc0&page_size=50 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=highlife&license=by%2Ccc0&page_size=50 HTTP Error 429: Too Many Requests
+  retry 1 https://api.openverse.org/v1/audio/?q=highlife&license=by%2Ccc0&page_size=50 HTTP Error 429: Too Many Requests
+page_keep https://api.openverse.org/v1/audio/?q=highlife&license=by%2Ccc0&page_size=50 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=african+guitar&license=by%2Ccc0&page_size=50 HTTP Error 429: Too Many Requests
+  retry 1 https://api.openverse.org/v1/audio/?q=african+guitar&license=by%2Ccc0&page_size=50 HTTP Error 429: Too Many Requests
+page_keep https://api.openverse.org/v1/audio/?q=african+guitar&license=by%2Ccc0&page_size=50 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=makossa&license=by%2Ccc0&page_size=50 HTTP Error 429: Too Many Requests
+  retry 1 https://api.openverse.org/v1/audio/?q=makossa&license=by%2Ccc0&page_size=50 HTTP Error 429: Too Many Requests
+page_keep https://api.openverse.org/v1/audio/?q=makossa&license=by%2Ccc0&page_size=50 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=zouk&license=by%2Ccc0&page_size=50 HTTP Error 429: Too Many Requests
+  retry 1 https://api.openverse.org/v1/audio/?q=zouk&license=by%2Ccc0&page_size=50 HTTP Error 429: Too Many Requests
+page_keep https://api.openverse.org/v1/audio/?q=zouk&license=by%2Ccc0&page_size=50 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=afro+house&license=by%2Ccc0&page_size=50 HTTP Error 429: Too Many Requests
+  retry 1 https://api.openverse.org/v1/audio/?q=afro+house&license=by%2Ccc0&page_size=50 HTTP Error 429: Too Many Requests
+page_keep https://api.openverse.org/v1/audio/?q=afro+house&license=by%2Ccc0&page_size=50 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=kuduro&license=by%2Ccc0&page_size=50 HTTP Error 429: Too Many Requests
+  retry 1 https://api.openverse.org/v1/audio/?q=kuduro&license=by%2Ccc0&page_size=50 HTTP Error 429: Too Many Requests
+page_keep https://api.openverse.org/v1/audio/?q=kuduro&license=by%2Ccc0&page_size=50 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=african+dance&license=by%2Ccc0&page_size=50 HTTP Error 429: Too Many Requests
+  retry 1 https://api.openverse.org/v1/audio/?q=african+dance&license=by%2Ccc0&page_size=50 HTTP Error 429: Too Many Requests
+page_keep https://api.openverse.org/v1/audio/?q=african+dance&license=by%2Ccc0&page_size=50 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=afrobeat&license=by%2Ccc0&page_size=50 HTTP Error 429: Too Many Requests
+  retry 1 https://api.openverse.org/v1/audio/?q=afrobeat&license=by%2Ccc0&page_size=50 HTTP Error 429: Too Many Requests
+page_keep https://api.openverse.org/v1/audio/?q=afrobeat&license=by%2Ccc0&page_size=50 FAIL
+page_keep https://archive.org/advancedsearch.php?q=%28soukous+OR+ndombolo+OR+%22rumba+congolaise%22+OR+sebene+OR+%22coupe+decale%22+OR+zouglou+OR+%22afro+trap%22+OR+highlife+OR+makossa+OR+%22congolese%22%29+AND+mediatype%3Aaudio+AND+licenseurl%3A%2Acreativecommons.org%2Aby%2A&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=creator&fl%5B%5D=licenseurl&fl%5B%5D=downloads&fl%5B%5D=subject&rows=200&output=json&sort%5B%5D=downloads+desc 59552
+page_keep https://archive.org/advancedsearch.php?q=%28soukous+OR+ndombolo+OR+%22rumba+congolaise%22+OR+sebene+OR+%22coupe+decale%22+OR+zouglou+OR+%22afro+trap%22+OR+highlife+OR+makossa+OR+%22congolese%22%29+AND+mediatype%3Aaudio+AND+licenseurl%3A%2Acreativecommons.org%2Apublicdomain%2A&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=creator&fl%5B%5D=licenseurl&fl%5B%5D=downloads&fl%5B%5D=subject&rows=200&output=json&sort%5B%5D=downloads+desc 10957
+page_keep http://ccmixter.org/api/query?tags=african&f=json&limit=60&sort=rank 2
+page_keep http://ccmixter.org/api/query?tags=soukous&f=json&limit=60&sort=rank 4087
+page_keep http://ccmixter.org/api/query?tags=afrobeat&f=json&limit=60&sort=rank 26360
+  retry 0 http://ccmixter.org/api/query?tags=world&f=json&limit=60&sort=rank got more than 65536 bytes when reading header line
+  retry 1 http://ccmixter.org/api/query?tags=world&f=json&limit=60&sort=rank got more than 65536 bytes when reading header line
+page_keep http://ccmixter.org/api/query?tags=world&f=json&limit=60&sort=rank FAIL
+page_keep http://ccmixter.org/api/query?tags=highlife&f=json&limit=60&sort=rank 2
+page_keep http://ccmixter.org/api/query?tags=congo&f=json&limit=60&sort=rank 2
+commons soukous filetype:audio 2 results 0 kept
+commons rumba congolaise filetype:audio 0 results 0 kept
+commons coupé-décalé filetype:audio 0 results 0 kept
+commons zouglou filetype:audio 2 results 0 kept
+commons highlife filetype:audio 6 results 0 kept
+commons African music filetype:audio 30 results 0 kept
