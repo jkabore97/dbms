@@ -1,0 +1,149 @@
+commons Lagos skyline filew:>1499 24 results 6 kept
+commons Victoria Island Lagos filew:>1499 24 results 0 kept
+commons Nairobi skyline filew:>1499 24 results 7 kept
+commons Nairobi CBD filew:>1499 24 results 3 kept
+commons Abidjan Plateau skyline filew:>1499 5 results 2 kept
+commons Accra skyline filew:>1499 9 results 1 kept
+commons Kigali city filew:>1499 24 results 14 kept
+commons Kigali Convention Centre filew:>1499 24 results 19 kept
+commons Dakar skyline filew:>1499 14 results 10 kept
+commons Eko Atlantic filew:>1499 14 results 4 kept
+commons shopping mall Nairobi filew:>1499 24 results 2 kept
+commons shopping mall Lagos filew:>1499 24 results 5 kept
+commons Accra Mall filew:>1499 24 results 8 kept
+commons Two Rivers Mall filew:>1499 24 results 1 kept
+commons Garden City Mall filew:>1499 24 results 15 kept
+commons boutique interior filew:>1499 24 results 10 kept
+commons clothing store interior filew:>1499 24 results 10 kept
+commons fashion boutique Lagos filew:>1499 1 results 1 kept
+commons shoe store interior filew:>1499 24 results 15 kept
+commons restaurant interior Nairobi filew:>1499 10 results 1 kept
+commons cafe Kigali filew:>1499 2 results 0 kept
+commons coffee shop interior filew:>1499 24 results 8 kept
+commons restaurant Lagos filew:>1499 24 results 18 kept
+commons modern restaurant interior filew:>1499 24 results 18 kept
+commons poultry farm modern filew:>1499 24 results 4 kept
+commons egg farm filew:>1499 0 results 0 kept
+commons layer hens cage free filew:>1499 17 results 15 kept
+commons agribusiness Kenya filew:>1499 24 results 0 kept
+commons greenhouse Kenya filew:>1499 23 results 5 kept
+commons farm Rwanda filew:>1499 24 results 9 kept
+commons dairy farm Kenya filew:>1499 24 results 21 kept
+commons business meeting Nigeria filew:>1499 6 results 5 kept
+commons conference Nairobi filew:>1499 24 results 1 kept
+commons board meeting filew:>1499 24 results 20 kept
+commons meeting room modern filew:>1499 24 results 14 kept
+commons workshop Kigali filew:>1499 22 results 19 kept
+commons entrepreneurs Africa filew:>1499 24 results 22 kept
+commons women entrepreneurs Nigeria filew:>1499 15 results 11 kept
+commons card payment terminal filew:>1499 24 results 12 kept
+commons point of sale terminal filew:>1499 24 results 12 kept
+commons cash drawer filew:>1499 24 results 12 kept
+commons mobile money Kenya filew:>1499 24 results 2 kept
+commons smartphone hands filew:>1499 24 results 17 kept
+commons banknotes wallet filew:>1499 10 results 6 kept
+commons CFA franc banknotes filew:>1499 3 results 1 kept
+commons notebook desk filew:>1499 24 results 21 kept
+commons planner pen desk filew:>1499 1 results 1 kept
+commons wall clock filew:>1499 24 results 7 kept
+openverse Lagos skyline 20 results 20 kept
+  retry 0 https://api.openverse.org/v1/images/e0cdc7f2-944e-4d67-a536-c06c62b7cb17/thumb/ HTTP Error 424: Failed Dependency
+  retry 1 https://api.openverse.org/v1/images/e0cdc7f2-944e-4d67-a536-c06c62b7cb17/thumb/ HTTP Error 424: Failed Dependency
+  retry 0 https://api.openverse.org/v1/images/26f0f75d-eb41-41e0-905e-cdaf9466de72/thumb/ HTTP Error 424: Failed Dependency
+  retry 1 https://api.openverse.org/v1/images/26f0f75d-eb41-41e0-905e-cdaf9466de72/thumb/ HTTP Error 500: Internal Server Error
+  retry 0 https://api.openverse.org/v1/images/6c1ecdb7-48f0-452b-b19b-0dd8b336740f/thumb/ HTTP Error 424: Failed Dependency
+  retry 1 https://api.openverse.org/v1/images/6c1ecdb7-48f0-452b-b19b-0dd8b336740f/thumb/ HTTP Error 424: Failed Dependency
+  retry 0 https://api.openverse.org/v1/images/8f27bcbd-a86b-4c4c-8238-0f1268c77677/thumb/ HTTP Error 424: Failed Dependency
+  retry 1 https://api.openverse.org/v1/images/8f27bcbd-a86b-4c4c-8238-0f1268c77677/thumb/ HTTP Error 424: Failed Dependency
+  retry 0 https://api.openverse.org/v1/images/e8afb718-4003-444e-92a5-0af3eb9878a8/thumb/ HTTP Error 424: Failed Dependency
+  retry 1 https://api.openverse.org/v1/images/e8afb718-4003-444e-92a5-0af3eb9878a8/thumb/ HTTP Error 424: Failed Dependency
+  retry 0 https://api.openverse.org/v1/images/e5731cfd-f342-4b3e-8839-efd81f2fe874/thumb/ HTTP Error 500: Internal Server Error
+  retry 1 https://api.openverse.org/v1/images/e5731cfd-f342-4b3e-8839-efd81f2fe874/thumb/ HTTP Error 424: Failed Dependency
+  retry 0 https://api.openverse.org/v1/images/c13b8906-6dbe-4da3-aa17-dfa63e7fc775/thumb/ HTTP Error 424: Failed Dependency
+  retry 1 https://api.openverse.org/v1/images/c13b8906-6dbe-4da3-aa17-dfa63e7fc775/thumb/ HTTP Error 500: Internal Server Error
+  retry 0 https://api.openverse.org/v1/images/57ca629b-5886-43d2-905d-4ea8b2a05157/thumb/ HTTP Error 424: Failed Dependency
+  retry 1 https://api.openverse.org/v1/images/57ca629b-5886-43d2-905d-4ea8b2a05157/thumb/ HTTP Error 424: Failed Dependency
+  retry 0 https://api.openverse.org/v1/images/99255587-b8b8-48bf-92e0-791350420d0e/thumb/ HTTP Error 500: Internal Server Error
+  retry 1 https://api.openverse.org/v1/images/99255587-b8b8-48bf-92e0-791350420d0e/thumb/ HTTP Error 424: Failed Dependency
+  retry 0 https://api.openverse.org/v1/images/ace11129-2969-4710-b0f3-bf08cdfddf17/thumb/ HTTP Error 500: Internal Server Error
+  retry 1 https://api.openverse.org/v1/images/ace11129-2969-4710-b0f3-bf08cdfddf17/thumb/ HTTP Error 500: Internal Server Error
+  retry 0 https://api.openverse.org/v1/images/d5098fd9-2d87-45a7-921d-71d82fae3aa6/thumb/ HTTP Error 424: Failed Dependency
+  retry 1 https://api.openverse.org/v1/images/d5098fd9-2d87-45a7-921d-71d82fae3aa6/thumb/ HTTP Error 424: Failed Dependency
+  retry 0 https://api.openverse.org/v1/images/bc6adfd6-3677-4b9a-b029-f714db8ee24b/thumb/ HTTP Error 424: Failed Dependency
+  retry 1 https://api.openverse.org/v1/images/bc6adfd6-3677-4b9a-b029-f714db8ee24b/thumb/ HTTP Error 424: Failed Dependency
+  retry 0 https://api.openverse.org/v1/images/888c19e7-2f87-4c7a-a0fc-4fe22149511c/thumb/ HTTP Error 424: Failed Dependency
+  retry 1 https://api.openverse.org/v1/images/888c19e7-2f87-4c7a-a0fc-4fe22149511c/thumb/ HTTP Error 500: Internal Server Error
+  retry 0 https://api.openverse.org/v1/images/2fc20ec8-0683-4f24-a544-6301d29bd3be/thumb/ HTTP Error 500: Internal Server Error
+  retry 1 https://api.openverse.org/v1/images/2fc20ec8-0683-4f24-a544-6301d29bd3be/thumb/ HTTP Error 500: Internal Server Error
+  retry 0 https://api.openverse.org/v1/images/8ff744b9-e234-47b7-b837-209d25a28c62/thumb/ HTTP Error 500: Internal Server Error
+  retry 1 https://api.openverse.org/v1/images/8ff744b9-e234-47b7-b837-209d25a28c62/thumb/ HTTP Error 500: Internal Server Error
+openverse Nairobi skyline 20 results 20 kept
+  retry 0 https://api.openverse.org/v1/images/4464b6ef-1b17-4d55-93b7-27dcf4f4e6f0/thumb/ HTTP Error 424: Failed Dependency
+  retry 1 https://api.openverse.org/v1/images/4464b6ef-1b17-4d55-93b7-27dcf4f4e6f0/thumb/ HTTP Error 424: Failed Dependency
+openverse Abidjan skyline 11 results 11 kept
+  retry 0 https://api.openverse.org/v1/images/d2fd758e-c53b-41b1-bcfd-016dd92a241a/thumb/ HTTP Error 424: Failed Dependency
+  retry 1 https://api.openverse.org/v1/images/d2fd758e-c53b-41b1-bcfd-016dd92a241a/thumb/ HTTP Error 500: Internal Server Error
+openverse Accra city 20 results 20 kept
+openverse Kigali 20 results 20 kept
+openverse boutique interior 20 results 20 kept
+openverse clothing store 20 results 20 kept
+  retry 0 https://api.openverse.org/v1/images/44ca7fb4-cab8-4028-bd22-5a9c99ce8394/thumb/ HTTP Error 500: Internal Server Error
+  retry 1 https://api.openverse.org/v1/images/44ca7fb4-cab8-4028-bd22-5a9c99ce8394/thumb/ HTTP Error 424: Failed Dependency
+  retry 0 https://api.openverse.org/v1/images/838c069e-f65f-4c8c-b2ce-cfbcc244fe99/thumb/ HTTP Error 500: Internal Server Error
+  retry 1 https://api.openverse.org/v1/images/838c069e-f65f-4c8c-b2ce-cfbcc244fe99/thumb/ HTTP Error 500: Internal Server Error
+  retry 0 https://api.openverse.org/v1/images/4e466526-7a0b-4d26-b3f4-f42abcb7375a/thumb/ HTTP Error 424: Failed Dependency
+  retry 1 https://api.openverse.org/v1/images/4e466526-7a0b-4d26-b3f4-f42abcb7375a/thumb/ HTTP Error 500: Internal Server Error
+openverse concept store 20 results 20 kept
+  retry 0 https://api.openverse.org/v1/images/54f96fe5-eafb-415a-9e14-9411b2c4c479/thumb/ HTTP Error 500: Internal Server Error
+  retry 1 https://api.openverse.org/v1/images/54f96fe5-eafb-415a-9e14-9411b2c4c479/thumb/ HTTP Error 424: Failed Dependency
+openverse cafe interior 20 results 20 kept
+openverse restaurant interior 20 results 20 kept
+  retry 0 https://api.openverse.org/v1/images/f377b806-0309-45d3-97ee-5b6d06936d75/thumb/ HTTP Error 500: Internal Server Error
+  retry 1 https://api.openverse.org/v1/images/f377b806-0309-45d3-97ee-5b6d06936d75/thumb/ HTTP Error 500: Internal Server Error
+openverse modern poultry farm 13 results 13 kept
+openverse chicken farm 20 results 20 kept
+openverse eggs carton 20 results 20 kept
+openverse greenhouse farm 20 results 20 kept
+  retry 0 https://api.openverse.org/v1/images/06cf128a-6b42-4a15-bac8-719a05a0e91a/thumb/ HTTP Error 500: Internal Server Error
+  retry 1 https://api.openverse.org/v1/images/06cf128a-6b42-4a15-bac8-719a05a0e91a/thumb/ HTTP Error 500: Internal Server Error
+openverse business meeting africa 20 results 20 kept
+openverse conference room meeting 20 results 20 kept
+  retry 0 https://api.openverse.org/v1/images/61dbcd80-7fb9-4a09-b383-ebdedd07d892/thumb/ HTTP Error 500: Internal Server Error
+  retry 1 https://api.openverse.org/v1/images/61dbcd80-7fb9-4a09-b383-ebdedd07d892/thumb/ HTTP Error 500: Internal Server Error
+  retry 0 https://api.openverse.org/v1/images/981d7162-c088-41c9-80bb-3e4095f1dd2e/thumb/ HTTP Error 424: Failed Dependency
+  retry 1 https://api.openverse.org/v1/images/981d7162-c088-41c9-80bb-3e4095f1dd2e/thumb/ HTTP Error 500: Internal Server Error
+  retry 0 https://api.openverse.org/v1/images/f8507b12-5a96-41e8-ab0b-0765387111ad/thumb/ HTTP Error 500: Internal Server Error
+  retry 1 https://api.openverse.org/v1/images/f8507b12-5a96-41e8-ab0b-0765387111ad/thumb/ HTTP Error 424: Failed Dependency
+  retry 0 https://api.openverse.org/v1/images/35980060-a30e-4d65-a775-6ea9dff868c4/thumb/ HTTP Error 500: Internal Server Error
+  retry 1 https://api.openverse.org/v1/images/35980060-a30e-4d65-a775-6ea9dff868c4/thumb/ HTTP Error 500: Internal Server Error
+  retry 0 https://api.openverse.org/v1/images/c2b8bec7-b1a1-4352-8390-4b02c9187ac9/thumb/ HTTP Error 424: Failed Dependency
+  retry 1 https://api.openverse.org/v1/images/c2b8bec7-b1a1-4352-8390-4b02c9187ac9/thumb/ HTTP Error 424: Failed Dependency
+  retry 0 https://api.openverse.org/v1/images/b8e5429d-7453-4ff5-bc2e-3510c29e1026/thumb/ HTTP Error 500: Internal Server Error
+  retry 1 https://api.openverse.org/v1/images/b8e5429d-7453-4ff5-bc2e-3510c29e1026/thumb/ HTTP Error 424: Failed Dependency
+  retry 0 https://api.openverse.org/v1/images/80219ad5-2157-4dd4-a067-70d477a093b1/thumb/ HTTP Error 424: Failed Dependency
+  retry 1 https://api.openverse.org/v1/images/80219ad5-2157-4dd4-a067-70d477a093b1/thumb/ HTTP Error 500: Internal Server Error
+openverse card terminal payment 17 results 17 kept
+  retry 0 https://api.openverse.org/v1/images/dbf739cd-3d4d-49e2-a735-e255c61d2a4e/thumb/ HTTP Error 500: Internal Server Error
+  retry 1 https://api.openverse.org/v1/images/dbf739cd-3d4d-49e2-a735-e255c61d2a4e/thumb/ HTTP Error 424: Failed Dependency
+  retry 0 https://api.openverse.org/v1/images/bffca05a-0969-437a-a0b5-d2afd5be9a2c/thumb/ HTTP Error 500: Internal Server Error
+  retry 1 https://api.openverse.org/v1/images/bffca05a-0969-437a-a0b5-d2afd5be9a2c/thumb/ HTTP Error 424: Failed Dependency
+openverse pos terminal 20 results 20 kept
+openverse cash register modern 5 results 5 kept
+openverse smartphone woman hands 20 results 20 kept
+openverse smartphone man hands 20 results 20 kept
+openverse wallet money 20 results 20 kept
+openverse notebook desk coffee 20 results 20 kept
+  retry 0 https://api.openverse.org/v1/images/a89439fd-fb83-4eb0-b59d-d7b1294de370/thumb/ HTTP Error 500: Internal Server Error
+  retry 0 https://api.openverse.org/v1/images/5a66584c-9823-499f-97e7-4c1185459aae/thumb/ HTTP Error 500: Internal Server Error
+  retry 1 https://api.openverse.org/v1/images/5a66584c-9823-499f-97e7-4c1185459aae/thumb/ HTTP Error 500: Internal Server Error
+  retry 0 https://api.openverse.org/v1/images/05d71970-d3c2-443c-b3d5-426cfcb4aad6/thumb/ HTTP Error 500: Internal Server Error
+openverse planner desk 20 results 20 kept
+  retry 0 https://api.openverse.org/v1/images/?q=modern+wall+clock&license=cc0%2Cby&page_size=20&mature=false HTTP Error 504: Gateway Timeout
+  retry 1 https://api.openverse.org/v1/images/?q=modern+wall+clock&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 2 https://api.openverse.org/v1/images/?q=modern+wall+clock&license=cc0%2Cby&page_size=20&mature=false HTTP Error 504: Gateway Timeout
+openverse african businesswoman 20 results 20 kept
+  retry 0 https://api.openverse.org/v1/images/55696108-e924-4369-877b-333e75f446cc/thumb/ HTTP Error 500: Internal Server Error
+  retry 1 https://api.openverse.org/v1/images/55696108-e924-4369-877b-333e75f446cc/thumb/ HTTP Error 424: Failed Dependency
+openverse african businessman 20 results 20 kept
+openverse office interior modern 20 results 20 kept
+openverse shopping mall 20 results 20 kept
