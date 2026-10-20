@@ -1,5 +1,5 @@
 {
- "run": "p5",
+ "run": "p6",
  "commons": [
   {
    "q": "Lagos skyline filew:>1499",
@@ -313,61 +313,5 @@
   }
  ],
  "get": [],
- "fma": [
-  {
-   "url": "https://freemusicarchive.org/genre/Afrobeat/",
-   "pages": 6
-  },
-  {
-   "url": "https://freemusicarchive.org/genre/African/",
-   "pages": 4
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=amapiano",
-   "pages": 3
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=afrobeats",
-   "pages": 3
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=afro+house",
-   "pages": 3
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=afropop",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=afro+pop",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=afrobeat+dance",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=log+drum",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=naija",
-   "pages": 2
-  }
- ],
- "max_tracks": 0,
- "pages_keep": [
-  "https://pixabay.com/music/search/afrobeat/",
-  "https://pixabay.com/music/search/amapiano/",
-  "https://pixabay.com/music/search/afro%20house/",
-  "https://pixabay.com/service/license-summary/",
-  "https://mixkit.co/free-stock-music/tag/african/",
-  "https://mixkit.co/free-stock-music/tag/afrobeat/",
-  "https://mixkit.co/free-stock-music/tag/world/",
-  "https://mixkit.co/free-stock-music/tag/dance/",
-  "https://mixkit.co/license/",
-  "https://www.chosic.com/free-music/afrobeat/",
-  "https://www.chosic.com/free-music/african/",
-  "https://freemusicarchive.org/License_Guide"
- ]
+ "max_tracks": 0
 }
