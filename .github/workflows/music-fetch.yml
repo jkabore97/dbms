@@ -44,10 +44,14 @@ jobs:
               print(s); log.write(s + '\n'); log.flush()
 
 
-          def get(url, binary=False, tries=3, timeout=60):
+          BROWSER = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', 'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.8'}
+
+
+          def get(url, binary=False, tries=3, timeout=60, browser=False):
               for k in range(tries):
                   try:
-                      r = urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': UA}), timeout=timeout)
+                      r = urllib.request.urlopen(urllib.request.Request(url, headers=BROWSER if browser else {'User-Agent': UA}), timeout=timeout)
                       b = r.read()
                       return b if binary else b.decode('utf-8', 'replace')
                   except Exception as e:  # noqa: BLE001
@@ -125,7 +129,8 @@ jobs:
                   genres = re.findall(r'href="https://freemusicarchive\.org/genre/[^"]+"[^>]*>\s*([^<]+?)\s*<', h)
                   dur = re.search(r'"duration"\s*:\s*"?([0-9:.]+)', h)
                   txt = re.sub(r'\s+', ' ', html.unescape(re.sub(r'<[^>]+>', ' ', h)))
-                  cnt = {k.lower(): int(v.replace(',', '')) for k, v in re.findall(r'\b(Plays|Downloads|Favorites) ([0-9,]+)', txt)[:3]}
+                  num = lambda v: int(float(v.replace(',', '')[:-1]) * (1000 if v[-1] in 'Kk' else 1000000)) if v[-1] in 'KkMm' else int(v.replace(',', ''))
+                  cnt = {k.lower(): num(v) for k, v in re.findall(r'\b(Plays|Downloads|Favorites) ([0-9][0-9,.]*[KkMm]?)', txt)[:3]}
                   rec = dict(id=str(tid), title=t.get('title'), artist=t.get('artistName'), album=t.get('albumTitle'), url=t['url'],
                              file_url=t.get('fileUrl'), stream=t.get('playbackUrl'), licences=lics, ok=lic_ok(lics),
                              instr=field(h, 'Instrumental'), ai=field(h, 'AI generated'), genres=genres[:8], duration=dur.group(1) if dur else '', **cnt)
@@ -144,7 +149,9 @@ jobs:
 
           def pages():
               for u in L.get('pages_keep', []):
-                  h = get(u, tries=2)
+                  br = isinstance(u, dict)
+                  u = u['url'] if br else u
+                  h = get(u, tries=2, browser=br)
                   say('page_keep', u, len(h) if h else 'FAIL')
                   if h:
                       open(os.path.join(OUT, 'pages_' + re.sub(r'[^a-z0-9]+', '_', u.lower())[-80:] + '.html'), 'w').write(h)
@@ -214,7 +221,7 @@ jobs:
           def fetch():
               os.makedirs(os.path.join(OUT, 'full'), exist_ok=True)
               for g in L.get('get', []):
-                  b = get(g['url'], binary=True, timeout=180)
+                  b = get(g['url'], binary=True, timeout=180, browser=g.get('browser', False))
                   if b:
                       open(os.path.join(OUT, 'full', g['file']), 'wb').write(b)
                   say('get', g['file'], len(b) if b else 'FAIL', g['url'])
@@ -230,7 +237,7 @@ jobs:
           log.close()
 
           PY
-          python3 fetch.py commons openverse
+          python3 fetch.py music
           du -sh out
       - name: Commit them on the music-samples branch
         run: |
