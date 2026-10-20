@@ -162,7 +162,7 @@ jobs:
               allm = []
               os.makedirs(os.path.join(OUT, 'prev'), exist_ok=True)
               for q in L.get('commons', []):
-                  params = dict(action='query', format='json', generator='search', gsrsearch=q['q'] + ' filetype:bitmap', gsrnamespace=6,
+                  params = dict(action='query', format='json', generator='search', gsrsearch=q['q'] if 'filetype:' in q['q'] else q['q'] + ' filetype:bitmap', gsrnamespace=6,
                                 gsrlimit=q.get('n', 40), prop='imageinfo', iiprop='url|size|extmetadata|mime', iiurlwidth=480)
                   h = get('https://commons.wikimedia.org/w/api.php?' + urllib.parse.urlencode(params))
                   if not h:
@@ -178,7 +178,7 @@ jobs:
                       rec = dict(src='commons', q=q['q'], title=p.get('title'), page=ii.get('descriptionurl'), url=ii.get('url'), w=ii.get('width'), h=ii.get('height'),
                                  mime=ii.get('mime'), licence=lic, licence_url=lurl, artist=v('Artist'), credit=v('Credit')[:300], desc=v('ImageDescription')[:300],
                                  restrictions=v('Restrictions'), ok=ok)
-                      if ok and ii.get('thumburl') and (ii.get('mime') or '').startswith('image/'):
+                      if ok and ii.get('thumburl') and (ii.get('mime') or '').startswith('image/') and 'filetype:audio' not in q['q']:
                           k += 1
                           fn = f"prev/c_{re.sub(r'[^a-z0-9]+', '_', q['q'].lower())[:30]}_{k:02d}.jpg"
                           b = get(ii['thumburl'], binary=True)
@@ -237,7 +237,7 @@ jobs:
           log.close()
 
           PY
-          python3 fetch.py fetch
+          python3 fetch.py music commons
           du -sh out
       - name: Commit them on the music-samples branch
         run: |

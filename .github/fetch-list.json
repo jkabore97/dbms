@@ -1,130 +1,155 @@
 {
- "run": "p9",
- "get": [
+ "run": "p10",
+ "max_tracks": 0,
+ "fma": [
   {
-   "file": "phone_r2.jpg",
-   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Hands-coffee-smartphone-technology_%2823698591814%29.jpg/3840px-Hands-coffee-smartphone-technology_%2823698591814%29.jpg",
-   "page": "https://commons.wikimedia.org/wiki/File:Hands-coffee-smartphone-technology_(23698591814).jpg"
+   "url": "https://freemusicarchive.org/search/?quicksearch=ndombolo",
+   "pages": 2
   },
   {
-   "file": "wallet_a.jpg",
-   "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvaXMxNTAyMi1pbWFnZS1rd3lzY2JhaS5qcGc.jpg",
-   "page": "https://www.rawpixel.com/image/5969576/wallet-money"
+   "url": "https://freemusicarchive.org/search/?quicksearch=soukous",
+   "pages": 2
   },
   {
-   "file": "wallet_b.jpg",
-   "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvZnJzdGV2ZWJ1aXNzaW5uZTAwMTU5LWltYWdlLWt3eXNrYW42LmpwZw.jpg",
-   "page": "https://www.rawpixel.com/image/5971081/wallet-and-money-free-public-domain-cc0-photo"
+   "url": "https://freemusicarchive.org/search/?quicksearch=rumba+congolaise",
+   "pages": 2
   },
   {
-   "file": "card_pay.jpg",
-   "url": "https://upload.wikimedia.org/wikipedia/commons/d/db/Card_Payment_%28176811287%29.jpeg",
-   "page": "https://commons.wikimedia.org/wiki/File:Card_Payment_(176811287).jpeg"
+   "url": "https://freemusicarchive.org/search/?quicksearch=congolese+rumba",
+   "pages": 2
   },
   {
-   "file": "nb_desk_a.jpg",
-   "url": "https://cdn.stocksnap.io/img-thumbs/960w/XGXORJWZIX.jpg",
-   "page": "https://stocksnap.io/photo/computer-office-XGXORJWZIX"
+   "url": "https://freemusicarchive.org/search/?quicksearch=sebene",
+   "pages": 2
   },
   {
-   "file": "nb_desk_b.jpg",
-   "url": "https://cdn.stocksnap.io/img-thumbs/960w/UUY821MG70.jpg",
-   "page": "https://stocksnap.io/photo/notebook-notepad-UUY821MG70"
+   "url": "https://freemusicarchive.org/search/?quicksearch=seben",
+   "pages": 2
   },
   {
-   "file": "abidjan_night.jpg",
-   "url": "https://upload.wikimedia.org/wikipedia/commons/0/06/Plateau_Abidjan_de_nuit.jpg",
-   "page": "https://commons.wikimedia.org/wiki/File:Plateau_Abidjan_de_nuit.jpg"
+   "url": "https://freemusicarchive.org/search/?quicksearch=congo",
+   "pages": 2
   },
   {
-   "file": "store_window.jpg",
-   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Mega_store%2C_Clothing_shop%2C_Rostov-on-Don%2C_Russia.jpg/3840px-Mega_store%2C_Clothing_shop%2C_Rostov-on-Don%2C_Russia.jpg",
-   "page": "https://commons.wikimedia.org/wiki/File:Mega_store,_Clothing_shop,_Rostov-on-Don,_Russia.jpg"
+   "url": "https://freemusicarchive.org/search/?quicksearch=kinshasa",
+   "pages": 2
   },
   {
-   "file": "supermarket.jpg",
-   "url": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Accra_Mall_Supermarket_1.jpg",
-   "page": "https://commons.wikimedia.org/wiki/File:Accra_Mall_Supermarket_1.jpg"
+   "url": "https://freemusicarchive.org/search/?quicksearch=coupe+decale",
+   "pages": 2
   },
   {
-   "file": "kigali_street.jpg",
-   "url": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Kigali%2C_the_cleanest_city_in_Africa.jpg",
-   "page": "https://commons.wikimedia.org/wiki/File:Kigali,_the_cleanest_city_in_Africa.jpg"
+   "url": "https://freemusicarchive.org/search/?quicksearch=coup%C3%A9-d%C3%A9cal%C3%A9",
+   "pages": 2
   },
   {
-   "file": "pos_drawer.jpg",
-   "url": "https://upload.wikimedia.org/wikipedia/commons/6/60/Cash_register.jpeg",
-   "page": "https://commons.wikimedia.org/wiki/File:Cash_register.jpeg"
+   "url": "https://freemusicarchive.org/search/?quicksearch=zouglou",
+   "pages": 2
   },
   {
-   "file": "layer_house.jpg",
-   "url": "https://live.staticflickr.com/1913/45044852241_54feedd093_b.jpg",
-   "page": "https://www.flickr.com/photos/157635012@N07/45044852241"
+   "url": "https://freemusicarchive.org/search/?quicksearch=ivoire",
+   "pages": 2
   },
   {
-   "file": "chicks_pen.jpg",
-   "url": "https://live.staticflickr.com/2260/2323537118_21f3360f6d_b.jpg",
-   "page": "https://www.flickr.com/photos/44124348109@N01/2323537118"
+   "url": "https://freemusicarchive.org/search/?quicksearch=abidjan",
+   "pages": 2
   },
   {
-   "file": "layer_house_b.jpg",
-   "url": "https://live.staticflickr.com/1913/45044852241_54feedd093_b.jpg",
-   "page": "https://www.flickr.com/photos/157635012@N07/45044852241"
+   "url": "https://freemusicarchive.org/search/?quicksearch=afro+trap",
+   "pages": 2
   },
   {
-   "file": "planning_desk.jpg",
-   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Working_on_a_planning_session_with_stationery_items%2C_notebook%2C_and_colorful_pencils_on_a_wooden_desk.jpg/3840px-Working_on_a_planning_session_with_stationery_items%2C_notebook%2C_and_colorful_pencils_on_a_wooden_desk.jpg",
-   "page": "https://commons.wikimedia.org/wiki/File:Working_on_a_planning_session_with_stationery_items,_notebook,_and_colorful_pencils_on_a_wooden_desk.jpg"
+   "url": "https://freemusicarchive.org/search/?quicksearch=afro+club",
+   "pages": 2
   },
   {
-   "file": "meeting_kigali.jpg",
-   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Wikimedia_Rwanda_team_building_workshop_04.jpg/3840px-Wikimedia_Rwanda_team_building_workshop_04.jpg",
-   "page": "https://commons.wikimedia.org/wiki/File:Wikimedia_Rwanda_team_building_workshop_04.jpg"
+   "url": "https://freemusicarchive.org/search/?quicksearch=afropop",
+   "pages": 2
   },
   {
-   "file": "meeting_empty.jpg",
-   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Chairs_in_a_meeting_room_%28Unsplash%29.jpg/3840px-Chairs_in_a_meeting_room_%28Unsplash%29.jpg",
-   "page": "https://commons.wikimedia.org/wiki/File:Chairs_in_a_meeting_room_(Unsplash).jpg"
+   "url": "https://freemusicarchive.org/search/?quicksearch=makossa",
+   "pages": 2
   },
   {
-   "file": "fashion_display.jpg",
-   "url": "https://upload.wikimedia.org/wikipedia/commons/6/6b/%27Bjay%27_de_Ombre_Thomas-Fahm_%28Mus%C3%A9e_du_quai_Branly%2C_Paris%29_%2855219498450%29.png",
-   "page": "https://commons.wikimedia.org/wiki/File:%27Bjay%27_de_Ombre_Thomas-Fahm_(Mus%C3%A9e_du_quai_Branly,_Paris)_(55219498450).png"
+   "url": "https://freemusicarchive.org/search/?quicksearch=kuduro",
+   "pages": 2
   },
   {
-   "file": "abidjan_plateau.jpg",
-   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Le_Plateau_depuis_le_Pont_ADO_%E2%80%93_Abidjan.jpg/3840px-Le_Plateau_depuis_le_Pont_ADO_%E2%80%93_Abidjan.jpg",
-   "page": "https://commons.wikimedia.org/wiki/File:Le_Plateau_depuis_le_Pont_ADO_%E2%80%93_Abidjan.jpg"
+   "url": "https://freemusicarchive.org/search/?quicksearch=highlife",
+   "pages": 2
   },
   {
-   "file": "eggs_carton.jpg",
-   "url": "https://live.staticflickr.com/65535/49829839696_2234a9820a_b.jpg",
-   "page": "https://www.flickr.com/photos/26344495@N05/49829839696"
+   "url": "https://freemusicarchive.org/search/?quicksearch=rumba",
+   "pages": 2
   },
   {
-   "file": "eggs_carton_b.jpg",
-   "url": "https://live.staticflickr.com/3749/12710629754_4db6583844_b.jpg",
-   "page": "https://www.flickr.com/photos/64441474@N06/12710629754"
+   "url": "https://freemusicarchive.org/search/?quicksearch=zouk",
+   "pages": 2
   },
   {
-   "file": "rooster.jpg",
-   "url": "https://live.staticflickr.com/2317/2285486507_3c5b7c74c8_b.jpg",
-   "page": "https://www.flickr.com/photos/87616709@N00/2285486507"
+   "url": "https://freemusicarchive.org/search/?quicksearch=afro+francais",
+   "pages": 2
   },
   {
-   "file": "hen_portrait.jpg",
-   "url": "https://live.staticflickr.com/4013/5165590011_f9fa4f4b91_b.jpg",
-   "page": "https://www.flickr.com/photos/41014897@N08/5165590011"
+   "url": "https://freemusicarchive.org/genre/Highlife/",
+   "pages": 3
   },
   {
-   "file": "presenter_kigali.jpg",
-   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Afrocreative_Wikiproject_2024_in_Rwanda_08.jpg/3840px-Afrocreative_Wikiproject_2024_in_Rwanda_08.jpg",
-   "page": "https://commons.wikimedia.org/wiki/File:Afrocreative_Wikiproject_2024_in_Rwanda_08.jpg"
+   "url": "https://freemusicarchive.org/genre/Latin/",
+   "pages": 1
+  }
+ ],
+ "pages_keep": [
+  "https://api.openverse.org/v1/audio/?q=soukous&license=by%2Ccc0&page_size=50",
+  "https://api.openverse.org/v1/audio/?q=ndombolo&license=by%2Ccc0&page_size=50",
+  "https://api.openverse.org/v1/audio/?q=congolese&license=by%2Ccc0&page_size=50",
+  "https://api.openverse.org/v1/audio/?q=congo+rumba&license=by%2Ccc0&page_size=50",
+  "https://api.openverse.org/v1/audio/?q=sebene&license=by%2Ccc0&page_size=50",
+  "https://api.openverse.org/v1/audio/?q=coupe+decale&license=by%2Ccc0&page_size=50",
+  "https://api.openverse.org/v1/audio/?q=zouglou&license=by%2Ccc0&page_size=50",
+  "https://api.openverse.org/v1/audio/?q=afro+trap&license=by%2Ccc0&page_size=50",
+  "https://api.openverse.org/v1/audio/?q=afropop&license=by%2Ccc0&page_size=50",
+  "https://api.openverse.org/v1/audio/?q=highlife&license=by%2Ccc0&page_size=50",
+  "https://api.openverse.org/v1/audio/?q=african+guitar&license=by%2Ccc0&page_size=50",
+  "https://api.openverse.org/v1/audio/?q=makossa&license=by%2Ccc0&page_size=50",
+  "https://api.openverse.org/v1/audio/?q=zouk&license=by%2Ccc0&page_size=50",
+  "https://api.openverse.org/v1/audio/?q=afro+house&license=by%2Ccc0&page_size=50",
+  "https://api.openverse.org/v1/audio/?q=kuduro&license=by%2Ccc0&page_size=50",
+  "https://api.openverse.org/v1/audio/?q=african+dance&license=by%2Ccc0&page_size=50",
+  "https://api.openverse.org/v1/audio/?q=afrobeat&license=by%2Ccc0&page_size=50",
+  "https://archive.org/advancedsearch.php?q=%28soukous+OR+ndombolo+OR+%22rumba+congolaise%22+OR+sebene+OR+%22coupe+decale%22+OR+zouglou+OR+%22afro+trap%22+OR+highlife+OR+makossa+OR+%22congolese%22%29+AND+mediatype%3Aaudio+AND+licenseurl%3A%2Acreativecommons.org%2Aby%2A&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=creator&fl%5B%5D=licenseurl&fl%5B%5D=downloads&fl%5B%5D=subject&rows=200&output=json&sort%5B%5D=downloads+desc",
+  "https://archive.org/advancedsearch.php?q=%28soukous+OR+ndombolo+OR+%22rumba+congolaise%22+OR+sebene+OR+%22coupe+decale%22+OR+zouglou+OR+%22afro+trap%22+OR+highlife+OR+makossa+OR+%22congolese%22%29+AND+mediatype%3Aaudio+AND+licenseurl%3A%2Acreativecommons.org%2Apublicdomain%2A&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=creator&fl%5B%5D=licenseurl&fl%5B%5D=downloads&fl%5B%5D=subject&rows=200&output=json&sort%5B%5D=downloads+desc",
+  "http://ccmixter.org/api/query?tags=african&f=json&limit=60&sort=rank",
+  "http://ccmixter.org/api/query?tags=soukous&f=json&limit=60&sort=rank",
+  "http://ccmixter.org/api/query?tags=afrobeat&f=json&limit=60&sort=rank",
+  "http://ccmixter.org/api/query?tags=world&f=json&limit=60&sort=rank",
+  "http://ccmixter.org/api/query?tags=highlife&f=json&limit=60&sort=rank",
+  "http://ccmixter.org/api/query?tags=congo&f=json&limit=60&sort=rank"
+ ],
+ "commons": [
+  {
+   "q": "soukous filetype:audio",
+   "n": 30
   },
   {
-   "file": "group_kigali.jpg",
-   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Afrocreative_Wikiproject_2024_in_Rwanda_09.jpg/3840px-Afrocreative_Wikiproject_2024_in_Rwanda_09.jpg",
-   "page": "https://commons.wikimedia.org/wiki/File:Afrocreative_Wikiproject_2024_in_Rwanda_09.jpg"
+   "q": "rumba congolaise filetype:audio",
+   "n": 30
+  },
+  {
+   "q": "coupé-décalé filetype:audio",
+   "n": 30
+  },
+  {
+   "q": "zouglou filetype:audio",
+   "n": 30
+  },
+  {
+   "q": "highlife filetype:audio",
+   "n": 30
+  },
+  {
+   "q": "African music filetype:audio",
+   "n": 30
   }
  ]
 }
