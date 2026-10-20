@@ -1,0 +1,12 @@
+ok Zephyr__tb_04n_r100_t2.wav
+ok Zephyr__tb_04n_r100_t1.wav
+ok Zephyr__tb_04n_r100_t3.wav
+ok Iapetus__tf_04n_r100_t1.wav
+ok Iapetus__tf_04n_r100_t2.wav
+ok Zephyr__tb_04n_r104_t4.wav
+ok Iapetus__tf_04n_r100_t3.wav
+ok Iapetus__tf_04n_r104_t4.wav
+ok Iapetus__ta_04n_r100_t1.wav
+ok Iapetus__ta_04n_r100_t2.wav
+ok Iapetus__ta_04n_r100_t3.wav
+ok Iapetus__ta_04n_r104_t4.wav
