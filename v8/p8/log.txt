@@ -1,0 +1,68 @@
+page https://freemusicarchive.org/music/amarent/free-electronic-music/some-bass-drums/ 2 tracks
+page https://freemusicarchive.org/music/John_Bartmann/audio-drama-soundtracks-album-four/afro-sax-freakout-1/ 2 tracks
+page https://freemusicarchive.org/music/Ketsa/upbeat-street/sun-still-sky/ 2 tracks
+page https://freemusicarchive.org/music/mohmohrap/singles-5/free-afro-rap-type-beat-for-one/ 2 tracks
+page https://freemusicarchive.org/music/tiga-maine/amapiano-rapgawd-ep/tiga-maine-henny-ft-dj-gizo/ 2 tracks
+page https://freemusicarchive.org/music/tiga-maine/amapiano-rapgawd-ep/tiga-maine-kasi-rapiano-ft-mshizil-sa/ 2 tracks
+page https://freemusicarchive.org/music/tiga-maine/amapiano-rapgawd-ep/tiga-maine-x-mizzer-za-kutlwano-delela-ft-lady-lee/ 2 tracks
+page https://freemusicarchive.org/music/tiga-maine/amapiano-rapgawd-ep/tiga-maine-mizzer-za-madido-ft-dlaka-dlaka/ 2 tracks
+page https://freemusicarchive.org/music/ugo-mbaise/egwu-nwa/ajo-nwanyi/ 2 tracks
+page https://freemusicarchive.org/music/ugo-mbaise/egwu-nwa/egwu-nwa/ 2 tracks
+page https://freemusicarchive.org/search/?quicksearch=afrobeat+type+beat 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=afrobeat+type+beat&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=afro+type+beat 1 tracks
+page https://freemusicarchive.org/search/?quicksearch=afro+type+beat&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=amapiano+type+beat 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=amapiano+type+beat&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=burna+boy+type+beat 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=burna+boy+type+beat&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=wizkid+type+beat 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=wizkid+type+beat&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=rema+type+beat 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=rema+type+beat&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=asake+type+beat 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=asake+type+beat&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=afrobeats+instrumental 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=afrobeats+instrumental&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=afro+pop+instrumental 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=afro+pop+instrumental&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=naija+beat 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=naija+beat&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=afro+trap 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=afro+trap&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=afro+fusion 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=afro+fusion&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=log+drum 1 tracks
+page https://freemusicarchive.org/search/?quicksearch=log+drum&page=2 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=amapiano+beat 0 tracks
+page https://freemusicarchive.org/search/?quicksearch=amapiano+beat&page=2 0 tracks
+page https://freemusicarchive.org/music/mohmohrap/ 4 tracks
+page https://freemusicarchive.org/music/mohmohrap/?page=2 4 tracks
+page https://freemusicarchive.org/music/tiga-maine/ 4 tracks
+page https://freemusicarchive.org/music/tiga-maine/?page=2 4 tracks
+page https://freemusicarchive.org/music/amarent/ 4 tracks
+page https://freemusicarchive.org/music/amarent/?page=2 4 tracks
+track 245138 Amarent | Some Bass & Drums | ['creativecommons.org/licenses/by/4.0'] Yes No audio/fma_245138.mp3
+track 194774 John Bartmann | Afro Sax Freakout | ['creativecommons.org/publicdomain/zero/1.0'] No No audio/fma_194774.mp3
+track 258336 Ketsa | Sun Still Sky | ['creativecommons.org/licenses/by/4.0'] Yes No audio/fma_258336.mp3
+track 214797 MOHMOHRAP | Free afro rap type beat "for one" | ['creativecommons.org/licenses/by/4.0'] Yes No audio/fma_214797.mp3
+track 246814 Tiga Maine | Tiga Maine - Henny (ft. Dj Gizo) | ['creativecommons.org/licenses/by/4.0'] No No audio/fma_246814.mp3
+track 246817 Tiga Maine | Tiga Maine - Kasi Rapiano (ft. Mshizil SA) | ['creativecommons.org/licenses/by/4.0'] No No audio/fma_246817.mp3
+track 246815 Tiga Maine | Tiga Maine x Mizzer ZA & Kutlwano - Delela (ft. Lady Lee) | ['creativecommons.org/licenses/by/4.0'] No No audio/fma_246815.mp3
+track 246816 Tiga Maine | Tiga Maine & Mizzer ZA - Madido (ft. Dlaka Dlaka) | ['creativecommons.org/licenses/by/4.0'] No No audio/fma_246816.mp3
+track 231524 Ugo Mbaise | Ajo Nwanyi | ['creativecommons.org/licenses/by/4.0'] No No audio/fma_231524.mp3
+track 231525 Ugo Mbaise | Egwu Nwa | ['creativecommons.org/licenses/by/4.0'] No No audio/fma_231525.mp3
+track 214797 MOHMOHRAP | Free afro rap type beat "for one" | ['creativecommons.org/licenses/by/4.0'] Yes No audio/fma_214797.mp3
+track 276761 Alex Morgan | Amapiano Beats With Log Drum Groove | ['creativecommons.org/licenses/by/4.0'] Yes Yes, this track (or part of it) was generated by AI audio/fma_276761.mp3
+track 232278 MOHMOHRAP | MTM Isaiah & MTM Kevin IJN Beat | ['creativecommons.org/licenses/by-nc/4.0'] Yes No -
+track 232084 MOHMOHRAP | MTM Lou ft MTM Isaiah Brothers (Reprod. @mohmohrap) | ['creativecommons.org/licenses/by-nc/4.0'] No No -
+track 223972 MOHMOHRAP | Turn up | ['creativecommons.org/licenses/by-nc-nd/4.0'] No No -
+track 223973 MOHMOHRAP | Rainbow Ruby | ['creativecommons.org/licenses/by-nc-nd/4.0'] No No -
+track 236602 Tiga Maine | Stuck In A Moment (ft. Mseventy DeeTee & King Cecil) | ['creativecommons.org/licenses/by/4.0'] No No audio/fma_236602.mp3
+track 230251 Tiga Maine | Tiga Maine - Trenches (ft. Mseventy DeeTee & Sauwcy) | ['creativecommons.org/licenses/by/4.0'] No No audio/fma_230251.mp3
+track 230258 Tiga Maine | Tiga Maine ft. 2Lee Stark & Mona Mula - Make It (Reloaded).mp3 | ['creativecommons.org/licenses/by/4.0'] No No audio/fma_230258.mp3
+track 230253 Tiga Maine | Tiga Maine - Be You.mp3 | ['creativecommons.org/licenses/by/4.0'] No No audio/fma_230253.mp3
+track 277774 Amarent | Quiet Grace - Instrumental Theme | ['creativecommons.org/licenses/by/4.0'] No Yes, this track (or part of it) was generated by AI audio/fma_277774.mp3
+track 277345 Amarent | The Man from Hyde Park - Ambient Mix | ['creativecommons.org/licenses/by/4.0'] Yes Yes, this track (or part of it) was generated by AI audio/fma_277345.mp3
+track 275860 Amarent | Memories Fade, History Repeats | ['creativecommons.org/licenses/by/4.0'] No Yes, this track (or part of it) was generated by AI audio/fma_275860.mp3
+track 274799 Amarent | Stairwell Harmony | ['creativecommons.org/publicdomain/zero/1.0'] Yes No audio/fma_274799.mp3
