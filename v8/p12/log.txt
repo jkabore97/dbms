@@ -1,0 +1,43 @@
+commons broiler house filew:>1499 30 results 18 kept
+commons poultry house interior filew:>1499 30 results 18 kept
+commons broiler chickens floor filew:>1499 2 results 0 kept
+commons poultry farm Nigeria filew:>1499 30 results 0 kept
+commons poultry farm Kenya filew:>1499 6 results 1 kept
+commons chicken farm Ghana filew:>1499 10 results 0 kept
+commons poultry farm worker filew:>1499 18 results 14 kept
+commons rice package filew:>1499 30 results 6 kept
+commons rice bag filew:>1499 30 results 11 kept
+commons basmati rice filew:>1499 30 results 6 kept
+commons packaged rice supermarket filew:>1499 22 results 9 kept
+commons rice in bowl filew:>1499 30 results 18 kept
+commons women business meeting Africa filew:>1499 30 results 28 kept
+commons community meeting hall Africa filew:>1499 30 results 30 kept
+commons association members meeting filew:>1499 30 results 30 kept
+commons cooperative meeting Rwanda filew:>1499 0 results 0 kept
+  retry 0 https://api.openverse.org/v1/images/?q=broiler+chickens+farm&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 1 https://api.openverse.org/v1/images/?q=broiler+chickens+farm&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 2 https://api.openverse.org/v1/images/?q=broiler+chickens+farm&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 0 https://api.openverse.org/v1/images/?q=poultry+house&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 1 https://api.openverse.org/v1/images/?q=poultry+house&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 2 https://api.openverse.org/v1/images/?q=poultry+house&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 0 https://api.openverse.org/v1/images/?q=chicken+farm+barn&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 1 https://api.openverse.org/v1/images/?q=chicken+farm+barn&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 2 https://api.openverse.org/v1/images/?q=chicken+farm+barn&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 0 https://api.openverse.org/v1/images/?q=rice+package&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 1 https://api.openverse.org/v1/images/?q=rice+package&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 2 https://api.openverse.org/v1/images/?q=rice+package&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 0 https://api.openverse.org/v1/images/?q=bag+of+rice&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 1 https://api.openverse.org/v1/images/?q=bag+of+rice&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 2 https://api.openverse.org/v1/images/?q=bag+of+rice&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 0 https://api.openverse.org/v1/images/?q=rice+grains&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 1 https://api.openverse.org/v1/images/?q=rice+grains&license=cc0%2Cby&page_size=20&mature=false HTTP Error 500: Internal Server Error
+  retry 2 https://api.openverse.org/v1/images/?q=rice+grains&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 0 https://api.openverse.org/v1/images/?q=women+meeting&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 1 https://api.openverse.org/v1/images/?q=women+meeting&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 2 https://api.openverse.org/v1/images/?q=women+meeting&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 0 https://api.openverse.org/v1/images/?q=community+meeting&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 1 https://api.openverse.org/v1/images/?q=community+meeting&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 2 https://api.openverse.org/v1/images/?q=community+meeting&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 0 https://api.openverse.org/v1/images/?q=team+meeting+africa&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 1 https://api.openverse.org/v1/images/?q=team+meeting+africa&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
+  retry 2 https://api.openverse.org/v1/images/?q=team+meeting+africa&license=cc0%2Cby&page_size=20&mature=false The read operation timed out
