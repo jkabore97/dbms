@@ -223,7 +223,7 @@ jobs:
           log.close()
 
           PY
-          python3 fetch.py fetch commons openverse
+          python3 fetch.py fetch
           du -sh out
       - name: Commit them on the music-samples branch
         run: |
