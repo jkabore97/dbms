@@ -1,0 +1,4 @@
+get group_rw.jpg 1436562 https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Afrocreative_Wikiproject_2024_in_Rwanda_06.jpg/3840px-Afrocreative_Wikiproject_2024_in_Rwanda_06.jpg
+get broiler_house.jpg 1164914 https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Baby_chickens_in_a_grower_broiler_house._%2824993924222%29.jpg/3840px-Baby_chickens_in_a_grower_broiler_house._%2824993924222%29.jpg
+get broiler_long.jpg 2199514 https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Baby_chickens_in_a_grower_broiler_house._%2824481449624%29.jpg/3840px-Baby_chickens_in_a_grower_broiler_house._%2824481449624%29.jpg
+get rice_bowl.jpg 1142414 https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Rice_In_A_Bowl.jpg/3840px-Rice_In_A_Bowl.jpg
