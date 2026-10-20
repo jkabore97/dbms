@@ -151,7 +151,8 @@ jobs:
               for u in L.get('pages_keep', []):
                   br = isinstance(u, dict)
                   u = u['url'] if br else u
-                  h = get(u, tries=2, browser=br)
+                  h = get(u, tries=1, browser=br, timeout=25)
+                  time.sleep(4)
                   say('page_keep', u, len(h) if h else 'FAIL')
                   if h:
                       open(os.path.join(OUT, 'pages_' + re.sub(r'[^a-z0-9]+', '_', u.lower())[-80:] + '.html'), 'w').write(h)
