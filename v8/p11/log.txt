@@ -1,0 +1,24 @@
+  retry 0 https://api.openverse.org/v1/audio/?q=coupe+decale&license=by%2Ccc0&page_size=20 The read operation timed out
+page_keep https://api.openverse.org/v1/audio/?q=coupe+decale&license=by%2Ccc0&page_size=20 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=zouglou&license=by%2Ccc0&page_size=20 The read operation timed out
+page_keep https://api.openverse.org/v1/audio/?q=zouglou&license=by%2Ccc0&page_size=20 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=ndombolo&license=by%2Ccc0&page_size=20 The read operation timed out
+page_keep https://api.openverse.org/v1/audio/?q=ndombolo&license=by%2Ccc0&page_size=20 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=soukous&license=by%2Ccc0&page_size=20 The read operation timed out
+page_keep https://api.openverse.org/v1/audio/?q=soukous&license=by%2Ccc0&page_size=20 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=congolese+rumba&license=by%2Ccc0&page_size=20 The read operation timed out
+page_keep https://api.openverse.org/v1/audio/?q=congolese+rumba&license=by%2Ccc0&page_size=20 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=afro+trap&license=by%2Ccc0&page_size=20 The read operation timed out
+page_keep https://api.openverse.org/v1/audio/?q=afro+trap&license=by%2Ccc0&page_size=20 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=afropop&license=by%2Ccc0&page_size=20 The read operation timed out
+page_keep https://api.openverse.org/v1/audio/?q=afropop&license=by%2Ccc0&page_size=20 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=afrobeats&license=by%2Ccc0&page_size=20 The read operation timed out
+page_keep https://api.openverse.org/v1/audio/?q=afrobeats&license=by%2Ccc0&page_size=20 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=african+dance&license=by%2Ccc0&page_size=20 The read operation timed out
+page_keep https://api.openverse.org/v1/audio/?q=african+dance&license=by%2Ccc0&page_size=20 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=kizomba&license=by%2Ccc0&page_size=20 The read operation timed out
+page_keep https://api.openverse.org/v1/audio/?q=kizomba&license=by%2Ccc0&page_size=20 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=makossa&license=by%2Ccc0&page_size=20 The read operation timed out
+page_keep https://api.openverse.org/v1/audio/?q=makossa&license=by%2Ccc0&page_size=20 FAIL
+  retry 0 https://api.openverse.org/v1/audio/?q=afro+house&license=by%2Ccc0&page_size=20 The read operation timed out
+page_keep https://api.openverse.org/v1/audio/?q=afro+house&license=by%2Ccc0&page_size=20 FAIL
