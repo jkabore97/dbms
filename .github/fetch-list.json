@@ -1,155 +1,65 @@
 {
- "run": "p10",
- "max_tracks": 0,
- "fma": [
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=ndombolo",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=soukous",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=rumba+congolaise",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=congolese+rumba",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=sebene",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=seben",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=congo",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=kinshasa",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=coupe+decale",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=coup%C3%A9-d%C3%A9cal%C3%A9",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=zouglou",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=ivoire",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=abidjan",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=afro+trap",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=afro+club",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=afropop",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=makossa",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=kuduro",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=highlife",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=rumba",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=zouk",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=afro+francais",
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/genre/Highlife/",
-   "pages": 3
-  },
-  {
-   "url": "https://freemusicarchive.org/genre/Latin/",
-   "pages": 1
-  }
- ],
+ "run": "p11",
  "pages_keep": [
-  "https://api.openverse.org/v1/audio/?q=soukous&license=by%2Ccc0&page_size=50",
-  "https://api.openverse.org/v1/audio/?q=ndombolo&license=by%2Ccc0&page_size=50",
-  "https://api.openverse.org/v1/audio/?q=congolese&license=by%2Ccc0&page_size=50",
-  "https://api.openverse.org/v1/audio/?q=congo+rumba&license=by%2Ccc0&page_size=50",
-  "https://api.openverse.org/v1/audio/?q=sebene&license=by%2Ccc0&page_size=50",
-  "https://api.openverse.org/v1/audio/?q=coupe+decale&license=by%2Ccc0&page_size=50",
-  "https://api.openverse.org/v1/audio/?q=zouglou&license=by%2Ccc0&page_size=50",
-  "https://api.openverse.org/v1/audio/?q=afro+trap&license=by%2Ccc0&page_size=50",
-  "https://api.openverse.org/v1/audio/?q=afropop&license=by%2Ccc0&page_size=50",
-  "https://api.openverse.org/v1/audio/?q=highlife&license=by%2Ccc0&page_size=50",
-  "https://api.openverse.org/v1/audio/?q=african+guitar&license=by%2Ccc0&page_size=50",
-  "https://api.openverse.org/v1/audio/?q=makossa&license=by%2Ccc0&page_size=50",
-  "https://api.openverse.org/v1/audio/?q=zouk&license=by%2Ccc0&page_size=50",
-  "https://api.openverse.org/v1/audio/?q=afro+house&license=by%2Ccc0&page_size=50",
-  "https://api.openverse.org/v1/audio/?q=kuduro&license=by%2Ccc0&page_size=50",
-  "https://api.openverse.org/v1/audio/?q=african+dance&license=by%2Ccc0&page_size=50",
-  "https://api.openverse.org/v1/audio/?q=afrobeat&license=by%2Ccc0&page_size=50",
-  "https://archive.org/advancedsearch.php?q=%28soukous+OR+ndombolo+OR+%22rumba+congolaise%22+OR+sebene+OR+%22coupe+decale%22+OR+zouglou+OR+%22afro+trap%22+OR+highlife+OR+makossa+OR+%22congolese%22%29+AND+mediatype%3Aaudio+AND+licenseurl%3A%2Acreativecommons.org%2Aby%2A&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=creator&fl%5B%5D=licenseurl&fl%5B%5D=downloads&fl%5B%5D=subject&rows=200&output=json&sort%5B%5D=downloads+desc",
-  "https://archive.org/advancedsearch.php?q=%28soukous+OR+ndombolo+OR+%22rumba+congolaise%22+OR+sebene+OR+%22coupe+decale%22+OR+zouglou+OR+%22afro+trap%22+OR+highlife+OR+makossa+OR+%22congolese%22%29+AND+mediatype%3Aaudio+AND+licenseurl%3A%2Acreativecommons.org%2Apublicdomain%2A&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=creator&fl%5B%5D=licenseurl&fl%5B%5D=downloads&fl%5B%5D=subject&rows=200&output=json&sort%5B%5D=downloads+desc",
-  "http://ccmixter.org/api/query?tags=african&f=json&limit=60&sort=rank",
-  "http://ccmixter.org/api/query?tags=soukous&f=json&limit=60&sort=rank",
-  "http://ccmixter.org/api/query?tags=afrobeat&f=json&limit=60&sort=rank",
-  "http://ccmixter.org/api/query?tags=world&f=json&limit=60&sort=rank",
-  "http://ccmixter.org/api/query?tags=highlife&f=json&limit=60&sort=rank",
-  "http://ccmixter.org/api/query?tags=congo&f=json&limit=60&sort=rank"
- ],
- "commons": [
-  {
-   "q": "soukous filetype:audio",
-   "n": 30
-  },
-  {
-   "q": "rumba congolaise filetype:audio",
-   "n": 30
-  },
-  {
-   "q": "coupé-décalé filetype:audio",
-   "n": 30
-  },
-  {
-   "q": "zouglou filetype:audio",
-   "n": 30
-  },
-  {
-   "q": "highlife filetype:audio",
-   "n": 30
-  },
-  {
-   "q": "African music filetype:audio",
-   "n": 30
-  }
+  "https://api.openverse.org/v1/audio/?q=soukous&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=soukous&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=ndombolo&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=ndombolo&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=congolese&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=congolese&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=rumba+congolaise&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=rumba+congolaise&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=sebene&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=sebene&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=coupe+decale&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=coupe+decale&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=coup%C3%A9+d%C3%A9cal%C3%A9&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=coup%C3%A9+d%C3%A9cal%C3%A9&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=zouglou&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=zouglou&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=afro+trap&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=afro+trap&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=afrotrap&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=afrotrap&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=afro+pop&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=afro+pop&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=afropop&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=afropop&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=afrobeat&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=afrobeat&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=afrobeats&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=afrobeats&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=amapiano&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=amapiano&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=african&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=african&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=makossa&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=makossa&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=zouk&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=zouk&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=kizomba&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=kizomba&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=afro+house&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=afro+house&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=highlife&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=highlife&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=kuduro&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=kuduro&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=afro+dance&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=afro+dance&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=naija&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=naija&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=ivory+coast&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=ivory+coast&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=congo&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=congo&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=abidjan&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=abidjan&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=kinshasa&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=kinshasa&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=afro+club&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=afro+club&license=by%2Ccc0&page_size=20&page=2",
+  "https://api.openverse.org/v1/audio/?q=dancehall+afro&license=by%2Ccc0&page_size=20&page=1",
+  "https://api.openverse.org/v1/audio/?q=dancehall+afro&license=by%2Ccc0&page_size=20&page=2"
  ]
 }

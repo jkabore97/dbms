@@ -237,7 +237,7 @@ jobs:
           log.close()
 
           PY
-          python3 fetch.py music commons
+          python3 fetch.py pages
           du -sh out
       - name: Commit them on the music-samples branch
         run: |
