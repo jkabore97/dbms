@@ -1,17 +1,107 @@
 {
- "run": "p11",
- "pages_keep": [
-  "https://api.openverse.org/v1/audio/?q=coupe+decale&license=by%2Ccc0&page_size=20",
-  "https://api.openverse.org/v1/audio/?q=zouglou&license=by%2Ccc0&page_size=20",
-  "https://api.openverse.org/v1/audio/?q=ndombolo&license=by%2Ccc0&page_size=20",
-  "https://api.openverse.org/v1/audio/?q=soukous&license=by%2Ccc0&page_size=20",
-  "https://api.openverse.org/v1/audio/?q=congolese+rumba&license=by%2Ccc0&page_size=20",
-  "https://api.openverse.org/v1/audio/?q=afro+trap&license=by%2Ccc0&page_size=20",
-  "https://api.openverse.org/v1/audio/?q=afropop&license=by%2Ccc0&page_size=20",
-  "https://api.openverse.org/v1/audio/?q=afrobeats&license=by%2Ccc0&page_size=20",
-  "https://api.openverse.org/v1/audio/?q=african+dance&license=by%2Ccc0&page_size=20",
-  "https://api.openverse.org/v1/audio/?q=kizomba&license=by%2Ccc0&page_size=20",
-  "https://api.openverse.org/v1/audio/?q=makossa&license=by%2Ccc0&page_size=20",
-  "https://api.openverse.org/v1/audio/?q=afro+house&license=by%2Ccc0&page_size=20"
+ "run": "p12",
+ "commons": [
+  {
+   "q": "broiler house filew:>1499",
+   "n": 30
+  },
+  {
+   "q": "poultry house interior filew:>1499",
+   "n": 30
+  },
+  {
+   "q": "broiler chickens floor filew:>1499",
+   "n": 30
+  },
+  {
+   "q": "poultry farm Nigeria filew:>1499",
+   "n": 30
+  },
+  {
+   "q": "poultry farm Kenya filew:>1499",
+   "n": 30
+  },
+  {
+   "q": "chicken farm Ghana filew:>1499",
+   "n": 30
+  },
+  {
+   "q": "poultry farm worker filew:>1499",
+   "n": 30
+  },
+  {
+   "q": "rice package filew:>1499",
+   "n": 30
+  },
+  {
+   "q": "rice bag filew:>1499",
+   "n": 30
+  },
+  {
+   "q": "basmati rice filew:>1499",
+   "n": 30
+  },
+  {
+   "q": "packaged rice supermarket filew:>1499",
+   "n": 30
+  },
+  {
+   "q": "rice in bowl filew:>1499",
+   "n": 30
+  },
+  {
+   "q": "women business meeting Africa filew:>1499",
+   "n": 30
+  },
+  {
+   "q": "community meeting hall Africa filew:>1499",
+   "n": 30
+  },
+  {
+   "q": "association members meeting filew:>1499",
+   "n": 30
+  },
+  {
+   "q": "cooperative meeting Rwanda filew:>1499",
+   "n": 30
+  }
+ ],
+ "openverse": [
+  {
+   "q": "broiler chickens farm",
+   "n": 20
+  },
+  {
+   "q": "poultry house",
+   "n": 20
+  },
+  {
+   "q": "chicken farm barn",
+   "n": 20
+  },
+  {
+   "q": "rice package",
+   "n": 20
+  },
+  {
+   "q": "bag of rice",
+   "n": 20
+  },
+  {
+   "q": "rice grains",
+   "n": 20
+  },
+  {
+   "q": "women meeting",
+   "n": 20
+  },
+  {
+   "q": "community meeting",
+   "n": 20
+  },
+  {
+   "q": "team meeting africa",
+   "n": 20
+  }
  ]
 }
