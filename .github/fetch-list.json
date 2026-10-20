@@ -1,133 +1,130 @@
 {
- "run": "p8",
- "max_tracks": 45,
- "min_plays": 400,
- "fma": [
+ "run": "p9",
+ "get": [
   {
-   "url": "https://freemusicarchive.org/music/amarent/free-electronic-music/some-bass-drums/",
-   "download": true
+   "file": "phone_r2.jpg",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Hands-coffee-smartphone-technology_%2823698591814%29.jpg/3840px-Hands-coffee-smartphone-technology_%2823698591814%29.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Hands-coffee-smartphone-technology_(23698591814).jpg"
   },
   {
-   "url": "https://freemusicarchive.org/music/John_Bartmann/audio-drama-soundtracks-album-four/afro-sax-freakout-1/",
-   "download": true
+   "file": "wallet_a.jpg",
+   "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvaXMxNTAyMi1pbWFnZS1rd3lzY2JhaS5qcGc.jpg",
+   "page": "https://www.rawpixel.com/image/5969576/wallet-money"
   },
   {
-   "url": "https://freemusicarchive.org/music/Ketsa/upbeat-street/sun-still-sky/",
-   "download": true
+   "file": "wallet_b.jpg",
+   "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvZnJzdGV2ZWJ1aXNzaW5uZTAwMTU5LWltYWdlLWt3eXNrYW42LmpwZw.jpg",
+   "page": "https://www.rawpixel.com/image/5971081/wallet-and-money-free-public-domain-cc0-photo"
   },
   {
-   "url": "https://freemusicarchive.org/music/mohmohrap/singles-5/free-afro-rap-type-beat-for-one/",
-   "download": true
+   "file": "card_pay.jpg",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/d/db/Card_Payment_%28176811287%29.jpeg",
+   "page": "https://commons.wikimedia.org/wiki/File:Card_Payment_(176811287).jpeg"
   },
   {
-   "url": "https://freemusicarchive.org/music/tiga-maine/amapiano-rapgawd-ep/tiga-maine-henny-ft-dj-gizo/",
-   "download": true
+   "file": "nb_desk_a.jpg",
+   "url": "https://cdn.stocksnap.io/img-thumbs/960w/XGXORJWZIX.jpg",
+   "page": "https://stocksnap.io/photo/computer-office-XGXORJWZIX"
   },
   {
-   "url": "https://freemusicarchive.org/music/tiga-maine/amapiano-rapgawd-ep/tiga-maine-kasi-rapiano-ft-mshizil-sa/",
-   "download": true
+   "file": "nb_desk_b.jpg",
+   "url": "https://cdn.stocksnap.io/img-thumbs/960w/UUY821MG70.jpg",
+   "page": "https://stocksnap.io/photo/notebook-notepad-UUY821MG70"
   },
   {
-   "url": "https://freemusicarchive.org/music/tiga-maine/amapiano-rapgawd-ep/tiga-maine-x-mizzer-za-kutlwano-delela-ft-lady-lee/",
-   "download": true
+   "file": "abidjan_night.jpg",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/0/06/Plateau_Abidjan_de_nuit.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Plateau_Abidjan_de_nuit.jpg"
   },
   {
-   "url": "https://freemusicarchive.org/music/tiga-maine/amapiano-rapgawd-ep/tiga-maine-mizzer-za-madido-ft-dlaka-dlaka/",
-   "download": true
+   "file": "store_window.jpg",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Mega_store%2C_Clothing_shop%2C_Rostov-on-Don%2C_Russia.jpg/3840px-Mega_store%2C_Clothing_shop%2C_Rostov-on-Don%2C_Russia.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Mega_store,_Clothing_shop,_Rostov-on-Don,_Russia.jpg"
   },
   {
-   "url": "https://freemusicarchive.org/music/ugo-mbaise/egwu-nwa/ajo-nwanyi/",
-   "download": true
+   "file": "supermarket.jpg",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Accra_Mall_Supermarket_1.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Accra_Mall_Supermarket_1.jpg"
   },
   {
-   "url": "https://freemusicarchive.org/music/ugo-mbaise/egwu-nwa/egwu-nwa/",
-   "download": true
+   "file": "kigali_street.jpg",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Kigali%2C_the_cleanest_city_in_Africa.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Kigali,_the_cleanest_city_in_Africa.jpg"
   },
   {
-   "url": "https://freemusicarchive.org/search/?quicksearch=afrobeat+type+beat",
-   "download": true,
-   "pages": 2
+   "file": "pos_drawer.jpg",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/6/60/Cash_register.jpeg",
+   "page": "https://commons.wikimedia.org/wiki/File:Cash_register.jpeg"
   },
   {
-   "url": "https://freemusicarchive.org/search/?quicksearch=afro+type+beat",
-   "download": true,
-   "pages": 2
+   "file": "layer_house.jpg",
+   "url": "https://live.staticflickr.com/1913/45044852241_54feedd093_b.jpg",
+   "page": "https://www.flickr.com/photos/157635012@N07/45044852241"
   },
   {
-   "url": "https://freemusicarchive.org/search/?quicksearch=amapiano+type+beat",
-   "download": true,
-   "pages": 2
+   "file": "chicks_pen.jpg",
+   "url": "https://live.staticflickr.com/2260/2323537118_21f3360f6d_b.jpg",
+   "page": "https://www.flickr.com/photos/44124348109@N01/2323537118"
   },
   {
-   "url": "https://freemusicarchive.org/search/?quicksearch=burna+boy+type+beat",
-   "download": true,
-   "pages": 2
+   "file": "layer_house_b.jpg",
+   "url": "https://live.staticflickr.com/1913/45044852241_54feedd093_b.jpg",
+   "page": "https://www.flickr.com/photos/157635012@N07/45044852241"
   },
   {
-   "url": "https://freemusicarchive.org/search/?quicksearch=wizkid+type+beat",
-   "download": true,
-   "pages": 2
+   "file": "planning_desk.jpg",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Working_on_a_planning_session_with_stationery_items%2C_notebook%2C_and_colorful_pencils_on_a_wooden_desk.jpg/3840px-Working_on_a_planning_session_with_stationery_items%2C_notebook%2C_and_colorful_pencils_on_a_wooden_desk.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Working_on_a_planning_session_with_stationery_items,_notebook,_and_colorful_pencils_on_a_wooden_desk.jpg"
   },
   {
-   "url": "https://freemusicarchive.org/search/?quicksearch=rema+type+beat",
-   "download": true,
-   "pages": 2
+   "file": "meeting_kigali.jpg",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Wikimedia_Rwanda_team_building_workshop_04.jpg/3840px-Wikimedia_Rwanda_team_building_workshop_04.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Wikimedia_Rwanda_team_building_workshop_04.jpg"
   },
   {
-   "url": "https://freemusicarchive.org/search/?quicksearch=asake+type+beat",
-   "download": true,
-   "pages": 2
+   "file": "meeting_empty.jpg",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Chairs_in_a_meeting_room_%28Unsplash%29.jpg/3840px-Chairs_in_a_meeting_room_%28Unsplash%29.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Chairs_in_a_meeting_room_(Unsplash).jpg"
   },
   {
-   "url": "https://freemusicarchive.org/search/?quicksearch=afrobeats+instrumental",
-   "download": true,
-   "pages": 2
+   "file": "fashion_display.jpg",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/6/6b/%27Bjay%27_de_Ombre_Thomas-Fahm_%28Mus%C3%A9e_du_quai_Branly%2C_Paris%29_%2855219498450%29.png",
+   "page": "https://commons.wikimedia.org/wiki/File:%27Bjay%27_de_Ombre_Thomas-Fahm_(Mus%C3%A9e_du_quai_Branly,_Paris)_(55219498450).png"
   },
   {
-   "url": "https://freemusicarchive.org/search/?quicksearch=afro+pop+instrumental",
-   "download": true,
-   "pages": 2
+   "file": "abidjan_plateau.jpg",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Le_Plateau_depuis_le_Pont_ADO_%E2%80%93_Abidjan.jpg/3840px-Le_Plateau_depuis_le_Pont_ADO_%E2%80%93_Abidjan.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Le_Plateau_depuis_le_Pont_ADO_%E2%80%93_Abidjan.jpg"
   },
   {
-   "url": "https://freemusicarchive.org/search/?quicksearch=naija+beat",
-   "download": true,
-   "pages": 2
+   "file": "eggs_carton.jpg",
+   "url": "https://live.staticflickr.com/65535/49829839696_2234a9820a_b.jpg",
+   "page": "https://www.flickr.com/photos/26344495@N05/49829839696"
   },
   {
-   "url": "https://freemusicarchive.org/search/?quicksearch=afro+trap",
-   "download": true,
-   "pages": 2
+   "file": "eggs_carton_b.jpg",
+   "url": "https://live.staticflickr.com/3749/12710629754_4db6583844_b.jpg",
+   "page": "https://www.flickr.com/photos/64441474@N06/12710629754"
   },
   {
-   "url": "https://freemusicarchive.org/search/?quicksearch=afro+fusion",
-   "download": true,
-   "pages": 2
+   "file": "rooster.jpg",
+   "url": "https://live.staticflickr.com/2317/2285486507_3c5b7c74c8_b.jpg",
+   "page": "https://www.flickr.com/photos/87616709@N00/2285486507"
   },
   {
-   "url": "https://freemusicarchive.org/search/?quicksearch=log+drum",
-   "download": true,
-   "pages": 2
+   "file": "hen_portrait.jpg",
+   "url": "https://live.staticflickr.com/4013/5165590011_f9fa4f4b91_b.jpg",
+   "page": "https://www.flickr.com/photos/41014897@N08/5165590011"
   },
   {
-   "url": "https://freemusicarchive.org/search/?quicksearch=amapiano+beat",
-   "download": true,
-   "pages": 2
+   "file": "presenter_kigali.jpg",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Afrocreative_Wikiproject_2024_in_Rwanda_08.jpg/3840px-Afrocreative_Wikiproject_2024_in_Rwanda_08.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Afrocreative_Wikiproject_2024_in_Rwanda_08.jpg"
   },
   {
-   "url": "https://freemusicarchive.org/music/mohmohrap/",
-   "download": true,
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/music/tiga-maine/",
-   "download": true,
-   "pages": 2
-  },
-  {
-   "url": "https://freemusicarchive.org/music/amarent/",
-   "download": true,
-   "pages": 2
+   "file": "group_kigali.jpg",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Afrocreative_Wikiproject_2024_in_Rwanda_09.jpg/3840px-Afrocreative_Wikiproject_2024_in_Rwanda_09.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Afrocreative_Wikiproject_2024_in_Rwanda_09.jpg"
   }
- ],
- "pages_keep": []
+ ]
 }
