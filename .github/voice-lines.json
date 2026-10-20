@@ -1,0 +1,75 @@
+[
+ {
+  "file": "Zephyr__tb_04n_r100_t1.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Son nom : Elegance Studio. Son adresse se crée toute seule.",
+  "speakingRate": 1.0,
+  "run": "names1"
+ },
+ {
+  "file": "Zephyr__tb_04n_r100_t2.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Son nom : Elegance Studio. Son adresse se crée toute seule.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zephyr__tb_04n_r100_t3.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Son nom : Elegance Studio. Son adresse se crée toute seule.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Zephyr__tb_04n_r104_t4.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Son nom : Elegance Studio. Son adresse se crée toute seule.",
+  "speakingRate": 1.04
+ },
+ {
+  "file": "Iapetus__tf_04n_r100_t1.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Son nom : Golden Acres.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__tf_04n_r100_t2.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Son nom : Golden Acres.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__tf_04n_r100_t3.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Son nom : Golden Acres.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__tf_04n_r104_t4.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Son nom : Golden Acres.",
+  "speakingRate": 1.04
+ },
+ {
+  "file": "Iapetus__ta_04n_r100_t1.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Son nom : Builders Network.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__ta_04n_r100_t2.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Son nom : Builders Network.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__ta_04n_r100_t3.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Son nom : Builders Network.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "Iapetus__ta_04n_r104_t4.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Son nom : Builders Network.",
+  "speakingRate": 1.04
+ }
+]
