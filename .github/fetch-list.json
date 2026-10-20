@@ -1,0 +1,373 @@
+{
+ "run": "p5",
+ "commons": [
+  {
+   "q": "Lagos skyline filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "Victoria Island Lagos filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "Nairobi skyline filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "Nairobi CBD filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "Abidjan Plateau skyline filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "Accra skyline filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "Kigali city filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "Kigali Convention Centre filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "Dakar skyline filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "Eko Atlantic filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "shopping mall Nairobi filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "shopping mall Lagos filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "Accra Mall filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "Two Rivers Mall filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "Garden City Mall filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "boutique interior filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "clothing store interior filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "fashion boutique Lagos filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "shoe store interior filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "restaurant interior Nairobi filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "cafe Kigali filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "coffee shop interior filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "restaurant Lagos filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "modern restaurant interior filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "poultry farm modern filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "egg farm filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "layer hens cage free filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "agribusiness Kenya filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "greenhouse Kenya filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "farm Rwanda filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "dairy farm Kenya filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "business meeting Nigeria filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "conference Nairobi filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "board meeting filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "meeting room modern filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "workshop Kigali filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "entrepreneurs Africa filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "women entrepreneurs Nigeria filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "card payment terminal filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "point of sale terminal filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "cash drawer filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "mobile money Kenya filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "smartphone hands filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "banknotes wallet filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "CFA franc banknotes filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "notebook desk filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "planner pen desk filew:>1499",
+   "n": 24
+  },
+  {
+   "q": "wall clock filew:>1499",
+   "n": 24
+  }
+ ],
+ "openverse": [
+  {
+   "q": "Lagos skyline",
+   "n": 20
+  },
+  {
+   "q": "Nairobi skyline",
+   "n": 20
+  },
+  {
+   "q": "Abidjan skyline",
+   "n": 20
+  },
+  {
+   "q": "Accra city",
+   "n": 20
+  },
+  {
+   "q": "Kigali",
+   "n": 20
+  },
+  {
+   "q": "boutique interior",
+   "n": 20
+  },
+  {
+   "q": "clothing store",
+   "n": 20
+  },
+  {
+   "q": "concept store",
+   "n": 20
+  },
+  {
+   "q": "cafe interior",
+   "n": 20
+  },
+  {
+   "q": "restaurant interior",
+   "n": 20
+  },
+  {
+   "q": "modern poultry farm",
+   "n": 20
+  },
+  {
+   "q": "chicken farm",
+   "n": 20
+  },
+  {
+   "q": "eggs carton",
+   "n": 20
+  },
+  {
+   "q": "greenhouse farm",
+   "n": 20
+  },
+  {
+   "q": "business meeting africa",
+   "n": 20
+  },
+  {
+   "q": "conference room meeting",
+   "n": 20
+  },
+  {
+   "q": "card terminal payment",
+   "n": 20
+  },
+  {
+   "q": "pos terminal",
+   "n": 20
+  },
+  {
+   "q": "cash register modern",
+   "n": 20
+  },
+  {
+   "q": "smartphone woman hands",
+   "n": 20
+  },
+  {
+   "q": "smartphone man hands",
+   "n": 20
+  },
+  {
+   "q": "wallet money",
+   "n": 20
+  },
+  {
+   "q": "notebook desk coffee",
+   "n": 20
+  },
+  {
+   "q": "planner desk",
+   "n": 20
+  },
+  {
+   "q": "modern wall clock",
+   "n": 20
+  },
+  {
+   "q": "african businesswoman",
+   "n": 20
+  },
+  {
+   "q": "african businessman",
+   "n": 20
+  },
+  {
+   "q": "office interior modern",
+   "n": 20
+  },
+  {
+   "q": "shopping mall",
+   "n": 20
+  }
+ ],
+ "get": [],
+ "fma": [
+  {
+   "url": "https://freemusicarchive.org/genre/Afrobeat/",
+   "pages": 6
+  },
+  {
+   "url": "https://freemusicarchive.org/genre/African/",
+   "pages": 4
+  },
+  {
+   "url": "https://freemusicarchive.org/search/?quicksearch=amapiano",
+   "pages": 3
+  },
+  {
+   "url": "https://freemusicarchive.org/search/?quicksearch=afrobeats",
+   "pages": 3
+  },
+  {
+   "url": "https://freemusicarchive.org/search/?quicksearch=afro+house",
+   "pages": 3
+  },
+  {
+   "url": "https://freemusicarchive.org/search/?quicksearch=afropop",
+   "pages": 2
+  },
+  {
+   "url": "https://freemusicarchive.org/search/?quicksearch=afro+pop",
+   "pages": 2
+  },
+  {
+   "url": "https://freemusicarchive.org/search/?quicksearch=afrobeat+dance",
+   "pages": 2
+  },
+  {
+   "url": "https://freemusicarchive.org/search/?quicksearch=log+drum",
+   "pages": 2
+  },
+  {
+   "url": "https://freemusicarchive.org/search/?quicksearch=naija",
+   "pages": 2
+  }
+ ],
+ "max_tracks": 0,
+ "pages_keep": [
+  "https://pixabay.com/music/search/afrobeat/",
+  "https://pixabay.com/music/search/amapiano/",
+  "https://pixabay.com/music/search/afro%20house/",
+  "https://pixabay.com/service/license-summary/",
+  "https://mixkit.co/free-stock-music/tag/african/",
+  "https://mixkit.co/free-stock-music/tag/afrobeat/",
+  "https://mixkit.co/free-stock-music/tag/world/",
+  "https://mixkit.co/free-stock-music/tag/dance/",
+  "https://mixkit.co/license/",
+  "https://www.chosic.com/free-music/afrobeat/",
+  "https://www.chosic.com/free-music/african/",
+  "https://freemusicarchive.org/License_Guide"
+ ]
+}
