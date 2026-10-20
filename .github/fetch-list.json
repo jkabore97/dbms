@@ -1,85 +1,133 @@
 {
- "run": "p7",
- "max_tracks": 0,
+ "run": "p8",
+ "max_tracks": 45,
+ "min_plays": 400,
  "fma": [
   {
-   "url": "https://freemusicarchive.org/genre/Afrobeat/?sort=downloads",
-   "pages": 4
+   "url": "https://freemusicarchive.org/music/amarent/free-electronic-music/some-bass-drums/",
+   "download": true
   },
   {
-   "url": "https://freemusicarchive.org/genre/African/?sort=downloads",
-   "pages": 3
+   "url": "https://freemusicarchive.org/music/John_Bartmann/audio-drama-soundtracks-album-four/afro-sax-freakout-1/",
+   "download": true
   },
   {
-   "url": "https://freemusicarchive.org/genre/Afrobeat/?sort=plays",
+   "url": "https://freemusicarchive.org/music/Ketsa/upbeat-street/sun-still-sky/",
+   "download": true
+  },
+  {
+   "url": "https://freemusicarchive.org/music/mohmohrap/singles-5/free-afro-rap-type-beat-for-one/",
+   "download": true
+  },
+  {
+   "url": "https://freemusicarchive.org/music/tiga-maine/amapiano-rapgawd-ep/tiga-maine-henny-ft-dj-gizo/",
+   "download": true
+  },
+  {
+   "url": "https://freemusicarchive.org/music/tiga-maine/amapiano-rapgawd-ep/tiga-maine-kasi-rapiano-ft-mshizil-sa/",
+   "download": true
+  },
+  {
+   "url": "https://freemusicarchive.org/music/tiga-maine/amapiano-rapgawd-ep/tiga-maine-x-mizzer-za-kutlwano-delela-ft-lady-lee/",
+   "download": true
+  },
+  {
+   "url": "https://freemusicarchive.org/music/tiga-maine/amapiano-rapgawd-ep/tiga-maine-mizzer-za-madido-ft-dlaka-dlaka/",
+   "download": true
+  },
+  {
+   "url": "https://freemusicarchive.org/music/ugo-mbaise/egwu-nwa/ajo-nwanyi/",
+   "download": true
+  },
+  {
+   "url": "https://freemusicarchive.org/music/ugo-mbaise/egwu-nwa/egwu-nwa/",
+   "download": true
+  },
+  {
+   "url": "https://freemusicarchive.org/search/?quicksearch=afrobeat+type+beat",
+   "download": true,
    "pages": 2
   },
   {
-   "url": "https://freemusicarchive.org/search/?quicksearch=afro",
-   "pages": 4
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=afrobeat+instrumental",
+   "url": "https://freemusicarchive.org/search/?quicksearch=afro+type+beat",
+   "download": true,
    "pages": 2
   },
   {
-   "url": "https://freemusicarchive.org/search/?quicksearch=amapiano+instrumental",
-   "pages": 1
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=afrohouse",
-   "pages": 1
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=afro+dance",
+   "url": "https://freemusicarchive.org/search/?quicksearch=amapiano+type+beat",
+   "download": true,
    "pages": 2
   },
   {
-   "url": "https://freemusicarchive.org/search/?quicksearch=afroswing",
-   "pages": 1
-  },
-  {
-   "url": "https://freemusicarchive.org/search/?quicksearch=afro+beat",
+   "url": "https://freemusicarchive.org/search/?quicksearch=burna+boy+type+beat",
+   "download": true,
    "pages": 2
   },
   {
-   "url": "https://freemusicarchive.org/music/charts/all?sort=downloads",
-   "pages": 3
+   "url": "https://freemusicarchive.org/search/?quicksearch=wizkid+type+beat",
+   "download": true,
+   "pages": 2
+  },
+  {
+   "url": "https://freemusicarchive.org/search/?quicksearch=rema+type+beat",
+   "download": true,
+   "pages": 2
+  },
+  {
+   "url": "https://freemusicarchive.org/search/?quicksearch=asake+type+beat",
+   "download": true,
+   "pages": 2
+  },
+  {
+   "url": "https://freemusicarchive.org/search/?quicksearch=afrobeats+instrumental",
+   "download": true,
+   "pages": 2
+  },
+  {
+   "url": "https://freemusicarchive.org/search/?quicksearch=afro+pop+instrumental",
+   "download": true,
+   "pages": 2
+  },
+  {
+   "url": "https://freemusicarchive.org/search/?quicksearch=naija+beat",
+   "download": true,
+   "pages": 2
+  },
+  {
+   "url": "https://freemusicarchive.org/search/?quicksearch=afro+trap",
+   "download": true,
+   "pages": 2
+  },
+  {
+   "url": "https://freemusicarchive.org/search/?quicksearch=afro+fusion",
+   "download": true,
+   "pages": 2
+  },
+  {
+   "url": "https://freemusicarchive.org/search/?quicksearch=log+drum",
+   "download": true,
+   "pages": 2
+  },
+  {
+   "url": "https://freemusicarchive.org/search/?quicksearch=amapiano+beat",
+   "download": true,
+   "pages": 2
+  },
+  {
+   "url": "https://freemusicarchive.org/music/mohmohrap/",
+   "download": true,
+   "pages": 2
+  },
+  {
+   "url": "https://freemusicarchive.org/music/tiga-maine/",
+   "download": true,
+   "pages": 2
+  },
+  {
+   "url": "https://freemusicarchive.org/music/amarent/",
+   "download": true,
+   "pages": 2
   }
  ],
- "pages_keep": [
-  {
-   "url": "https://pixabay.com/music/search/afrobeat/"
-  },
-  {
-   "url": "https://pixabay.com/music/search/amapiano/"
-  },
-  {
-   "url": "https://pixabay.com/music/search/afro%20house/"
-  },
-  {
-   "url": "https://pixabay.com/music/search/afrobeat/?order=ec"
-  },
-  {
-   "url": "https://pixabay.com/service/license-summary/"
-  },
-  {
-   "url": "https://pixabay.com/music/"
-  },
-  {
-   "url": "https://www.chosic.com/free-music/afrobeat/"
-  },
-  {
-   "url": "https://www.chosic.com/free-music/all/?keyword=afrobeat"
-  },
-  {
-   "url": "https://www.chosic.com/free-music/all/?keyword=amapiano"
-  },
-  {
-   "url": "https://uppbeat.io/browse/music/afrobeats"
-  },
-  {
-   "url": "https://www.bensound.com/royalty-free-music?tag[]=afrobeat"
-  }
- ]
+ "pages_keep": []
 }
