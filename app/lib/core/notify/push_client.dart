@@ -18,6 +18,13 @@ class PushClient {
 
   static const url = String.fromEnvironment('PUSH_URL');
 
+  /// The longest any one step of the platform's may stay silent — the push
+  /// Worker's key, the browser's push service, Firebase's token — before it
+  /// is taken as « no push now ». Offline, Android's getToken() and a
+  /// browser's subscribe() could wait for good, and « Activer » (the
+  /// opening's pop-up, the bell's offer) span with nothing to press.
+  static const wait = Duration(seconds: 20);
+
   /// Whether this build and this platform can offer push at all. On Android
   /// known only once [prepare] has run.
   static bool get available => PushPlatform.available(url);

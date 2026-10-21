@@ -13,6 +13,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'apple_js.dart';
 import 'models.dart';
 import '../errors.dart' as errors;
+import '../net/timeout_client.dart';
 
 /// Apple's sheet (sign_in_with_apple) — native on the iPhone, Apple's JS
 /// popup on the website (139): asks for [scopes] and seals [nonce] — the
@@ -239,7 +240,7 @@ class AuthRepository {
     final url = authUrl, key = apiKey;
     if (!isConfigured || url == null || key == null) return null;
     try {
-      final client = _http ?? http.Client();
+      final client = _http ?? TimeoutClient.bounded();
       final r = await client
           .get(Uri.parse('$url/settings'), headers: {'apikey': key})
           .timeout(const Duration(seconds: 8));

@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../access/plan_terms.dart';
 import '../cauris/feature_states.dart';
 import '../errors.dart';
+import '../net/timeout_client.dart';
 import '../rates/currency_rates.dart';
 import '../storefront/storefront_repository.dart' show StorefrontStyle;
 import 'models.dart';
@@ -32,7 +33,7 @@ class AdminRepository {
     String accountAdminUrl = '',
     http.Client? httpClient,
   })  : _accountUrl = _trimSlash(accountAdminUrl),
-        _http = httpClient ?? http.Client();
+        _http = httpClient ?? TimeoutClient.bounded();
 
   final SupabaseClient? _client;
 

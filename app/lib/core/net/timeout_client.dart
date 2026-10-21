@@ -28,6 +28,23 @@ import 'package:http/http.dart' as http;
 ///
 /// Screens that already stop waiting sooner (the till's 20 s, the homes'
 /// 12 s, sign-in's 8 s) keep doing so: their own `.timeout` fires first.
+///
+/// A read whose line failed is not tried again ([LineDown]). PostgREST
+/// retries a failed GET three times with 1 + 2 + 4 s between, so with no
+/// signal at all every `.select()` — the till's shelf, an association's
+/// members, a farm's day, the bell, a profile — took seven seconds to say
+/// so, and a stalled one more than a minute, before the screen fell back on
+/// the phone's own copy. Measured: an offline read failed after 7020 ms in
+/// 4 tries; now at once, in 1. (Its `retryEnabled` option cannot say this:
+/// supabase 2.16's `from()` builds its query without the client's retry
+/// options.) PostgREST still asks a read again when the server answers
+/// « busy » (503, 520): that is an answer, not a dead line.
+///
+/// [bounded] is this policy for the clients that talk to the Workers
+/// (photos, Wave, the account Worker, a courier's files, push): before it
+/// they used a bare `http.Client()` with no bound at all, so a stalled
+/// upload or payment kept its button spinning for as long as the socket
+/// lived.
 class TimeoutClient extends http.BaseClient {
   TimeoutClient(
     this._inner, {
@@ -35,6 +52,10 @@ class TimeoutClient extends http.BaseClient {
     this.uploadTimeout = defaultUploadTimeout,
     this.retryTimeout = defaultRetryTimeout,
   });
+
+  /// A plain client under the app's one time limit: the default for every
+  /// repository that makes its own requests (the Workers).
+  static http.Client bounded() => TimeoutClient(http.Client());
 
   final http.Client _inner;
 
@@ -74,8 +95,30 @@ class TimeoutClient extends http.BaseClient {
     return timeout;
   }
 
+  /// Whether a failure of [request]'s line is said as a [LineDown]: a read,
+  /// the only kind PostgREST asks again.
+  static bool _read(http.BaseRequest request) =>
+      request.method == 'GET' || request.method == 'HEAD';
+
+  /// [error] as it leaves here: for a read, a line that failed (no signal,
+  /// a stall past the bound) becomes a [LineDown], which PostgREST does not
+  /// retry. A caller's own abort, and anything that is not the line, stay
+  /// as they are.
+  static Object _outgoing(http.BaseRequest request, Object error) =>
+      _read(request) && error is Exception && error is! http.RequestAbortedException
+          ? LineDown(error, request.url)
+          : error;
+
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    try {
+      return await _send(request);
+    } catch (error, stack) {
+      Error.throwWithStackTrace(_outgoing(request, error), stack);
+    }
+  }
+
+  Future<http.StreamedResponse> _send(http.BaseRequest request) async {
     final bound = boundFor(request);
     final stalled = Completer<void>();
     Timer? timer;
@@ -131,7 +174,7 @@ class TimeoutClient extends http.BaseClient {
       if (closed) return;
       closed = true;
       timer?.cancel();
-      body.addError(error, stack);
+      body.addError(_outgoing(request, error), stack);
       unawaited(body.close());
       unawaited(sub?.cancel());
     }
@@ -206,6 +249,22 @@ class TimeoutClient extends http.BaseClient {
 
   @override
   void close() => _inner.close();
+}
+
+/// A read whose line failed — [cause] is what failed: no signal (a
+/// SocketException, the browser's ClientException) or a [RequestTimedOut].
+///
+/// A [http.RequestAbortedException], on purpose: it is the one failure
+/// PostgREST gives back at once instead of asking again (1 + 2 + 4 s of
+/// waiting on a line that is not there). It reads as its cause, so
+/// `describeError` and `isOffline` say « Pas de connexion » as before.
+class LineDown extends http.RequestAbortedException {
+  LineDown(this.cause, [Uri? uri]) : super(uri);
+
+  final Object cause;
+
+  @override
+  String toString() => '$cause';
 }
 
 /// The line stayed silent past the bound. A [TimeoutException], so

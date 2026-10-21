@@ -31,6 +31,21 @@ class ProductPhoto extends StatefulWidget {
   /// Cover for an article's square; contain for a logo, shown whole.
   final BoxFit fit;
 
+  /// How wide to decode a photograph drawn in [box] (freeze audit). The
+  /// photos are up to 2000 px (capture_action.dart): decoded whole, each
+  /// 60 px thumbnail of the Articles list cost 12 MB and a decode on the
+  /// UI's raster thread — a list of them stalled a low-end phone's
+  /// scrolling, and on some ran it out of memory. Twice the box's longer
+  /// side, so a photo twice as wide as tall still covers its square; null
+  /// (the whole picture) where the box has no size.
+  static int? decodeWidth(BoxConstraints box, double devicePixelRatio) {
+    final w = box.maxWidth.isFinite ? box.maxWidth : 0.0;
+    final h = box.maxHeight.isFinite ? box.maxHeight : 0.0;
+    final side = w > h ? w : h;
+    if (side <= 0) return null;
+    return (side * devicePixelRatio * 2).ceil();
+  }
+
   @override
   State<ProductPhoto> createState() => _ProductPhotoState();
 }
@@ -69,12 +84,15 @@ class _ProductPhotoState extends State<ProductPhoto> {
   Widget build(BuildContext context) {
     final bytes = _bytes;
     if (bytes != null) {
-      return Image.memory(
-        bytes,
-        fit: widget.fit,
-        gaplessPlayback: true,
-        semanticLabel: widget.name,
-        errorBuilder: (_, _, _) => _letter(context),
+      return LayoutBuilder(
+        builder: (context, box) => Image.memory(
+          bytes,
+          fit: widget.fit,
+          gaplessPlayback: true,
+          semanticLabel: widget.name,
+          cacheWidth: ProductPhoto.decodeWidth(box, MediaQuery.maybeDevicePixelRatioOf(context) ?? 1),
+          errorBuilder: (_, _, _) => _letter(context),
+        ),
       );
     }
     return _letter(context);

@@ -51,8 +51,9 @@ void main() {
     test('a request nobody answers fails after the bound', () async {
       final client = TimeoutClient(_stalled(), timeout: const Duration(milliseconds: 50));
       final watch = Stopwatch()..start();
+      // A read says it as a LineDown (not asked again), its cause the bound.
       await expectLater(client.get(Uri.parse('https://x.test/rest/v1/sales')),
-          throwsA(isA<RequestTimedOut>()));
+          throwsA(isA<LineDown>().having((e) => e.cause, 'cause', isA<RequestTimedOut>())));
       expect(watch.elapsed, lessThan(const Duration(seconds: 2)));
     });
 
@@ -81,7 +82,7 @@ void main() {
       });
       final client = TimeoutClient(inner, timeout: const Duration(milliseconds: 50));
       await expectLater(client.get(Uri.parse('https://x.test/rest/v1/sales')),
-          throwsA(isA<RequestTimedOut>()));
+          throwsA(isA<LineDown>().having((e) => e.cause, 'cause', isA<RequestTimedOut>())));
     });
 
     test('a slow answer still arriving is never cut', () async {

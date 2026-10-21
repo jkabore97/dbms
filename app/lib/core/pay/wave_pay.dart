@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../admin/platform_writes.dart';
+import '../net/timeout_client.dart';
 
 /// Paying by Wave — or by card on Wave's page — through the kaj-pay Worker
 /// (migration 076); and Kaj Pro by card as a Stripe subscription, through
@@ -14,7 +15,7 @@ import '../admin/platform_writes.dart';
 /// the old paths stand: the shop's own Wave link, "J'ai payé".
 class WavePay {
   WavePay(this._client, {http.Client? httpClient, String? url})
-      : _http = httpClient ?? http.Client(),
+      : _http = httpClient ?? TimeoutClient.bounded(),
         _url = url ?? const String.fromEnvironment('PAY_URL');
 
   final SupabaseClient? _client;

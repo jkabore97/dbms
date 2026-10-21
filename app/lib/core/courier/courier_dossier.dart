@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../net/timeout_client.dart';
+
 /// Becoming a courier (112): the dossier a person fills, one step at a
 /// time, and the platform's review of it. Every rule is the server's — which
 /// steps are open, what a step needs, who may see a photo — so this file
@@ -363,7 +365,7 @@ class CourierDossierRepository {
 class CourierFiles {
   CourierFiles(this._client, {String? url, http.Client? httpClient})
       : _url = _trim(url ?? const String.fromEnvironment('UPLOADS_URL')),
-        _http = httpClient ?? http.Client();
+        _http = httpClient ?? TimeoutClient.bounded();
 
   final SupabaseClient? _client;
   final String _url;

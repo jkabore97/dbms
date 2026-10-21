@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
@@ -124,7 +125,12 @@ class PushPlatform {
       }
       if (web.Notification.permission != 'granted') return null;
 
-      final keyResponse = await http.get(Uri.parse('$pushUrl/v1/key'));
+      // Each wait below is bounded (A freeze audit): on a dead line the key's
+      // download, and the browser's own push service behind subscribe(),
+      // could stay silent for good — and « Activer » span with them, the
+      // opening's pop-up unable to close.
+      final keyResponse =
+          await http.get(Uri.parse('$pushUrl/v1/key')).timeout(PushClient.wait);
       if (keyResponse.statusCode != 200) return null;
       final key = (jsonDecode(keyResponse.body) as Map)['key'] as String?;
       if (key == null || key.isEmpty) return null;
@@ -137,14 +143,22 @@ class PushPlatform {
       );
       web.PushSubscription subscription;
       try {
-        subscription = await registration.pushManager.subscribe(options).toDart;
+        subscription = await registration.pushManager
+            .subscribe(options)
+            .toDart
+            .timeout(PushClient.wait);
+      } on TimeoutException {
+        return null;
       } catch (_) {
         // A subscription made with another key (a VAPID pair renewed) is
         // refused as it stands: dropped, and made again with this one.
         final old = await registration.pushManager.getSubscription().toDart;
         if (old == null) rethrow;
         await old.unsubscribe().toDart;
-        subscription = await registration.pushManager.subscribe(options).toDart;
+        subscription = await registration.pushManager
+            .subscribe(options)
+            .toDart
+            .timeout(PushClient.wait);
       }
       return _info(subscription);
     } catch (_) {

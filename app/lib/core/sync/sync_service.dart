@@ -146,6 +146,12 @@ class SyncService {
           // genuine rejection. Either way the row stays in the outbox. Only the
           // error is recorded.
           await _db.markFailed(clientUuid, e.toString());
+          // The line itself failed: the rows after this one would fail the
+          // same way, one [rpcTimeout] each on a stalled line — thirty queued
+          // sales held the drain (and every syncNow() behind `_running`) for
+          // ten minutes. They wait for the next drain: the connection's
+          // return, the five-minute tick, the next thing recorded.
+          if (isOffline(e)) break;
         }
       }
     } finally {

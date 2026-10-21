@@ -175,12 +175,20 @@ class _AppDownloadPromptState extends State<AppDownloadPrompt> with WidgetsBindi
   Widget build(BuildContext context) {
     _route = ModalRoute.of(context);
     final links = _links;
-    if (links == null) return widget.child;
-    if (!_seen) WidgetsBinding.instance.addPostFrameCallback((_) => _markSeen());
+    if (links != null && !_seen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _markSeen());
+    }
+    // One tree whether the card shows or not: the page is always the
+    // Stack's first child. Before, the card's arrival moved the page from
+    // here into a Stack — a new place in the tree, so the street (or the
+    // vitrine) under it was built again from nothing: every question asked
+    // again two seconds after it had loaded, the scroll lost, the visit
+    // counted twice; and the same again when the card was closed.
     return Stack(
+      fit: StackFit.expand,
       children: [
         widget.child,
-        Positioned(
+        if (links != null) Positioned(
           bottom: 0,
           left: 0,
           right: 0,

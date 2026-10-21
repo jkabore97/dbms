@@ -437,6 +437,28 @@ class SessionController extends ChangeNotifier {
     return location;
   }
 
+  /// A business to open as soon as this person has it: the one an
+  /// invitation code just joined (« Rejoindre »). The screen said « Code
+  /// accepté. Ouverture de votre entreprise… » and nobody opened it — the
+  /// redirect leaves a member on /rejoindre. Kept apart from [_returnTo]
+  /// because the code screen, which a first business brings (108), stashes
+  /// /rejoindre over it; this survives the gate and is taken by the router
+  /// once the business is in the list (never before: an id not in it opens
+  /// nothing). Forgotten at sign-out.
+  String? _landOn;
+
+  void landOn(String orgId) {
+    _landOn = orgId;
+  }
+
+  /// The business to open now, once: null until it is this person's.
+  String? takeLanding() {
+    final id = _landOn;
+    if (id == null || orgById(id) == null) return null;
+    _landOn = null;
+    return id;
+  }
+
   /// Set when the org list came from the device instead of the server. The
   /// home screen still works; the user simply has not been re-checked.
   bool _orgsFromCache = false;
@@ -861,6 +883,7 @@ class SessionController extends ChangeNotifier {
     _access.clear();
     _dialKept.clear();
     _lastOrgId = null;
+    _landOn = null;
     _notice = null;
     _isPlatformAdmin = false;
     _adminDevice = false;

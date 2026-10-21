@@ -136,6 +136,8 @@ Future<void> _startup() async {
       // Every call to the server gives up after a silent line instead of
       // spinning forever (core/net/timeout_client.dart), and says « Pas de
       // connexion » like any other loss of signal.
+      // A read whose line failed is not asked again either (LineDown): with
+      // no signal each `.select()` waited 1 + 2 + 4 s before saying so.
       httpClient: TimeoutClient(http.Client()),
       // The session is written to device storage and reloaded on launch, so a
       // phone that has been out of range for a fortnight still knows who its
@@ -409,7 +411,10 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
     super.initState();
     unawaited(_security.load());
     _update = UpdateCheck(
-      fetch: (uri) async => (await http.get(uri)).body,
+      // Bounded like every other request: a check that never answers would
+      // otherwise hold its socket (on the web, one of the few) for good.
+      fetch: (uri) async =>
+          (await http.get(uri).timeout(TimeoutClient.defaultTimeout)).body,
     );
     unawaited(_update.check());
     _updateTimer = Timer.periodic(

@@ -53,7 +53,9 @@ class PushPlatform {
       if (!_listening) {
         _listening = true;
         FirebaseMessaging.onMessageOpenedApp.listen((m) => _open(m.data));
-        final first = await FirebaseMessaging.instance.getInitialMessage();
+        final first = await FirebaseMessaging.instance
+            .getInitialMessage()
+            .timeout(PushClient.wait, onTimeout: () => null);
         if (first != null) _open(first.data);
       }
     } catch (e) {
@@ -115,7 +117,9 @@ class PushPlatform {
   static Future<PushSubscriptionInfo?> current() async {
     if (!_ready) return null;
     try {
-      final token = await FirebaseMessaging.instance.getToken();
+      // Offline, getToken() waits for Google without end (PushClient.wait).
+      final token =
+          await FirebaseMessaging.instance.getToken().timeout(PushClient.wait);
       return token == null || token.isEmpty
           ? null
           : PushSubscriptionInfo.fcm(token, userAgent: 'Android');
@@ -128,7 +132,7 @@ class PushPlatform {
     if (!_ready) return null;
     try {
       final now = await current();
-      await FirebaseMessaging.instance.deleteToken();
+      await FirebaseMessaging.instance.deleteToken().timeout(PushClient.wait);
       return now?.endpoint;
     } catch (_) {
       return null;

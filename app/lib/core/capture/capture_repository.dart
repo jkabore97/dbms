@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../db/local_db.dart';
+import '../net/timeout_client.dart';
 import '../site/site.dart';
 import 'invoice_reading.dart';
 import 'models.dart';
@@ -40,7 +41,10 @@ class CaptureRepository {
     int photoCacheBudget = 24 * 1024 * 1024,
     this.sendTimeout = const Duration(seconds: 60),
   })  : _uploads = _trimSlash(uploadsUrl),
-        _http = httpClient ?? http.Client(),
+        // Bounded like every call to Supabase (core/net): a photo read that
+        // never answers left its tile on a spinner and, on the web, held one
+        // of the browser's few connections to the Worker for good.
+        _http = httpClient ?? TimeoutClient.bounded(),
         _photoBudget = photoCacheBudget;
 
   /// How long [capture]'s one try may take before the photograph is left
