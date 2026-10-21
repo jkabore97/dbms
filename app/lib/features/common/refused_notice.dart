@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
+import '../../core/farm/animal_sales.dart' show animalsText;
 import '../../core/l10n/tr.dart';
 import '../../core/retail/stock_rule.dart';
 import '../../core/theme/mara_mark.dart';
@@ -21,8 +22,12 @@ class RefusedAction {
 
   final String clientUuid;
 
-  /// 'record_sale' (the till) or 'move_stock' (a farm's feed).
+  /// 'record_sale' (the till), 'sell_animals' (the farm's till with a group
+  /// of animals, 150) or 'move_stock' (a farm's feed).
   final String action;
+
+  /// A sale of the till's, with or without animals in it.
+  bool get isSale => action == 'record_sale' || action == 'sell_animals';
 
   /// « 2 × Savon, 1 × Huile », « 4 Aliment ».
   final String what;
@@ -52,7 +57,7 @@ class RefusedAction {
     final lines = <String, double>{};
     try {
       final payload = jsonDecode(row['payload'] as String) as Map<String, dynamic>;
-      if (action == 'record_sale') {
+      if (action == 'record_sale' || action == 'sell_animals') {
         for (final l in (payload['p_lines'] as List? ?? const [])) {
           final name = '${(l as Map)['name'] ?? ''}';
           lines[name] =
@@ -121,7 +126,7 @@ class RefusedNotice extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              a.action == 'record_sale'
+                              a.isSale
                                   ? context.tr('Vente refusée : rien n\'a été enregistré')
                                   : context.tr('Sortie de stock refusée : rien n\'a été enregistré'),
                               style: const TextStyle(
@@ -133,7 +138,9 @@ class RefusedNotice extends StatelessWidget {
                             ],
                             const SizedBox(height: 4),
                             Text(
-                              stockShortText(context.trLanguage, a.reason) ?? a.reason,
+                              stockShortText(context.trLanguage, a.reason) ??
+                                  animalsText(context.trLanguage, a.reason) ??
+                                  translate(context.trLanguage, a.reason),
                               style: const TextStyle(
                                   color: maraBrown, fontWeight: FontWeight.w600),
                             ),
@@ -148,7 +155,7 @@ class RefusedNotice extends StatelessWidget {
                     spacing: 4,
                     children: [
                       if (onFix != null &&
-                          a.action == 'record_sale' &&
+                          a.isSale &&
                           a.shortfall != null)
                         TextButton.icon(
                           key: Key('refused-fix-${a.clientUuid}'),

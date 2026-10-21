@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../errors.dart';
+import '../farm/animal_sales.dart';
 import '../rates/currency_rates.dart';
 import '../orders/orders.dart';
 import '../storefront/storefront_repository.dart' show VitrineSchedule;
@@ -527,6 +530,220 @@ class RetailRepository {
         'p_customer_name': customerName,
     });
     _onQueued?.call();
+  }
+
+  // ----------------------------------------------------------------
+  // A farm's animals at the till (150). One sale, one count: the sale and
+  // the group's « sold » go together, on the server, in one transaction.
+  // ----------------------------------------------------------------
+
+  /// What « Vente » may sell of the farm's animals: its open groups, how
+  /// many each has alive, the article that follows each. Null while the
+  /// database has not had 150 (the till sells articles only, as before) —
+  /// or offline with nothing kept. Each answer is kept on the phone, for
+  /// the till with no signal ([AnimalShelf.fromDevice]).
+  ///
+  /// Kept with when it was asked: read back, each group's count is less
+  /// what this phone's sales sent since took (the server had not counted
+  /// them when it answered) — the till takes the ones still waiting off
+  /// itself, as for the shelf.
+  Future<AnimalShelf?> animalsForSale(String orgId,
+      {Duration timeout = const Duration(seconds: 12)}) async {
+    final key = _keptAnimalsKey(orgId);
+    final askedAt = DateTime.now();
+    try {
+      final rows = await _requireClient()
+          .rpc('farm_animals_for_sale', params: {'p_org_id': orgId})
+          .timeout(timeout) as List<dynamic>;
+      final animals = [
+        for (final r in rows) AnimalForSale.fromRow(Map<String, dynamic>.from(r as Map)),
+      ];
+      try {
+        await _outbox?.writePref(key, jsonEncode({
+          'at': askedAt.toUtc().toIso8601String(),
+          'rows': [for (final a in animals) a.toRow()],
+        }));
+      } catch (_) {}
+      return AnimalShelf(animals);
+    } catch (error) {
+      if (isSchemaOutOfDate(error)) {
+        try {
+          await _outbox?.writePref(key, null);
+        } catch (_) {}
+        return null;
+      }
+      return _keptAnimals(orgId);
+    }
+  }
+
+  String _keptAnimalsKey(String orgId) =>
+      '${LocalDb.personalPrefPrefix}animals_for_sale:$orgId';
+
+  /// The list this phone last heard, less its sales sent since; null when
+  /// none is kept.
+  Future<AnimalShelf?> _keptAnimals(String orgId) async {
+    final outbox = _outbox;
+    if (outbox == null) return null;
+    try {
+      final kept = await outbox.readPref(_keptAnimalsKey(orgId));
+      if (kept == null) return null;
+      final map = jsonDecode(kept) as Map;
+      final at = DateTime.parse('${map['at']}');
+      final sent = await outbox.saleQuantitiesSentSince(orgId, at);
+      return AnimalShelf([
+        for (final r in map['rows'] as List)
+          () {
+            final a = AnimalForSale.fromRow(Map<String, dynamic>.from(r as Map));
+            final left = a.alive - (sent[a.waitingKey] ?? 0);
+            return AnimalForSale(
+              kind: a.kind,
+              groupId: a.groupId,
+              label: a.label,
+              detail: a.detail,
+              alive: left < 0 ? 0 : left.round(),
+              productId: a.productId,
+              productName: a.productName,
+              salePrice: a.salePrice,
+              unit: a.unit,
+            );
+          }(),
+      ], fromDevice: true);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// A sale the server took at once: its heads come off the kept list too,
+  /// should the next read find no signal.
+  Future<void> _takeFromKeptAnimals(String orgId, List<SaleLineDraft> lines) async {
+    final outbox = _outbox;
+    if (outbox == null) return;
+    final key = _keptAnimalsKey(orgId);
+    final kept = await outbox.readPref(key);
+    if (kept == null) return;
+    final map = Map<String, dynamic>.from(jsonDecode(kept) as Map);
+    final taken = <String, double>{};
+    for (final l in lines) {
+      final k = l.flockId != null ? 'flock:${l.flockId}' : l.herdId != null ? 'herd:${l.herdId}' : null;
+      if (k != null) taken[k] = (taken[k] ?? 0) + l.quantity;
+    }
+    map['rows'] = [
+      for (final r in map['rows'] as List)
+        () {
+          final row = Map<String, dynamic>.from(r as Map);
+          final t = taken['${row['kind']}:${row['group_id']}'] ?? 0;
+          final alive = ((row['alive'] as num?) ?? 0) - t;
+          row['alive'] = alive < 0 ? 0 : alive;
+          return row;
+        }(),
+    ];
+    await outbox.writePref(key, jsonEncode(map));
+  }
+
+  /// A sale with a group of animals in it (150's sell_animals): the same
+  /// parameters as [recordSale]; the server makes the group's article when
+  /// it has none, records the sale once and lowers the group's count in the
+  /// same transaction. Idempotent by [clientUuid]. [groups] names each
+  /// group's line for the farm's day list ([LocalDb.noteAnimalSale]).
+  Future<String> recordAnimalSale({
+    required String orgId,
+    required List<SaleLineDraft> lines,
+    required String clientUuid,
+    String method = 'cash',
+    String? note,
+    String? customerName,
+    String? customerPhone,
+    Map<String, String> groups = const {},
+  }) async {
+    final client = _requireClient();
+    final id = await client.rpc('sell_animals', params: {
+      'p_org_id': orgId,
+      'p_lines': lines.map((l) => l.toJson()).toList(),
+      'p_method': method,
+      if (note != null && note.isNotEmpty) 'p_note': note,
+      'p_client_uuid': clientUuid,
+      if (customerName != null && customerName.isNotEmpty)
+        'p_customer_name': customerName,
+      if (customerPhone != null && customerPhone.isNotEmpty)
+        'p_customer_phone': customerPhone,
+    });
+    try {
+      await _outbox?.takeFromCachedProducts(
+          orgId, [for (final l in lines) l.toJson()]);
+      await _takeFromKeptAnimals(orgId, lines);
+      await _noteAnimals(orgId, clientUuid, lines, groups);
+    } catch (_) {}
+    return id as String;
+  }
+
+  /// Keeps an animal sale on the phone (no signal): the same parameters
+  /// [recordAnimalSale] would have sent, its client uuid, action
+  /// 'sell_animals'. On the server once, however often it is sent.
+  Future<void> queueAnimalSale({
+    required String orgId,
+    required List<SaleLineDraft> lines,
+    required String clientUuid,
+    String method = 'cash',
+    String? note,
+    String? customerName,
+    Map<String, String> groups = const {},
+  }) async {
+    final outbox = _outbox;
+    if (outbox == null) {
+      throw StateError('Pas de connexion. Réessayez quand le réseau revient.');
+    }
+    await outbox.queueSale(
+      orgId: orgId,
+      clientUuid: clientUuid,
+      action: 'sell_animals',
+      params: {
+        'p_org_id': orgId,
+        'p_lines': lines.map((l) => l.toJson()).toList(),
+        'p_method': method,
+        if (note != null && note.isNotEmpty) 'p_note': note,
+        'p_client_uuid': clientUuid,
+        if (customerName != null && customerName.isNotEmpty)
+          'p_customer_name': customerName,
+      },
+    );
+    try {
+      await _noteAnimals(orgId, clientUuid, lines, groups);
+    } catch (_) {}
+    _onQueued?.call();
+  }
+
+  /// One line on the farm's day list per sale with animals in it: the
+  /// group (or groups) and how many heads.
+  Future<void> _noteAnimals(String orgId, String clientUuid,
+      List<SaleLineDraft> lines, Map<String, String> groups) async {
+    final outbox = _outbox;
+    if (outbox == null) return;
+    final heads = <String, double>{};
+    for (final l in lines) {
+      final id = l.flockId ?? l.herdId;
+      if (id == null) continue;
+      heads[id] = (heads[id] ?? 0) + l.quantity;
+    }
+    if (heads.isEmpty) return;
+    await outbox.noteAnimalSale(
+      orgId: orgId,
+      clientUuid: clientUuid,
+      subject: [for (final id in heads.keys) groups[id] ?? ''].where((s) => s.isNotEmpty).join(', '),
+      quantity: heads.values.fold(0, (a, b) => a + b),
+    );
+  }
+
+  /// « Suit des animaux » (150): the article follows [flockId] or [herdId]
+  /// — its count becomes the group's — or neither (both null): it stops,
+  /// and counts nothing of its own. Returns the article's new count.
+  Future<double> linkProductAnimals(String productId,
+      {String? flockId, String? herdId}) async {
+    final v = await _requireClient().rpc('link_product_animals', params: {
+      'p_product_id': productId,
+      'p_flock_id': flockId,
+      'p_herd_id': herdId,
+    });
+    return v is num ? v.toDouble() : double.tryParse('$v') ?? 0;
   }
 
   /// Sales on this phone waiting for the network, for [orgId].

@@ -1344,19 +1344,56 @@ class LocalDb {
   /// A sale the till could not send (package 7): kept as an outbox row,
   /// sent by the sync loop with its client uuid, which `record_sale()` makes
   /// idempotent — a sale that did land the first time is not sold twice.
+  ///
+  /// [action] 'sell_animals' (150): a farm's sale with a group of animals
+  /// in it — the same parameters, sent by the sync loop's generic path
+  /// (which adds p_recorded_by); idempotent by the same client uuid, so the
+  /// sale and the group's count move once however often it is sent.
   Future<void> queueSale({
     required String orgId,
     required String clientUuid,
     required Map<String, dynamic> params,
+    String action = 'record_sale',
   }) async {
     await _db.insert(
       'outbox',
       {
         'client_uuid': clientUuid,
         'org_id': orgId,
-        'action': 'record_sale',
+        'action': action,
         'payload': jsonEncode(params),
         'created_at': DateTime.now().toUtc().toIso8601String(),
+      },
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+  }
+
+  /// The till's outbox actions: what [pendingSales] counts and what
+  /// [pendingSaleQuantities] adds up.
+  static const saleActions = "('record_sale', 'sell_animals')";
+
+  /// Animals sold at the till (150), on the day's list of the farm's home
+  /// beside the deaths and the eggs — « Vendus · B-2026-07 · 10 ». Shown
+  /// only: the outbox row (or the server) carries the sale. Keyed by the
+  /// sale's client uuid, so a sale written twice is listed once, and a
+  /// refused one leaves the list with it ([markRefused]).
+  Future<void> noteAnimalSale({
+    required String orgId,
+    required String clientUuid,
+    required String subject,
+    required double quantity,
+    String? note,
+  }) async {
+    await _db.insert(
+      'farm_events',
+      {
+        'client_uuid': clientUuid,
+        'org_id': orgId,
+        'kind': 'sold',
+        'subject': subject,
+        'quantity': quantity,
+        'note': note,
+        'occurred_at': DateTime.now().toUtc().toIso8601String(),
       },
       conflictAlgorithm: ConflictAlgorithm.ignore,
     );
@@ -1406,7 +1443,7 @@ class LocalDb {
   Future<int> pendingSales(String orgId) async {
     final result = await _db.rawQuery(
       "SELECT COUNT(*) AS c FROM outbox WHERE synced_at IS NULL "
-      "AND refused_at IS NULL AND action = 'record_sale' AND org_id = ?",
+      "AND refused_at IS NULL AND action IN $saleActions AND org_id = ?",
       [orgId],
     );
     return (result.first['c'] as int?) ?? 0;
@@ -1540,9 +1577,18 @@ class LocalDb {
   /// shelf the till reads is the server's, which has not seen them yet.
   Future<Map<String, double>> pendingSaleQuantities(String orgId) =>
       _saleQuantities(
-          "org_id = ? AND action = 'record_sale' "
+          'org_id = ? AND action IN $saleActions '
           'AND synced_at IS NULL AND refused_at IS NULL',
           [orgId]);
+
+  /// What this phone's till sales sent since [at] took, by the same keys
+  /// (`flock:<id>`, `herd:<id>` for a group of animals, 150): a list kept
+  /// before them is read less these, as [cachedProducts] reads its shelf.
+  Future<Map<String, double>> saleQuantitiesSentSince(String orgId, DateTime at) =>
+      _saleQuantities(
+          'org_id = ? AND action IN $saleActions '
+          'AND synced_at IS NOT NULL AND synced_at >= ?',
+          [orgId, at.toUtc().toIso8601String()]);
 
   /// The lines of the till's outbox rows matching [where], added up by
   /// product id, or `name:<name>` for a line typed without one.
@@ -1571,9 +1617,17 @@ class LocalDb {
       final q = (line['quantity'] as num?)?.toDouble() ?? 0;
       if (q <= 0) continue;
       final id = line['product_id'] as String?;
-      final key = id != null && id.isNotEmpty
-          ? id
-          : 'name:${'${line['name'] ?? ''}'.trim().toLowerCase()}';
+      // A group of animals (150) by its group: its article may not exist
+      // yet, and its name is the server's to give.
+      final flock = line['flock_id'] as String?;
+      final herd = line['herd_id'] as String?;
+      final key = flock != null
+          ? 'flock:$flock'
+          : herd != null
+              ? 'herd:$herd'
+              : id != null && id.isNotEmpty
+                  ? id
+                  : 'name:${'${line['name'] ?? ''}'.trim().toLowerCase()}';
       taken[key] = (taken[key] ?? 0) + q;
     }
   }
@@ -1643,7 +1697,7 @@ class LocalDb {
         .map((r) => r['read_at'] as String)
         .reduce((a, b) => a.compareTo(b) <= 0 ? a : b);
     final sentSince = await _saleQuantities(
-        "org_id = ? AND action = 'record_sale' "
+        'org_id = ? AND action IN $saleActions '
         'AND synced_at IS NOT NULL AND synced_at >= ?',
         [orgId, readAt]);
     return [

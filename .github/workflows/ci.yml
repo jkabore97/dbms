@@ -939,6 +939,13 @@ jobs:
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch149.sql
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch149.sql
 
+      - name: "Prove an animal is sold once and counted once — a batch with no article sold at the till: one sale, one journal entry (« Ventes » once), one 'sold' event tagged with the article made for it (named after the batch, « tête », off the vitrine), alive down once, the eggs beside it as before, the same client_uuid sending nothing twice, the till's list and 101's analyses counting it once; a linked article sold by id, by typed name and on credit (the carnet's debt) moves the batch, a herd sold lowers head_count; more than alive refused (MA001) for a flock and a herd, through sell_animals and record_sale, a closed group selling nothing and reading 0, reopened its count again; a vitrine order accepted takes the birds once, handed over is a sale taking nothing more, cancelled gives them back (a sold of -n), more than alive not orderable; a return gives back, no more than taken can come back, a delivery into it refused, a hand on its count through the API moves no animal; deaths, a corrected death, a birth and « sortis sans vente » followed; linking replaces its own count, one article per group, unlinked counts nothing, another business's herd refused (127's same_org); a sale's event not editable as a farm entry, a herd's correction moving head_count by the difference (the 033 bug), never below zero; an observer, another business, anon and on-behalf-of refused; a shop's till and counts as before; INVOKER doors authenticated only, the triggers nobody's; run twice the same (150)"
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch150.sql
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch150.sql
+
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each
       # owner reads and every vitrine door (orders, bookings, delivery, Wave,

@@ -5,7 +5,9 @@ import '../../core/nav/url_tabs.dart';
 import 'farm_animal_flows.dart';
 import 'farm_corrections.dart';
 import 'farm_crop_flows.dart';
+import 'farm_till.dart';
 import 'package:intl/intl.dart';
+import '../../core/farm/animal_sales.dart';
 
 import '../../core/auth/models.dart';
 import '../../core/db/local_db.dart';
@@ -69,6 +71,10 @@ class _LivestockScreenState extends State<LivestockScreen>
   bool _loading = true;
   String? _error;
 
+  /// The herds « Vente » can sell (150): their « Vendre » button. Empty
+  /// before 150 — no button, as before.
+  Set<String> _sellable = const {};
+
   @override
   void initState() {
     super.initState();
@@ -89,6 +95,7 @@ class _LivestockScreenState extends State<LivestockScreen>
         _crops = crops;
         _loading = false;
       });
+      _loadSellable();
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -117,6 +124,22 @@ class _LivestockScreenState extends State<LivestockScreen>
           farm: widget.farm,
           herd: herd,
           kind: kind));
+
+  /// Best-effort, after the list: which herds the till can sell (150).
+  Future<void> _loadSellable() async {
+    final retail = widget.retail;
+    if (retail == null || widget.org.isObserverOnly) return;
+    final shelf = await FarmTill.animalsFor(retail, widget.org);
+    if (!mounted) return;
+    setState(() => _sellable = {
+          for (final a in shelf?.animals ?? const <AnimalForSale>[]) a.waitingKey,
+        });
+  }
+
+  /// « Vendre » (150): the till with this herd in the basket — one sale,
+  /// and its count goes down with it.
+  Future<void> _sell(Herd herd) => _after(FarmTill.open(context,
+      org: widget.org, retail: widget.retail!, animal: 'herd:${herd.id}'));
 
   Future<void> _harvest(CropCycle cycle) => _after(FarmCropFlow.harvest(context,
       org: widget.org,
@@ -233,6 +256,13 @@ class _LivestockScreenState extends State<LivestockScreen>
                           icon: const Icon(Icons.vaccines_outlined, size: 18),
                           label: Text(context.tr('Vaccin')),
                         ),
+                        if (_sellable.contains('herd:${herd.id}'))
+                          OutlinedButton.icon(
+                            key: Key('herd-sell-${herd.id}'),
+                            onPressed: () => _sell(herd),
+                            icon: const Icon(Icons.point_of_sale_outlined, size: 18),
+                            label: Text(context.tr('Vendre')),
+                          ),
                         if (!widget.org.isObserverOnly)
                           TextButton.icon(
                             onPressed: () => showFarmCorrections(

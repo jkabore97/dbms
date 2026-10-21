@@ -334,17 +334,29 @@ class SaleLineDraft {
     required this.quantity,
     required this.unitPrice,
     this.productId,
+    this.flockId,
+    this.herdId,
   });
 
   final String? productId;
+
+  /// A farm's group of animals sold from « Vente » (150's sell_animals):
+  /// the server finds or makes the article that follows it. Null for every
+  /// other line — a shop's, an association's, a farm's eggs.
+  final String? flockId;
+  final String? herdId;
   final String name;
   final double quantity;
   final double unitPrice;
+
+  bool get isAnimals => flockId != null || herdId != null;
 
   double get lineTotal => quantity * unitPrice;
 
   Map<String, Object?> toJson() => {
         if (productId != null) 'product_id': productId,
+        if (flockId != null) 'flock_id': flockId,
+        if (herdId != null) 'herd_id': herdId,
         'name': name,
         'quantity': quantity,
         'unit_price': unitPrice,

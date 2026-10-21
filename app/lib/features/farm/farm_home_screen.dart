@@ -32,11 +32,10 @@ import '../orders/home_doorbell.dart';
 import 'farm_animal_flows.dart';
 import 'farm_crop_flows.dart';
 import 'farm_flows.dart';
+import 'farm_till.dart';
 import '../money/expense_flow.dart';
 import '../common/step_flow.dart';
-import '../retail/sale_flow.dart';
 import '../retail/till_close_sheet.dart';
-import '../../core/retail/models.dart';
 import '../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
@@ -559,33 +558,12 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
   /// list this phone last read, its stock less the sales it already made
   /// (the till says the list is the phone's) — typed by name only when it
   /// never read one. The sale waits on the phone, as the shop's does.
+  /// Its animals beside its products (150): one sale lowers the batch.
   Future<void> _sell() async {
     final retail = widget.retail;
     if (retail == null) return;
-    List<Product> products = const [];
-    var fromDevice = false;
-    try {
-      final shelf = await retail.tillProducts(widget.org.id, timeout: _askFor);
-      products = shelf.products;
-      fromDevice = shelf.fromDevice;
-    } catch (_) {}
-    if (!mounted) return;
-    final sold = await StepFlow.push(
-      context,
-      SaleFlow(
-        orgId: widget.org.id,
-        orgName: widget.org.name,
-        retail: retail,
-        currency: widget.org.currency,
-        products: products,
-        productsFromDevice: fromDevice,
-        farm: true,
-        canCredit: widget.access.canEdit('credits') &&
-            !PathGate.locks(context, widget.org, 'credits'),
-        // The last answer the device heard when offline (batch 115).
-        allowWave: AppScope.read(context)?.session.waveAllowedFor(widget.org.id) ?? false,
-      ),
-    );
+    final sold = await FarmTill.open(context,
+        org: widget.org, retail: retail, access: widget.access);
     if (sold == true && mounted) await _refresh();
   }
 

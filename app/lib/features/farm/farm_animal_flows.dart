@@ -4,11 +4,15 @@ import 'package:uuid/uuid.dart';
 
 import '../../core/auth/models.dart';
 import '../../core/db/local_db.dart';
+import '../../core/farm/animal_sales.dart';
 import '../../core/farm/farm_repository.dart';
 import '../../core/farm/models.dart';
 import '../../core/format/money.dart';
 import '../../core/l10n/tr.dart';
+import '../../core/nav/app_scope.dart';
+import '../../core/retail/retail_repository.dart';
 import '../common/step_flow.dart';
+import 'farm_till.dart';
 
 /// The farm's animals, one entry at a time (115): « Ajouter des animaux »
 /// and « Mortalité » (with the rest of what happens to a batch: a weighing,
@@ -40,17 +44,19 @@ class FarmAnimalFlow {
     required OrgSummary org,
     FarmRepository? farm,
     String? kind = 'mortality',
+    RetailRepository? retail,
   }) =>
       StepFlow.push(
-          context, _EventFlow(db: db, org: org, farm: farm, kind: kind));
+          context, _EventFlow(db: db, org: org, farm: farm, kind: kind, retail: retail));
 
   /// What happened to one flock (« Bandes »): the batch is known, the event
-  /// is asked.
+  /// is asked. « Vendus vivants » opens « Vente » on it (150).
   static Future<bool?> flockEvent(
     BuildContext context, {
     required LocalDb db,
     required OrgSummary org,
     required Flock flock,
+    RetailRepository? retail,
   }) =>
       StepFlow.push(
           context,
@@ -59,6 +65,7 @@ class FarmAnimalFlow {
             org: org,
             kind: null,
             preset: _Group(flock.id, flock.batchCode, true, flock.alive),
+            retail: retail,
           ));
 
   /// What happened to one herd (« Élevage et cultures »): its button says
@@ -70,6 +77,7 @@ class FarmAnimalFlow {
     required FarmRepository farm,
     required Herd herd,
     required String kind,
+    RetailRepository? retail,
   }) =>
       StepFlow.push(
           context,
@@ -79,6 +87,7 @@ class FarmAnimalFlow {
             farm: farm,
             kind: kind,
             preset: _Group(herd.id, herd.label, false, herd.headCount),
+            retail: retail,
           ));
 }
 
@@ -504,12 +513,16 @@ class _EventFlow extends StatefulWidget {
     this.farm,
     this.kind,
     this.preset,
+    this.retail,
   });
   final LocalDb db;
   final OrgSummary org;
   final FarmRepository? farm;
   final String? kind;
   final _Group? preset;
+
+  /// Where « Vendus vivants » sells (150); AppScope's when null.
+  final RetailRepository? retail;
 
   @override
   State<_EventFlow> createState() => _EventFlowState();
@@ -530,6 +543,24 @@ class _EventFlowState extends State<_EventFlow> {
   /// stalled answer must not count the same deaths twice (019).
   String _clientUuid = const Uuid().v4();
 
+  /// The groups « Vente » can sell (150): null before 150 (or nothing heard,
+  /// nothing kept) — « Vendus vivants » then counts the heads only, as it
+  /// always did.
+  AnimalShelf? _shelf;
+
+  RetailRepository? get _retail =>
+      widget.retail ?? AppScope.read(context)?.retail;
+
+  /// This group can be sold at the till: « Vendus vivants » takes the money
+  /// there, in one sale that lowers the count; « Sortis sans vente » stays
+  /// for what leaves without money — given away, eaten at home.
+  bool get _sells {
+    final g = _group;
+    if (g == null || widget.org.isObserverOnly) return false;
+    final key = '${g.isFlock ? 'flock' : 'herd'}:${g.id}';
+    return _shelf?.animals.any((a) => a.waitingKey == key) ?? false;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -541,6 +572,28 @@ class _EventFlowState extends State<_EventFlow> {
     } else {
       _load();
     }
+    _loadShelf();
+  }
+
+  Future<void> _loadShelf() async {
+    final retail = _retail;
+    if (retail == null) return;
+    final shelf = await FarmTill.animalsFor(retail, widget.org);
+    if (mounted && shelf != null) setState(() => _shelf = shelf);
+  }
+
+  /// « Vendus vivants » (150): the sale itself, at the till, with this group
+  /// in the basket — price, customer, payment, receipt — and the count goes
+  /// down with it, once. Back from the till without selling: this flow.
+  Future<void> _sell() async {
+    final retail = _retail;
+    final g = _group;
+    if (retail == null || g == null) return;
+    final sold = await FarmTill.open(context,
+        org: widget.org,
+        retail: retail,
+        animal: '${g.isFlock ? 'flock' : 'herd'}:${g.id}');
+    if (sold == true && mounted) Navigator.of(context).pop(true);
   }
 
   Future<void> _load() async {
@@ -589,21 +642,25 @@ class _EventFlowState extends State<_EventFlow> {
 
   bool get _isFlock => _group?.isFlock ?? true;
 
-  Map<String, String> get _kinds => _isFlock
+  /// With 150: « Vendus vivants » ('sale') is the sale at the till, and the
+  /// heads that leave without money keep the old count-only event ('sold')
+  /// under their own words. Before it: 'sold' is « Vendus vivants », a count.
+  Map<String, String> get _kinds => {
+        'mortality': context.tr('Mortalité'),
+        if (!_isFlock) 'birth': context.tr('Naissance'),
+        'weight': context.tr('Pesée'),
+        'vaccination': context.tr('Vaccination'),
+        if (!_isFlock) 'treatment': context.tr('Traitement'),
+        if (_sells) 'sale': context.tr('Vendus vivants'),
+        'sold': _sells ? context.tr('Sortis sans vente') : context.tr('Vendus vivants'),
+      };
+
+  Map<String, String> get _kindDetails => _sells
       ? {
-          'mortality': context.tr('Mortalité'),
-          'weight': context.tr('Pesée'),
-          'vaccination': context.tr('Vaccination'),
-          'sold': context.tr('Vendus vivants'),
+          'sale': context.tr('Le prix, le client, le reçu : une seule vente, et le nombre baisse avec elle.'),
+          'sold': context.tr('Donnés, mangés à la maison : sans argent.'),
         }
-      : {
-          'mortality': context.tr('Mortalité'),
-          'birth': context.tr('Naissance'),
-          'weight': context.tr('Pesée'),
-          'vaccination': context.tr('Vaccination'),
-          'treatment': context.tr('Traitement'),
-          'sold': context.tr('Vendus vivants'),
-        };
+      : const {};
 
   String get _unit => switch (_kind) {
         'weight' => _isFlock ? context.tr('grammes') : 'kg',
@@ -636,6 +693,8 @@ class _EventFlowState extends State<_EventFlow> {
 
   String? get _memo {
     final parts = [
+      // Said on the event, so the batch's history tells the two apart.
+      if (_kind == 'sold' && _sells) context.tr('Sans vente'),
       ?_cause,
       if (_note.text.trim().isNotEmpty) _note.text.trim(),
     ];
@@ -752,10 +811,20 @@ class _EventFlowState extends State<_EventFlow> {
           isValid: () => _kind != null,
           builder: (_) => FlowChoice<String>(
             options: [
-              for (final e in _kinds.entries) FlowOption(e.key, e.value),
+              for (final e in _kinds.entries)
+                FlowOption(e.key, e.value,
+                    icon: e.key == 'sale' ? Icons.point_of_sale_outlined : null,
+                    detail: _kindDetails[e.key]),
             ],
             value: _kind,
-            onChanged: (v) => setState(() => _kind = v),
+            onChanged: (v) {
+              // The sale is the till's: one record, the count with it.
+              if (v == 'sale') {
+                _sell();
+                return;
+              }
+              setState(() => _kind = v);
+            },
           ),
         ),
         FlowStep(
@@ -764,7 +833,9 @@ class _EventFlowState extends State<_EventFlow> {
             'mortality' => context.tr('Combien sont morts ?'),
             'weight' => context.tr('Quel poids ?'),
             'birth' => context.tr('Combien sont nés ?'),
-            'sold' => context.tr('Combien sont vendus ?'),
+            'sold' => _sells
+                ? context.tr('Combien sont sortis sans vente ?')
+                : context.tr('Combien sont vendus ?'),
             _ => context.tr('Combien ?'),
           },
           help: group?.alive == null || !_counts

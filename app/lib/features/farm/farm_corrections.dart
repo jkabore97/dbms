@@ -199,19 +199,31 @@ class _CorrectionsSheetState extends State<_CorrectionsSheet> {
                   final unit = row['unit'] as String?;
                   final date = DateTime.parse('${row[_dateField()]}').toLocal();
                   final note = row['note'] as String?;
+                  // Written by a sale (150): corrected through the sale —
+                  // a return gives the animals back — never here, or the
+                  // count and the money would part.
+                  final bySale = row['product_id'] != null;
+                  final label = bySale
+                      ? (qty < 0 ? context.tr('Rendus') : context.tr('Vendus'))
+                      : context.tr(_label(row));
+                  final editable = widget.canWrite && !bySale;
                   return ListTile(
+                    key: ValueKey('farm-entry-${row['id']}'),
                     dense: true,
                     contentPadding: EdgeInsets.zero,
-                    title: Text('${context.tr(_label(row))} · '
-                        '${qty.toStringAsFixed(0)}${unit == null ? '' : ' $unit'}'),
+                    title: Text('$label · '
+                        '${qty.abs().toStringAsFixed(0)}${unit == null ? '' : ' $unit'}'),
                     subtitle: Text([
                       DateFormat('d MMM y', intlLocale()).format(date),
                       if (note != null && note.isNotEmpty) note,
+                      if (bySale) context.tr('Une vente : corrigez-la dans Corrections'),
                     ].join(' · ')),
-                    trailing: widget.canWrite
+                    trailing: editable
                         ? const Icon(Icons.edit_outlined, size: 18)
-                        : null,
-                    onLongPress: widget.canWrite ? () => _edit(row) : null,
+                        : bySale
+                            ? const Icon(Icons.point_of_sale_outlined, size: 18)
+                            : null,
+                    onLongPress: editable ? () => _edit(row) : null,
                   );
                 },
               ),

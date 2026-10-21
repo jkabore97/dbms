@@ -1,3 +1,4 @@
+import 'farm/animal_sales.dart' show animalsText;
 import 'l10n/tr.dart';
 import 'retail/stock_rule.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -33,6 +34,7 @@ String describeError(Object error) {
   final text = brandText(_describe(error));
   return pathLockText(trCurrent, text) ??
       stockShortText(trCurrent, text) ??
+      animalsText(trCurrent, text) ??
       translate(trCurrent, text);
 }
 
