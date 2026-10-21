@@ -61,7 +61,9 @@ void main() {
   group('offline, a read says so at once (it took 7 s in 4 tries)', () {
     test('main.dart gives Supabase the bounded client', () {
       final main = File('lib/main.dart').readAsStringSync();
-      expect(main, contains('httpClient: TimeoutClient(http.Client())'));
+      // On the web, around it, the same-origin PostgREST client
+      // (core/net/same_origin_rest.dart) — the bound still applies.
+      expect(main, contains('httpClient: _supabaseHttp(TimeoutClient(http.Client()))'));
     });
 
     test('a stalled read ends after one bound, not four (it was more than a minute)', () async {

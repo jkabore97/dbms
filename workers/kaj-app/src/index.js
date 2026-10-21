@@ -24,6 +24,10 @@
 //     support_contacts), the defaults when Supabase does not answer.
 //     /support and /aide/ are sent there for good.
 //
+//  3c. /sb/rest/v1/… is PostgREST, passed on to the project as it is
+//     (supabase_proxy.js): the web app's reads from its own origin, with no
+//     preflight before each one. Nothing else under /sb/.
+//
 //  4. How long a phone may keep each file (cacheFor, below). Set here, not
 //     only in _headers: with run_worker_first, Cloudflare applies _headers
 //     to nothing this Worker returns. The deploy moves every file that
@@ -40,11 +44,18 @@
 import { mapsLink } from "./maps.js";
 import { isLegalPath, legalPage } from "./legal.js";
 import { helpPage, supportContacts } from "./help.js";
+import { isProxyPath, proxySupabase } from "./supabase_proxy.js";
 
 const SITE = "https://marakaj.com";
 
 export default {
   async fetch(request, env) {
+    const url = new URL(request.url);
+    // The project's answer goes back exactly as it came: none of the
+    // site's own headers are added to it.
+    if (isProxyPath(url.pathname) && !url.hostname.endsWith(".workers.dev")) {
+      return proxySupabase(request, env);
+    }
     return secure(await serve(request, env));
   },
 };
@@ -250,16 +261,25 @@ function photoUrl(env, key) {
   return `${env.UPLOADS_URL.replace(/\/$/, "")}/v1/public/objects/${encodeURIComponent(key)}`;
 }
 
+// Asked with GET (both functions are STABLE, which PostgREST lets a GET
+// call): Cloudflare keeps a GET's answer for cacheTtl, never a POST's. As a
+// POST every vitrine page waited on two fresh calls to Supabase before its
+// first byte left; now a shop opened in the last five minutes is answered
+// from the edge. The data is the public vitrine, the same for everyone.
+export function rpcUrl(env, fn, params) {
+  const url = new URL(`${String(env.SUPABASE_URL).replace(/\/+$/, "")}/rest/v1/rpc/${fn}`);
+  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+  return url.toString();
+}
+
 async function rpc(env, fn, params) {
-  const response = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/${fn}`, {
-    method: "POST",
+  const response = await fetch(rpcUrl(env, fn, params), {
+    method: "GET",
     headers: {
       apikey: env.SUPABASE_PUBLISHABLE_KEY,
       Authorization: `Bearer ${env.SUPABASE_PUBLISHABLE_KEY}`,
-      "Content-Type": "application/json",
     },
-    body: JSON.stringify(params),
-    cf: { cacheTtl: 300 },
+    cf: { cacheTtl: 300, cacheEverything: true },
   });
   if (!response.ok) return null;
   return response.json();

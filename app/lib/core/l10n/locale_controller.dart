@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../db/local_db.dart';
+import 'fr_en_localizations.dart';
 
 /// The languages a person can actually pick.
 ///
@@ -106,7 +106,7 @@ class MaterialFallbackDelegate
 
   @override
   Future<MaterialLocalizations> load(Locale locale) =>
-      GlobalMaterialLocalizations.delegate.load(const Locale('fr'));
+      const FrEnMaterialLocalizations().load(const Locale('fr'));
 
   @override
   bool shouldReload(MaterialFallbackDelegate old) => false;
@@ -123,7 +123,7 @@ class WidgetsFallbackDelegate
 
   @override
   Future<WidgetsLocalizations> load(Locale locale) =>
-      GlobalWidgetsLocalizations.delegate.load(const Locale('fr'));
+      const FrEnWidgetsLocalizations().load(const Locale('fr'));
 
   @override
   bool shouldReload(WidgetsFallbackDelegate old) => false;

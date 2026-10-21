@@ -204,6 +204,11 @@ self.addEventListener('fetch', (event) => {
   if (request.headers.has('range')) return;
   const path = url.pathname;
   if (PASS.has(path)) return;
+  // Supabase through the site's own address (/sb/rest/v1/…, the site
+  // Worker's supabase_proxy.js): data, often a signed-in person's — never
+  // kept here, never answered from a copy. Before /sb it was another
+  // origin and passed by the line above this one's.
+  if (path === '/sb' || path.startsWith('/sb/')) return;
 
   if (request.mode === 'navigate') {
     event.respondWith(LEGAL.has(path.replace(/\/+$/, ''))
