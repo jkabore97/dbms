@@ -193,6 +193,7 @@ class WavePay {
     required String productId,
     String? transactionId,
     String? token,
+    String? signedTransaction,
   }) async {
     if (!compiledIn) throw StateError('Pas de connexion au serveur de Marakaj.');
     final session = _client?.auth.currentSession?.accessToken;
@@ -213,6 +214,7 @@ class WavePay {
           'product_id': productId,
           'transaction_id': ?transactionId,
           'token': ?token,
+          'signed_transaction': ?signedTransaction,
         }),
       );
     } catch (_) {
@@ -223,6 +225,17 @@ class WavePay {
       body = Map<String, dynamic>.from(jsonDecode(response.body) as Map);
     } catch (_) {
       body = const {};
+    }
+    // The Worker answered, but not yes: a server-side failure too carries
+    // its code and status (« upstream » 502: the store did not answer
+    // well; « config » 503) — said by its reason and logged with its
+    // status, never a bare « could not check » (store_watcher).
+    if (response.statusCode >= 500) {
+      throw StoreVerifyRefused(
+        '${body['error'] ?? 'La vérification de l\'achat n\'a pas abouti.'}',
+        '${body['code'] ?? ''}',
+        status: response.statusCode,
+      );
     }
     if (response.statusCode == 200 && body['ok'] == true) {
       return StoreVerdict(

@@ -153,16 +153,26 @@ const sub = (over = {}) => ({
 
 /// A fake world. `db` is the store_subscriptions table as store_settle
 /// keeps it (by platform + original id, one business each).
-function world({ apple = {}, google = {}, admin = true, sandboxOk = true, gone = [] } = {}) {
+/// Apple's own answers, as the App Store Server API words them.
+const APPLE_404 = '{"errorCode":4040010,"errorMessage":"Transaction id not found."}';
+
+/// [appleProduction]: what production answers before it looks — « open »
+/// (an app on the App Store: it looks, 404 for a sandbox purchase),
+/// « unreleased » (an app never released: 401 to every call, whatever the
+/// key — Marakaj today) or « bad key » (production and sandbox both 401).
+function world({ apple = {}, google = {}, admin = true, sandboxOk = true, gone = [], appleProduction = "open" } = {}) {
   const calls = [];
   const db = new Map();
   const fetchImpl = async (url, init = {}) => {
     calls.push({ url, method: init.method, headers: init.headers, body: init.body });
     if (url.startsWith("https://api.storekit")) {
       const sandbox = url.includes("sandbox");
+      if (appleProduction === "bad key" || (appleProduction === "unreleased" && !sandbox)) {
+        return new Response("Unauthenticated\n", { status: 401 });
+      }
       const m = url.match(/\/inApps\/v1\/(transactions|subscriptions)\/(\d+)/);
       const known = apple[m[2]];
-      if (!known || (known.sandbox ?? true) !== sandbox) return new Response("{}", { status: 404 });
+      if (!known || (known.sandbox ?? true) !== sandbox) return new Response(APPLE_404, { status: 404 });
       if (m[1] === "transactions") {
         return Response.json({ signedTransactionInfo: jws(known.tx) });
       }
@@ -373,6 +383,114 @@ test("Apple: another business's purchase, another app's, another product, a refu
   // Unknown to Apple, in both environments.
   r = await call(w, "/store/verify", { platform: "apple", org_id: ORG, transaction_id: "999" });
   assert.equal(r.status, 404);
+});
+
+// ------------------------------------------------------------
+// Apple: which host — the TestFlight bug (no Apple purchase ever verified)
+// ------------------------------------------------------------
+
+const appleHosts = (w) => w.calls.filter((c) => c.url?.startsWith("https://api.storekit"))
+  .map((c) => `${c.url.includes("sandbox") ? "sandbox" : "production"} ${c.url.match(/v1\/(\w+)\//)[1]}`);
+
+test("Apple, app never released: production's 401 sends the sandbox purchase to the sandbox, and Pro turns on", async () => {
+  // Production answers 401 to every call until the app's first release
+  // (Marakaj is in TestFlight only). appleGet used to move on only on a
+  // 404, so this 401 became « upstream » 502 and the app's « Le paiement
+  // est fait, mais Marakaj n'a pas encore pu le vérifier… » at every launch.
+  const w = world({ apple: { 2000000111: { tx: tx() }, 2000000100: { tx: tx() } }, appleProduction: "unreleased" });
+  const r = await call(w, "/store/verify", {
+    platform: "apple", org_id: ORG, product_id: "bf.kaj.app.pro.monthly", transaction_id: "2000000111",
+  });
+  assert.equal(r.status, 200, JSON.stringify(r.body));
+  assert.equal(r.body.pro, true);
+  // The subscription is asked where the transaction was found, at once.
+  assert.deepEqual(appleHosts(w), ["production transactions", "sandbox transactions", "sandbox subscriptions"]);
+  assert.equal(w.calls.find((c) => c.rpc === "store_settle").args.p_environment, "sandbox");
+
+  // The daily re-check asks the row's own host, never production's 401.
+  w.calls.length = 0;
+  const done = await storeRecheck(env, w.io);
+  assert.deepEqual(done, { due: 1, checked: 1, failed: 0 });
+  assert.deepEqual(appleHosts(w), ["sandbox transactions", "sandbox subscriptions"]);
+});
+
+test("Apple: the signed transaction the app sends picks the host — verified, and only a hint", async () => {
+  const w = world({ apple: { 2000000111: { tx: tx() } }, appleProduction: "unreleased" });
+  const r = await call(w, "/store/verify", {
+    platform: "apple", org_id: ORG, product_id: "bf.kaj.app.pro.monthly", transaction_id: "2000000111",
+    signed_transaction: jws(tx()),
+  });
+  assert.equal(r.status, 200, JSON.stringify(r.body));
+  assert.deepEqual(appleHosts(w), ["sandbox transactions", "sandbox subscriptions"], "production never asked");
+
+  // Not Apple's signature, or another transaction's: ignored, both asked —
+  // and what is settled is still Apple's API's answer.
+  const stranger = chain();
+  for (const signed of [jws(tx(), stranger), jws(tx({ transactionId: "2000000999" })), "not.a.jws", 42]) {
+    const v = world({ apple: { 2000000111: { tx: tx() } }, appleProduction: "unreleased" });
+    const rv = await call(v, "/store/verify", {
+      platform: "apple", org_id: ORG, transaction_id: "2000000111", signed_transaction: signed,
+    });
+    assert.equal(rv.status, 200, JSON.stringify(rv.body));
+    assert.equal(appleHosts(v)[0], "production transactions");
+  }
+
+  // A production purchase that says so is asked of production alone.
+  const p = world({ apple: { 2000000111: { tx: tx({ environment: "Production" }), sandbox: false } } });
+  const rp = await call(p, "/store/verify", {
+    platform: "apple", org_id: ORG, transaction_id: "2000000111",
+    signed_transaction: jws(tx({ environment: "Production" })),
+  });
+  assert.equal(rp.status, 200, JSON.stringify(rp.body));
+  assert.deepEqual(appleHosts(p), ["production transactions", "production subscriptions"]);
+  assert.equal(p.calls.find((c) => c.rpc === "store_settle").args.p_environment, "production");
+});
+
+test("Apple: a key both hosts refuse, and a purchase neither knows, are said apart in the log — no id, no bearer", async () => {
+  const logs = [];
+  const { error, warn } = console;
+  console.error = (...a) => logs.push(a.join(" "));
+  console.warn = (...a) => logs.push(a.join(" "));
+  try {
+    // A wrong key (or issuer, or a key that is not an In-App Purchase key).
+    let w = world({ apple: { 2000000111: { tx: tx() } }, appleProduction: "bad key" });
+    let r = await call(w, "/store/verify", { platform: "apple", org_id: ORG, transaction_id: "2000000111" });
+    assert.equal(r.status, 502);
+    assert.equal(r.body.code, "upstream");
+    assert.deepEqual(appleHosts(w), ["production transactions", "sandbox transactions"]);
+    assert.ok(logs.some((l) => l.includes("failed 502 upstream") && l.includes("production 401, sandbox 401")), logs.join("\n"));
+
+    // Unknown in both (an app never released: production 401, sandbox 404).
+    w = world({ appleProduction: "unreleased" });
+    r = await call(w, "/store/verify", { platform: "apple", org_id: ORG, transaction_id: "2000000111" });
+    assert.equal(r.status, 404);
+    assert.equal(r.body.code, "unknown");
+    assert.ok(logs.some((l) => l.includes("refused 404 unknown") && l.includes("production 401, sandbox 404 4040010")), logs.join("\n"));
+
+    const bearer = w.calls.find((c) => c.url)?.headers.Authorization.slice(7);
+    for (const l of logs) {
+      assert.ok(!l.includes("2000000111"), `no transaction id in the log: ${l}`);
+      assert.ok(!l.includes(bearer), "never the bearer");
+    }
+  } finally {
+    console.error = error;
+    console.warn = warn;
+  }
+});
+
+test("Apple's notification names its host: a sandbox one is asked of the sandbox alone", async () => {
+  const w = world({ apple: { 2000000100: { tx: tx() } }, appleProduction: "unreleased" });
+  const signedPayload = jws({
+    notificationType: "DID_RENEW",
+    data: {
+      bundleId: "bf.kaj.app", environment: "Sandbox", status: 1,
+      signedTransactionInfo: jws(tx()), signedRenewalInfo: jws({ autoRenewStatus: 1 }),
+    },
+  });
+  const r = await call(w, "/store/apple-notify", { signedPayload }, { token: null });
+  assert.equal(r.status, 200, JSON.stringify(r.body));
+  assert.equal(r.body.settled, true);
+  assert.deepEqual(appleHosts(w), ["sandbox transactions", "sandbox subscriptions"]);
 });
 
 test("Apple: a grace period runs to its own end; billing retry gives nothing", async () => {
