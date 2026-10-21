@@ -3,10 +3,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/date_symbol_data_local.dart';
 import 'package:sqflite/sqflite.dart' show databaseFactory;
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -28,7 +26,9 @@ import 'core/credit/credit_repository.dart';
 import 'core/db/local_db.dart';
 import 'core/farm/farm_repository.dart';
 import 'core/invoicing/invoicing_repository.dart';
+import 'core/l10n/fr_en_localizations.dart';
 import 'core/l10n/locale_controller.dart';
+import 'core/net/same_origin_rest.dart';
 import 'core/net/timeout_client.dart';
 import 'core/offline/offline_prep.dart';
 import 'l10n/strings.dart';
@@ -66,6 +66,11 @@ import 'package:kaj_app/core/l10n/tr.dart';
 final supabaseUrl = supabaseOrigin(const String.fromEnvironment('SUPABASE_URL'));
 const supabasePublishableKey =
     String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
+
+/// The website's own path to PostgREST, e.g. `/sb` (core/net/same_origin_rest.dart):
+/// no preflight before each read. Empty — the default, and always on
+/// Android and iOS — sends every call straight to [supabaseUrl].
+const supabaseWebProxy = String.fromEnvironment('SUPABASE_WEB_PROXY');
 
 /// Where photographs go: the origin of the upload Worker (workers/uploads),
 /// e.g. `https://kaj-uploads.kabore-boss.workers.dev`.
@@ -119,7 +124,10 @@ Future<void> _startup() async {
     databaseFactory = databaseFactoryFfiWeb;
   }
 
-  await initializeDateFormatting('fr_FR', null);
+  // French and English calendars only (core/l10n/fr_en_localizations.dart):
+  // intl's initializeDateFormatting brought every language's into the web
+  // build's first download.
+  initializeFrEnDateFormatting();
 
   // The local database opens first and the UI runs from it. If Supabase is
   // unreachable, the app still works completely — that is the whole point.
@@ -138,7 +146,7 @@ Future<void> _startup() async {
       // connexion » like any other loss of signal.
       // A read whose line failed is not asked again either (LineDown): with
       // no signal each `.select()` waited 1 + 2 + 4 s before saying so.
-      httpClient: TimeoutClient(http.Client()),
+      httpClient: _supabaseHttp(TimeoutClient(http.Client())),
       // The session is written to device storage and reloaded on launch, so a
       // phone that has been out of range for a fortnight still knows who its
       // owner is. Refreshing that session needs signal; the device PIN covers
@@ -196,6 +204,20 @@ Future<void> _startup() async {
     onboarding: OnboardingRepository(client),
     sync: sync,
   ));
+}
+
+/// [inner], with PostgREST sent through the website's own address when this
+/// is the web build and it was given one ([supabaseWebProxy]).
+http.Client _supabaseHttp(http.Client inner) {
+  final proxy = restProxyBase(
+    supabaseUrl: supabaseUrl,
+    proxy: supabaseWebProxy,
+    isWeb: kIsWeb,
+    pageUrl: Uri.base,
+  );
+  return proxy == null
+      ? inner
+      : SameOriginRestClient(inner, supabaseUrl: supabaseUrl, proxyBase: proxy);
 }
 
 /// Shown instead of a white page when the app cannot start. It is deliberately
@@ -623,9 +645,11 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
             // answer only for the draft locales Material has never heard of.
             MaterialFallbackDelegate(),
             WidgetsFallbackDelegate(),
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
+            // Flutter's Global*Localizations for fr and en only: the same
+            // strings and formats, without the other eighty languages.
+            FrEnMaterialLocalizations(),
+            FrEnWidgetsLocalizations(),
+            FrEnCupertinoLocalizations(),
           ],
           // No org is named anywhere in this file, and none ever should be.
           // Which business opens is decided by the signed-in user's

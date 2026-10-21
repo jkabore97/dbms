@@ -73,6 +73,15 @@ jobs:
       PUSH_URL: ${{ vars.PUSH_URL || secrets.PUSH_URL }}
       # The Wave Worker's origin (README "Wave checkout"); empty: no Wave button.
       PAY_URL: ${{ vars.PAY_URL || secrets.PAY_URL }}
+      # The site's own path to PostgREST (web first load): `/sb`. The web
+      # build then reads through https://marakaj.com/sb/rest/v1/… — the
+      # Worker passes it on to SUPABASE_URL (workers/kaj-app/src/
+      # supabase_proxy.js) — so the browser sends no CORS preflight before
+      # each read. A repository *variable*: it is a path, not a secret.
+      # Empty (unset): the web build calls Supabase directly, as before —
+      # unsetting it and re-running this workflow is the whole rollback.
+      # Android and iOS never use it.
+      SUPABASE_WEB_PROXY: ${{ vars.SUPABASE_WEB_PROXY }}
     steps:
       - uses: actions/checkout@v4
 
@@ -153,7 +162,8 @@ jobs:
             --dart-define=ACCOUNT_ADMIN_URL="$ACCOUNT_ADMIN_URL" \
             --dart-define=SENTRY_DSN="$SENTRY_DSN" \
             --dart-define=PUSH_URL="$PUSH_URL" \
-            --dart-define=PAY_URL="$PAY_URL"
+            --dart-define=PAY_URL="$PAY_URL" \
+            --dart-define=SUPABASE_WEB_PROXY="$SUPABASE_WEB_PROXY"
           # --pwa-strategy none stops registering a service worker, but the
           # tool still plants an empty file under this name. Phones that
           # installed the old offline-first worker re-fetch this URL and get
@@ -218,4 +228,9 @@ jobs:
                 echo "::warning::$name is empty: this build ships without $what. Set the repository variable and re-run this workflow."
               fi
             done
+            if [ -n "$SUPABASE_WEB_PROXY" ]; then
+              echo "- ✅ reads through the site's own address (no preflight) — \`SUPABASE_WEB_PROXY\` = \`$SUPABASE_WEB_PROXY\`"
+            else
+              echo "- ➖ reads go straight to Supabase — \`SUPABASE_WEB_PROXY\` unset (set it to \`/sb\` for the faster path)"
+            fi
           } >> "$GITHUB_STEP_SUMMARY"

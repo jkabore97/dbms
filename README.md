@@ -1194,6 +1194,20 @@ one in the background, and switches at its next start, or straight away
 from « Recharger » on the update banner. A first visit always gets the
 build just deployed.
 
+**Reads through the site's own address (`SUPABASE_WEB_PROXY`).** With the
+repository *variable* `SUPABASE_WEB_PROXY` set to `/sb`, the web build sends
+its PostgREST calls (tables and RPCs) to `https://marakaj.com/sb/rest/v1/…`
+instead of `<project>.supabase.co`, and the site Worker passes each one on,
+unchanged, to `SUPABASE_URL` (`workers/kaj-app/src/supabase_proxy.js`).
+Same origin: the browser sends no CORS preflight before each read and uses
+the connection the page came on. Only `/rest/v1` goes that way; sign-in,
+token refresh and Google's redirects (`/auth/v1`) stay direct, because
+Supabase rate-limits those per visitor IP and through a Worker every
+visitor would share Cloudflare's; realtime and the photos stay direct too.
+Android and iOS never use it. Each proxied read counts as a Worker request
+on the Cloudflare plan. **To roll back**, delete the variable (or empty it)
+and re-run *Deploy to Cloudflare*: the build calls Supabase directly again.
+
 ### Testing it in a browser
 
 Open the Cloudflare URL above. It is public, like any hosted app: the
