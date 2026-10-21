@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show compute, kIsWeb, visibleForTesting;
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -193,20 +195,26 @@ class ReportExport {
   // PDF
   // ----------------------------------------------------------------
 
-  static pw.Font? _regular, _bold;
+  static ByteData? _regular, _bold;
 
-  /// Roboto, once; null when the asset cannot be read (Helvetica then,
-  /// with the few characters it lacks replaced).
+  /// Roboto's bytes, once; false when the asset cannot be read (Helvetica
+  /// then, with the few characters it lacks replaced).
   static Future<bool> _fonts() async {
     if (_regular != null && _bold != null) return true;
     try {
-      _regular = pw.Font.ttf(await rootBundle.load('assets/fonts/Roboto-Regular.ttf'));
-      _bold = pw.Font.ttf(await rootBundle.load('assets/fonts/Roboto-Bold.ttf'));
+      _regular = await rootBundle.load('assets/fonts/Roboto-Regular.ttf');
+      _bold = await rootBundle.load('assets/fonts/Roboto-Bold.ttf');
       return true;
     } catch (_) {
       return false;
     }
   }
+
+  /// Whether [toPdf] lays the document out on a background isolate. On by
+  /// default off the web (the web has one thread: compute() would run it
+  /// in place anyway); a test may turn it off.
+  @visibleForTesting
+  static bool inBackground = !kIsWeb;
 
   /// Helvetica holds Latin-1 only.
   static String _latin1(String s) => s
@@ -229,11 +237,39 @@ class ReportExport {
 
   /// [embedFonts] false and [compress] false: Helvetica and plain text
   /// streams, which a test can read.
+  ///
+  /// Laid out, its fonts subset and its pages compressed off the UI isolate
+  /// (freeze audit): a year's journal is thousands of rows, and built in
+  /// place it held every frame — the spinner of « Télécharger » included —
+  /// for seconds on a phone, the whole app still until the file came.
   Future<Uint8List> toPdf({bool embedFonts = true, bool compress = true}) async {
     final embedded = embedFonts && await _fonts();
+    final job = (
+      export: this,
+      regular: embedded ? _regular : null,
+      bold: embedded ? _bold : null,
+      compress: compress,
+    );
+    return inBackground ? compute(_render, job) : _render(job);
+  }
+
+  static Future<Uint8List> _render(
+      ({ReportExport export, ByteData? regular, ByteData? bold, bool compress}) job) async {
+    // A fresh isolate has no locale data yet: the dates are written in the
+    // report's language as on the screen.
+    await initializeDateFormatting();
+    final regular = job.regular, bold = job.bold;
+    return job.export._build(
+      regular == null || bold == null ? null : (pw.Font.ttf(regular), pw.Font.ttf(bold)),
+      job.compress,
+    );
+  }
+
+  Future<Uint8List> _build((pw.Font, pw.Font)? fonts, bool compress) {
+    final embedded = fonts != null;
     String t(String s) => embedded ? s : _latin1(s);
     final theme = embedded
-        ? pw.ThemeData.withFont(base: _regular!, bold: _bold!)
+        ? pw.ThemeData.withFont(base: fonts.$1, bold: fonts.$2)
         : pw.ThemeData.base();
     final doc = pw.Document(
         title: '$title — $orgName', author: orgName, creator: 'Marakaj', compress: compress);
@@ -242,6 +278,9 @@ class ReportExport {
     const band = PdfColor.fromInt(0xFFEFF2F5);
     doc.addPage(pw.MultiPage(
       theme: theme,
+      // The package's default is 20 pages, past which it throws: a year's
+      // journal (a few thousand lines) never downloaded at all.
+      maxPages: 2000,
       // A wide table (the journal, a ledger) lies on its side.
       pageFormat: sections.any((x) => x.columns.length > 6) ? PdfPageFormat.a4.landscape : PdfPageFormat.a4,
       margin: const pw.EdgeInsets.fromLTRB(36, 36, 36, 40),

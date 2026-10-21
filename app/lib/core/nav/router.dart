@@ -236,6 +236,18 @@ bool _shopperPath(String location) =>
       Routes.arrival,
     ].any((p) => location == p || location.startsWith('$p/'));
 
+/// The business an invitation code joined ([SessionController.landOn]),
+/// once it is in this person's list: its address, unless already there.
+/// The page a gate stashed meanwhile (/rejoindre) is dropped with it, or
+/// the next pass would send the person back to the form they just used.
+String? _landing(SessionController session, String here) {
+  final id = session.takeLanding();
+  if (id == null) return null;
+  session.takeReturnTo();
+  final to = Routes.org(id);
+  return here == to ? null : to;
+}
+
 Future<bool>? _businessScreens;
 bool _businessScreensReady = false;
 
@@ -410,6 +422,11 @@ GoRouter buildRouter(SessionController session) {
         return Routes.directory;
 
       case SessionPhase.picking:
+        // A business an invitation code just joined opens first — through
+        // the code screen if it brought one (the page that gate stashed was
+        // /rejoindre, and is dropped).
+        final joined = _landing(session, here);
+        if (joined != null) return joined;
         // A gate we just came through may have interrupted a deep address —
         // send the person back to it. If it names a business this account
         // cannot open, the very next redirect pass lands on the picker.
@@ -449,6 +466,8 @@ GoRouter buildRouter(SessionController session) {
         return Routes.directory;
 
       case SessionPhase.ready:
+        final joined = _landing(session, here);
+        if (joined != null) return joined;
         // Same as `picking`: honour the address a gate interrupted, and let
         // the next redirect pass validate whatever it names.
         final resume = session.takeReturnTo();
@@ -779,6 +798,10 @@ GoRouter buildRouter(SessionController session) {
                 onboarding: scope.onboarding,
                 admin: scope.admin,
                 onRetry: scope.session.resolveOrgs,
+                // The joined business opens once the resolve has it — a
+                // first business through the code screen, another one
+                // straight away (the redirect, _landing).
+                onJoined: scope.session.landOn,
                 onSignOut: scope.session.signOut,
                 checking: scope.session.phase == SessionPhase.resolving,
               );

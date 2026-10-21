@@ -46,7 +46,10 @@ class JoinOrApplyScreen extends StatefulWidget {
   /// business the person just joined is the thing they want to open.
   final Future<void> Function() onRetry;
   final VoidCallback onSignOut;
-  final VoidCallback? onJoined;
+
+  /// The business the code joined, by id — told before the resolve, so the
+  /// app opens it as soon as the list has it (SessionController.landOn).
+  final ValueChanged<String>? onJoined;
   final bool checking;
 
   @override
@@ -111,14 +114,16 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
       // Returns the org's id, not its name. The name arrives with the org
       // list a moment later, and routing into the business is the real
       // confirmation — this line only has to say the code worked.
-      await widget.admin.claimInvitation(_code.text.trim());
+      final orgId = await widget.admin.claimInvitation(_code.text.trim());
       if (!mounted) return;
       setState(() {
         _busy = false;
         _message = context.tr('Code accepté. Ouverture de votre entreprise…');
       });
+      // Said before the resolve: the resolve's own phase change is what
+      // moves the page, and it must already know where to.
+      widget.onJoined?.call(orgId);
       await widget.onRetry();
-      widget.onJoined?.call();
     } catch (error) {
       if (!mounted) return;
       setState(() {

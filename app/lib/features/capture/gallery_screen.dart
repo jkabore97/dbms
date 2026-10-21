@@ -12,6 +12,7 @@ import '../../core/capture/models.dart';
 import '../../core/capture/text_reader.dart';
 import '../../core/retail/models.dart';
 import '../../core/retail/retail_repository.dart';
+import '../retail/product_photo.dart' show ProductPhoto;
 import 'capture_action.dart';
 import '../../core/errors.dart';
 import '../../core/nav/router.dart';
@@ -368,8 +369,14 @@ class _ThumbnailState extends State<_Thumbnail> {
     final theme = Theme.of(context);
 
     if (_bytes != null) {
-      return Image.memory(_bytes!,
-          fit: BoxFit.cover, semanticLabel: widget.document.title);
+      // Decoded at the tile's size, not the photo's (ProductPhoto.decodeWidth).
+      return LayoutBuilder(
+        builder: (context, box) => Image.memory(_bytes!,
+            fit: BoxFit.cover,
+            semanticLabel: widget.document.title,
+            cacheWidth: ProductPhoto.decodeWidth(
+                box, MediaQuery.maybeDevicePixelRatioOf(context) ?? 1)),
+      );
     }
     return Container(
       color: theme.colorScheme.surfaceContainerHighest,

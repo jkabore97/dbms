@@ -8,6 +8,7 @@ import '../../core/errors.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/theme/mara_mark.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
+import '../retail/product_photo.dart' show ProductPhoto;
 
 /// « Choisir dans Photos » (114): the business's own photographs — the
 /// gallery « Photos » — to give one to an article or a service instead of
@@ -188,7 +189,14 @@ class _TileState extends State<_Tile> {
           fit: StackFit.expand,
           children: [
             if (_bytes != null)
-              Image.memory(_bytes!, fit: BoxFit.cover, semanticLabel: widget.document.title)
+              // At the tile's size (ProductPhoto.decodeWidth).
+              LayoutBuilder(
+                builder: (context, box) => Image.memory(_bytes!,
+                    fit: BoxFit.cover,
+                    semanticLabel: widget.document.title,
+                    cacheWidth: ProductPhoto.decodeWidth(
+                        box, MediaQuery.maybeDevicePixelRatioOf(context) ?? 1)),
+              )
             else
               Center(
                 child: _failed
