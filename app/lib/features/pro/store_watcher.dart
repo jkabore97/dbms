@@ -49,8 +49,17 @@ String storeRefusalText(BuildContext context, StoreVerifyRefused e, String store
       'sandbox' => context.tr('Achat de test refusé : un achat fait avec un compte de test (sandbox, TestFlight) n\'active Marakaj Pro que pour les comptes de test de Marakaj.'),
       'not_admin' => context.tr('Seul un administrateur de l\'entreprise peut l\'abonner à Marakaj Pro.'),
       'session' => context.tr('Votre session a expiré : reconnectez-vous, puis touchez « Restaurer mes achats ». Rien ne sera prélevé deux fois.'),
+      // The Worker reached, the store not (or not well): Apple's or
+      // Google's API down, or refusing Marakaj's key (the Worker's log
+      // says which).
+      'upstream' => context.tr('Le paiement est fait, mais {store} n\'a pas encore répondu à Marakaj. Marakaj réessaiera au prochain lancement, ou touchez « Restaurer mes achats » dans un moment : rien ne sera prélevé deux fois.', {'store': store}),
+      'config' => context.tr('Le paiement est fait, mais la vérification des achats {store} n\'est pas encore ouverte sur Marakaj. Touchez « Restaurer mes achats » plus tard : rien ne sera prélevé deux fois.', {'store': store}),
+      'unknown' => context.tr('Le paiement est fait, mais {store} ne retrouve pas encore cet achat. Touchez « Restaurer mes achats » dans un moment : rien ne sera prélevé deux fois.', {'store': store}),
       _ => context.tr('Le paiement est fait, mais Marakaj n\'a pas encore pu le vérifier. Gardez une connexion et touchez « Restaurer mes achats » : rien ne sera prélevé deux fois.'),
     };
+
+/// The Worker was not reached at all (no network, the server down).
+String storeUnreachedText(BuildContext context) => context.tr('Le paiement est fait, mais Marakaj n\'a pas pu joindre son serveur. Une fois connecté, touchez « Restaurer mes achats » : rien ne sera prélevé deux fois.');
 
 /// Where a spot's store purchase stands (142).
 enum SpotNoticeState { checking, pending, done, cancelled, refused }
@@ -220,11 +229,27 @@ class StoreWatcher {
   void attach([String? orgId]) => _pages.add(orgId);
   void detach([String? orgId]) => _pages.remove(orgId);
 
-  void _say(StoreNotice n) {
+  /// What a passing refusal already said outside this run, by purchase and
+  /// reason: the store hands an open purchase back at every launch and on
+  /// « Restaurer », sometimes twice in a run — its snackbar is shown once,
+  /// not on every screen it lands on. The Pro page still draws it.
+  final Set<String> _saidOutside = {};
+
+  /// The purchases being verified right now: one delivered twice while
+  /// its first check runs is not asked again.
+  final Set<String> _checking = {};
+
+  static String _key(StorePurchase p) => p.transactionId ?? p.token ?? '${p.productId}:${p.orgId}';
+
+  /// [once]: said outside only the first time this run (a passing
+  /// refusal); [pageOnly]: never outside (the « checking… » line).
+  void _say(StoreNotice n, {String? once, bool pageOnly = false}) {
     notice.value = n;
     // No page open that draws it: said outside (a snackbar).
     final shown = _pages.any((page) => page == null || n.isFor(page));
-    if (!shown) outside?.call(n);
+    if (shown || pageOnly) return;
+    if (once != null && !_saidOutside.add(once)) return;
+    outside?.call(n);
   }
 
   Future<void> handle(List<StorePurchase> list) async {
@@ -320,11 +345,25 @@ class StoreWatcher {
   }
 
   Future<void> _verify(StorePurchase p) async {
+    final key = _key(p);
+    if (!_checking.add(key)) return;
+    try {
+      await _verifyOnce(p, key);
+    } finally {
+      _checking.remove(key);
+    }
+  }
+
+  Future<void> _verifyOnce(StorePurchase p, String key) async {
     final org = p.orgId;
-    _say(StoreNotice((context) => context.tr('Vérification de l\'achat auprès de {store}…', {'store': _store}), orgId: org));
+    // On the Pro page only: a purchase handed back at launch is checked
+    // quietly, and said outside only when there is news.
+    _say(StoreNotice((context) => context.tr('Vérification de l\'achat auprès de {store}…', {'store': _store}), orgId: org),
+        pageOnly: true);
     try {
       final verdict = await verify(p);
       await _complete(p);
+      _saidOutside.removeWhere((k) => k.startsWith('$key|'));
       final settled = verdict.orgId?.toLowerCase() ?? org;
       if (verdict.pro) {
         onPro?.call();
@@ -342,19 +381,25 @@ class StoreWatcher {
       final forGood = storeRefusalsForGood.contains(e.code);
       // Logged either way: a refusal for good is a purchase Mara keeps
       // nothing of; a passing one that repeats is worth seeing too.
+      // The Worker's HTTP status beside its code: « upstream, http 502 »
+      // is the store not answering, « http 401 » the session (Sentry:
+      // « store purchase refused »).
       log?.call('store purchase refused (${e.code.isEmpty ? e.status : e.code}, '
-          '${forGood ? 'finished' : 'left open'}) ${billing.platform} ${p.productId}');
+          '${forGood ? 'finished' : 'left open'}) ${billing.platform} ${p.productId} http ${e.status}');
       if (forGood) {
-        for (final key in [p.transactionId, p.token]) {
-          if (key != null && key.isNotEmpty) refused.add(key);
+        for (final id in [p.transactionId, p.token]) {
+          if (id != null && id.isNotEmpty) refused.add(id);
         }
         await _complete(p);
       }
-      _say(StoreNotice((context) => storeRefusalText(context, e, _store), orgId: org));
-    } catch (_) {
+      _say(StoreNotice((context) => storeRefusalText(context, e, _store), orgId: org),
+          once: forGood ? null : '$key|${e.code}|${e.status}');
+    } catch (e) {
       // The Worker was not reached: the purchase stays open, the store
       // hands it back.
-      _say(StoreNotice((context) => context.tr('Le paiement est fait, mais Marakaj n\'a pas encore pu le vérifier. Gardez une connexion et touchez « Restaurer mes achats » : rien ne sera prélevé deux fois.'), orgId: org));
+      log?.call('store purchase not verified (Worker not reached: ${e.runtimeType}, left open) '
+          '${billing.platform} ${p.productId}');
+      _say(StoreNotice(storeUnreachedText, orgId: org), once: '$key|unreached');
     }
   }
 }

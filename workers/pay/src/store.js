@@ -45,7 +45,10 @@ const ENTITLED = new Set(["active", "grace", "cancelled"]);
 async function lookup(platform, body, env, io) {
   if (platform === "apple") {
     if (!appleConfigured(env)) throw new StoreError("L'App Store n'est pas encore relié à Marakaj.", 503, "config");
-    return appleLookup(env, body?.transaction_id, io, io.verify);
+    // The app's signed transaction (StoreKit 2's JWS), when sent, names
+    // the host to ask; Apple's API is still what is believed.
+    return appleLookup(env, body?.transaction_id, io, io.verify,
+      { signed: typeof body?.signed_transaction === "string" ? body.signed_transaction : null });
   }
   if (!googleConfigured(env)) throw new StoreError("Google Play n'est pas encore relié à Marakaj.", 503, "config");
   return googleLookup(env, body?.token, io);
@@ -175,7 +178,9 @@ export async function appleNotify(body, env, io) {
   if (!appleConfigured(env)) throw new StoreError("L'App Store n'est pas encore relié à Marakaj.", 503, "config");
   let s;
   try {
-    s = await appleLookup(env, note.settlement.originalId, io, io.verify);
+    // The verified notification says which host holds it.
+    s = await appleLookup(env, note.settlement.originalId, io, io.verify,
+      { environment: note.environment ?? null });
   } catch (error) {
     const ignored = ignoredNotice("apple-notify", error, "apple");
     if (ignored) return ignored;
@@ -271,7 +276,7 @@ export async function storeRecheck(env, io) {
       let s;
       if (row.platform === "apple") {
         if (!appleConfigured(env)) continue;
-        s = await appleLookup(env, row.original_id, io, io.verify);
+        s = await appleLookup(env, row.original_id, io, io.verify, { environment: row.environment });
       } else {
         if (!googleConfigured(env)) continue;
         s = await googleLookup(env, row.original_id, io);

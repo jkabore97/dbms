@@ -1400,6 +1400,7 @@ GoRouter buildRouter(SessionController session) {
                           productId: p.productId,
                           transactionId: p.transactionId,
                           token: p.token,
+                          signedTransaction: p.signedTransaction,
                         ),
                 storeWatcher: scope.storeWatcher,
                 storeStanding: scope.wavePay == null

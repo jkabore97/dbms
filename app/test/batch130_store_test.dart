@@ -267,7 +267,9 @@ void main() {
       await tester.pump();
       await tester.pump();
       expect(fake.completed, isEmpty, reason: 'not completed: the store hands it back');
-      expect(find.textContaining('Marakaj n\'a pas encore pu le vérifier'), findsOneWidget);
+      // The Worker not reached says so (not the store), and keeps « rien
+      // ne sera prélevé deux fois ».
+      expect(find.textContaining('Marakaj n\'a pas pu joindre son serveur'), findsOneWidget);
       fake.controller.add(const [bought]);
       await tester.pump();
       await tester.pump();

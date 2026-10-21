@@ -6317,6 +6317,14 @@ const enStrings = <String, String>{
       'This purchase does not give this business Marakaj Pro.',
   'Le paiement est fait, mais Marakaj n\'a pas encore pu le vérifier. Gardez une connexion et touchez « Restaurer mes achats » : rien ne sera prélevé deux fois.':
       'The payment is made, but Marakaj could not check it yet. Stay connected and tap “Restore purchases”: nothing will be charged twice.',
+  'Le paiement est fait, mais {store} n\'a pas encore répondu à Marakaj. Marakaj réessaiera au prochain lancement, ou touchez « Restaurer mes achats » dans un moment : rien ne sera prélevé deux fois.':
+      'The payment is made, but {store} has not answered Marakaj yet. Marakaj will try again at the next launch, or tap “Restore purchases” in a moment: nothing will be charged twice.',
+  'Le paiement est fait, mais la vérification des achats {store} n\'est pas encore ouverte sur Marakaj. Touchez « Restaurer mes achats » plus tard : rien ne sera prélevé deux fois.':
+      'The payment is made, but checking {store} purchases is not open on Marakaj yet. Tap “Restore purchases” later: nothing will be charged twice.',
+  'Le paiement est fait, mais {store} ne retrouve pas encore cet achat. Touchez « Restaurer mes achats » dans un moment : rien ne sera prélevé deux fois.':
+      'The payment is made, but {store} cannot find this purchase yet. Tap “Restore purchases” in a moment: nothing will be charged twice.',
+  'Le paiement est fait, mais Marakaj n\'a pas pu joindre son serveur. Une fois connecté, touchez « Restaurer mes achats » : rien ne sera prélevé deux fois.':
+      'The payment is made, but Marakaj could not reach its server. Once connected, tap “Restore purchases”: nothing will be charged twice.',
   'Recherche de vos achats sur {store}…':
       'Looking for your purchases on {store}…',
   'Aucun abonnement Marakaj Pro à restaurer sur ce compte {store}.':

@@ -73,6 +73,11 @@ class PluginStoreBilling implements StoreBilling, SpotStoreBilling {
       productId: p.productID,
       transactionId: platform == 'apple' ? p.purchaseID : null,
       token: platform == 'google' ? p.verificationData.serverVerificationData : null,
+      // StoreKit 2's JWS (in_app_purchase_storekit: serverVerificationData
+      // is the transaction's jwsRepresentation).
+      signedTransaction: p is SK2PurchaseDetails && p.verificationData.serverVerificationData.isNotEmpty
+          ? p.verificationData.serverVerificationData
+          : null,
       errorCode: p.error?.code,
       errorMessage: p.error?.message,
       errorDetails: p.error?.details?.toString(),

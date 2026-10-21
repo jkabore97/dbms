@@ -238,7 +238,10 @@ export async function storeDoor(request, url, env, cors, io = storeIo()) {
     const { status, body: answer } = storeProblem(error);
     // Every refusal is in the Worker's log by its code (review S3) —
     // never a token or a transaction id.
-    if (status < 500) console.warn(`store ${url.pathname}: refused ${status} ${answer.code || ""}`.trim());
+    // A store's « unknown » keeps what each host answered (« production
+    // 401, sandbox 404 4040010 ») — statuses and Apple's codes only.
+    if (status < 500) console.warn(`store ${url.pathname}: refused ${status} ${answer.code || ""}`.trim(),
+                                   String(error?.detail || ""));
     // A failure also says why (the message, never a token): a 502 with no
     // code was all the log held when the first Google check failed.
     else console.error(`store ${url.pathname}: failed ${status} ${answer.code || ""} ${answer.error || ""}`.trim(),

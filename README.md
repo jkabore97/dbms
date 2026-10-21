@@ -882,6 +882,21 @@ One-time setup (keys go only in GitHub's secrets page, never in chat):
    key id), `APPLE_IAP_ISSUER_ID` (the issuer id shown above the list) and
    `APPLE_IAP_PRIVATE_KEY` (the whole text of the `.p8`). The bundle id
    is `bf.kaj.app` (`APPLE_BUNDLE_ID` in `workers/pay/wrangler.toml`).
+   It must be an *In-App Purchase* key (not a « Team » App Store Connect
+   API key), with the issuer id of that same page.
+
+   Which App Store host is asked: the one the purchase's signed
+   transaction names (the app sends it; Apple's signature is checked),
+   else production then the sandbox. Until the app's first release on the
+   App Store, production answers **401 to every call** even with a right
+   key, so a TestFlight purchase is found in the sandbox after that 401.
+   If Apple purchases still fail, Cloudflare › Workers › kaj-pay › Logs,
+   filter « store »: `failed 502 upstream … production 401, sandbox 401`
+   is a wrong key or issuer (both hosts refuse it); `refused 404 unknown
+   … sandbox 404 4040010` a purchase Apple does not know; `refused 403
+   sandbox` a tester's business that is not a test account (below). In
+   Sentry the app's line is « store purchase refused (code, left open)
+   apple <product> http <status> ».
 2. **App Store Connect › the app › App Information › App Store Server
    Notifications**: Production and Sandbox URL
    `<PAY_URL>/store/apple-notify`, Version 2.

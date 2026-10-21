@@ -104,8 +104,15 @@ class StorePurchase {
     this.needsCompletion = false,
     this.orgId,
     this.profileId,
+    this.signedTransaction,
     this.native,
   });
+
+  /// Apple: StoreKit 2's signed transaction (its jwsRepresentation). The
+  /// Worker reads from it only which App Store host to ask — production or
+  /// the sandbox (TestFlight) — once Apple's signature holds; what it
+  /// settles is still what Apple's API answers.
+  final String? signedTransaction;
 
   /// Google's obfuscatedProfileId (142): a spot bought in the Play app
   /// names its promotion there, beside the business in [orgId]. Apple has

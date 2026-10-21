@@ -456,6 +456,7 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
         productId: p.productId,
         transactionId: p.transactionId,
         token: p.token,
+        signedTransaction: p.signedTransaction,
       ),
       // A spot's purchase (142), verified as a spot: the spot it names.
       // No price is sent: the Worker takes the store's, or Mara's own.
