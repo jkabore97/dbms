@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/errors.dart';
+import '../../core/farm/animal_sales.dart';
+import 'farm_till.dart';
 import '../../core/format/money.dart';
 import '../../core/nav/router.dart';
 import '../../core/retail/models.dart';
@@ -54,7 +56,19 @@ class ForSaleScreen extends StatefulWidget {
 class _ForSaleScreenState extends State<ForSaleScreen> {
   List<Product> _items = const [];
   Map<String, String> _photos = const {};
+
+  /// The farm's groups of animals (150), null before 150 (or for an
+  /// association): which article follows which, and what may be followed.
+  List<AnimalForSale>? _groups;
   bool _loading = true;
+
+  /// The group [p] follows, if it follows one.
+  AnimalForSale? _followed(Product p) {
+    for (final g in _groups ?? const <AnimalForSale>[]) {
+      if (g.productId == p.id) return g;
+    }
+    return null;
+  }
   final _publishBanner = GlobalKey<PublishAllBannerState>();
   String? _error;
 
@@ -83,10 +97,15 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
       _error = null;
     });
     try {
+      final askedGroups = FarmTill.animalsFor(widget.retail, widget.org);
       final items = await widget.retail.products(widget.org.id);
       final photos = await widget.retail.photoKeys(widget.org.id);
+      final shelf = await askedGroups;
       if (!mounted) return;
       setState(() {
+        // The phone's own list is not enough to choose from: only the
+        // server's answer offers « Suit des animaux ».
+        _groups = shelf == null || shelf.fromDevice ? null : shelf.animals;
         // What the farm grows; its services (098) have their own page.
         _items = [
           for (final p in items)
@@ -142,6 +161,7 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
         product: product,
         hasPhoto: _photos.containsKey(product.id),
         photoKey: _photos[product.id],
+        groups: _groups,
       ),
     );
     if (saved == true) await _load();
@@ -192,7 +212,9 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
             // Why « À vendre » has a red number (122), on top.
             if (!_loading && _error == null)
               StockAttention(
-                products: _items,
+                // An article that follows animals is not restocked: its
+                // batch is what it has (150).
+                products: [for (final p in _items) if (_followed(p) == null) p],
                 // The bar's word (134: « Ventes », « Catalogue »).
                 place: SectionHost.of(context)?.title ?? place,
                 onRestock: _canWrite ? _restock : null,
@@ -267,7 +289,11 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
                     ),
                     title: Text(p.name,
                         style: const TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: p.counted && p.quantity <= 0 && _canWrite
+                    subtitle: _followed(p) != null
+                        // Follows a batch (150): its number is the batch's.
+                        ? Text('${_line(p, money)}\n${_follows(context, _followed(p)!)}',
+                            key: ValueKey('product-follows-${p.id}'))
+                        : p.counted && p.quantity <= 0 && _canWrite
                         // At zero, its own way back (122).
                         ? Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -317,6 +343,10 @@ class _ForSaleScreenState extends State<ForSaleScreen> {
     );
   }
 
+  static String _follows(BuildContext context, AnimalForSale g) => g.isFlock
+      ? context.tr('Suit la bande « {group} »', {'group': g.label})
+      : context.tr('Suit le groupe « {group} »', {'group': g.label});
+
   static String _line(Product p, NumberFormat money) {
     final price = p.unit == null
         ? money.format(p.salePrice)
@@ -348,10 +378,16 @@ class ForSaleSheet extends StatefulWidget {
     required this.product,
     this.hasPhoto = false,
     this.photoKey,
+    this.groups,
   });
 
   final OrgSummary org;
   final RetailRepository retail;
+
+  /// The farm's groups of animals (150) — « Suit des animaux » offers the
+  /// ones no other article follows. Null (before 150, offline, an
+  /// association): not offered.
+  final List<AnimalForSale>? groups;
 
   /// The article has a photo already: a new one takes no new place (100).
   final bool hasPhoto;
@@ -393,6 +429,35 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
   /// « Suivre le stock » (131). Off: no count — always there on the
   /// vitrine, ordered in any number, never « Rupture ».
   late bool _tracked = widget.product.stockTracked;
+
+  /// The group this article follows ([AnimalForSale.waitingKey]), as it was
+  /// and as chosen (150). Following one, its number is the group's alive:
+  /// no count of its own to type, nothing to forget to take off.
+  late final String? _wasFollowing = _followOf(widget.product.id)?.waitingKey;
+  late String? _following = _wasFollowing;
+
+  AnimalForSale? _followOf(String productId) {
+    for (final g in widget.groups ?? const <AnimalForSale>[]) {
+      if (g.productId == productId) return g;
+    }
+    return null;
+  }
+
+  AnimalForSale? get _chosenGroup {
+    for (final g in widget.groups ?? const <AnimalForSale>[]) {
+      if (g.waitingKey == _following) return g;
+    }
+    return null;
+  }
+
+  /// The groups this article may follow: those no other article follows.
+  List<AnimalForSale> get _followable => [
+        for (final g in widget.groups ?? const <AnimalForSale>[])
+          if (g.productId == null || g.productId == widget.product.id) g,
+      ];
+
+  bool get _linkOffered =>
+      widget.groups != null && !_association && !widget.product.isService;
 
   /// The switch is offered once the database has 131.
   bool get _trackingOffered => !widget.retail.stockTrackingMissing;
@@ -464,21 +529,34 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
     });
     try {
       final id = widget.product.id;
+      final group = _chosenGroup;
+      // Unfollowed (150): first, so the count typed below is its own again.
+      if (_following != _wasFollowing && group == null) {
+        await widget.retail.linkProductAnimals(id);
+      }
       await widget.retail.updateProduct(
         id,
         name: name,
         salePrice: price,
         // Not followed: no count (switched off, the count goes to zero in
         // the same change — the server refuses stock left behind).
-        quantity: _tracked ? _num(_quantity) ?? 0 : 0,
-        stockTracked:
-            _tracked != widget.product.stockTracked ? _tracked : null,
+        // Following animals (150): never sent — the batch is the count.
+        quantity: group != null ? null : (_tracked ? _num(_quantity) ?? 0 : 0),
+        stockTracked: group != null
+            ? (widget.product.stockTracked ? null : true)
+            : _tracked != widget.product.stockTracked ? _tracked : null,
         unit: _unit.text,
         availableFrom: _availableFrom,
         clearAvailableFrom: _availableFrom == null,
         isPublished: _published,
         description: _description.text,
       );
+      // Followed now (150): its count becomes the batch's, on the server.
+      if (_following != _wasFollowing && group != null) {
+        await widget.retail.linkProductAnimals(id,
+            flockId: group.isFlock ? group.groupId : null,
+            herdId: group.isFlock ? null : group.groupId);
+      }
       final capture = widget.capture;
       final photo = _photo;
       if (photo != null && capture != null) {
@@ -516,6 +594,73 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
         });
       }
     }
+  }
+
+  /// « Suit des animaux » (150): the article sells a batch's birds or a
+  /// herd's heads, and its number to sell is theirs — sold at the till, on
+  /// credit or from the vitrine, the batch goes down with it, once.
+  List<Widget> _followSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final chosen = _chosenGroup;
+    return [
+      const SizedBox(height: 16),
+      Text(context.tr('Suit des animaux'), style: theme.textTheme.titleSmall),
+      const SizedBox(height: 4),
+      Text(
+        context.tr('Le nombre à vendre est celui des animaux vivants : une vente, à la caisse, à crédit ou sur la vitrine, le fait baisser. Rien à compter deux fois.'),
+        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+      ),
+      const SizedBox(height: 8),
+      Wrap(
+        spacing: 8,
+        runSpacing: 6,
+        children: [
+          ChoiceChip(
+            key: const Key('for-sale-follow-none'),
+            label: Text(context.tr('Non, un stock à lui')),
+            selected: _following == null,
+            onSelected: _busy
+                ? null
+                : (_) => setState(() {
+                      _following = null;
+                      // The animals stay with their group: this article
+                      // starts again from nothing of its own.
+                      if (_wasFollowing != null) _quantity.text = '0';
+                    }),
+          ),
+          for (final g in _followable)
+            ChoiceChip(
+              key: ValueKey('for-sale-follow-${g.waitingKey}'),
+              avatar: Icon(g.isFlock ? Icons.egg_outlined : Icons.pets, size: 18),
+              label: Text(g.label),
+              selected: _following == g.waitingKey,
+              onSelected: _busy ? null : (_) => setState(() => _following = g.waitingKey),
+            ),
+        ],
+      ),
+      if (chosen != null) ...[
+        const SizedBox(height: 8),
+        Text(
+          chosen.isFlock
+              ? context.tr('{n} à vendre : les vivants de la bande « {group} ».', {'n': chosen.alive, 'group': chosen.label})
+              : context.tr('{n} à vendre : les têtes du groupe « {group} ».', {'n': chosen.alive, 'group': chosen.label}),
+          key: const Key('for-sale-follow-count'),
+          style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+        ),
+        if (_wasFollowing == null && widget.product.stockTracked && widget.product.quantity > 0)
+          Text(
+            context.tr('Son stock à lui ({n}) est remplacé par ce nombre.', {'n': _plain(widget.product.quantity)}),
+            style: theme.textTheme.bodySmall,
+          ),
+      ] else if (_wasFollowing != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(
+            context.tr('Les animaux restent dans leur groupe ; cet article repart de zéro.'),
+            style: theme.textTheme.bodySmall,
+          ),
+        ),
+    ];
   }
 
   @override
@@ -649,7 +794,8 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
                   ),
               ],
             ),
-            if (_trackingOffered)
+            if (_linkOffered) ..._followSection(context),
+            if (_trackingOffered && _chosenGroup == null)
               SwitchListTile(
                 key: const Key('for-sale-tracked'),
                 contentPadding: EdgeInsets.zero,
@@ -660,7 +806,7 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
                     ? context.tr('Marakaj compte ce qu\'il reste ; à zéro, il est épuisé.')
                     : context.tr('Pas de compte : toujours disponible sur la vitrine.')),
               ),
-            if (_tracked) ...[
+            if (_tracked && _chosenGroup == null) ...[
               const SizedBox(height: 12),
               TextField(
                 key: const Key('for-sale-quantity'),

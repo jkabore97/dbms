@@ -110,6 +110,14 @@ class StepFlow extends StatefulWidget {
   /// Opens [flow] over the pages, full screen. Resolves with what the flow
   /// closed with: true once something was saved (even if the person then
   /// started another and left it), as the sheets it replaces.
+  /// The device's own preferences (AppScope's LocalDb), where a flow keeps
+  /// what outlives one entry — the till's last price for a group of
+  /// animals (150). Null with no AppScope (a test hands its own store).
+  static FlowStore? devicePrefs(BuildContext context) {
+    final scope = AppScope.maybeOf(context);
+    return scope == null ? null : _PrefStore(scope);
+  }
+
   static Future<bool?> push(BuildContext context, Widget flow) =>
       Navigator.of(context).push<bool>(MaterialPageRoute<bool>(
         fullscreenDialog: true,

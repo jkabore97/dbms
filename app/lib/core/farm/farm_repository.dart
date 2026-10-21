@@ -399,25 +399,32 @@ class FarmRepository {
   /// The recent events of one flock, newest first, for the corrections list.
   /// Read straight from the table: its select policy is has_full_visibility,
   /// the same entitlement the home feed already needs.
-  Future<List<Map<String, dynamic>>> flockEvents(String flockId) async {
-    final client = _requireClient();
-    final rows = await client
-        .from('flock_events')
-        .select('id, kind, quantity, note, occurred_at')
-        .eq('flock_id', flockId)
-        .order('occurred_at', ascending: false)
-        .limit(50) as List<dynamic>;
-    return rows.map((r) => Map<String, dynamic>.from(r as Map)).toList();
-  }
+  ///
+  /// With 150 each row says whether a sale wrote it (product_id): that one
+  /// is corrected through its sale, not here. A database before 150
+  /// answers 42703 and the rows are read as before.
+  Future<List<Map<String, dynamic>>> flockEvents(String flockId) =>
+      _events('flock_events', 'flock_id', flockId, 'occurred_at');
 
-  Future<List<Map<String, dynamic>>> herdEvents(String herdId) async {
+  Future<List<Map<String, dynamic>>> herdEvents(String herdId) =>
+      _events('herd_events', 'herd_id', herdId, 'occurred_on');
+
+  Future<List<Map<String, dynamic>>> _events(
+      String table, String key, String id, String date) async {
     final client = _requireClient();
-    final rows = await client
-        .from('herd_events')
-        .select('id, kind, quantity, note, occurred_on')
-        .eq('herd_id', herdId)
-        .order('occurred_on', ascending: false)
+    Future<List<dynamic>> read(String columns) async => await client
+        .from(table)
+        .select(columns)
+        .eq(key, id)
+        .order(date, ascending: false)
         .limit(50) as List<dynamic>;
+    List<dynamic> rows;
+    try {
+      rows = await read('id, kind, quantity, note, $date, product_id');
+    } on PostgrestException catch (e) {
+      if (e.code != '42703') rethrow;
+      rows = await read('id, kind, quantity, note, $date');
+    }
     return rows.map((r) => Map<String, dynamic>.from(r as Map)).toList();
   }
 

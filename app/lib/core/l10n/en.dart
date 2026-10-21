@@ -8548,4 +8548,75 @@ const enStrings = <String, String>{
       'Currency: {money}',
   'Ex. : kermesse annuelle':
       'E.g. annual fair',
+  // 150 — animals sold once, counted once.
+  'Produits':
+      'Products',
+  '{n} vivants':
+      '{n} alive',
+  '{price} / tête':
+      '{price} / head',
+  '{price} le lot':
+      '{price} for the lot',
+  'Plus d\'animaux':
+      'No animals left',
+  '{group} · {n} vivants':
+      '{group} · {n} alive',
+  '{group} · {n} têtes':
+      '{group} · {n} head',
+  'Prix par tête':
+      'Price per head',
+  'Prix total':
+      'Total price',
+  'Sortis sans vente':
+      'Left without a sale',
+  'Le prix, le client, le reçu : une seule vente, et le nombre baisse avec elle.':
+      'The price, the customer, the receipt: one sale, and the count goes down with it.',
+  'Donnés, mangés à la maison : sans argent.':
+      'Given away, eaten at home: no money.',
+  'Combien sont sortis sans vente ?':
+      'How many left without a sale?',
+  'Sans vente':
+      'No sale',
+  'Suit la bande « {group} »':
+      'Follows the batch “{group}”',
+  'Suit le groupe « {group} »':
+      'Follows the group “{group}”',
+  'Suit des animaux':
+      'Follows animals',
+  'Le nombre à vendre est celui des animaux vivants : une vente, à la caisse, à crédit ou sur la vitrine, le fait baisser. Rien à compter deux fois.':
+      'The number for sale is the animals alive: a sale — at the till, on credit or from the vitrine — lowers it. Nothing to count twice.',
+  'Non, un stock à lui':
+      'No, its own stock',
+  '{n} à vendre : les vivants de la bande « {group} ».':
+      '{n} for sale: the birds alive in the batch “{group}”.',
+  '{n} à vendre : les têtes du groupe « {group} ».':
+      '{n} for sale: the head in the group “{group}”.',
+  'Son stock à lui ({n}) est remplacé par ce nombre.':
+      'Its own stock ({n}) is replaced by this number.',
+  'Les animaux restent dans leur groupe ; cet article repart de zéro.':
+      'The animals stay in their group; this item starts again from zero.',
+  'Rendus':
+      'Given back',
+  'Une vente : corrigez-la dans Corrections':
+      'A sale: correct it in Corrections',
+  '« {name} » est clôturé : ces animaux ne se vendent plus':
+      '“{name}” is closed: these animals are no longer for sale',
+  '« {group} » est déjà suivi par l\'article « {name} »':
+      '“{group}” is already followed by the item “{name}”',
+  '« {name} » suit des animaux : ils s\'ajoutent depuis « Ajouter des animaux », pas comme une livraison':
+      '“{name}” follows animals: they are added with “Add animals”, not as a delivery',
+  '« {name} » suit des animaux : son stock est toujours suivi':
+      '“{name}” follows animals: its stock is always counted',
+  'Ces animaux ne sont pas dans cette ferme':
+      'These animals are not on this farm',
+  'Ces animaux ne sont pas à cette entreprise':
+      'These animals do not belong to this business',
+  'Ce mouvement vient d\'une vente : corrigez la vente elle-même (Corrections)':
+      'This entry comes from a sale: correct the sale itself (Corrections)',
+  'Un article suit une seule bande ou un seul groupe':
+      'An item follows one batch or one group',
+  'Vous ne pouvez pas modifier les articles de cette entreprise':
+      'You cannot edit this business’s items',
+  'Un service ne peut pas suivre des animaux':
+      'A service cannot follow animals',
 };

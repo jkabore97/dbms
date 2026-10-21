@@ -55,6 +55,10 @@ grant select, insert, update, delete on pending_invitations, documents, journal_
     journal_lines, sale_lines, products to authenticated;
 grant select on memberships, accounts, entities, departments, orgs, profiles, sales, orders to authenticated;
 \i database/migrations/127_security_fixes.sql
+-- And 150 after it, as on the live database: 150 widens herd_events' guard
+-- (its product_id) and guards products and flock_events, which 127's
+-- re-run above has just narrowed back to 127's own list.
+\i database/migrations/150_farm_animal_sales.sql
 
 \set mara    '''12712712-0000-0000-0000-000000000001'''
 \set sowner  '''12712712-0000-0000-0000-000000000002'''

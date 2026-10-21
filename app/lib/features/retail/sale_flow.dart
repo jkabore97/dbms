@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../core/capture/capture_repository.dart';
 import '../../core/errors.dart';
+import '../../core/farm/animal_sales.dart';
 import '../../core/format/money.dart';
 import '../../core/format/money_text.dart';
 import '../../core/l10n/tr.dart';
@@ -76,7 +78,24 @@ class SaleFlow extends StatefulWidget {
     this.initialLines = const [],
     this.onSaved,
     this.sendTimeout = const Duration(seconds: 20),
+    this.animals = const [],
+    this.initialAnimal,
+    this.initialAnimalQuantity = 1,
   });
+
+  /// A farm's live groups of animals (150), offered beside its products:
+  /// picked, a group is a line « how many, at what price — per head or the
+  /// total », and the sale goes through sell_animals, which records it once
+  /// and lowers the group's count in the same transaction. The articles
+  /// that follow a group are sold through it, not listed twice. Empty — a
+  /// shop, an association, a farm before 150 — the till is exactly the
+  /// articles' till it always was.
+  final List<AnimalForSale> animals;
+
+  /// The group the basket opens with ([AnimalForSale.waitingKey]): « Vendus
+  /// vivants » handed over to the till, with how many. Its draft is its own.
+  final String? initialAnimal;
+  final double initialAnimalQuantity;
 
   /// How long « Enregistrer » waits for the server before the sale is kept
   /// on the phone instead. A market connection often stalls rather than
@@ -148,13 +167,25 @@ class SaleFlow extends StatefulWidget {
 
 /// A line of the basket while it is being made.
 class _Line {
-  _Line({this.productId, required this.name, double quantity = 1, double? price, this.currency})
+  _Line({this.productId, required this.name, double quantity = 1, double? price, this.currency,
+         this.animal, this.byTotal = false})
       : quantity = TextEditingController(text: stockQty(quantity)),
         price = TextEditingController(
             text: price == null || price <= 0 ? '' : _plain(price));
 
   final String? productId;
   final String name;
+
+  /// A group of animals (150), not an article: sold by sell_animals.
+  final AnimalForSale? animal;
+
+  /// The price field holds the line's total, not one head's (150): « 3
+  /// chèvres pour 100 000 ».
+  bool byTotal;
+
+  /// Its price is the article's, not one this phone sold the group at:
+  /// the last price, once read, takes its place.
+  bool priceFromArticle = false;
 
   /// The money of the price (144); null reads it as before.
   final String? currency;
@@ -163,11 +194,38 @@ class _Line {
 
   double get qty => FlowNumberField.read(quantity) ?? 0;
   // In the shop's money (144): no centimes of a franc.
-  double? get unitPrice => currency == null ? FlowNumberField.read(price) : parseAmount(price.text, currency: currency);
-  double get total => qty * (unitPrice ?? 0);
+  double? get typedPrice => currency == null ? FlowNumberField.read(price) : parseAmount(price.text, currency: currency);
+  double? get unitPrice {
+    final p = typedPrice;
+    if (!byTotal || p == null) return p;
+    return qty > 0 ? p / qty : null;
+  }
+
+  double get total => byTotal ? (typedPrice ?? 0) : qty * (unitPrice ?? 0);
 
   SaleLineDraft get draft => SaleLineDraft(
       productId: productId, name: name, quantity: qty, unitPrice: unitPrice ?? 0);
+
+  /// What is sent: an article's one line; a group's line by its group — two
+  /// when a total does not divide by the heads (2 × 33 333 + 1 × 33 334 for
+  /// 100 000), so the books hold the total typed, to the franc.
+  List<SaleLineDraft> drafts(String currency) {
+    final a = animal;
+    if (a == null) return [draft];
+    final parts = byTotal
+        ? splitTotal(qty, typedPrice ?? 0, currency)
+        : [(quantity: qty, unitPrice: unitPrice ?? 0)];
+    return [
+      for (final p in parts)
+        SaleLineDraft(
+          flockId: a.isFlock ? a.groupId : null,
+          herdId: a.isFlock ? null : a.groupId,
+          name: name,
+          quantity: p.quantity,
+          unitPrice: p.unitPrice,
+        ),
+    ];
+  }
 
   void dispose() {
     quantity.dispose();
@@ -238,8 +296,69 @@ class _SaleFlowState extends State<SaleFlow> {
   /// The shelf without the kitchen: production ingredients stay out of the
   /// picker so a thumb cannot sell the flour at 0 F. Typing the name still
   /// works — the flag is a signpost, not a rule.
-  late final List<Product> _sellable =
-      widget.products.where((p) => !p.isIngredient).toList();
+  ///
+  /// An article that follows a group of animals (150) is sold through its
+  /// group's tile: the same birds are not offered twice.
+  late final List<Product> _sellable = widget.products
+      .where((p) => !p.isIngredient && !_followed.contains(p.id))
+      .toList();
+
+  late final Set<String> _followed = {
+    for (final a in widget.animals) ?a.productId,
+  };
+
+  /// The last price each group was sold at on this phone (150): per head or
+  /// the total, as it was typed — the group's key → {'p': price, 't': total?}.
+  Map<String, Map<String, Object?>> _lastPrices = const {};
+  bool _pricesRead = false;
+  FlowStore? _prices;
+
+  String get _pricesKey => 'animal_prices:${widget.orgId}';
+
+  Future<void> _readPrices() async {
+    final store = _prices;
+    if (store == null) return;
+    try {
+      final raw = await store.read(_pricesKey);
+      if (raw == null || !mounted) return;
+      final map = jsonDecode(raw);
+      if (map is! Map) return;
+      setState(() {
+        _lastPrices = {
+          for (final e in map.entries)
+            if (e.value is Map) '${e.key}': Map<String, Object?>.from(e.value as Map),
+        };
+        // A group already in the basket with no price yet (« Vendus
+        // vivants » handed over) takes its last one.
+        for (final l in _lines) {
+          final last = l.animal == null ? null : _lastPrices[l.animal!.waitingKey];
+          final p = last?['p'];
+          if (p is num && (l.price.text.trim().isEmpty || l.priceFromArticle)) {
+            l.byTotal = last?['t'] == true;
+            l.price.text = _Line._plain(p.toDouble());
+            l.priceFromArticle = false;
+          }
+        }
+      });
+    } catch (_) {}
+  }
+
+  /// Kept after a sale: the next sale of that group opens on it.
+  Future<void> _keepPrices() async {
+    final store = _prices;
+    if (store == null) return;
+    final next = {..._lastPrices};
+    for (final l in _lines) {
+      final a = l.animal;
+      final p = l.typedPrice;
+      if (a == null || p == null || p <= 0) continue;
+      next[a.waitingKey] = {'p': p, 't': l.byTotal};
+    }
+    _lastPrices = next;
+    try {
+      await store.write(_pricesKey, jsonEncode(next));
+    } catch (_) {}
+  }
 
   List<Product> get _pickable {
     final q = _search.text.trim().toLowerCase();
@@ -262,9 +381,45 @@ class _SaleFlowState extends State<SaleFlow> {
           quantity: l.quantity,
           price: l.unitPrice));
     }
+    final first = _animalOf(widget.initialAnimal);
+    if (first != null) {
+      _lines.add(_animalLine(first, quantity: widget.initialAnimalQuantity));
+    }
     _loadPaymentOptions();
     _loadWaiting();
     _loadPhotos();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_pricesRead || widget.animals.isEmpty) return;
+    _pricesRead = true;
+    _prices = widget.store ?? StepFlow.devicePrefs(context);
+    _readPrices();
+  }
+
+  AnimalForSale? _animalOf(String? key) {
+    if (key == null) return null;
+    for (final a in widget.animals) {
+      if (a.waitingKey == key) return a;
+    }
+    return null;
+  }
+
+  /// A group's line: its last price on this phone, else its article's.
+  _Line _animalLine(AnimalForSale a, {double quantity = 1}) {
+    final last = _lastPrices[a.waitingKey];
+    final p = last?['p'];
+    final price = p is num ? p.toDouble() : (a.salePrice > 0 ? a.salePrice : null);
+    return _Line(
+      currency: widget.currency,
+      name: a.lineName,
+      animal: a,
+      quantity: quantity,
+      price: price,
+      byTotal: last?['t'] == true,
+    )..priceFromArticle = p is! num && price != null;
   }
 
   @override
@@ -345,6 +500,8 @@ class _SaleFlowState extends State<SaleFlow> {
               'name': l.name,
               'q': l.quantity.text,
               'p': l.price.text,
+              if (l.animal != null) 'animal': l.animal!.waitingKey,
+              if (l.byTotal) 't': true,
             },
         ],
         'named': _named,
@@ -361,8 +518,15 @@ class _SaleFlowState extends State<SaleFlow> {
       if (lines is List) {
         for (final raw in lines) {
           if (raw is! Map) continue;
+          // A group no longer offered (closed, or the server answers
+          // without 150): its line goes.
+          final animal = _animalOf(raw['animal'] as String?);
+          if (raw['animal'] != null && animal == null) continue;
           final line = _Line(currency: widget.currency,
-              productId: raw['id'] as String?, name: '${raw['name'] ?? ''}');
+              productId: animal == null ? raw['id'] as String? : null,
+              name: '${raw['name'] ?? ''}',
+              animal: animal,
+              byTotal: raw['t'] == true);
           line.quantity.text = '${raw['q'] ?? '1'}';
           line.price.text = '${raw['p'] ?? ''}';
           if (line.name.isNotEmpty) _lines.add(line);
@@ -401,6 +565,8 @@ class _SaleFlowState extends State<SaleFlow> {
   // ----------------------------------------------------------------
 
   Product? _productOf(_Line line) {
+    // A group of animals is never an article of the same name.
+    if (line.animal != null) return null;
     for (final p in widget.products) {
       if (line.productId != null
           ? p.id == line.productId
@@ -430,6 +596,44 @@ class _SaleFlowState extends State<SaleFlow> {
   }
 
   bool _inBasket(Product p) => _lines.any((l) => l.productId == p.id);
+
+  /// What a group has left to sell: alive as the server last said, this
+  /// phone's sales still waiting taken off (and those of the article that
+  /// follows it, should an older sale have named it).
+  double _animalsLeft(AnimalForSale a) =>
+      a.alive -
+      (_waiting[a.waitingKey] ?? 0) -
+      (a.productId == null ? 0 : (_waiting[a.productId!] ?? 0));
+
+  bool _animalInBasket(AnimalForSale a) =>
+      _lines.any((l) => l.animal?.waitingKey == a.waitingKey);
+
+  void _toggleAnimal(AnimalForSale a) {
+    setState(() {
+      final i = _lines.indexWhere((l) => l.animal?.waitingKey == a.waitingKey);
+      if (i >= 0) {
+        _later(_lines.removeAt(i));
+      } else {
+        _lines.add(_animalLine(a));
+      }
+    });
+    _flow.keep();
+  }
+
+  /// A batch of birds asked for more than its last known count (150): said,
+  /// not refused — this phone's count may be days old; the server refuses
+  /// if the batch is smaller (009). A herd's is refused ([_stockProblem]).
+  String? _animalWarning(_Line l) {
+    final a = l.animal;
+    if (a == null || !a.isFlock) return null;
+    final asked = _lines
+        .where((x) => x.animal?.waitingKey == a.waitingKey)
+        .fold<double>(0, (s, x) => s + x.qty);
+    final left = _animalsLeft(a);
+    if (asked <= left) return null;
+    return context.tr('Plus que le dernier effectif connu ({alive}). Vérifiez le chiffre — le serveur refusera si la bande est plus petite.',
+        {'alive': stockQty(left < 0 ? 0 : left)});
+  }
 
   void _toggle(Product p) {
     setState(() {
@@ -504,6 +708,17 @@ class _SaleFlowState extends State<SaleFlow> {
     final names = <String, String>{};
     final left = <String, double>{};
     for (final line in _lines) {
+      // A herd: no more heads than it has (019 refuses it too). A batch of
+      // birds is warned instead (_animalWarning).
+      final a = line.animal;
+      if (a != null) {
+        if (!a.isFlock) {
+          sold[a.waitingKey] = (sold[a.waitingKey] ?? 0) + line.qty;
+          names[a.waitingKey] = a.lineName;
+          left[a.waitingKey] = _animalsLeft(a);
+        }
+        continue;
+      }
       final p = _productOf(line);
       if (p == null) {
         if (line.productId == null && widget.products.isNotEmpty) {
@@ -575,20 +790,12 @@ class _SaleFlowState extends State<SaleFlow> {
     }
     if (_method == 'wave') return _recordWave();
 
-    final lines = [for (final l in _lines) l.draft];
+    final lines = [for (final l in _lines) ...l.drafts(widget.currency)];
     final tender = _tender;
     final total = _total;
     final note = _note;
     try {
-      final saleId = await widget.retail.recordSale(
-        orgId: widget.orgId,
-        lines: lines,
-        method: _method,
-        note: note,
-        clientUuid: _clientUuid,
-        customerName: _credit ? _customerName : null,
-        customerPhone: _credit ? widget.customerPhone : null,
-      ).timeout(widget.sendTimeout);
+      final saleId = await _send(lines, _method, note).timeout(widget.sendTimeout);
       // Paid in a foreign currency: the cash that actually crossed the
       // counter, both amounts and the rate on the receipt.
       if (tender != null && total > 0 && !_credit) {
@@ -611,20 +818,72 @@ class _SaleFlowState extends State<SaleFlow> {
       if (isOffline(error) &&
           widget.retail.canQueueSales &&
           (tender == null || _credit)) {
-        await widget.retail.queueSale(
-          orgId: widget.orgId,
-          lines: lines,
-          method: _method,
-          note: note,
-          clientUuid: _clientUuid,
-          customerName: _credit ? _customerName : null,
-        );
+        if (_hasAnimals) {
+          // The same single operation, kept: on sync the sale and the
+          // group's count move together, once (sell_animals' client uuid).
+          await widget.retail.queueAnimalSale(
+            orgId: widget.orgId,
+            lines: lines,
+            method: _method,
+            note: note,
+            clientUuid: _clientUuid,
+            customerName: _credit ? _customerName : null,
+            groups: _groupNames,
+          );
+          await _keepPrices();
+        } else {
+          await widget.retail.queueSale(
+            orgId: widget.orgId,
+            lines: lines,
+            method: _method,
+            note: note,
+            clientUuid: _clientUuid,
+            customerName: _credit ? _customerName : null,
+          );
+        }
         _queued = true;
         _pin(total);
         return true;
       }
       rethrow;
     }
+  }
+
+  /// A group of animals in the basket (150): the sale is sell_animals'.
+  bool get _hasAnimals => _lines.any((l) => l.animal != null);
+
+  Map<String, String> get _groupNames => {
+        for (final l in _lines)
+          if (l.animal != null) l.animal!.groupId: l.animal!.label,
+      };
+
+  /// The sale, to the server: record_sale as always, or — with animals in
+  /// it — sell_animals, the one operation that records the sale and lowers
+  /// the group's count together.
+  Future<String> _send(List<SaleLineDraft> lines, String method, String? note) async {
+    if (!_hasAnimals) {
+      return widget.retail.recordSale(
+        orgId: widget.orgId,
+        lines: lines,
+        method: method,
+        note: note,
+        clientUuid: _clientUuid,
+        customerName: _credit ? _customerName : null,
+        customerPhone: _credit ? widget.customerPhone : null,
+      );
+    }
+    final id = await widget.retail.recordAnimalSale(
+      orgId: widget.orgId,
+      lines: lines,
+      method: method,
+      note: note,
+      clientUuid: _clientUuid,
+      customerName: _credit ? _customerName : null,
+      customerPhone: _credit ? widget.customerPhone : null,
+      groups: _groupNames,
+    );
+    await _keepPrices();
+    return id;
   }
 
   /// Wave: the shelf as the server holds it now (a QR scanned for what the
@@ -654,13 +913,8 @@ class _SaleFlowState extends State<SaleFlow> {
           merchant: merchant, amount: total, currency: widget.currency),
     );
     if (sender == null || !mounted) return false;
-    final saleId = await widget.retail.recordSale(
-      orgId: widget.orgId,
-      lines: [for (final l in _lines) l.draft],
-      method: 'wave',
-      note: _note,
-      clientUuid: _clientUuid,
-    );
+    final saleId = await _send(
+        [for (final l in _lines) ...l.drafts(widget.currency)], 'wave', _note);
     await widget.retail.confirmWavePayment(saleId: saleId, sender: sender);
     _sender = sender;
     _pin(total);
@@ -757,7 +1011,13 @@ class _SaleFlowState extends State<SaleFlow> {
       controller: _flow,
       store: widget.store,
       draft: FlowDraft(
-          key: _fromCarnet ? 'sale-credit:${widget.orgId}' : 'sale:${widget.orgId}',
+          key: _fromCarnet
+              ? 'sale-credit:${widget.orgId}'
+              // « Vendus vivants » handed over (150): its own draft, never
+              // the till's basket in progress.
+              : widget.initialAnimal != null
+                  ? 'sale-animals:${widget.orgId}:${widget.initialAnimal}'
+                  : 'sale:${widget.orgId}',
           save: _save,
           restore: _restore),
       saveLabel: _method == 'wave'
@@ -829,6 +1089,7 @@ class _SaleFlowState extends State<SaleFlow> {
               ],
             ),
           ),
+        if (widget.animals.isNotEmpty) ..._animalSection(context),
         Row(
           children: [
             if (_sellable.length > 8)
@@ -877,54 +1138,10 @@ class _SaleFlowState extends State<SaleFlow> {
               style: theme.textTheme.bodyMedium,
             ),
           ),
-        // The tiles' height follows the text size (UI audit S-1): at 1.3 on
-        // an iPhone SE a fixed 1.45 ratio cut the price and the stock off.
-        // A small phone at large text gets one tile per row, wide enough
-        // for the article's name.
-        LayoutBuilder(builder: (context, box) {
-          final width = MediaQuery.sizeOf(context).width;
-          final scaler = MediaQuery.textScalerOf(context);
-          final large = scaler.scale(10) > 11.5;
-          final columns = width >= 520
-              ? 3
-              : ((large && width < 400) || width < 340 ? 1 : 2);
-          final tileWidth = (box.maxWidth - 10 * (columns - 1)) / columns;
-          // Padding, the name (two lines, or the 44 px photo), the price
-          // and the stock — measured in their own styles at the reader's
-          // text size.
-          double lines(TextStyle? style, int n) {
-            final painter = TextPainter(
-              text: TextSpan(text: List.filled(n, 'Ag').join('\n'), style: style),
-              textDirection: Directionality.of(context),
-              textScaler: scaler,
-            )..layout();
-            final h = painter.height;
-            painter.dispose();
-            return h;
-          }
-          final theme = Theme.of(context);
-          final needed = 20 +
-              math.max(44.0, lines(theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600), 2)) +
-              lines(theme.textTheme.bodyMedium, 1) +
-              lines(theme.textTheme.bodySmall, 1) +
-              8;
-          return GridView(
-            key: const Key('sale-tiles'),
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: columns,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
-              // One tile a row: as tall as its words, not 1.45 of its width.
-              mainAxisExtent: columns == 1 ? needed : math.max(tileWidth / 1.45, needed),
-            ),
-            children: [for (final p in pickable) _tile(context, p)],
-          );
-        }),
+        _tiles(const Key('sale-tiles'), [for (final p in pickable) _tile(context, p)]),
         // Lines typed on the spot, already in the basket.
         for (final l in _lines)
-          if (l.productId == null)
+          if (l.productId == null && l.animal == null)
             Padding(
               padding: const EdgeInsets.only(top: 10),
               child: InputChip(
@@ -935,7 +1152,7 @@ class _SaleFlowState extends State<SaleFlow> {
               ),
             ),
         const SizedBox(height: 12),
-        if (!_typing && _sellable.isNotEmpty)
+        if (!_typing && (_sellable.isNotEmpty || widget.animals.isNotEmpty))
           OutlinedButton.icon(
             key: const Key('sale-type-open'),
             onPressed: () => setState(() => _typing = true),
@@ -992,6 +1209,144 @@ class _SaleFlowState extends State<SaleFlow> {
           ),
         ],
       ],
+    );
+  }
+
+  /// The animals first (150): what the farm raises, each group a tile with
+  /// how many it has left — then its products under their own heading.
+  List<Widget> _animalSection(BuildContext context) {
+    final theme = Theme.of(context);
+    return [
+      Text(context.tr('Animaux'),
+          key: const Key('sale-animals-title'), style: theme.textTheme.titleMedium),
+      const SizedBox(height: 8),
+      _tiles(const Key('sale-animal-tiles'),
+          [for (final a in widget.animals) _animalTile(context, a)]),
+      const SizedBox(height: 16),
+      if (_sellable.isNotEmpty) ...[
+        Text(context.tr('Produits'), style: theme.textTheme.titleMedium),
+        const SizedBox(height: 8),
+      ],
+    ];
+  }
+
+  // The tiles' height follows the text size (UI audit S-1): at 1.3 on an
+  // iPhone SE a fixed 1.45 ratio cut the price and the stock off. A small
+  // phone at large text gets one tile per row, wide enough for the name.
+  Widget _tiles(Key key, List<Widget> children) =>
+        LayoutBuilder(builder: (context, box) {
+          final width = MediaQuery.sizeOf(context).width;
+          final scaler = MediaQuery.textScalerOf(context);
+          final large = scaler.scale(10) > 11.5;
+          final columns = width >= 520
+              ? 3
+              : ((large && width < 400) || width < 340 ? 1 : 2);
+          final tileWidth = (box.maxWidth - 10 * (columns - 1)) / columns;
+          // Padding, the name (two lines, or the 44 px photo), the price
+          // and the stock — measured in their own styles at the reader's
+          // text size.
+          double lines(TextStyle? style, int n) {
+            final painter = TextPainter(
+              text: TextSpan(text: List.filled(n, 'Ag').join('\n'), style: style),
+              textDirection: Directionality.of(context),
+              textScaler: scaler,
+            )..layout();
+            final h = painter.height;
+            painter.dispose();
+            return h;
+          }
+          final theme = Theme.of(context);
+          final needed = 20 +
+              math.max(44.0, lines(theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600), 2)) +
+              lines(theme.textTheme.bodyMedium, 1) +
+              lines(theme.textTheme.bodySmall, 1) +
+              8;
+          return GridView(
+            key: key,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columns,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              // One tile a row: as tall as its words, not 1.45 of its width.
+              mainAxisExtent: columns == 1 ? needed : math.max(tileWidth / 1.45, needed),
+            ),
+            children: children,
+          );
+        });
+
+  /// A group of animals (150): its name, what it is, how many it has left,
+  /// its last price. Nothing left: nothing to sell, as an article at zero.
+  Widget _animalTile(BuildContext context, AnimalForSale a) {
+    final theme = Theme.of(context);
+    final picked = _animalInBasket(a);
+    final left = _animalsLeft(a);
+    final empty = left <= 0;
+    final last = _lastPrices[a.waitingKey];
+    final lastPrice = last?['p'] is num ? (last!['p'] as num).toDouble() : null;
+    final price = lastPrice ?? (a.salePrice > 0 ? a.salePrice : null);
+    return Material(
+      color: picked
+          ? theme.colorScheme.primaryContainer
+          : theme.colorScheme.surfaceContainerHighest,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(
+            color: picked ? theme.colorScheme.primary : Colors.transparent,
+            width: 2),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        key: ValueKey('sale-animal-${a.waitingKey}'),
+        onTap: empty && !picked ? null : () => _toggleAnimal(a),
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: Icon(a.isFlock ? Icons.egg_outlined : Icons.pets,
+                        size: 18,
+                        color: empty ? theme.disabledColor : theme.colorScheme.primary),
+                  ),
+                  Expanded(
+                    child: Text(a.label,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: empty ? theme.disabledColor : null)),
+                  ),
+                  if (picked)
+                    Icon(Icons.check_circle, color: theme.colorScheme.primary),
+                ],
+              ),
+              const Spacer(),
+              if (price != null)
+                MoneyText(
+                    last?['t'] == true
+                        ? context.tr('{price} le lot', {'price': _money.format(price)})
+                        : context.tr('{price} / tête', {'price': _money.format(price)}),
+                    style: theme.textTheme.bodyMedium),
+              Text(
+                empty
+                    ? context.tr('Plus d\'animaux')
+                    : a.isFlock
+                        ? context.tr('{n} vivants', {'n': stockQty(left)})
+                        : context.tr('{n} têtes', {'n': stockQty(left)}),
+                style: theme.textTheme.bodySmall?.copyWith(
+                    color: empty
+                        ? theme.colorScheme.error
+                        : theme.colorScheme.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -1122,6 +1477,9 @@ class _SaleFlowState extends State<SaleFlow> {
   Widget _quantityCard(BuildContext context, _Line l) {
     final theme = Theme.of(context);
     final p = _productOf(l);
+    final a = l.animal;
+    final id = l.productId ?? a?.waitingKey ?? l.name;
+    final warning = _animalWarning(l);
     void step(double by) {
       final next = (l.qty + by).clamp(0, double.infinity).toDouble();
       setState(() => l.quantity.text = stockQty(next));
@@ -1129,7 +1487,7 @@ class _SaleFlowState extends State<SaleFlow> {
     }
 
     return Container(
-      key: ValueKey('sale-line-${l.productId ?? l.name}'),
+      key: ValueKey('sale-line-$id'),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
@@ -1156,18 +1514,54 @@ class _SaleFlowState extends State<SaleFlow> {
             Text(context.tr('Reste : {n}', {'n': stockQty(_left(p))}),
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          // A group (150): how many it has, and how the price is given.
+          if (a != null) ...[
+            Text(
+                // The group's name once: not again when the line bears it.
+                l.name == a.label
+                    ? (a.isFlock
+                        ? context.tr('{n} vivants', {'n': stockQty(_animalsLeft(a))})
+                        : context.tr('{n} têtes', {'n': stockQty(_animalsLeft(a))}))
+                    : a.isFlock
+                        ? context.tr('{group} · {n} vivants', {'group': a.label, 'n': stockQty(_animalsLeft(a))})
+                        : context.tr('{group} · {n} têtes', {'group': a.label, 'n': stockQty(_animalsLeft(a))}),
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: [
+                ChoiceChip(
+                  key: ValueKey('sale-per-head-$id'),
+                  label: Text(context.tr('Prix par tête')),
+                  selected: !l.byTotal,
+                  onSelected: (_) => _priceBy(l, total: false),
+                ),
+                ChoiceChip(
+                  key: ValueKey('sale-by-total-$id'),
+                  label: Text(context.tr('Prix total')),
+                  selected: l.byTotal,
+                  onSelected: (_) => _priceBy(l, total: true),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 8),
           LayoutBuilder(builder: (context, box) {
             final priceField = TextField(
-              key: ValueKey('sale-price-${l.productId ?? l.name}'),
+              key: ValueKey('sale-price-$id'),
               controller: l.price,
               keyboardType: TextInputType.number,
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))
               ],
-              onChanged: (_) => setState(() {}),
+              onChanged: (_) => setState(() => l.priceFromArticle = false),
               decoration: InputDecoration(
-                labelText: context.tr('Prix unitaire'),
+                labelText: a == null
+                    ? context.tr('Prix unitaire')
+                    : l.byTotal
+                        ? context.tr('Prix total')
+                        : context.tr('Prix par tête'),
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
@@ -1179,7 +1573,7 @@ class _SaleFlowState extends State<SaleFlow> {
             final stepper = Row(
               children: [
                 IconButton.filledTonal(
-                  key: ValueKey('sale-minus-${l.productId ?? l.name}'),
+                  key: ValueKey('sale-minus-$id'),
                   iconSize: 28,
                   onPressed: l.qty > 1 ? () => step(-1) : null,
                   icon: const Icon(Icons.remove),
@@ -1188,7 +1582,7 @@ class _SaleFlowState extends State<SaleFlow> {
                 SizedBox(
                   width: 72,
                   child: TextField(
-                    key: ValueKey('sale-qty-${l.productId ?? l.name}'),
+                    key: ValueKey('sale-qty-$id'),
                     controller: l.quantity,
                     textAlign: TextAlign.center,
                     keyboardType:
@@ -1202,7 +1596,7 @@ class _SaleFlowState extends State<SaleFlow> {
                 ),
                 const SizedBox(width: 8),
                 IconButton.filledTonal(
-                  key: ValueKey('sale-plus-${l.productId ?? l.name}'),
+                  key: ValueKey('sale-plus-$id'),
                   iconSize: 28,
                   onPressed: () => step(1),
                   icon: const Icon(Icons.add),
@@ -1220,15 +1614,45 @@ class _SaleFlowState extends State<SaleFlow> {
                     children: [stepper, const SizedBox(height: 10), priceField],
                   );
           }),
+          if (warning != null) ...[
+            const SizedBox(height: 8),
+            Text(warning,
+                key: ValueKey('sale-animal-warning-$id'),
+                style: TextStyle(color: theme.colorScheme.error, fontWeight: FontWeight.w600)),
+          ],
           const SizedBox(height: 6),
           Align(
             alignment: Alignment.centerRight,
-            child: Text(_money.format(l.total),
-                style: theme.textTheme.titleMedium),
+            child: Text(_money.format(l.total), style: theme.textTheme.titleMedium),
           ),
+          // By the total: what one head came to, under it.
+          if (a != null && l.byTotal && l.qty > 0 && (l.typedPrice ?? 0) > 0)
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                  context.tr('{price} / tête', {'price': _money.format(l.total / l.qty)}),
+                  key: ValueKey('sale-per-head-figure-$id'),
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            ),
         ],
       ),
     );
+  }
+
+  /// Per head ↔ the total (150): the number typed keeps its meaning — the
+  /// amount the customer agreed to — so switching converts it.
+  void _priceBy(_Line l, {required bool total}) {
+    if (l.byTotal == total) return;
+    final p = l.typedPrice;
+    setState(() {
+      if (p != null && p > 0 && l.qty > 0) {
+        final v = total ? p * l.qty : roundToCurrency(p / l.qty, widget.currency);
+        l.price.text = _Line._plain(v);
+      }
+      l.byTotal = total;
+    });
+    _flow.keep();
   }
 
   Widget _customerStep(BuildContext context) {
