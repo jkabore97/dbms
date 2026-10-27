@@ -28,6 +28,8 @@ import 'package:kaj_app/core/theme/mara_sheet.dart';
 import '../../core/theme/app_bar_title.dart';
 import '../home/place_sections.dart';
 import '../storefront/share_vitrine.dart' show ShareArticleButton;
+import '../../core/access/store_rules.dart' show sellsSpotsInApp;
+import '../admin/spots_card.dart' show SpotSheet;
 
 /// What the farm sells on its vitrine (083): « À vendre ».
 ///
@@ -874,6 +876,35 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
                   product: widget.product,
                   photoKey: widget.photoKey,
                   capture: widget.capture),
+            // A spot on the street for this one (071), as a shop's article
+            // has it; the sheet checks photo, price and stock. Not an
+            // association's: it buys the whole-vitrine spot only.
+            if (sellsSpotsInApp &&
+                !_association &&
+                widget.org.isAdmin &&
+                widget.product.id.isNotEmpty &&
+                widget.product.isPublished &&
+                AppScope.maybeOf(context) != null &&
+                !AppScope.read(context)!
+                    .session
+                    .accessFor(widget.org.id)
+                    .isHidden('spots'))
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  key: const Key('for-sale-spot'),
+                  onPressed: _busy
+                      ? null
+                      : () => SpotSheet.open(context,
+                          orgId: widget.org.id,
+                          admin: AppScope.read(context)!.admin,
+                          retail: widget.retail,
+                          org: widget.org,
+                          productId: widget.product.id),
+                  icon: const Icon(Icons.campaign_outlined),
+                  label: Text(context.tr('Mettre cet article en avant')),
+                ),
+              ),
             ...[
               const SizedBox(height: 8),
               TextButton(

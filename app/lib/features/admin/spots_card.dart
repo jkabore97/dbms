@@ -755,7 +755,10 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
                 p.salePrice > 0 &&
                 // A service has no stock (143); not followed (131): always
                 // there, as request_promotion allows.
-                (p.isService || p.quantity > 0 || !p.stockTracked))
+                (p.isService || p.quantity > 0 || !p.stockTracked) &&
+                // And a photo, which request_promotion asks too: without
+                // one the request is refused after the article is picked.
+                photos.containsKey(p.id))
             .toList()
           ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
         if (_productId == null && _articles.isNotEmpty) {
