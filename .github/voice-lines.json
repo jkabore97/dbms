@@ -1,0 +1,356 @@
+[
+ {
+  "file": "s1_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Hé, toi ! Oui, toi, derrière ton comptoir !",
+  "speakingRate": 1.08,
+  "markup": "Hé, toi ! [pause short] Oui, toi, derrière ton comptoir !"
+ },
+ {
+  "file": "s1_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Hé, toi ! Oui, toi, derrière ton comptoir !",
+  "speakingRate": 1.16,
+  "markup": "Hé, toi ! [pause short] Oui, toi, derrière ton comptoir !"
+ },
+ {
+  "file": "s1_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Tu dis que le business ne marche pas ?",
+  "speakingRate": 1.08,
+  "markup": "Tu dis que le business ne marche pas ?"
+ },
+ {
+  "file": "s1_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Tu dis que le business ne marche pas ?",
+  "speakingRate": 1.16,
+  "markup": "Tu dis que le business ne marche pas ?"
+ },
+ {
+  "file": "s1_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Mon frère… le business marche. C'est ton argent qui s'en va à pied.",
+  "speakingRate": 1.08,
+  "markup": "Mon frère… [pause short] le business marche. C'est ton argent qui s'en va à pied."
+ },
+ {
+  "file": "s1_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Mon frère… le business marche. C'est ton argent qui s'en va à pied.",
+  "speakingRate": 1.16,
+  "markup": "Mon frère… [pause short] le business marche. C'est ton argent qui s'en va à pied."
+ },
+ {
+  "file": "s1_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Une vente par-ci, une monnaie par-là… et ton cahier qui fait semblant de savoir.",
+  "speakingRate": 1.08,
+  "markup": "Une vente par-ci, une monnaie par-là… [pause short] et ton cahier qui fait semblant de savoir."
+ },
+ {
+  "file": "s1_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Une vente par-ci, une monnaie par-là… et ton cahier qui fait semblant de savoir.",
+  "speakingRate": 1.16,
+  "markup": "Une vente par-ci, une monnaie par-là… [pause short] et ton cahier qui fait semblant de savoir."
+ },
+ {
+  "file": "s1_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Moi, je suis un panda. Je mange du bambou toute la journée.",
+  "speakingRate": 1.08,
+  "markup": "Moi, je suis un panda. Je mange du bambou toute la journée."
+ },
+ {
+  "file": "s1_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Moi, je suis un panda. Je mange du bambou toute la journée.",
+  "speakingRate": 1.16,
+  "markup": "Moi, je suis un panda. Je mange du bambou toute la journée."
+ },
+ {
+  "file": "s1_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Et même moi, je sais ce que j'ai vendu hier.",
+  "speakingRate": 1.08,
+  "markup": "Et même moi, je sais ce que j'ai vendu hier."
+ },
+ {
+  "file": "s1_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Et même moi, je sais ce que j'ai vendu hier.",
+  "speakingRate": 1.16,
+  "markup": "Et même moi, je sais ce que j'ai vendu hier."
+ },
+ {
+  "file": "s1_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Marakadj. Chaque vente, notée.",
+  "speakingRate": 1.08,
+  "markup": "Marakadj. [pause short] Chaque vente, notée."
+ },
+ {
+  "file": "s1_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Marakadj. Chaque vente, notée.",
+  "speakingRate": 1.16,
+  "markup": "Marakadj. [pause short] Chaque vente, notée."
+ },
+ {
+  "file": "s1_08_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Le soir, ta caisse tombe juste. Au franc près.",
+  "speakingRate": 1.08,
+  "markup": "Le soir, ta caisse tombe juste. Au franc près."
+ },
+ {
+  "file": "s1_08_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Le soir, ta caisse tombe juste. Au franc près.",
+  "speakingRate": 1.16,
+  "markup": "Le soir, ta caisse tombe juste. Au franc près."
+ },
+ {
+  "file": "s1_09_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Alors ? Tu continues à deviner… ou tu deviens malin ?",
+  "speakingRate": 1.08,
+  "markup": "Alors ? Tu continues à deviner… [pause short] ou tu deviens malin ?"
+ },
+ {
+  "file": "s1_09_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Alors ? Tu continues à deviner… ou tu deviens malin ?",
+  "speakingRate": 1.16,
+  "markup": "Alors ? Tu continues à deviner… [pause short] ou tu deviens malin ?"
+ },
+ {
+  "file": "s2_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Ton cahier, là ? Il te ment.",
+  "speakingRate": 1.08,
+  "markup": "Ton cahier, là ? [pause short] Il te ment."
+ },
+ {
+  "file": "s2_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Ton cahier, là ? Il te ment.",
+  "speakingRate": 1.16,
+  "markup": "Ton cahier, là ? [pause short] Il te ment."
+ },
+ {
+  "file": "s2_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Six mille cinq cents francs disparus. Hier aussi. Avant-hier aussi.",
+  "speakingRate": 1.08,
+  "markup": "Six mille cinq cents francs disparus. [pause short] Hier aussi. [pause short] Avant-hier aussi."
+ },
+ {
+  "file": "s2_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Six mille cinq cents francs disparus. Hier aussi. Avant-hier aussi.",
+  "speakingRate": 1.16,
+  "markup": "Six mille cinq cents francs disparus. [pause short] Hier aussi. [pause short] Avant-hier aussi."
+ },
+ {
+  "file": "s2_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Tu crois qu'un fantôme mange ta caisse ?",
+  "speakingRate": 1.08,
+  "markup": "Tu crois qu'un fantôme mange ta caisse ?"
+ },
+ {
+  "file": "s2_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Tu crois qu'un fantôme mange ta caisse ?",
+  "speakingRate": 1.16,
+  "markup": "Tu crois qu'un fantôme mange ta caisse ?"
+ },
+ {
+  "file": "s2_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Non. Le fantôme, c'est toi. Tu ne notes rien.",
+  "speakingRate": 1.08,
+  "markup": "Non. [pause short] Le fantôme, c'est toi. Tu ne notes rien."
+ },
+ {
+  "file": "s2_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Non. Le fantôme, c'est toi. Tu ne notes rien.",
+  "speakingRate": 1.16,
+  "markup": "Non. [pause short] Le fantôme, c'est toi. Tu ne notes rien."
+ },
+ {
+  "file": "s2_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Ton voisin, lui, il sait combien il gagne. Toi, tu devines.",
+  "speakingRate": 1.08,
+  "markup": "Ton voisin, lui, il sait combien il gagne. Toi, tu devines."
+ },
+ {
+  "file": "s2_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Ton voisin, lui, il sait combien il gagne. Toi, tu devines.",
+  "speakingRate": 1.16,
+  "markup": "Ton voisin, lui, il sait combien il gagne. Toi, tu devines."
+ },
+ {
+  "file": "s2_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Et deviner, ça coûte cher.",
+  "speakingRate": 1.08,
+  "markup": "Et deviner, [pause short] ça coûte cher."
+ },
+ {
+  "file": "s2_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Et deviner, ça coûte cher.",
+  "speakingRate": 1.16,
+  "markup": "Et deviner, [pause short] ça coûte cher."
+ },
+ {
+  "file": "s2_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Marakadj : chaque vente notée, et le soir, tu sais. Au franc près.",
+  "speakingRate": 1.08,
+  "markup": "Marakadj : chaque vente notée, et le soir, tu sais. Au franc près."
+ },
+ {
+  "file": "s2_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Marakadj : chaque vente notée, et le soir, tu sais. Au franc près.",
+  "speakingRate": 1.16,
+  "markup": "Marakadj : chaque vente notée, et le soir, tu sais. Au franc près."
+ },
+ {
+  "file": "s2_08_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Sois plus malin que ton voisin.",
+  "speakingRate": 1.08,
+  "markup": "Sois plus malin que ton voisin."
+ },
+ {
+  "file": "s2_08_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Sois plus malin que ton voisin.",
+  "speakingRate": 1.16,
+  "markup": "Sois plus malin que ton voisin."
+ },
+ {
+  "file": "s3_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Flash spécial !",
+  "speakingRate": 1.08,
+  "markup": "Flash spécial !"
+ },
+ {
+  "file": "s3_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Flash spécial !",
+  "speakingRate": 1.16,
+  "markup": "Flash spécial !"
+ },
+ {
+  "file": "s3_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Un commerçant perd six mille cinq cents francs. Encore.",
+  "speakingRate": 1.08,
+  "markup": "Un commerçant perd six mille cinq cents francs. [pause short] Encore."
+ },
+ {
+  "file": "s3_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Un commerçant perd six mille cinq cents francs. Encore.",
+  "speakingRate": 1.16,
+  "markup": "Un commerçant perd six mille cinq cents francs. [pause short] Encore."
+ },
+ {
+  "file": "s3_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Les enquêteurs sont formels : pas de voleur… pas de fantôme…",
+  "speakingRate": 1.08,
+  "markup": "Les enquêteurs sont formels : pas de voleur… [pause short] pas de fantôme…"
+ },
+ {
+  "file": "s3_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Les enquêteurs sont formels : pas de voleur… pas de fantôme…",
+  "speakingRate": 1.16,
+  "markup": "Les enquêteurs sont formels : pas de voleur… [pause short] pas de fantôme…"
+ },
+ {
+  "file": "s3_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Le coupable… c'est le cahier !",
+  "speakingRate": 1.08,
+  "markup": "Le coupable… [pause long] c'est le cahier !"
+ },
+ {
+  "file": "s3_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Le coupable… c'est le cahier !",
+  "speakingRate": 1.16,
+  "markup": "Le coupable… [pause long] c'est le cahier !"
+ },
+ {
+  "file": "s3_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Il oublie des ventes. Il se trompe dans la monnaie. Et il ne s'excuse jamais.",
+  "speakingRate": 1.08,
+  "markup": "Il oublie des ventes. Il se trompe dans la monnaie. [pause short] Et il ne s'excuse jamais."
+ },
+ {
+  "file": "s3_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Il oublie des ventes. Il se trompe dans la monnaie. Et il ne s'excuse jamais.",
+  "speakingRate": 1.16,
+  "markup": "Il oublie des ventes. Il se trompe dans la monnaie. [pause short] Et il ne s'excuse jamais."
+ },
+ {
+  "file": "s3_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Arrêtez le cahier. Passez à Marakadj.",
+  "speakingRate": 1.08,
+  "markup": "Arrêtez le cahier. [pause short] Passez à Marakadj."
+ },
+ {
+  "file": "s3_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Arrêtez le cahier. Passez à Marakadj.",
+  "speakingRate": 1.16,
+  "markup": "Arrêtez le cahier. [pause short] Passez à Marakadj."
+ },
+ {
+  "file": "s3_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Chaque vente notée, la caisse au franc près. Fin du flash.",
+  "speakingRate": 1.08,
+  "markup": "Chaque vente notée, la caisse au franc près. [pause short] Fin du flash."
+ },
+ {
+  "file": "s3_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Chaque vente notée, la caisse au franc près. Fin du flash.",
+  "speakingRate": 1.16,
+  "markup": "Chaque vente notée, la caisse au franc près. [pause short] Fin du flash."
+ },
+ {
+  "file": "name_marakaj.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Marakaj.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "name_marakadj.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Marakadj.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "name_maracadge.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Mara-kadje.",
+  "speakingRate": 1.0
+ }
+]

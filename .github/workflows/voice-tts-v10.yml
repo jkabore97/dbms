@@ -1,0 +1,84 @@
+# Temporary: renders the promo narration lines listed in .github/voice-lines.json
+# ({file, voice, text, speakingRate, markup?}) with Google Cloud Text-to-Speech
+# (key GCP_TTS_API_KEY), one LINEAR16 48 kHz WAV per line, and force-pushes them
+# to the voice-samples-v10-audio branch. Temporary (v10 Kaj films): this branch is deleted once the takes are fetched.
+name: Voice samples
+on:
+  push:
+    branches: [voice-samples-v10]
+    paths: [.github/workflows/voice-tts-v10.yml, .github/voice-lines.json]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  voices:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github
+      - name: Render
+        env:
+          KEY: ${{ secrets.GCP_TTS_API_KEY }}
+        run: |
+          set -eu
+          [ -n "$KEY" ] || { echo "GCP_TTS_API_KEY is not set"; exit 1; }
+          mkdir out req
+          n=$(jq length .github/voice-lines.json)
+          cat > synth.sh <<'SH'
+          #!/bin/bash
+          # $1 = index into voice-lines.json
+          i=$1
+          item=$(jq -c ".[$i]" .github/voice-lines.json)
+          file=$(jq -r .file <<<"$item")
+          voice=$(jq -r .voice <<<"$item")
+          rate=$(jq -r '.speakingRate // 1.0' <<<"$item")
+          call() {  # $1 = request file
+            for try in 1 2 3 4; do
+              curl -sS -H "X-Goog-Api-Key: $KEY" -H "Content-Type: application/json" -d @"$1" \
+                https://texttospeech.googleapis.com/v1/text:synthesize > "req/$i.res"
+              if jq -e '.audioContent' "req/$i.res" >/dev/null 2>&1; then
+                jq -r '.audioContent' "req/$i.res" | base64 -d > "out/$file"; return 0
+              fi
+              sleep $((try * 12))
+            done
+            return 1
+          }
+          if jq -e '.markup' <<<"$item" >/dev/null; then
+            jq -n --argjson it "$item" --arg v "$voice" --argjson r "$rate" \
+              '{input:{markup:$it.markup}, voice:{languageCode:"fr-FR", name:$v}, audioConfig:{audioEncoding:"LINEAR16", sampleRateHertz:48000, speakingRate:$r}}' > "req/$i.json"
+            if call "req/$i.json"; then echo "ok $file (markup)"; exit 0; fi
+            echo "markup refused for $file: $(jq -r '.error.message // "no audio"' "req/$i.res"); skipped"; exit 0
+          fi
+          jq -n --argjson it "$item" --arg v "$voice" --argjson r "$rate" \
+            '{input:{text:$it.text}, voice:{languageCode:"fr-FR", name:$v}, audioConfig:{audioEncoding:"LINEAR16", sampleRateHertz:48000, speakingRate:$r}}' > "req/$i.json"
+          if call "req/$i.json"; then echo "ok $file"; else echo "fail $file: $(jq -r '.error.message // "no audio"' "req/$i.res")"; fi
+          SH
+          chmod +x synth.sh
+          export KEY
+          seq 0 $((n - 1)) | xargs -P 3 -I{} ./synth.sh {} | tee log.txt
+          cp .github/voice-lines.json out/lines.json
+          cp log.txt out/log.txt
+          ok=$(ls out/*.wav | wc -l)
+          echo "takes: $ok of $n"
+          [ "$ok" -gt 0 ]
+      - name: Music (Kevin MacLeod, incompetech, CC BY 4.0)
+        run: |
+          set -u
+          mkdir -p out/music
+          base="https://incompetech.com/music/royalty-free/mp3-royaltyfree"
+          for t in "Monkeys Spinning Monkeys" "Sneaky Snitch" "Fluffing a Duck" "Investigations" "Scheming Weasel faster" "Hitman" "Comic Plodding" "Run Amok" "The Show Must Be Go" "Merry Go" "Spy Glass" "Breaking News" "News Theme" "Cipher"; do
+            f="out/music/$(echo "$t" | tr ' ' '_').mp3"
+            u="$base/$(echo "$t" | sed 's/ /%20/g').mp3"
+            if curl -fsSL -A "Mozilla/5.0" -o "$f" "$u"; then echo "ok $t $(stat -c%s "$f")"; else echo "miss $t"; rm -f "$f"; fi
+          done
+      - name: Keep them on the voice-samples branch
+        run: |
+          set -eu
+          cd out
+          git init -q -b voice-samples-v10-audio
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -A
+          git commit -qm "Narration lines (Chirp 3 HD, v10)"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" voice-samples-v10-audio
