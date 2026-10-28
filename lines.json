@@ -1,0 +1,310 @@
+[
+ {
+  "file": "f_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Tu as combien de poulets ?",
+  "speakingRate": 1.06,
+  "markup": "Tu as combien de poulets ?"
+ },
+ {
+  "file": "f_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Tu as combien de poulets ?",
+  "speakingRate": 1.14,
+  "markup": "Tu as combien de poulets ?"
+ },
+ {
+  "file": "f_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Euh… À peu près deux cents.",
+  "speakingRate": 1.06,
+  "markup": "Euh… [pause short] À peu près deux cents."
+ },
+ {
+  "file": "f_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Euh… À peu près deux cents.",
+  "speakingRate": 1.14,
+  "markup": "Euh… [pause short] À peu près deux cents."
+ },
+ {
+  "file": "f_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "« À peu près » ?! Ma sœur, tes poulets, eux, ils ont compté. Et ils sont fâchés.",
+  "speakingRate": 1.06,
+  "markup": "« À peu près » ?! [pause short] Ma sœur, tes poulets, eux, ils ont compté. [pause short] Et ils sont fâchés."
+ },
+ {
+  "file": "f_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "« À peu près » ?! Ma sœur, tes poulets, eux, ils ont compté. Et ils sont fâchés.",
+  "speakingRate": 1.14,
+  "markup": "« À peu près » ?! [pause short] Ma sœur, tes poulets, eux, ils ont compté. [pause short] Et ils sont fâchés."
+ },
+ {
+  "file": "f_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Un sac d'aliment disparaît… le chien regarde ailleurs.",
+  "speakingRate": 1.06,
+  "markup": "Un sac d'aliment disparaît… [pause short] le chien regarde ailleurs."
+ },
+ {
+  "file": "f_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Un sac d'aliment disparaît… le chien regarde ailleurs.",
+  "speakingRate": 1.14,
+  "markup": "Un sac d'aliment disparaît… [pause short] le chien regarde ailleurs."
+ },
+ {
+  "file": "f_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Le vaccin, c'était mardi… ou le mardi d'avant ? La poule, elle, s'en souvient.",
+  "speakingRate": 1.06,
+  "markup": "Le vaccin, c'était mardi… [pause short] ou le mardi d'avant ? [pause short] La poule, elle, s'en souvient."
+ },
+ {
+  "file": "f_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Le vaccin, c'était mardi… ou le mardi d'avant ? La poule, elle, s'en souvient.",
+  "speakingRate": 1.14,
+  "markup": "Le vaccin, c'était mardi… [pause short] ou le mardi d'avant ? [pause short] La poule, elle, s'en souvient."
+ },
+ {
+  "file": "f_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Marakadj : chaque bande a ses chiffres. Les morts, l'aliment, les vaccins.",
+  "speakingRate": 1.06,
+  "markup": "Marakadj : [pause short] chaque bande a ses chiffres. [pause short] Les morts, l'aliment, les vaccins."
+ },
+ {
+  "file": "f_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Marakadj : chaque bande a ses chiffres. Les morts, l'aliment, les vaccins.",
+  "speakingRate": 1.14,
+  "markup": "Marakadj : [pause short] chaque bande a ses chiffres. [pause short] Les morts, l'aliment, les vaccins."
+ },
+ {
+  "file": "f_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Même les poules signent.",
+  "speakingRate": 1.06,
+  "markup": "Même les poules signent."
+ },
+ {
+  "file": "f_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Même les poules signent.",
+  "speakingRate": 1.14,
+  "markup": "Même les poules signent."
+ },
+ {
+  "file": "f_08_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Elle dit merci.",
+  "speakingRate": 1.06,
+  "markup": "Elle dit merci."
+ },
+ {
+  "file": "f_08_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Elle dit merci.",
+  "speakingRate": 1.14,
+  "markup": "Elle dit merci."
+ },
+ {
+  "file": "v_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "« C'est combien ? » « Il reste le rouge ? » « Envoie encore la photo. »",
+  "speakingRate": 1.06,
+  "markup": "« C'est combien ? » [pause short] « Il reste le rouge ? » [pause short] « Envoie encore la photo. »"
+ },
+ {
+  "file": "v_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "« C'est combien ? » « Il reste le rouge ? » « Envoie encore la photo. »",
+  "speakingRate": 1.14,
+  "markup": "« C'est combien ? » [pause short] « Il reste le rouge ? » [pause short] « Envoie encore la photo. »"
+ },
+ {
+  "file": "v_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Trois heures du matin. Quarante-sept messages.",
+  "speakingRate": 1.06,
+  "markup": "Trois heures du matin. [pause short] Quarante-sept messages."
+ },
+ {
+  "file": "v_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Trois heures du matin. Quarante-sept messages.",
+  "speakingRate": 1.14,
+  "markup": "Trois heures du matin. [pause short] Quarante-sept messages."
+ },
+ {
+  "file": "v_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Mon frère, tu n'as pas une boutique. Tu as un standard téléphonique.",
+  "speakingRate": 1.06,
+  "markup": "Mon frère, tu n'as pas une boutique. [pause short] Tu as un standard téléphonique."
+ },
+ {
+  "file": "v_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Mon frère, tu n'as pas une boutique. Tu as un standard téléphonique.",
+  "speakingRate": 1.14,
+  "markup": "Mon frère, tu n'as pas une boutique. [pause short] Tu as un standard téléphonique."
+ },
+ {
+  "file": "v_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Et pendant que tu envoies la photo floue numéro douze… ta voisine a déjà vendu.",
+  "speakingRate": 1.06,
+  "markup": "Et pendant que tu envoies la photo floue numéro douze… [pause short] ta voisine a déjà vendu."
+ },
+ {
+  "file": "v_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Et pendant que tu envoies la photo floue numéro douze… ta voisine a déjà vendu.",
+  "speakingRate": 1.14,
+  "markup": "Et pendant que tu envoies la photo floue numéro douze… [pause short] ta voisine a déjà vendu."
+ },
+ {
+  "file": "v_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Marakadj : ta vitrine en ligne. Tes articles, tes photos, tes prix.",
+  "speakingRate": 1.06,
+  "markup": "Marakadj : [pause short] ta vitrine en ligne. Tes articles, tes photos, tes prix."
+ },
+ {
+  "file": "v_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Marakadj : ta vitrine en ligne. Tes articles, tes photos, tes prix.",
+  "speakingRate": 1.14,
+  "markup": "Marakadj : [pause short] ta vitrine en ligne. Tes articles, tes photos, tes prix."
+ },
+ {
+  "file": "v_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Tu partages le lien, le client regarde, il commande. Toi, tu dors.",
+  "speakingRate": 1.06,
+  "markup": "Tu partages le lien, le client regarde, il commande. [pause short] Toi, tu dors."
+ },
+ {
+  "file": "v_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Tu partages le lien, le client regarde, il commande. Toi, tu dors.",
+  "speakingRate": 1.14,
+  "markup": "Tu partages le lien, le client regarde, il commande. [pause short] Toi, tu dors."
+ },
+ {
+  "file": "v_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "C'est écrit, chéri.",
+  "speakingRate": 1.06,
+  "markup": "C'est écrit, chéri."
+ },
+ {
+  "file": "v_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "C'est écrit, chéri.",
+  "speakingRate": 1.14,
+  "markup": "C'est écrit, chéri."
+ },
+ {
+  "file": "a_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Réunion de l'association.",
+  "speakingRate": 1.06,
+  "markup": "Réunion de l'association."
+ },
+ {
+  "file": "a_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Réunion de l'association.",
+  "speakingRate": 1.14,
+  "markup": "Réunion de l'association."
+ },
+ {
+  "file": "a_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Point un : où est l'argent ? Point deux : où est l'argent ? Point trois : on mange.",
+  "speakingRate": 1.06,
+  "markup": "Point un : où est l'argent ? [pause short] Point deux : où est l'argent ? [pause short] Point trois : on mange."
+ },
+ {
+  "file": "a_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Point un : où est l'argent ? Point deux : où est l'argent ? Point trois : on mange.",
+  "speakingRate": 1.14,
+  "markup": "Point un : où est l'argent ? [pause short] Point deux : où est l'argent ? [pause short] Point trois : on mange."
+ },
+ {
+  "file": "a_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Tout est dans le cahier.",
+  "speakingRate": 1.06,
+  "markup": "Tout est dans le cahier."
+ },
+ {
+  "file": "a_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Tout est dans le cahier.",
+  "speakingRate": 1.14,
+  "markup": "Tout est dans le cahier."
+ },
+ {
+  "file": "a_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Le cahier dit que tout est chez la trésorière.",
+  "speakingRate": 1.06,
+  "markup": "Le cahier dit que tout est chez la trésorière."
+ },
+ {
+  "file": "a_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Le cahier dit que tout est chez la trésorière.",
+  "speakingRate": 1.14,
+  "markup": "Le cahier dit que tout est chez la trésorière."
+ },
+ {
+  "file": "a_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Tonton dit qu'il a payé en mars. Personne ne se souvient de mars. Même mars ne se souvient pas de mars.",
+  "speakingRate": 1.06,
+  "markup": "Tonton dit qu'il a payé en mars. [pause short] Personne ne se souvient de mars. [pause short] Même mars ne se souvient pas de mars."
+ },
+ {
+  "file": "a_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Tonton dit qu'il a payé en mars. Personne ne se souvient de mars. Même mars ne se souvient pas de mars.",
+  "speakingRate": 1.14,
+  "markup": "Tonton dit qu'il a payé en mars. [pause short] Personne ne se souvient de mars. [pause short] Même mars ne se souvient pas de mars."
+ },
+ {
+  "file": "a_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Marakadj : chaque cotisation notée, chaque dépense avec sa trace.",
+  "speakingRate": 1.06,
+  "markup": "Marakadj : [pause short] chaque cotisation notée, chaque dépense avec sa trace."
+ },
+ {
+  "file": "a_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Marakadj : chaque cotisation notée, chaque dépense avec sa trace.",
+  "speakingRate": 1.14,
+  "markup": "Marakadj : [pause short] chaque cotisation notée, chaque dépense avec sa trace."
+ },
+ {
+  "file": "a_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "La réunion dure dix minutes… et on mange plus tôt.",
+  "speakingRate": 1.06,
+  "markup": "La réunion dure dix minutes… [pause short] et on mange plus tôt."
+ },
+ {
+  "file": "a_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "La réunion dure dix minutes… et on mange plus tôt.",
+  "speakingRate": 1.14,
+  "markup": "La réunion dure dix minutes… [pause short] et on mange plus tôt."
+ }
+]
