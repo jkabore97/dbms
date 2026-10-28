@@ -1,0 +1,158 @@
+[
+ {
+  "file": "f_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Tu as combien de poulets ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "f_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Tu as combien de poulets ?",
+  "speakingRate": 0.94
+ },
+ {
+  "file": "f_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "À peu près ? Ma sœur, tes poulets, eux, ils ont compté. Et ils ne sont pas contents.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "f_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "À peu près ? Ma sœur, tes poulets, eux, ils ont compté. Et ils ne sont pas contents.",
+  "speakingRate": 0.94
+ },
+ {
+  "file": "f_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Un sac d'aliment a disparu. Et le chien regarde ailleurs.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "f_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Un sac d'aliment a disparu. Et le chien regarde ailleurs.",
+  "speakingRate": 0.94
+ },
+ {
+  "file": "f_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Le vaccin, c'était mardi ? Ou bien le mardi d'avant ? La poule, elle, s'en souvient.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "f_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Le vaccin, c'était mardi ? Ou bien le mardi d'avant ? La poule, elle, s'en souvient.",
+  "speakingRate": 0.94
+ },
+ {
+  "file": "f_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Avec Marakadj, chaque bande a ses chiffres : les morts, l'aliment et les vaccins.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "f_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Avec Marakadj, chaque bande a ses chiffres : les morts, l'aliment et les vaccins.",
+  "speakingRate": 0.94
+ },
+ {
+  "file": "f_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Même les poules approuvent.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "f_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Même les poules approuvent.",
+  "speakingRate": 0.94
+ },
+ {
+  "file": "f_08_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Elle dit merci.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "f_08_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Elle dit merci.",
+  "speakingRate": 0.94
+ },
+ {
+  "file": "a_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Réunion de l'association.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "a_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Réunion de l'association.",
+  "speakingRate": 0.94
+ },
+ {
+  "file": "a_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Premier point : où est l'argent ? Deuxième point : où est l'argent ? Troisième point : on mange.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "a_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Premier point : où est l'argent ? Deuxième point : où est l'argent ? Troisième point : on mange.",
+  "speakingRate": 0.94
+ },
+ {
+  "file": "a_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Le cahier dit que tout est chez la trésorière.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "a_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Le cahier dit que tout est chez la trésorière.",
+  "speakingRate": 0.94
+ },
+ {
+  "file": "a_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Tonton dit qu'il a payé au mois de mars. Personne ne s'en souvient. Même le mois de mars ne s'en souvient pas.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "a_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Tonton dit qu'il a payé au mois de mars. Personne ne s'en souvient. Même le mois de mars ne s'en souvient pas.",
+  "speakingRate": 0.94
+ },
+ {
+  "file": "a_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Avec Marakadj, chaque cotisation est notée, et chaque dépense garde son reçu.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "a_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Avec Marakadj, chaque cotisation est notée, et chaque dépense garde son reçu.",
+  "speakingRate": 0.94
+ },
+ {
+  "file": "a_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "La réunion dure dix minutes, et on mange plus tôt.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "a_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "La réunion dure dix minutes, et on mange plus tôt.",
+  "speakingRate": 0.94
+ }
+]
