@@ -1,0 +1,450 @@
+[
+ {
+  "file": "Charon_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Voici l'éleveur… dans son habitat naturel.",
+  "speakingRate": 0.96,
+  "markup": "Voici l'éleveur… [pause short] dans son habitat naturel."
+ },
+ {
+  "file": "Charon_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Voici l'éleveur… dans son habitat naturel.",
+  "speakingRate": 1.04,
+  "markup": "Voici l'éleveur… [pause short] dans son habitat naturel."
+ },
+ {
+  "file": "Charon_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Il compte ses poulets. Pour la quatrième fois.",
+  "speakingRate": 0.96,
+  "markup": "Il compte ses poulets. [pause short] Pour la quatrième fois."
+ },
+ {
+  "file": "Charon_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Il compte ses poulets. Pour la quatrième fois.",
+  "speakingRate": 1.04,
+  "markup": "Il compte ses poulets. [pause short] Pour la quatrième fois."
+ },
+ {
+  "file": "Charon_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Il trouve un chiffre différent à chaque fois.",
+  "speakingRate": 0.96,
+  "markup": "Il trouve un chiffre différent à chaque fois."
+ },
+ {
+  "file": "Charon_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Il trouve un chiffre différent à chaque fois.",
+  "speakingRate": 1.04,
+  "markup": "Il trouve un chiffre différent à chaque fois."
+ },
+ {
+  "file": "Charon_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "C'est normal : les poulets bougent.",
+  "speakingRate": 0.96,
+  "markup": "C'est normal : [pause short] les poulets bougent."
+ },
+ {
+  "file": "Charon_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "C'est normal : les poulets bougent.",
+  "speakingRate": 1.04,
+  "markup": "C'est normal : [pause short] les poulets bougent."
+ },
+ {
+  "file": "Charon_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Un sac d'aliment a disparu. L'éleveur soupçonne le chien.",
+  "speakingRate": 0.96,
+  "markup": "Un sac d'aliment a disparu. [pause short] L'éleveur soupçonne le chien."
+ },
+ {
+  "file": "Charon_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Un sac d'aliment a disparu. L'éleveur soupçonne le chien.",
+  "speakingRate": 1.04,
+  "markup": "Un sac d'aliment a disparu. [pause short] L'éleveur soupçonne le chien."
+ },
+ {
+  "file": "Charon_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Le chien… soupçonne l'éleveur.",
+  "speakingRate": 0.96,
+  "markup": "Le chien… [pause short] soupçonne l'éleveur."
+ },
+ {
+  "file": "Charon_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Le chien… soupçonne l'éleveur.",
+  "speakingRate": 1.04,
+  "markup": "Le chien… [pause short] soupçonne l'éleveur."
+ },
+ {
+  "file": "Charon_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Marakadj. Chaque bande a ses chiffres : les morts, l'aliment, les vaccins.",
+  "speakingRate": 0.96,
+  "markup": "Marakadj. [pause short] Chaque bande a ses chiffres : les morts, l'aliment, les vaccins."
+ },
+ {
+  "file": "Charon_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Marakadj. Chaque bande a ses chiffres : les morts, l'aliment, les vaccins.",
+  "speakingRate": 1.04,
+  "markup": "Marakadj. [pause short] Chaque bande a ses chiffres : les morts, l'aliment, les vaccins."
+ },
+ {
+  "file": "Charon_08_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Lui ? Il est compté.",
+  "speakingRate": 0.96,
+  "markup": "Lui ? [pause short] Il est compté."
+ },
+ {
+  "file": "Charon_08_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Charon",
+  "text": "Lui ? Il est compté.",
+  "speakingRate": 1.04,
+  "markup": "Lui ? [pause short] Il est compté."
+ },
+ {
+  "file": "Orus_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Voici l'éleveur… dans son habitat naturel.",
+  "speakingRate": 0.96,
+  "markup": "Voici l'éleveur… [pause short] dans son habitat naturel."
+ },
+ {
+  "file": "Orus_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Voici l'éleveur… dans son habitat naturel.",
+  "speakingRate": 1.04,
+  "markup": "Voici l'éleveur… [pause short] dans son habitat naturel."
+ },
+ {
+  "file": "Orus_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Il compte ses poulets. Pour la quatrième fois.",
+  "speakingRate": 0.96,
+  "markup": "Il compte ses poulets. [pause short] Pour la quatrième fois."
+ },
+ {
+  "file": "Orus_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Il compte ses poulets. Pour la quatrième fois.",
+  "speakingRate": 1.04,
+  "markup": "Il compte ses poulets. [pause short] Pour la quatrième fois."
+ },
+ {
+  "file": "Orus_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Il trouve un chiffre différent à chaque fois.",
+  "speakingRate": 0.96,
+  "markup": "Il trouve un chiffre différent à chaque fois."
+ },
+ {
+  "file": "Orus_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Il trouve un chiffre différent à chaque fois.",
+  "speakingRate": 1.04,
+  "markup": "Il trouve un chiffre différent à chaque fois."
+ },
+ {
+  "file": "Orus_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "C'est normal : les poulets bougent.",
+  "speakingRate": 0.96,
+  "markup": "C'est normal : [pause short] les poulets bougent."
+ },
+ {
+  "file": "Orus_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "C'est normal : les poulets bougent.",
+  "speakingRate": 1.04,
+  "markup": "C'est normal : [pause short] les poulets bougent."
+ },
+ {
+  "file": "Orus_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Un sac d'aliment a disparu. L'éleveur soupçonne le chien.",
+  "speakingRate": 0.96,
+  "markup": "Un sac d'aliment a disparu. [pause short] L'éleveur soupçonne le chien."
+ },
+ {
+  "file": "Orus_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Un sac d'aliment a disparu. L'éleveur soupçonne le chien.",
+  "speakingRate": 1.04,
+  "markup": "Un sac d'aliment a disparu. [pause short] L'éleveur soupçonne le chien."
+ },
+ {
+  "file": "Orus_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Le chien… soupçonne l'éleveur.",
+  "speakingRate": 0.96,
+  "markup": "Le chien… [pause short] soupçonne l'éleveur."
+ },
+ {
+  "file": "Orus_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Le chien… soupçonne l'éleveur.",
+  "speakingRate": 1.04,
+  "markup": "Le chien… [pause short] soupçonne l'éleveur."
+ },
+ {
+  "file": "Orus_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Marakadj. Chaque bande a ses chiffres : les morts, l'aliment, les vaccins.",
+  "speakingRate": 0.96,
+  "markup": "Marakadj. [pause short] Chaque bande a ses chiffres : les morts, l'aliment, les vaccins."
+ },
+ {
+  "file": "Orus_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Marakadj. Chaque bande a ses chiffres : les morts, l'aliment, les vaccins.",
+  "speakingRate": 1.04,
+  "markup": "Marakadj. [pause short] Chaque bande a ses chiffres : les morts, l'aliment, les vaccins."
+ },
+ {
+  "file": "Orus_08_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Lui ? Il est compté.",
+  "speakingRate": 0.96,
+  "markup": "Lui ? [pause short] Il est compté."
+ },
+ {
+  "file": "Orus_08_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Orus",
+  "text": "Lui ? Il est compté.",
+  "speakingRate": 1.04,
+  "markup": "Lui ? [pause short] Il est compté."
+ },
+ {
+  "file": "Algenib_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Voici l'éleveur… dans son habitat naturel.",
+  "speakingRate": 0.96,
+  "markup": "Voici l'éleveur… [pause short] dans son habitat naturel."
+ },
+ {
+  "file": "Algenib_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Voici l'éleveur… dans son habitat naturel.",
+  "speakingRate": 1.04,
+  "markup": "Voici l'éleveur… [pause short] dans son habitat naturel."
+ },
+ {
+  "file": "Algenib_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Il compte ses poulets. Pour la quatrième fois.",
+  "speakingRate": 0.96,
+  "markup": "Il compte ses poulets. [pause short] Pour la quatrième fois."
+ },
+ {
+  "file": "Algenib_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Il compte ses poulets. Pour la quatrième fois.",
+  "speakingRate": 1.04,
+  "markup": "Il compte ses poulets. [pause short] Pour la quatrième fois."
+ },
+ {
+  "file": "Algenib_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Il trouve un chiffre différent à chaque fois.",
+  "speakingRate": 0.96,
+  "markup": "Il trouve un chiffre différent à chaque fois."
+ },
+ {
+  "file": "Algenib_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Il trouve un chiffre différent à chaque fois.",
+  "speakingRate": 1.04,
+  "markup": "Il trouve un chiffre différent à chaque fois."
+ },
+ {
+  "file": "Algenib_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "C'est normal : les poulets bougent.",
+  "speakingRate": 0.96,
+  "markup": "C'est normal : [pause short] les poulets bougent."
+ },
+ {
+  "file": "Algenib_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "C'est normal : les poulets bougent.",
+  "speakingRate": 1.04,
+  "markup": "C'est normal : [pause short] les poulets bougent."
+ },
+ {
+  "file": "Algenib_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Un sac d'aliment a disparu. L'éleveur soupçonne le chien.",
+  "speakingRate": 0.96,
+  "markup": "Un sac d'aliment a disparu. [pause short] L'éleveur soupçonne le chien."
+ },
+ {
+  "file": "Algenib_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Un sac d'aliment a disparu. L'éleveur soupçonne le chien.",
+  "speakingRate": 1.04,
+  "markup": "Un sac d'aliment a disparu. [pause short] L'éleveur soupçonne le chien."
+ },
+ {
+  "file": "Algenib_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Le chien… soupçonne l'éleveur.",
+  "speakingRate": 0.96,
+  "markup": "Le chien… [pause short] soupçonne l'éleveur."
+ },
+ {
+  "file": "Algenib_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Le chien… soupçonne l'éleveur.",
+  "speakingRate": 1.04,
+  "markup": "Le chien… [pause short] soupçonne l'éleveur."
+ },
+ {
+  "file": "Algenib_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Marakadj. Chaque bande a ses chiffres : les morts, l'aliment, les vaccins.",
+  "speakingRate": 0.96,
+  "markup": "Marakadj. [pause short] Chaque bande a ses chiffres : les morts, l'aliment, les vaccins."
+ },
+ {
+  "file": "Algenib_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Marakadj. Chaque bande a ses chiffres : les morts, l'aliment, les vaccins.",
+  "speakingRate": 1.04,
+  "markup": "Marakadj. [pause short] Chaque bande a ses chiffres : les morts, l'aliment, les vaccins."
+ },
+ {
+  "file": "Algenib_08_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Lui ? Il est compté.",
+  "speakingRate": 0.96,
+  "markup": "Lui ? [pause short] Il est compté."
+ },
+ {
+  "file": "Algenib_08_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Algenib",
+  "text": "Lui ? Il est compté.",
+  "speakingRate": 1.04,
+  "markup": "Lui ? [pause short] Il est compté."
+ },
+ {
+  "file": "Iapetus_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Voici l'éleveur… dans son habitat naturel.",
+  "speakingRate": 0.96,
+  "markup": "Voici l'éleveur… [pause short] dans son habitat naturel."
+ },
+ {
+  "file": "Iapetus_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Voici l'éleveur… dans son habitat naturel.",
+  "speakingRate": 1.04,
+  "markup": "Voici l'éleveur… [pause short] dans son habitat naturel."
+ },
+ {
+  "file": "Iapetus_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Il compte ses poulets. Pour la quatrième fois.",
+  "speakingRate": 0.96,
+  "markup": "Il compte ses poulets. [pause short] Pour la quatrième fois."
+ },
+ {
+  "file": "Iapetus_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Il compte ses poulets. Pour la quatrième fois.",
+  "speakingRate": 1.04,
+  "markup": "Il compte ses poulets. [pause short] Pour la quatrième fois."
+ },
+ {
+  "file": "Iapetus_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Il trouve un chiffre différent à chaque fois.",
+  "speakingRate": 0.96,
+  "markup": "Il trouve un chiffre différent à chaque fois."
+ },
+ {
+  "file": "Iapetus_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Il trouve un chiffre différent à chaque fois.",
+  "speakingRate": 1.04,
+  "markup": "Il trouve un chiffre différent à chaque fois."
+ },
+ {
+  "file": "Iapetus_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "C'est normal : les poulets bougent.",
+  "speakingRate": 0.96,
+  "markup": "C'est normal : [pause short] les poulets bougent."
+ },
+ {
+  "file": "Iapetus_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "C'est normal : les poulets bougent.",
+  "speakingRate": 1.04,
+  "markup": "C'est normal : [pause short] les poulets bougent."
+ },
+ {
+  "file": "Iapetus_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Un sac d'aliment a disparu. L'éleveur soupçonne le chien.",
+  "speakingRate": 0.96,
+  "markup": "Un sac d'aliment a disparu. [pause short] L'éleveur soupçonne le chien."
+ },
+ {
+  "file": "Iapetus_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Un sac d'aliment a disparu. L'éleveur soupçonne le chien.",
+  "speakingRate": 1.04,
+  "markup": "Un sac d'aliment a disparu. [pause short] L'éleveur soupçonne le chien."
+ },
+ {
+  "file": "Iapetus_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Le chien… soupçonne l'éleveur.",
+  "speakingRate": 0.96,
+  "markup": "Le chien… [pause short] soupçonne l'éleveur."
+ },
+ {
+  "file": "Iapetus_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Le chien… soupçonne l'éleveur.",
+  "speakingRate": 1.04,
+  "markup": "Le chien… [pause short] soupçonne l'éleveur."
+ },
+ {
+  "file": "Iapetus_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Marakadj. Chaque bande a ses chiffres : les morts, l'aliment, les vaccins.",
+  "speakingRate": 0.96,
+  "markup": "Marakadj. [pause short] Chaque bande a ses chiffres : les morts, l'aliment, les vaccins."
+ },
+ {
+  "file": "Iapetus_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Marakadj. Chaque bande a ses chiffres : les morts, l'aliment, les vaccins.",
+  "speakingRate": 1.04,
+  "markup": "Marakadj. [pause short] Chaque bande a ses chiffres : les morts, l'aliment, les vaccins."
+ },
+ {
+  "file": "Iapetus_08_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Lui ? Il est compté.",
+  "speakingRate": 0.96,
+  "markup": "Lui ? [pause short] Il est compté."
+ },
+ {
+  "file": "Iapetus_08_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Lui ? Il est compté.",
+  "speakingRate": 1.04,
+  "markup": "Lui ? [pause short] Il est compté."
+ }
+]
