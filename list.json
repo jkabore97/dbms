@@ -1,0 +1,457 @@
+{
+ "log": [
+  {
+   "term": "coupe decale",
+   "status": 403,
+   "links": 0
+  },
+  {
+   "term": "coupé décalé",
+   "status": 200,
+   "links": 18
+  },
+  {
+   "term": "ivorian",
+   "status": 200,
+   "links": 0
+  },
+  {
+   "term": "afro club",
+   "status": 200,
+   "links": 20
+  },
+  {
+   "term": "afrobeat dance",
+   "status": 200,
+   "links": 19
+  },
+  {
+   "term": "ndombolo",
+   "status": 200,
+   "links": 0
+  }
+ ],
+ "tracks": [
+  {
+   "href": "https://pixabay.com/music/vaudeville-variety-show-art-and-guilt-389437/",
+   "term": "coupé décalé",
+   "title": "Art and Guilt by alanajordan",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/08/13/audio_c13e284fd7.mp3",
+   "status": 200,
+   "tags": [],
+   "file": "out/00_vaudeville-variety-show-art-and-guilt-389437.mp3"
+  },
+  {
+   "href": "https://pixabay.com/music/dance-quirky-edm-with-toy-sounds-silly-vocal-chops-371342/",
+   "term": "coupé décalé",
+   "title": "Quirky EDM with toy sounds, silly vocal chops by DesiFreeMusic",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/07/07/audio_255021dd95.mp3",
+   "status": 200,
+   "tags": [
+    "Dance",
+    "Dance",
+    "Dance",
+    "Dance",
+    "Dance",
+    "Club",
+    "Dance",
+    "Club",
+    "Dance"
+   ],
+   "file": "out/01_dance-quirky-edm-with-toy-sounds-silly-vocal-chops-371342.mp3"
+  },
+  {
+   "href": "https://pixabay.com/music/dance-quirky-edm-with-toy-sounds-silly-vocal-chops-371341/",
+   "term": "coupé décalé",
+   "title": "Quirky EDM with toy sounds, silly vocal chops. by DesiFreeMusic",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/07/07/audio_d6ad1172c6.mp3",
+   "status": 200,
+   "tags": [
+    "Dance",
+    "Dance",
+    "Dance",
+    "Dance",
+    "Dance",
+    "Club",
+    "Dance",
+    "Club",
+    "Dance"
+   ],
+   "file": "out/02_dance-quirky-edm-with-toy-sounds-silly-vocal-chops-371341.mp3"
+  },
+  {
+   "href": "https://pixabay.com/music/sneaky-quirky-documentary-199161/",
+   "term": "coupé décalé",
+   "title": "Quirky Documentary by The_Mountain",
+   "contentId": true,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2024/03/30/audio_967d0c6654.mp3",
+   "status": 200,
+   "tags": []
+  },
+  {
+   "href": "https://pixabay.com/music/beats-funky-advertising-618216/",
+   "term": "coupé décalé",
+   "title": "Funky Advertising by The_Mountain",
+   "contentId": true,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2026/10/09/audio_ba8f19d711.mp3",
+   "status": 200,
+   "tags": [
+    "Dance"
+   ]
+  },
+  {
+   "href": "https://pixabay.com/music/cartoons-cartoon-quirky-262596/",
+   "term": "coupé décalé",
+   "title": "Cartoon Quirky by leberch",
+   "contentId": true,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2024/11/10/audio_6d7747d7ea.mp3",
+   "status": 200,
+   "tags": []
+  },
+  {
+   "href": "https://pixabay.com/music/comedy-eccentric-quirky-funk-music-347999/",
+   "term": "coupé décalé",
+   "title": "Eccentric Quirky Funk Music by Tunetank",
+   "contentId": true,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/06/13/audio_5b5f0b5b0e.mp3",
+   "status": 200,
+   "tags": []
+  },
+  {
+   "href": "https://pixabay.com/music/fantasy-dreamy-childrens-quirky-sneaky-music-614988/",
+   "term": "coupé décalé",
+   "title": "Quirky Sneaky Music by ViacheslavStarostin",
+   "contentId": true,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2026/10/04/audio_c25e2deec1.mp3",
+   "status": 200,
+   "tags": []
+  },
+  {
+   "href": "https://pixabay.com/music/comedy-eccentric-quirky-tango-music-350103/",
+   "term": "coupé décalé",
+   "title": "Eccentric Quirky Tango Music by Tunetank",
+   "contentId": true,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/06/04/audio_6549ea7b4a.mp3",
+   "status": 200,
+   "tags": []
+  },
+  {
+   "href": "https://pixabay.com/music/eccentric-quirky-sneaky-quirky-music-614286/",
+   "term": "coupé décalé",
+   "title": "Sneaky Quirky Music by andriih",
+   "contentId": true,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2026/10/02/audio_273e6bfea0.mp3",
+   "status": 200,
+   "tags": []
+  },
+  {
+   "href": "https://pixabay.com/music/sneaky-mystery-quirky-355604/",
+   "term": "coupé décalé",
+   "title": "Mystery Quirky by leberch",
+   "contentId": true,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/06/06/audio_bc99d5aabf.mp3",
+   "status": 200,
+   "tags": []
+  },
+  {
+   "href": "https://pixabay.com/music/comedy-quirky-eccentric-jazz-theme-350138/",
+   "term": "coupé décalé",
+   "title": "Quirky Eccentric Jazz Theme by Tunetank",
+   "contentId": true,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/06/13/audio_88c33eb9fd.mp3",
+   "status": 200,
+   "tags": []
+  },
+  {
+   "href": "https://pixabay.com/music/afrobeat-afro-beat-598119/",
+   "term": "afro club",
+   "title": "Afro Beat by kiravale",
+   "contentId": true,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2026/09/05/audio_282a499756.mp3",
+   "status": 200,
+   "tags": [
+    "Afro",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Club"
+   ]
+  },
+  {
+   "href": "https://pixabay.com/music/afrobeat-afro-pop-x-afro-beat-edm-x-night-club-bad-seed-525254/",
+   "term": "afro club",
+   "title": "Afro Pop x Afro Beat",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2026/04/27/audio_7e2d13de17.mp3",
+   "status": 200,
+   "tags": [
+    "Afro",
+    "Afro",
+    "Club",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Club",
+    "Club",
+    "Afrobeat"
+   ],
+   "file": "out/13_afrobeat-afro-pop-x-afro-beat-edm-x-night-club-bad-seed-525254.mp3"
+  },
+  {
+   "href": "https://pixabay.com/music/upbeat-legendary-afro-house-club-remix-wine-slow-524223/",
+   "term": "afro club",
+   "title": "Legendary Afro House Club Remix - Wine Slow by OpenMindAudio",
+   "contentId": true,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2026/04/24/audio_dcc1f58d16.mp3",
+   "status": 200,
+   "tags": [
+    "Afro",
+    "Club",
+    "Dance",
+    "afro",
+    "Afro",
+    "Afro",
+    "Dance",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Dance",
+    "Afro"
+   ]
+  },
+  {
+   "href": "https://pixabay.com/music/afrobeat-afro-house-x-aggressive-x-club-random-292070/",
+   "term": "afro club",
+   "title": "Afro House x Aggressive x Club (Random) by 47643651",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/01/24/audio_4f2999b94b.mp3",
+   "status": 200,
+   "tags": [
+    "Afro",
+    "Club",
+    "Afro",
+    "club",
+    "dance",
+    "afro",
+    "club",
+    "dance",
+    "Afro",
+    "Afro",
+    "Afrobeat",
+    "Club"
+   ],
+   "file": "out/15_afrobeat-afro-house-x-aggressive-x-club-random-292070.mp3"
+  },
+  {
+   "href": "https://pixabay.com/music/reggaeton-moombahton-x-reggaeton-afro-x-latin-x-night-club-to-the-moon-500622/",
+   "term": "afro club",
+   "title": "Moombahton x Reggaeton",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2026/03/12/audio_666da7143f.mp3",
+   "status": 200,
+   "tags": [
+    "Afro",
+    "Club",
+    "Afro",
+    "Afro",
+    "Afrobeat",
+    "Afro",
+    "Club",
+    "Dance"
+   ],
+   "file": "out/16_reggaeton-moombahton-x-reggaeton-afro-x-latin-x-night-club-to-the-moon-500622.mp3"
+  },
+  {
+   "href": "https://pixabay.com/music/soft-house-afro-house-473387/",
+   "term": "afro club",
+   "title": "Afro House by VibeHorn",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2026/01/25/audio_1dae06cd17.mp3",
+   "status": 200,
+   "tags": [
+    "Afro",
+    "Afro",
+    "dance",
+    "afro",
+    "dance",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Dance",
+    "Club",
+    "Dance"
+   ],
+   "file": "out/17_soft-house-afro-house-473387.mp3"
+  },
+  {
+   "href": "https://pixabay.com/music/afrobeat-afro-beat-x-afro-house-aggressive-x-aya-nakamura-lie-525249/",
+   "term": "afro club",
+   "title": "Afro Beat x Afro House",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2026/04/27/audio_a3ea84c693.mp3",
+   "status": 200,
+   "tags": [
+    "Afro",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Club",
+    "Afrobeat",
+    "Afrobeat",
+    "Afrobeat",
+    "Afrobeat",
+    "Afrobeat"
+   ],
+   "file": "out/18_afrobeat-afro-beat-x-afro-house-aggressive-x-aya-nakamura-lie-525249.mp3"
+  },
+  {
+   "href": "https://pixabay.com/music/afrobeat-legendary-afro-house-music-back-with-fire-521091/",
+   "term": "afro club",
+   "title": "Legendary Afro House Music - Back With Fire by OpenMindAudio",
+   "contentId": true,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2026/04/24/audio_78acce55b1.mp3",
+   "status": 200,
+   "tags": [
+    "Afro",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Dance",
+    "Club",
+    "Afro",
+    "Club",
+    "Dance"
+   ]
+  },
+  {
+   "href": "https://pixabay.com/music/trap-afrobeat-x-afro-house-night-club-x-shake-miniature-500683/",
+   "term": "afro club",
+   "title": "AfroBeat x Afro House",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2026/03/12/audio_6722b8dd8b.mp3",
+   "status": 200,
+   "tags": [
+    "AfroBeat",
+    "Afro",
+    "Club",
+    "Afro",
+    "Afrobeat",
+    "Afrohouse",
+    "Afro",
+    "Afrobeat",
+    "Afrohouse",
+    "Club",
+    "Afrobeat"
+   ],
+   "file": "out/20_trap-afrobeat-x-afro-house-night-club-x-shake-miniature-500683.mp3"
+  },
+  {
+   "href": "https://pixabay.com/music/soft-house-afro-house-dance-background-473385/",
+   "term": "afro club",
+   "title": "Afro House Dance Background by VibeHorn",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2026/01/25/audio_fae126874a.mp3",
+   "status": 200,
+   "tags": [
+    "Afro",
+    "Dance",
+    "Afro",
+    "dance",
+    "dance",
+    "afro",
+    "dance",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Dance",
+    "Club"
+   ],
+   "file": "out/21_soft-house-afro-house-dance-background-473385.mp3"
+  },
+  {
+   "href": "https://pixabay.com/music/soft-house-sunset-on-the-sand-495369/",
+   "term": "afro club",
+   "title": "Sunset On The Sand by DARIOCOIRO",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2026/03/04/audio_a1cd2a7a4b.mp3",
+   "status": 200,
+   "tags": [
+    "Afro",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Club",
+    "Dancefloor",
+    "Afro",
+    "Club",
+    "Club",
+    "Afro"
+   ],
+   "file": "out/22_soft-house-sunset-on-the-sand-495369.mp3"
+  },
+  {
+   "href": "https://pixabay.com/music/afrobeat-afro-house-music-last-dance-before-dawn-524213/",
+   "term": "afro club",
+   "title": "Afro House Music - Last Dance Before Dawn by OpenMindAudio",
+   "contentId": true,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2026/04/24/audio_894cd35aec.mp3",
+   "status": 200,
+   "tags": [
+    "Afro",
+    "Dance",
+    "afro",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Afro",
+    "Dance",
+    "Club",
+    "Club",
+    "Dance"
+   ]
+  }
+ ]
+}
