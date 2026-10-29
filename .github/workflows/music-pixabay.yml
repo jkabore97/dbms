@@ -1,0 +1,34 @@
+# Temporary: looks for modern coupé-décalé on Pixabay Music in a real browser (commercial use,
+# Pixabay Content License, no Content ID), downloads the candidates and force-pushes them to the
+# music-pixabay-audio branch. Deleted once the files are fetched.
+name: Music pixabay
+on:
+  push:
+    branches: [music-pixabay]
+    paths: [.github/workflows/music-pixabay.yml, .github/music/fetch.mjs]
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github
+      - name: Search and download
+        run: |
+          set -u
+          mkdir w && cp .github/music/fetch.mjs w/ && cd w
+          npm init -y >/dev/null && npm i playwright@1.48.2 >/dev/null 2>&1
+          node fetch.mjs || true
+          ls -la out | head -60
+      - name: Keep them on a branch
+        run: |
+          set -eu
+          cd w/out
+          git init -q -b music-pixabay-audio
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -A
+          git commit -qm "Pixabay candidates"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" music-pixabay-audio
