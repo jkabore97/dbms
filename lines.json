@@ -1,0 +1,134 @@
+[
+ {
+  "file": "p_01_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Nouvelle boutique sur Marakadj ?",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "p_01_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Nouvelle boutique sur Marakadj ?",
+  "speakingRate": 0.94
+ },
+ {
+  "file": "p_02_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Alors, voici votre cadeau de bienvenue !",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "p_02_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Alors, voici votre cadeau de bienvenue !",
+  "speakingRate": 0.94
+ },
+ {
+  "file": "p_03_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Cinq mille cauris, offerts à chaque nouvelle boutique.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "p_03_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Cinq mille cauris, offerts à chaque nouvelle boutique.",
+  "speakingRate": 0.94
+ },
+ {
+  "file": "p_04_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Cinq mille cauris, c'est trois mois de Marakadj Pro. Gratuits !",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "p_04_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Cinq mille cauris, c'est trois mois de Marakadj Pro. Gratuits !",
+  "speakingRate": 0.94
+ },
+ {
+  "file": "p_05_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Marakadj Basique, c'est déjà excellent pour votre business.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "p_05_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Marakadj Basique, c'est déjà excellent pour votre business.",
+  "speakingRate": 0.94
+ },
+ {
+  "file": "p_06_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Mais Marakadj Pro, c'est le Capitole !",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "p_06_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Mais Marakadj Pro, c'est le Capitole !",
+  "speakingRate": 0.94
+ },
+ {
+  "file": "p_07_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Que dis-je ? C'est la Maison Blanche !",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "p_07_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Que dis-je ? C'est la Maison Blanche !",
+  "speakingRate": 0.94
+ },
+ {
+  "file": "p_08_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "La livraison, une vitrine plus belle, toute votre équipe, et vos analyses.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "p_08_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "La livraison, une vitrine plus belle, toute votre équipe, et vos analyses.",
+  "speakingRate": 0.94
+ },
+ {
+  "file": "p_09_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Regardez la visibilité de votre business s'envoler !",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "p_09_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Regardez la visibilité de votre business s'envoler !",
+  "speakingRate": 0.94
+ },
+ {
+  "file": "p_10_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Inscrivez-vous maintenant, sur marakadj point com.",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "p_10_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Iapetus",
+  "text": "Inscrivez-vous maintenant, sur marakadj point com.",
+  "speakingRate": 0.94
+ },
+ {
+  "file": "p_11_a.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Avec Google, ou avec Apple sur iPhone. C'est simple et facile !",
+  "speakingRate": 1.0
+ },
+ {
+  "file": "p_11_b.wav",
+  "voice": "fr-FR-Chirp3-HD-Zephyr",
+  "text": "Avec Google, ou avec Apple sur iPhone. C'est simple et facile !",
+  "speakingRate": 0.94
+ }
+]
