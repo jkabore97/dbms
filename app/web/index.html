@@ -148,6 +148,44 @@
 {{flutter_bootstrap_js}}
   </script>
   <script>
+    // iOS Safari (26) can leave the page shifted once its keyboard closes:
+    // visualViewport.offsetTop stays above 0 and the window stays scrolled,
+    // so what the app draws and where a finger lands no longer agree — taps
+    // on « Se connecter » or the back button at the top did nothing. The app
+    // never scrolls its page, so once nothing is being typed the page is put
+    // back at the top. While a field has the keyboard, or the page is
+    // zoomed, nothing is touched.
+    (function () {
+      var vv = window.visualViewport;
+      if (!vv) return;
+      function typing() {
+        var a = document.activeElement;
+        return !!a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable);
+      }
+      function settle() {
+        // Typing, or zoomed in with two fingers: the person moved it.
+        if (typing() || vv.scale > 1.01) return;
+        if (window.scrollX || window.scrollY || vv.offsetTop > 0 || vv.offsetLeft > 0) {
+          window.scrollTo(0, 0);
+          // The offset bug survives a scroll to where the page already is:
+          // a one-pixel nudge and back makes Safari recompute it.
+          if (vv.offsetTop > 0) {
+            window.scrollBy(0, 1);
+            window.scrollBy(0, -1);
+          }
+        }
+      }
+      function soon() {
+        setTimeout(settle, 80);
+        setTimeout(settle, 450);
+      }
+      vv.addEventListener('resize', soon);
+      vv.addEventListener('scroll', soon);
+      document.addEventListener('focusout', soon, true);
+      window.addEventListener('orientationchange', soon);
+    })();
+  </script>
+  <script>
     (function () {
       // Written by the deploy (scripts/web-fingerprint.mjs): the folders
       // this build reads — /app/<hash>/, /ck/<hash>/, /a/<hash>/ — and the
