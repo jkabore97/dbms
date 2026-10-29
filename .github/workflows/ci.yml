@@ -946,6 +946,13 @@ jobs:
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch150.sql
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch150.sql
 
+      - name: "Prove a new business gets its welcome cauris once — a shop, a farm and an association each 5 000 once their owner is in (a promotion until today + 120, its ledger line, the wallet, « Mes cauris », the owner's bell saying Marakaj Pro 3 mois) as org_create_core makes it; once per person, kept when the business is deleted; never a showcase vitrine, an owner added to an existing business, an employee, or with the switch at 0; spent as cauris are (Mara Pro complet three times, a fourth refused); nothing backfilled; the gift and org_create_core nobody's to call; run twice the same (151)"
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch151.sql
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch151.sql
+
       # P1 for 110: installing it changes nothing any vitrine shows or does.
       # Its own database: 109, a photograph of the whole street, what each
       # owner reads and every vitrine door (orders, bookings, delivery, Wave,
