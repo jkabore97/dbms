@@ -1,0 +1,1479 @@
+{
+ "log": [
+  {
+   "term": "cash register",
+   "status": 403,
+   "links": 0
+  },
+  {
+   "term": "coins",
+   "status": 200,
+   "links": 20
+  },
+  {
+   "term": "bubble pop",
+   "status": 200,
+   "links": 20
+  },
+  {
+   "term": "whoosh",
+   "status": 200,
+   "links": 20
+  },
+  {
+   "term": "swoosh",
+   "status": 200,
+   "links": 20
+  },
+  {
+   "term": "boing",
+   "status": 200,
+   "links": 20
+  },
+  {
+   "term": "crowd cheer",
+   "status": 200,
+   "links": 20
+  },
+  {
+   "term": "applause",
+   "status": 200,
+   "links": 19
+  },
+  {
+   "term": "cymbal crash",
+   "status": 200,
+   "links": 20
+  },
+  {
+   "term": "impact boom",
+   "status": 200,
+   "links": 20
+  },
+  {
+   "term": "tada",
+   "status": 200,
+   "links": 12
+  },
+  {
+   "term": "magic sparkle",
+   "status": 200,
+   "links": 20
+  },
+  {
+   "term": "button click",
+   "status": 200,
+   "links": 20
+  },
+  {
+   "term": "gift unwrap",
+   "status": 200,
+   "links": 20
+  }
+ ],
+ "tracks": [
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-coins-clinking-sound-410677/",
+   "term": "coins",
+   "title": "Coins Clinking Sound by Dihumichi",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/09/25/audio_813fa1707f.mp3",
+   "status": 200,
+   "tags": [
+    "Coins",
+    "Coins",
+    "Coins",
+    "Coin",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/00_film-special-effects-coins-clinking-sound-410677.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-coin-drop-229314/",
+   "term": "coins",
+   "title": "Coin Drop by Universfield",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2024/08/03/audio_87adbd41ef.mp3",
+   "status": 200,
+   "tags": [
+    "Coin",
+    "Coin",
+    "coin",
+    "Coin",
+    "Coin",
+    "Coins",
+    "Coin",
+    "Coin",
+    "Cash",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/01_film-special-effects-coin-drop-229314.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-spinning-coin-on-table-352448/",
+   "term": "coins",
+   "title": "Spinning Coin on Table by Universfield",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/05/31/audio_2895d0eabb.mp3",
+   "status": 200,
+   "tags": [
+    "Coin",
+    "coin",
+    "coin",
+    "Coin",
+    "Coin",
+    "Coin",
+    "Coin",
+    "Coin",
+    "Coin",
+    "Coin",
+    "Coin",
+    "Coin"
+   ],
+   "file": "out/02_film-special-effects-spinning-coin-on-table-352448.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-drop-coin-384921/",
+   "term": "coins",
+   "title": "Drop Coin by freesound_gamestudio",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/08/05/audio_92c853a122.mp3",
+   "status": 200,
+   "tags": [
+    "Coin",
+    "Coin",
+    "Coin",
+    "Coin",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/03_film-special-effects-drop-coin-384921.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-coins-drop-1-404409/",
+   "term": "coins",
+   "title": "Coins Drop 1 by u_xg7ssi08yr",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/09/14/audio_05ffa0af62.mp3",
+   "status": 200,
+   "tags": [
+    "Coins",
+    "Coin",
+    "Coin",
+    "Coins",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/04_film-special-effects-coins-drop-1-404409.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-bubble-pop-06-351337/",
+   "term": "bubble pop",
+   "title": "Bubble Pop 06 by Universfield",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/05/29/audio_145c0e7b22.mp3",
+   "status": 200,
+   "tags": [
+    "Pop",
+    "pop",
+    "pop",
+    "pop",
+    "clicks",
+    "Pop",
+    "Popping",
+    "Pop",
+    "Pop",
+    "Cartoon",
+    "Pop",
+    "Pop"
+   ],
+   "file": "out/05_film-special-effects-bubble-pop-06-351337.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/people-bubble-pop-04-323580/",
+   "term": "bubble pop",
+   "title": "Bubble Pop 04 by Universfield",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/04/06/audio_2685bfee64.mp3",
+   "status": 200,
+   "tags": [
+    "Pop",
+    "pop",
+    "popping",
+    "popping",
+    "clicks",
+    "Pop",
+    "Pop",
+    "Popping",
+    "Cartoon",
+    "Pop",
+    "Pop",
+    "Click"
+   ],
+   "file": "out/06_people-bubble-pop-04-323580.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-bubble-pop-406640/",
+   "term": "bubble pop",
+   "title": "Bubble Pop by DRAGON-STUDIO",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/09/18/audio_37de472eec.mp3",
+   "status": 200,
+   "tags": [
+    "Pop",
+    "Pop",
+    "Pop",
+    "Pop",
+    "Popping",
+    "Popping",
+    "Popping",
+    "Popping",
+    "Pop",
+    "Pop",
+    "Cartoon",
+    "Popular"
+   ],
+   "file": "out/07_film-special-effects-bubble-pop-406640.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-bubble-pop-293342/",
+   "term": "bubble pop",
+   "title": "Bubble Pop by Universfield",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/01/27/audio_68e78552c6.mp3",
+   "status": 200,
+   "tags": [
+    "Pop",
+    "pop",
+    "pop",
+    "clicks",
+    "Pop",
+    "Pop",
+    "Pop",
+    "Pop",
+    "Pop",
+    "Click",
+    "Cartoon",
+    "Popular"
+   ],
+   "file": "out/08_film-special-effects-bubble-pop-293342.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-bubble-pop-08-351339/",
+   "term": "bubble pop",
+   "title": "Bubble Pop 08 by Universfield",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/05/29/audio_5ca2676796.mp3",
+   "status": 200,
+   "tags": [
+    "Pop",
+    "pop",
+    "popping",
+    "pop",
+    "clicks",
+    "cartoon",
+    "Pop",
+    "Popping",
+    "Pop",
+    "Pop",
+    "Cartoon",
+    "Pop"
+   ],
+   "file": "out/09_film-special-effects-bubble-pop-08-351339.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-simple-whoosh-382724/",
+   "term": "whoosh",
+   "title": "Simple Whoosh by DRAGON-STUDIO",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/07/30/audio_b3087a581e.mp3",
+   "status": 200,
+   "tags": [
+    "Whoosh",
+    "Whoosh",
+    "Whoosh",
+    "Swoosh",
+    "Whoosh",
+    "Whoosh",
+    "Swoosh",
+    "Whoosh",
+    "Whoosh",
+    "Whoosh",
+    "Swoosh",
+    "Whoosh"
+   ],
+   "file": "out/10_film-special-effects-simple-whoosh-382724.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-whoosh-bright-panning-6-620360/",
+   "term": "whoosh",
+   "title": "Whoosh Bright Panning 6 by SoundReality",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2026/10/14/audio_775054915a.mp3",
+   "status": 200,
+   "tags": [
+    "Whoosh",
+    "Whoosh",
+    "Whoosh",
+    "whoosh",
+    "Whoosh",
+    "Whoosh",
+    "Whoosh",
+    "Swoosh",
+    "Swoosh",
+    "Whoosh",
+    "Whoosh",
+    "Whoosh"
+   ],
+   "file": "out/11_film-special-effects-whoosh-bright-panning-6-620360.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-whoosh-cinematic-376875/",
+   "term": "whoosh",
+   "title": "Whoosh Cinematic by DRAGON-STUDIO",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/07/18/audio_f5a010a2d7.mp3",
+   "status": 200,
+   "tags": [
+    "Whoosh",
+    "Whoosh",
+    "whoosh",
+    "Swoosh",
+    "Whoosh",
+    "Whoosh",
+    "Swoosh",
+    "Whoosh",
+    "Whoosh",
+    "Whoosh",
+    "Whoosh",
+    "Whooshing"
+   ],
+   "file": "out/12_film-special-effects-whoosh-cinematic-376875.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-whoosh-end-384629/",
+   "term": "whoosh",
+   "title": "Whoosh End by SoundReality",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/08/04/audio_2c80e04e39.mp3",
+   "status": 200,
+   "tags": [
+    "Whoosh",
+    "Whoosh",
+    "Swoosh",
+    "Whoosh",
+    "Swoosh",
+    "Whoosh",
+    "Whoosh",
+    "Swoosh",
+    "Whooshing",
+    "Whoosh",
+    "Whoosh",
+    "Whoosh"
+   ],
+   "file": "out/13_film-special-effects-whoosh-end-384629.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-epic-whoosh-478371/",
+   "term": "whoosh",
+   "title": "Epic Whoosh by DRAGON-STUDIO",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2026/02/02/audio_89b1f3f381.mp3",
+   "status": 200,
+   "tags": [
+    "Whoosh",
+    "whoosh",
+    "whoosh",
+    "Whoosh",
+    "Whoosh",
+    "Whoosh",
+    "Whoosh",
+    "Swoosh",
+    "Whoosh",
+    "Whoosh",
+    "Whoosh",
+    "Swoosh"
+   ],
+   "file": "out/14_film-special-effects-epic-whoosh-478371.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-swoosh-015-383769/",
+   "term": "swoosh",
+   "title": "Swoosh 015 by Universfield",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/08/02/audio_6f4893deae.mp3",
+   "status": 200,
+   "tags": [
+    "Swoosh",
+    "Swoosh",
+    "swoosh",
+    "Swoosh",
+    "Swoosh",
+    "Swoosh",
+    "Swoosh",
+    "Whoosh",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/15_film-special-effects-swoosh-015-383769.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-copyright-free-swoosh-487669/",
+   "term": "swoosh",
+   "title": "Copyright Free Swoosh by DRAGON-STUDIO",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2026/02/19/audio_29ed929219.mp3",
+   "status": 200,
+   "tags": [
+    "Swoosh",
+    "swoosh",
+    "swoosh",
+    "Swoosh",
+    "Whoosh",
+    "Swoosh",
+    "Swoosh",
+    "Swoosh",
+    "Swoosh",
+    "Swoosh",
+    "Swoosh",
+    "Swoosh"
+   ],
+   "file": "out/16_film-special-effects-copyright-free-swoosh-487669.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-fast-swoosh-383967/",
+   "term": "swoosh",
+   "title": "Fast Swoosh by Universfield",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/08/03/audio_f3fcedb3d6.mp3",
+   "status": 200,
+   "tags": [
+    "Swoosh",
+    "swoosh",
+    "Swoosh",
+    "Swoosh",
+    "Swoosh",
+    "Whoosh",
+    "Swoosh",
+    "Swoosh",
+    "Whoosh",
+    "Swoosh",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/17_film-special-effects-fast-swoosh-383967.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-swoosh-010-352856/",
+   "term": "swoosh",
+   "title": "Swoosh 010 by Universfield",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/06/01/audio_32e3e71d5f.mp3",
+   "status": 200,
+   "tags": [
+    "Swoosh",
+    "Swoosh",
+    "swoosh",
+    "Swoosh",
+    "Whoosh",
+    "Swoosh",
+    "Whoosh",
+    "Swoosh",
+    "Swoosh",
+    "Swoosh",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/18_film-special-effects-swoosh-010-352856.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-air-swoosh-352049/",
+   "term": "swoosh",
+   "title": "Air Swoosh by Universfield",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/05/30/audio_6f836d4160.mp3",
+   "status": 200,
+   "tags": [
+    "Swoosh",
+    "swoosh",
+    "swoosh",
+    "Whoosh",
+    "Swoosh",
+    "Swoosh",
+    "Swoosh",
+    "Whoosh",
+    "Whoosh",
+    "Swoosh",
+    "Swoosh",
+    "Swoosh"
+   ],
+   "file": "out/19_film-special-effects-air-swoosh-352049.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-cartoon-spring-boing-140378/",
+   "term": "boing",
+   "title": "Cartoon Spring Boing by Universfield",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2023/02/23/audio_be301496db.mp3",
+   "status": 200,
+   "tags": [
+    "Cartoon",
+    "Boing",
+    "Cartoon",
+    "boing",
+    "cartoon",
+    "boing",
+    "Boing",
+    "Cartoon",
+    "Boing",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/20_film-special-effects-cartoon-spring-boing-140378.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-funny-boing-flexatone-wobble-352710/",
+   "term": "boing",
+   "title": "Funny Boing Flexatone Wobble by Universfield",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/06/01/audio_57a8106e40.mp3",
+   "status": 200,
+   "tags": [
+    "Boing",
+    "boing",
+    "cartoon",
+    "cartoonish",
+    "boing",
+    "Boing",
+    "Boing",
+    "Cartoon",
+    "Boing",
+    "Boing",
+    "Boing",
+    "Boing"
+   ],
+   "file": "out/21_film-special-effects-funny-boing-flexatone-wobble-352710.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-boing-flexatone-wobble-310482/",
+   "term": "boing",
+   "title": "Boing - Flexatone Wobble by Universfield",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/03/07/audio_29a7e4ffa3.mp3",
+   "status": 200,
+   "tags": [
+    "Boing",
+    "Boing",
+    "cartoon",
+    "cartoon",
+    "boing",
+    "Boing",
+    "Boing",
+    "Cartoon",
+    "Boing",
+    "Boing",
+    "Boing",
+    "Cartoon"
+   ],
+   "file": "out/22_film-special-effects-boing-flexatone-wobble-310482.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-spring-boing-229170/",
+   "term": "boing",
+   "title": "Spring Boing by Universfield",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2024/08/02/audio_d983632c54.mp3",
+   "status": 200,
+   "tags": [
+    "Boing",
+    "boing",
+    "cartoon",
+    "cartoon",
+    "boing",
+    "Boing",
+    "Cartoon",
+    "Boing",
+    "Cartoon",
+    "Boing",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/23_film-special-effects-spring-boing-229170.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-boing-2-44164/",
+   "term": "boing",
+   "title": "boing 2 by freesound_community",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2022/03/10/audio_1e343656d5.mp3",
+   "status": 200,
+   "tags": [
+    "boing",
+    "Boing",
+    "cartoon",
+    "cartoon",
+    "boing",
+    "Boing",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/24_film-special-effects-boing-2-44164.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/people-crowd-cheer-and-applause-406644/",
+   "term": "crowd cheer",
+   "title": "Crowd Cheer and Applause by DRAGON-STUDIO",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/09/18/audio_5c9b7f494e.mp3",
+   "status": 200,
+   "tags": [
+    "Cheer",
+    "Applause",
+    "Cheer",
+    "Cheer",
+    "Applause",
+    "Cheering",
+    "Cheering",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/25_people-crowd-cheer-and-applause-406644.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/people-live-football-match-stadium-crowd-cheering-563439/",
+   "term": "crowd cheer",
+   "title": "LIVE Football Match – Stadium Crowd Cheering by arunangshubanerjee",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2026/07/07/audio_c8fcdc342f.mp3",
+   "status": 200,
+   "tags": [
+    "Cheering",
+    "Cheer",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/26_people-live-football-match-stadium-crowd-cheering-563439.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/people-crowd-cheer-406646/",
+   "term": "crowd cheer",
+   "title": "Crowd Cheer by DRAGON-STUDIO",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/09/18/audio_94652bbdb5.mp3",
+   "status": 200,
+   "tags": [
+    "Cheer",
+    "Cheer",
+    "Cheering",
+    "Cheer",
+    "Cheering",
+    "Applause",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/27_people-crowd-cheer-406646.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/people-crowd-cheer-in-school-auditorium-236699/",
+   "term": "crowd cheer",
+   "title": "Crowd cheer in school auditorium by Driken5482",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2024/08/30/audio_138837314c.mp3",
+   "status": 200,
+   "tags": [
+    "cheer",
+    "cheer",
+    "applause",
+    "cheering",
+    "Cheer",
+    "Applause",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/28_people-crowd-cheer-in-school-auditorium-236699.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/people-crowd-cheering-198411/",
+   "term": "crowd cheer",
+   "title": "Crowd Cheering by VoiceBosch",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2024/03/26/audio_9bc9244969.mp3",
+   "status": 200,
+   "tags": [
+    "Cheering",
+    "cheering",
+    "cheering",
+    "Cheering",
+    "Cheer",
+    "Applause",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/29_people-crowd-cheering-198411.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-applause-sound-effect-521104/",
+   "term": "applause",
+   "title": "Applause - sound effect by PWLPL",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2026/04/24/audio_adc50d5be0.mp3",
+   "status": 200,
+   "tags": [
+    "Applause",
+    "Applause",
+    "applause",
+    "Applause",
+    "Applause",
+    "Cheering",
+    "Applause",
+    "Applause",
+    "Applause",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/30_film-special-effects-applause-sound-effect-521104.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/people-applause-cheer-236786/",
+   "term": "applause",
+   "title": "Applause, cheer by Driken5482",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2024/08/31/audio_aa510c96aa.mp3",
+   "status": 200,
+   "tags": [
+    "Applause",
+    "cheer",
+    "Applause",
+    "cheer",
+    "cheering",
+    "Applause",
+    "Cheer",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/31_people-applause-cheer-236786.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/people-applause-383901/",
+   "term": "applause",
+   "title": "Applause by vvqne",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/08/02/audio_2020d6ceff.mp3",
+   "status": 200,
+   "tags": [
+    "Applause",
+    "Applause",
+    "Applause",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/32_people-applause-383901.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/people-applause-236785/",
+   "term": "applause",
+   "title": "Applause by Driken5482",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2024/08/31/audio_5a2d1d3f2b.mp3",
+   "status": 200,
+   "tags": [
+    "Applause",
+    "Applause",
+    "cheering",
+    "applause",
+    "cheering",
+    "Applause",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/33_people-applause-236785.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-applause-180037/",
+   "term": "applause",
+   "title": "Applause by stavgag",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2023/12/05/audio_58a562081d.mp3",
+   "status": 200,
+   "tags": [
+    "Applause",
+    "Applause",
+    "Applause",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/34_film-special-effects-applause-180037.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/musical-tr707-crash-cymbal-241376/",
+   "term": "cymbal crash",
+   "title": "TR707 Crash Cymbal by 11325622",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2024/09/16/audio_2bc68166ab.mp3",
+   "status": 200,
+   "tags": [
+    "Crash",
+    "crash",
+    "crash",
+    "Crash",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/35_musical-tr707-crash-cymbal-241376.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/musical-crash-cymbal-hit-140577/",
+   "term": "cymbal crash",
+   "title": "Crash Cymbal Hit by Universfield",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2023/02/25/audio_a32413f47f.mp3",
+   "status": 200,
+   "tags": [
+    "Crash",
+    "Crash",
+    "crash",
+    "Crash",
+    "Crash",
+    "Crash",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/36_musical-crash-cymbal-hit-140577.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/musical-cymbal-crash-229206/",
+   "term": "cymbal crash",
+   "title": "Cymbal Crash by Universfield",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2024/08/02/audio_146a7a2464.mp3",
+   "status": 200,
+   "tags": [
+    "Crash",
+    "crash",
+    "crash",
+    "Crash",
+    "Crash",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/37_musical-cymbal-crash-229206.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/musical-cymbal-crash-412547/",
+   "term": "cymbal crash",
+   "title": "Cymbal Crash by u_rm9kk1yu9k",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/09/29/audio_ea326fb964.mp3",
+   "status": 200,
+   "tags": [
+    "Crash",
+    "Crash",
+    "Crash",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/38_musical-cymbal-crash-412547.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/musical-reverse-crash-cymbal-projection-80323/",
+   "term": "cymbal crash",
+   "title": "Reverse Crash Cymbal Projection by freesound_community",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2022/03/15/audio_2f0c6e359a.mp3",
+   "status": 200,
+   "tags": [
+    "Crash",
+    "crash",
+    "crash",
+    "Crash",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/39_musical-reverse-crash-cymbal-projection-80323.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-cinematic-impact-boom-05-352465/",
+   "term": "impact boom",
+   "title": "Cinematic Impact Boom 05 by Universfield",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/05/31/audio_be1e4daf3e.mp3",
+   "status": 200,
+   "tags": [
+    "Boom",
+    "boom",
+    "boom",
+    "Boom",
+    "Boom",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/40_film-special-effects-cinematic-impact-boom-05-352465.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-cinematic-impact-boom-03-294435/",
+   "term": "impact boom",
+   "title": "Cinematic Impact Boom 03 by Universfield",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/01/29/audio_3a40fcc997.mp3",
+   "status": 200,
+   "tags": [
+    "Boom",
+    "boom",
+    "boom",
+    "boom",
+    "Boom",
+    "Boom",
+    "Boom",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/41_film-special-effects-cinematic-impact-boom-03-294435.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/household-impact-cinematic-boom-02-487858/",
+   "term": "impact boom",
+   "title": "Impact – Cinematic Boom 02 by Universfield",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2026/02/20/audio_bc61563c9b.mp3",
+   "status": 200,
+   "tags": [
+    "Boom",
+    "boom",
+    "boom",
+    "boom",
+    "Boom",
+    "Boom",
+    "Boom",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/42_household-impact-cinematic-boom-02-487858.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-impact-cinematic-boom-04-567240/",
+   "term": "impact boom",
+   "title": "Impact – Cinematic Boom 04 by Universfield",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2026/07/14/audio_08c6c0f57d.mp3",
+   "status": 200,
+   "tags": [
+    "Boom",
+    "boom",
+    "Boom",
+    "Boom",
+    "Boom",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/43_film-special-effects-impact-cinematic-boom-04-567240.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-impact-transition-impact-dramatic-boom-346103/",
+   "term": "impact boom",
+   "title": "Impact Transition Impact Dramatic Boom by ALEXIS_GAMING_CAM",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/05/23/audio_c4b3e07856.mp3",
+   "status": 200,
+   "tags": [
+    "Boom",
+    "boom",
+    "boom",
+    "Boom",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/44_film-special-effects-impact-transition-impact-dramatic-boom-346103.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/musical-tada-fanfare-a-6313/",
+   "term": "tada",
+   "title": "Tada Fanfare A by freesound_community",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2021/08/04/audio_473a42432c.mp3",
+   "status": 200,
+   "tags": [
+    "Tada",
+    "Tada",
+    "tada",
+    "Tada",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/45_musical-tada-fanfare-a-6313.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/musical-065492-tadawav-80833/",
+   "term": "tada",
+   "title": "065492_TaDa!.wav by freesound_community",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2022/03/15/audio_01f5fcf7a9.mp3",
+   "status": 200,
+   "tags": [
+    "Tada",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/46_musical-065492-tadawav-80833.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/people-086060-tadawav-85939/",
+   "term": "tada",
+   "title": "086060_tada!.wav by freesound_community",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2022/03/15/audio_b0286134c9.mp3",
+   "status": 200,
+   "tags": [
+    "Tada",
+    "Tada",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/47_people-086060-tadawav-85939.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/musical-065490-tadaaif-85354/",
+   "term": "tada",
+   "title": "065490_TaDa!.aif by freesound_community",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2022/03/15/audio_10cd6f3001.mp3",
+   "status": 200,
+   "tags": [
+    "magic",
+    "Tada",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/48_musical-065490-tadaaif-85354.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-tada-military-3-183975/",
+   "term": "tada",
+   "title": "Tada Military 3 by floraphonic",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2024/01/02/audio_270064a12e.mp3",
+   "status": 200,
+   "tags": [
+    "Tada",
+    "Tada",
+    "tada",
+    "Tada",
+    "Tadah",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/49_film-special-effects-tada-military-3-183975.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-magic-sparkle-190030/",
+   "term": "magic sparkle",
+   "title": "Magic sparkle by Liecio",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2024/02/07/audio_bb7956a921.mp3",
+   "status": 200,
+   "tags": [
+    "Magic",
+    "Magic",
+    "magical",
+    "magical",
+    "Cartoon",
+    "Magic",
+    "Magical",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/50_film-special-effects-magic-sparkle-190030.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-sound-effect-twinklesparkle-115095/",
+   "term": "magic sparkle",
+   "title": "Sound Effect: Twinkle/Sparkle by ShidenBeatsMusic",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2022/07/15/audio_89f13f8631.mp3",
+   "status": 200,
+   "tags": [
+    "magical",
+    "magical",
+    "magical",
+    "Magic",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/51_film-special-effects-sound-effect-twinklesparkle-115095.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-magic-spell-278824/",
+   "term": "magic sparkle",
+   "title": "Magic Spell by Universfield",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2024/12/20/audio_d3efed8c6c.mp3",
+   "status": 200,
+   "tags": [
+    "Magic",
+    "Magic",
+    "magic",
+    "Magic",
+    "Magic",
+    "Magical",
+    "Magical",
+    "Whoosh",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/52_film-special-effects-magic-spell-278824.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-magic-spell-333896/",
+   "term": "magic sparkle",
+   "title": "Magic Spell by Soumages",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/04/29/audio_cc27d4eb0e.mp3",
+   "status": 200,
+   "tags": [
+    "Magic",
+    "Magic",
+    "magic",
+    "Magic",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/53_film-special-effects-magic-spell-333896.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-magic-spell-02-250240/",
+   "term": "magic sparkle",
+   "title": "Magic Spell 02 by Universfield",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2024/10/12/audio_515090dc3c.mp3",
+   "status": 200,
+   "tags": [
+    "Magic",
+    "Magic",
+    "magic",
+    "Magic",
+    "Magical",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/54_film-special-effects-magic-spell-02-250240.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-button-press-382713/",
+   "term": "button click",
+   "title": "Button Press by DRAGON-STUDIO",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/07/30/audio_c13eb537ea.mp3",
+   "status": 200,
+   "tags": [
+    "click",
+    "Click",
+    "Click",
+    "Click",
+    "Click",
+    "Click",
+    "Clicker",
+    "Click",
+    "Click",
+    "Click",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/55_film-special-effects-button-press-382713.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-click-button-140881/",
+   "term": "button click",
+   "title": "Click Button by Universfield",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2023/02/28/audio_52ccaf1a85.mp3",
+   "status": 200,
+   "tags": [
+    "Click",
+    "Click",
+    "click",
+    "Click",
+    "Click",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/56_film-special-effects-click-button-140881.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-computer-mouse-click-352734/",
+   "term": "button click",
+   "title": "Computer Mouse Click by Universfield",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/06/01/audio_d2ccbb367a.mp3",
+   "status": 200,
+   "tags": [
+    "Click",
+    "click",
+    "click",
+    "Click",
+    "Click",
+    "Click",
+    "Click",
+    "Click",
+    "Click",
+    "Click",
+    "Click",
+    "Popular"
+   ],
+   "file": "out/57_film-special-effects-computer-mouse-click-352734.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-old-radio-button-click-97549/",
+   "term": "button click",
+   "title": "old radio button click by freesound_community",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2022/03/20/audio_85050dc66d.mp3",
+   "status": 200,
+   "tags": [
+    "click",
+    "click",
+    "click",
+    "Click",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/58_film-special-effects-old-radio-button-click-97549.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-mouse-button-click-308449/",
+   "term": "button click",
+   "title": "mouse button click by sarthakraj_308",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/03/03/audio_9a2d0b0f36.mp3",
+   "status": 200,
+   "tags": [
+    "click",
+    "click",
+    "click",
+    "Click",
+    "Click",
+    "Click",
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/59_film-special-effects-mouse-button-click-308449.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/household-paper-crumple-rip-unwrap-gift-33930/",
+   "term": "gift unwrap",
+   "title": "Paper, crumple, rip, unwrap gift by freesound_community",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2022/03/10/audio_c07b968856.mp3",
+   "status": 200,
+   "tags": [
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/60_household-paper-crumple-rip-unwrap-gift-33930.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-wrapping-paper-rustle-72405/",
+   "term": "gift unwrap",
+   "title": "Wrapping Paper Rustle by freesound_community",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2022/03/15/audio_0d8f80bca3.mp3",
+   "status": 200,
+   "tags": [
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/61_film-special-effects-wrapping-paper-rustle-72405.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/film-special-effects-unwrapping-a-christmas-present-451854/",
+   "term": "gift unwrap",
+   "title": "Unwrapping a Christmas Present by DRAGON-STUDIO",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2025/12/15/audio_749db2077c.mp3",
+   "status": 200,
+   "tags": [
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/62_film-special-effects-unwrapping-a-christmas-present-451854.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/people-chewing-sounds-61127/",
+   "term": "gift unwrap",
+   "title": "chewing_sounds by freesound_community",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2022/03/14/audio_d22cef4a16.mp3",
+   "status": 200,
+   "tags": [
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/63_people-chewing-sounds-61127.mp3"
+  },
+  {
+   "href": "https://pixabay.com/sound-effects/household-unwrapping-parcel-20305/",
+   "term": "gift unwrap",
+   "title": "unwrapping parcel by freesound_community",
+   "contentId": false,
+   "license": true,
+   "mp3": "https://cdn.pixabay.com/download/audio/2022/02/10/audio_f91db41d68.mp3",
+   "status": 200,
+   "tags": [
+    "Popular",
+    "Popular",
+    "Popular",
+    "Popular"
+   ],
+   "file": "out/64_household-unwrapping-parcel-20305.mp3"
+  }
+ ]
+}
