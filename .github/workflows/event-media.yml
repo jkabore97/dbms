@@ -1,0 +1,54 @@
+# Temporary: fetches free Pixabay videos and photos for the Premium event templates, cuts the
+# videos to portrait clips that scrub well (short keyframe interval), and force-pushes them to
+# the event-media-out branch. Deleted once the files are fetched.
+name: Event media
+on:
+  push:
+    branches: [event-media]
+    paths: [.github/workflows/event-media.yml, .github/media/fetch.mjs]
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github
+      - name: Search and download
+        run: |
+          set -u
+          mkdir w && cp .github/media/fetch.mjs w/ && cd w
+          npm init -y >/dev/null && npm i playwright@1.48.2 >/dev/null 2>&1
+          node fetch.mjs || true
+          ls -la raw | head -80
+      - name: Portrait clips and photos
+        run: |
+          set -u
+          sudo apt-get install -y -qq ffmpeg >/dev/null 2>&1 || true
+          cd w && mkdir -p out/v out/p out/f
+          cp raw/list.json out/
+          for f in raw/*.mp4; do
+            [ -e "$f" ] || continue
+            b=$(basename "$f" .mp4)
+            ffprobe -v error -show_entries stream=width,height:format=duration -of csv=p=0 "$f" > "out/f/$b.txt" 2>/dev/null || true
+            ffmpeg -v error -y -ss 0.5 -t 9 -i "$f" -vf "crop='min(iw,ih*9/16)':ih,scale=576:1024:flags=lanczos,fps=30" -an -c:v libx264 -preset slow -crf 27 -g 5 -keyint_min 5 -pix_fmt yuv420p -movflags +faststart "out/v/$b.mp4" || true
+            ffmpeg -v error -y -ss 3 -i "out/v/$b.mp4" -frames:v 1 -q:v 4 "out/f/$b.jpg" || true
+          done
+          for f in raw/*.jpg; do
+            [ -e "$f" ] || continue
+            b=$(basename "$f" .jpg)
+            ffmpeg -v error -y -i "$f" -vf "scale='if(gt(a,9/16),-2,1080)':'if(gt(a,9/16),1920,-2)',crop=1080:1920" -q:v 5 "out/p/$b.jpg" || ffmpeg -v error -y -i "$f" -vf "scale=1080:-2" -q:v 5 "out/p/$b.jpg" || true
+          done
+          du -sh out/v out/p
+      - name: Keep them on a branch
+        run: |
+          set -eu
+          cd w/out
+          git init -q -b event-media-out
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -A
+          git commit -qm "Event media"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" event-media-out
