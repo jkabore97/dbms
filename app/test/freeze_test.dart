@@ -294,12 +294,12 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: AppDownloadPrompt(
           env: AppDownloadEnv(
-            phone: AppPhone.android,
+            phone: AppPhone.ios,
             standalone: false,
             readShownAt: () => shownAt,
             writeShownAt: (at) => shownAt = at,
           ),
-          links: () async => const AppLinks.fallback(),
+          links: () async => const AppLinks(android: apkDownloadUrl, ios: 'https://apps.apple.com/app/mara/id1'),
           child: _Counted(onInit: () => built++),
         ),
       ));
