@@ -1,0 +1,1512 @@
+{
+ "sahel": [
+  {
+   "kind": "videos",
+   "term": "giraffe savanna",
+   "status": 403,
+   "found": 0
+  },
+  {
+   "kind": "videos",
+   "term": "acacia sunset",
+   "status": 200,
+   "found": 99
+  },
+  {
+   "topic": "sahel",
+   "kind": "videos",
+   "term": "acacia sunset",
+   "href": "https://pixabay.com/videos/serengeti-africa-tanzania-nature-338442/",
+   "title": "Serengeti, Africa, Tanzania. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2026/03/05/338442_large.mp4",
+   "license": true,
+   "file": "raw/sahel_v0_serengeti-africa-tanzania-nature-338442.mp4"
+  },
+  {
+   "topic": "sahel",
+   "kind": "videos",
+   "term": "acacia sunset",
+   "href": "https://pixabay.com/videos/giraffes-tall-animal-long-neck-308422/",
+   "title": "Giraffes, Tall Animal, Long Neck. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2025/10/07/308422_large.mp4",
+   "license": true,
+   "file": "raw/sahel_v1_giraffes-tall-animal-long-neck-308422.mp4"
+  },
+  {
+   "topic": "sahel",
+   "kind": "videos",
+   "term": "acacia sunset",
+   "href": "https://pixabay.com/videos/flower-of-the-acacia-tree-flower-28095/",
+   "title": "Flower Of The Acacia, Tree, Flower. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2019/10/19/28095-367748148_large.mp4",
+   "license": true,
+   "file": "raw/sahel_v2_flower-of-the-acacia-tree-flower-28095.mp4"
+  },
+  {
+   "kind": "photos",
+   "term": "savanna sunset acacia",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "sahel",
+   "kind": "photos",
+   "term": "savanna sunset acacia",
+   "href": "https://pixabay.com/photos/antelope-sunset-kenya-dusk-mammal-4121962/",
+   "title": "Antelope on Kenyan savanna at sunset Photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2019/04/12/11/46/antelope-4121962_1280.jpg",
+   "license": true,
+   "file": "raw/sahel_p0_antelope-sunset-kenya-dusk-mammal-4121962.jpg"
+  },
+  {
+   "topic": "sahel",
+   "kind": "photos",
+   "term": "savanna sunset acacia",
+   "href": "https://pixabay.com/photos/africa-giraffes-wildlife-wilderness-2785836/",
+   "title": "Giraffes at sunset in savanna Photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2017/09/25/17/02/africa-2785836_1280.jpg",
+   "license": true,
+   "file": "raw/sahel_p1_africa-giraffes-wildlife-wilderness-2785836.jpg"
+  },
+  {
+   "topic": "sahel",
+   "kind": "photos",
+   "term": "savanna sunset acacia",
+   "href": "https://pixabay.com/photos/kenya-sunset-africa-nature-sun-3816810/",
+   "title": "Acacia tree at sunset in Kenya photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2018/11/15/09/07/kenya-3816810_1280.jpg",
+   "license": true,
+   "file": "raw/sahel_p2_kenya-sunset-africa-nature-sun-3816810.jpg"
+  }
+ ],
+ "lotus": [
+  {
+   "kind": "videos",
+   "term": "lotus flower",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "lotus",
+   "kind": "videos",
+   "term": "lotus flower",
+   "href": "https://pixabay.com/videos/flower-lotus-aquatic-plants-wind-170456/",
+   "title": "Flower, Lotus, Aquatic Plants. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2023/07/07/170456-843367898_large.mp4",
+   "license": true,
+   "file": "raw/lotus_v0_flower-lotus-aquatic-plants-wind-170456.mp4"
+  },
+  {
+   "topic": "lotus",
+   "kind": "videos",
+   "term": "lotus flower",
+   "href": "https://pixabay.com/videos/lotus-flower-beautiful-vietnam-222213/",
+   "title": "Lotus, Flower, Beautiful. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2024/07/21/222213_large.mp4",
+   "license": true,
+   "file": "raw/lotus_v1_lotus-flower-beautiful-vietnam-222213.mp4"
+  },
+  {
+   "topic": "lotus",
+   "kind": "videos",
+   "term": "lotus flower",
+   "href": "https://pixabay.com/videos/lotus-pink-flower-blossom-peace-34573/",
+   "title": "Lotus, Pink Flower, Blossom. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2020/03/30/34573-402634109_large.mp4",
+   "license": true,
+   "file": "raw/lotus_v2_lotus-pink-flower-blossom-peace-34573.mp4"
+  },
+  {
+   "kind": "videos",
+   "term": "koi pond",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "lotus",
+   "kind": "videos",
+   "term": "koi pond",
+   "href": "https://pixabay.com/videos/fish-koi-pond-animals-184799/",
+   "title": "Fish, Koi, Pond. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2023/10/13/184799-874271892_large.mp4",
+   "license": true,
+   "file": "raw/lotus_v0_fish-koi-pond-animals-184799.mp4"
+  },
+  {
+   "topic": "lotus",
+   "kind": "videos",
+   "term": "koi pond",
+   "href": "https://pixabay.com/videos/koi-carp-fishes-ornamental-fish-5652/",
+   "title": "Koi, Carp, Fishes. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2016/09/24/5652-184232331_large.mp4",
+   "license": true,
+   "file": "raw/lotus_v1_koi-carp-fishes-ornamental-fish-5652.mp4"
+  },
+  {
+   "topic": "lotus",
+   "kind": "videos",
+   "term": "koi pond",
+   "href": "https://pixabay.com/videos/ai-generated-pond-water-koi-fish-383351/",
+   "title": "Ai Generated, Pond, Water. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2026/10/18/383351_large.mp4",
+   "license": true,
+   "file": "raw/lotus_v2_ai-generated-pond-water-koi-fish-383351.mp4"
+  },
+  {
+   "kind": "photos",
+   "term": "lotus pond",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "lotus",
+   "kind": "photos",
+   "term": "lotus pond",
+   "href": "https://pixabay.com/photos/flower-lotus-flower-pink-flower-4312140/",
+   "title": "Pink lotus flower in pond photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2019/07/02/10/36/flower-4312140_1280.jpg",
+   "license": true,
+   "file": "raw/lotus_p0_flower-lotus-flower-pink-flower-4312140.jpg"
+  },
+  {
+   "topic": "lotus",
+   "kind": "photos",
+   "term": "lotus pond",
+   "href": "https://pixabay.com/photos/lotus-water-lily-pink-flower-7491929/",
+   "title": "Lotus Water Lily Pink Flower - Free photo on Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2022/10/01/17/22/lotus-7491929_1280.jpg",
+   "license": true,
+   "file": "raw/lotus_p1_lotus-water-lily-pink-flower-7491929.jpg"
+  },
+  {
+   "topic": "lotus",
+   "kind": "photos",
+   "term": "lotus pond",
+   "href": "https://pixabay.com/photos/giant-leaf-lotus-lotus-leaf-1556769/",
+   "title": "Green lotus leaves close-up photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2016/07/30/10/30/leaf-1556769_1280.jpg",
+   "license": true,
+   "file": "raw/lotus_p2_giant-leaf-lotus-lotus-leaf-1556769.jpg"
+  }
+ ],
+ "foret": [
+  {
+   "kind": "videos",
+   "term": "forest fog sunlight",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "foret",
+   "kind": "videos",
+   "term": "forest fog sunlight",
+   "href": "https://pixabay.com/videos/forest-woods-mystical-morning-49981/",
+   "title": "Forest, Woods, Mystical. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2020/09/15/49981-459802291_large.mp4",
+   "license": true,
+   "file": "raw/foret_v0_forest-woods-mystical-morning-49981.mp4"
+  },
+  {
+   "topic": "foret",
+   "kind": "videos",
+   "term": "forest fog sunlight",
+   "href": "https://pixabay.com/videos/mountains-fog-clouds-sunset-59291/",
+   "title": "Mountains, Fog, Clouds. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2020/12/15/59291-492700392_large.mp4",
+   "license": true,
+   "file": "raw/foret_v1_mountains-fog-clouds-sunset-59291.mp4"
+  },
+  {
+   "topic": "foret",
+   "kind": "videos",
+   "term": "forest fog sunlight",
+   "href": "https://pixabay.com/videos/morning-fog-winter-forest-258799/",
+   "title": "Morning, Fog, Winter. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2025/02/17/258799_large.mp4",
+   "license": true,
+   "file": "raw/foret_v2_morning-fog-winter-forest-258799.mp4"
+  },
+  {
+   "kind": "videos",
+   "term": "misty forest",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "foret",
+   "kind": "videos",
+   "term": "misty forest",
+   "href": "https://pixabay.com/videos/trees-pine-trees-forest-misty-snow-209659/",
+   "title": "Trees, Pine Trees, Forest. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2024/04/27/209659_large.mp4",
+   "license": true,
+   "file": "raw/foret_v0_trees-pine-trees-forest-misty-snow-209659.mp4"
+  },
+  {
+   "topic": "foret",
+   "kind": "videos",
+   "term": "misty forest",
+   "href": "https://pixabay.com/videos/trees-cross-grave-fog-forest-83095/",
+   "title": "Trees, Cross, Grave. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2021/07/29/83095-581045340_large.mp4",
+   "license": true,
+   "file": "raw/foret_v1_trees-cross-grave-fog-forest-83095.mp4"
+  },
+  {
+   "topic": "foret",
+   "kind": "videos",
+   "term": "misty forest",
+   "href": "https://pixabay.com/videos/netherlands-sun-rays-misty-forest-382584/",
+   "title": "Netherlands, Sun Rays, Misty Forest. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2026/10/14/382584_large.mp4",
+   "license": true,
+   "file": "raw/foret_v2_netherlands-sun-rays-misty-forest-382584.mp4"
+  },
+  {
+   "kind": "photos",
+   "term": "forest sunbeams",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "foret",
+   "kind": "photos",
+   "term": "forest sunbeams",
+   "href": "https://pixabay.com/photos/forest-sun-warm-nature-light-5038025/",
+   "title": "Forest path in golden light Photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2020/04/13/11/49/forest-5038025_1280.jpg",
+   "license": true,
+   "file": "raw/foret_p0_forest-sun-warm-nature-light-5038025.jpg"
+  },
+  {
+   "topic": "foret",
+   "kind": "photos",
+   "term": "forest sunbeams",
+   "href": "https://pixabay.com/photos/forest-trees-sun-rays-sunlight-fog-1072828/",
+   "title": "Misty forest with sunbeams Photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2015/12/01/20/28/forest-1072828_1280.jpg",
+   "license": true,
+   "file": "raw/foret_p1_forest-trees-sun-rays-sunlight-fog-1072828.jpg"
+  },
+  {
+   "topic": "foret",
+   "kind": "photos",
+   "term": "forest sunbeams",
+   "href": "https://pixabay.com/photos/trees-moss-forest-sunlight-sunrays-3294681/",
+   "title": "Sunbeams in a mossy forest photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2018/04/06/00/25/trees-3294681_1280.jpg",
+   "license": true,
+   "file": "raw/foret_p2_trees-moss-forest-sunlight-sunrays-3294681.jpg"
+  }
+ ],
+ "cerisiers": [
+  {
+   "kind": "videos",
+   "term": "cherry blossom",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "cerisiers",
+   "kind": "videos",
+   "term": "cherry blossom",
+   "href": "https://pixabay.com/videos/flowers-spring-cherry-blossoms-268528/",
+   "title": "Flowers, Spring, Cherry Blossoms. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2025/03/29/268528_large.mp4",
+   "license": true,
+   "file": "raw/cerisiers_v0_flowers-spring-cherry-blossoms-268528.mp4"
+  },
+  {
+   "topic": "cerisiers",
+   "kind": "videos",
+   "term": "cherry blossom",
+   "href": "https://pixabay.com/videos/flowers-finger-petals-cherry-flower-68367/",
+   "title": "Flowers, Finger, Petals. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2021/03/19/68367-865432244_large.mp4",
+   "license": true,
+   "file": "raw/cerisiers_v1_flowers-finger-petals-cherry-flower-68367.mp4"
+  },
+  {
+   "topic": "cerisiers",
+   "kind": "videos",
+   "term": "cherry blossom",
+   "href": "https://pixabay.com/videos/night-moon-spring-cherry-blossom-155672/",
+   "title": "Night, Moon, Spring. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2023/03/22/155672-810706799_large.mp4",
+   "license": true,
+   "file": "raw/cerisiers_v2_night-moon-spring-cherry-blossom-155672.mp4"
+  },
+  {
+   "kind": "videos",
+   "term": "sakura petals",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "cerisiers",
+   "kind": "videos",
+   "term": "sakura petals",
+   "href": "https://pixabay.com/videos/flowers-spring-cherry-blossoms-268528/",
+   "title": "Flowers, Spring, Cherry Blossoms. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2025/03/29/268528_large.mp4",
+   "license": true,
+   "file": "raw/cerisiers_v0_flowers-spring-cherry-blossoms-268528.mp4"
+  },
+  {
+   "topic": "cerisiers",
+   "kind": "videos",
+   "term": "sakura petals",
+   "href": "https://pixabay.com/videos/cherry-flowers-blossom-bloom-36758/",
+   "title": "Cherry, Flowers, Blossom. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2020/04/21/36758-410610438_large.mp4",
+   "license": true,
+   "file": "raw/cerisiers_v1_cherry-flowers-blossom-bloom-36758.mp4"
+  },
+  {
+   "topic": "cerisiers",
+   "kind": "videos",
+   "term": "sakura petals",
+   "href": "https://pixabay.com/videos/flowers-sakura-cherry-blossoms-park-156010/",
+   "title": "Flowers, Sakura, Cherry Blossoms. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2023/03/25/156010-811683620_large.mp4",
+   "license": true,
+   "file": "raw/cerisiers_v2_flowers-sakura-cherry-blossoms-park-156010.mp4"
+  },
+  {
+   "kind": "photos",
+   "term": "cherry blossom",
+   "status": 200,
+   "found": 99
+  },
+  {
+   "topic": "cerisiers",
+   "kind": "photos",
+   "term": "cherry blossom",
+   "href": "https://pixabay.com/photos/japanese-cherry-blossoms-pink-white-3063992/",
+   "title": "Pink cherry blossoms on tree Photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2018/01/05/22/18/japanese-cherry-trees-3063992_1280.jpg",
+   "license": true,
+   "file": "raw/cerisiers_p0_japanese-cherry-blossoms-pink-white-3063992.jpg"
+  },
+  {
+   "topic": "cerisiers",
+   "kind": "photos",
+   "term": "cherry blossom",
+   "href": "https://pixabay.com/photos/higan-cherry-spring-cherry-7862490/",
+   "title": "Pink Higan cherry blossoms on branch photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2023/03/19/12/44/higan-cherry-7862490_1280.jpg",
+   "license": true,
+   "file": "raw/cerisiers_p1_higan-cherry-spring-cherry-7862490.jpg"
+  },
+  {
+   "topic": "cerisiers",
+   "kind": "photos",
+   "term": "cherry blossom",
+   "href": "https://pixabay.com/photos/cherry-blossom-pink-white-spring-4987094/",
+   "title": "Pink cherry blossoms on branch Photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2020/03/31/10/28/cherry-blossom-4987094_1280.jpg",
+   "license": true,
+   "file": "raw/cerisiers_p2_cherry-blossom-pink-white-spring-4987094.jpg"
+  }
+ ],
+ "tournesols": [
+  {
+   "kind": "videos",
+   "term": "sunflower field",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "tournesols",
+   "kind": "videos",
+   "term": "sunflower field",
+   "href": "https://pixabay.com/videos/sunflower-yellow-green-field-agri-121873/",
+   "title": "Sunflower, Yellow, Green. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2022/06/23/121873-724720085_large.mp4",
+   "license": true,
+   "file": "raw/tournesols_v0_sunflower-yellow-green-field-agri-121873.mp4"
+  },
+  {
+   "topic": "tournesols",
+   "kind": "videos",
+   "term": "sunflower field",
+   "href": "https://pixabay.com/videos/sunflower-flower-bloom-yellow-27527/",
+   "title": "Sunflower, Flower, Bloom. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2019/10/04/27527-364430941_large.mp4",
+   "license": true,
+   "file": "raw/tournesols_v1_sunflower-flower-bloom-yellow-27527.mp4"
+  },
+  {
+   "topic": "tournesols",
+   "kind": "videos",
+   "term": "sunflower field",
+   "href": "https://pixabay.com/videos/field-sunflower-plant-agriculture-133771/",
+   "title": "Field, Sunflower, Plant. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2022/10/06/133771-758182431_large.mp4",
+   "license": true,
+   "file": "raw/tournesols_v2_field-sunflower-plant-agriculture-133771.mp4"
+  },
+  {
+   "kind": "videos",
+   "term": "sunflowers sunset",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "tournesols",
+   "kind": "videos",
+   "term": "sunflowers sunset",
+   "href": "https://pixabay.com/videos/sunflowers-flowers-sunset-sky-176529/",
+   "title": "Sunflowers, Flowers, Sunset. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2023/08/17/176529-855920758_large.mp4",
+   "license": true,
+   "file": "raw/tournesols_v0_sunflowers-flowers-sunset-sky-176529.mp4"
+  },
+  {
+   "topic": "tournesols",
+   "kind": "videos",
+   "term": "sunflowers sunset",
+   "href": "https://pixabay.com/videos/sunflowers-sunset-sky-clouds-birds-189929/",
+   "title": "Sunflowers, Sunset, Sky. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2023/11/20/189929-886596622_large.mp4",
+   "license": true,
+   "file": "raw/tournesols_v1_sunflowers-sunset-sky-clouds-birds-189929.mp4"
+  },
+  {
+   "topic": "tournesols",
+   "kind": "videos",
+   "term": "sunflowers sunset",
+   "href": "https://pixabay.com/videos/sunflowers-flowers-park-nature-sky-222811/",
+   "title": "Sunflowers, Flowers, Park. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2024/07/24/222811_large.mp4",
+   "license": true,
+   "file": "raw/tournesols_v2_sunflowers-flowers-park-nature-sky-222811.mp4"
+  },
+  {
+   "kind": "photos",
+   "term": "sunflower field",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "tournesols",
+   "kind": "photos",
+   "term": "sunflower field",
+   "href": "https://pixabay.com/photos/sunflowers-flowers-sunflower-field-3792914/",
+   "title": "Sunflower field in summer Photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2018/11/03/21/42/sunflowers-3792914_1280.jpg",
+   "license": true,
+   "file": "raw/tournesols_p0_sunflowers-flowers-sunflower-field-3792914.jpg"
+  },
+  {
+   "topic": "tournesols",
+   "kind": "photos",
+   "term": "sunflower field",
+   "href": "https://pixabay.com/photos/sunflowers-field-sunset-sun-6007847/",
+   "title": "Sunflower field at sunset photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2021/02/12/09/36/sunflowers-6007847_1280.jpg",
+   "license": true,
+   "file": "raw/tournesols_p1_sunflowers-field-sunset-sun-6007847.jpg"
+  },
+  {
+   "topic": "tournesols",
+   "kind": "photos",
+   "term": "sunflower field",
+   "href": "https://pixabay.com/photos/sunflowers-sunflower-field-4400519/",
+   "title": "Sunflower field with windmill Photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2019/08/12/06/14/sunflowers-4400519_1280.jpg",
+   "license": true,
+   "file": "raw/tournesols_p2_sunflowers-sunflower-field-4400519.jpg"
+  }
+ ],
+ "lanternes": [
+  {
+   "kind": "videos",
+   "term": "sky lanterns",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "lanternes",
+   "kind": "videos",
+   "term": "sky lanterns",
+   "href": "https://pixabay.com/videos/ghost-pumpkins-dark-atmosphere-184576/",
+   "title": "Ghost, Pumpkins, Dark Atmosphere. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2023/10/11/184576-873564667_large.mp4",
+   "license": true,
+   "file": "raw/lanternes_v0_ghost-pumpkins-dark-atmosphere-184576.mp4"
+  },
+  {
+   "topic": "lanternes",
+   "kind": "videos",
+   "term": "sky lanterns",
+   "href": "https://pixabay.com/videos/ai-generated-woman-storm-outdoors-374887/",
+   "title": "Ai Generated, Woman, Storm. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2026/09/07/374887_large.mp4",
+   "license": true,
+   "file": "raw/lanternes_v1_ai-generated-woman-storm-outdoors-374887.mp4"
+  },
+  {
+   "topic": "lanternes",
+   "kind": "videos",
+   "term": "sky lanterns",
+   "href": "https://pixabay.com/videos/camping-tent-nature-landscape-320452/",
+   "title": "Camping, Tent, Nature. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2025/12/07/320452_large.mp4",
+   "license": true,
+   "file": "raw/lanternes_v2_camping-tent-nature-landscape-320452.mp4"
+  },
+  {
+   "kind": "videos",
+   "term": "floating lanterns",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "lanternes",
+   "kind": "videos",
+   "term": "floating lanterns",
+   "href": "https://pixabay.com/videos/chiang-mai-lanterns-yifeng-241809/",
+   "title": "Chiang Mai, Lanterns, Yifeng. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2024/11/17/241809_large.mp4",
+   "license": true,
+   "file": "raw/lanternes_v0_chiang-mai-lanterns-yifeng-241809.mp4"
+  },
+  {
+   "topic": "lanternes",
+   "kind": "videos",
+   "term": "floating lanterns",
+   "href": "https://pixabay.com/videos/christmas-champagne-orchids-382702/",
+   "title": "Christmas, Champagne Orchids, Ivory Flowers. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2026/10/14/382702_large.mp4",
+   "license": true,
+   "file": "raw/lanternes_v1_christmas-champagne-orchids-382702.mp4"
+  },
+  {
+   "topic": "lanternes",
+   "kind": "videos",
+   "term": "floating lanterns",
+   "href": "https://pixabay.com/videos/full-moon-floating-pumpkins-364126/",
+   "title": "Full Moon, Floating Pumpkins, Jack O Lantern. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2026/07/14/364126_large.mp4",
+   "license": true,
+   "file": "raw/lanternes_v2_full-moon-floating-pumpkins-364126.mp4"
+  },
+  {
+   "kind": "photos",
+   "term": "sky lanterns",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "lanternes",
+   "kind": "photos",
+   "term": "sky lanterns",
+   "href": "https://pixabay.com/photos/chinese-lanterns-lantern-shining-3206530/",
+   "title": "Boy with sky lantern at sunset Photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2018/03/07/17/15/chinese-lanterns-3206530_1280.jpg",
+   "license": true,
+   "file": "raw/lanternes_p0_chinese-lanterns-lantern-shining-3206530.jpg"
+  },
+  {
+   "topic": "lanternes",
+   "kind": "photos",
+   "term": "sky lanterns",
+   "href": "https://pixabay.com/photos/yipeng-light-night-chiangmai-4670044/",
+   "title": "Sky lantern at Yi Peng festival in Chiang Mai photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2019/12/03/13/25/yipeng-4670044_1280.jpg",
+   "license": true,
+   "file": "raw/lanternes_p1_yipeng-light-night-chiangmai-4670044.jpg"
+  },
+  {
+   "topic": "lanternes",
+   "kind": "photos",
+   "term": "sky lanterns",
+   "href": "https://pixabay.com/photos/lighthouse-shore-coast-water-820431/",
+   "title": "Coastal lighthouse under a starry sky photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2015/06/24/16/54/lighthouse-820431_1280.jpg",
+   "license": true,
+   "file": "raw/lanternes_p2_lighthouse-shore-coast-water-820431.jpg"
+  }
+ ],
+ "roseraie": [
+  {
+   "kind": "videos",
+   "term": "red rose",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "roseraie",
+   "kind": "videos",
+   "term": "red rose",
+   "href": "https://pixabay.com/videos/rose-red-rose-flower-blossom-bloom-3654/",
+   "title": "Rose, Rose Flower, Red Rose. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2016/06/29/3654-173062443_large.mp4",
+   "license": true,
+   "file": "raw/roseraie_v0_rose-red-rose-flower-blossom-bloom-3654.mp4"
+  },
+  {
+   "topic": "roseraie",
+   "kind": "videos",
+   "term": "red rose",
+   "href": "https://pixabay.com/videos/roses-blossoms-red-rose-bush-bloom-119963/",
+   "title": "Roses, Blossoms, Red. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2022/06/11/119963-719443863_large.mp4",
+   "license": true,
+   "file": "raw/roseraie_v1_roses-blossoms-red-rose-bush-bloom-119963.mp4"
+  },
+  {
+   "topic": "roseraie",
+   "kind": "videos",
+   "term": "red rose",
+   "href": "https://pixabay.com/videos/flower-nature-flora-beautiful-48575/",
+   "title": "Flower, Nature, Flora. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2020/08/30/48575-454825042_large.mp4",
+   "license": true,
+   "file": "raw/roseraie_v2_flower-nature-flora-beautiful-48575.mp4"
+  },
+  {
+   "kind": "videos",
+   "term": "rose garden",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "roseraie",
+   "kind": "videos",
+   "term": "rose garden",
+   "href": "https://pixabay.com/videos/rose-red-rose-flower-blossom-bloom-3654/",
+   "title": "Rose, Red Rose, Flower. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2016/06/29/3654-173062443_large.mp4",
+   "license": true,
+   "file": "raw/roseraie_v0_rose-red-rose-flower-blossom-bloom-3654.mp4"
+  },
+  {
+   "topic": "roseraie",
+   "kind": "videos",
+   "term": "rose garden",
+   "href": "https://pixabay.com/videos/rose-flower-garden-flora-botany-122597/",
+   "title": "Rose, Flower, Rose Flower. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2022/06/30/122597-725894500_large.mp4",
+   "license": true,
+   "file": "raw/roseraie_v1_rose-flower-garden-flora-botany-122597.mp4"
+  },
+  {
+   "topic": "roseraie",
+   "kind": "videos",
+   "term": "rose garden",
+   "href": "https://pixabay.com/videos/flower-rose-petals-bush-garden-76488/",
+   "title": "Flower, Rose, Rose Flower. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2021/06/04/76488-559159480_large.mp4",
+   "license": true,
+   "file": "raw/roseraie_v2_flower-rose-petals-bush-garden-76488.mp4"
+  },
+  {
+   "kind": "photos",
+   "term": "roses wedding",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "roseraie",
+   "kind": "photos",
+   "term": "roses wedding",
+   "href": "https://pixabay.com/photos/bride-couple-groom-hands-1837148/",
+   "title": "Bride and groom hands with rings and bouquet, Photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2016/11/18/22/21/bride-1837148_1280.jpg",
+   "license": true,
+   "file": "raw/roseraie_p0_bride-couple-groom-hands-1837148.jpg"
+  },
+  {
+   "topic": "roseraie",
+   "kind": "photos",
+   "term": "roses wedding",
+   "href": "https://pixabay.com/photos/bridal-bouquet-bunch-of-flowers-3323903/",
+   "title": "Bride with pink wedding bouquet Photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2018/04/16/08/36/bridal-bouquet-3323903_1280.jpg",
+   "license": true,
+   "file": "raw/roseraie_p1_bridal-bouquet-bunch-of-flowers-3323903.jpg"
+  },
+  {
+   "topic": "roseraie",
+   "kind": "photos",
+   "term": "roses wedding",
+   "href": "https://pixabay.com/photos/rose-dew-white-rose-flower-flora-8017300/",
+   "title": "White rose with dew droplets photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2023/05/25/12/52/rose-8017300_1280.jpg",
+   "license": true,
+   "file": "raw/roseraie_p2_rose-dew-white-rose-flower-flora-8017300.jpg"
+  }
+ ],
+ "desert": [
+  {
+   "kind": "videos",
+   "term": "desert dunes",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "desert",
+   "kind": "videos",
+   "term": "desert dunes",
+   "href": "https://pixabay.com/videos/desert-dunes-sand-namibia-nature-284566/",
+   "title": "Desert, Dunes, Sand. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2025/06/09/284566_large.mp4",
+   "license": true,
+   "file": "raw/desert_v0_desert-dunes-sand-namibia-nature-284566.mp4"
+  },
+  {
+   "topic": "desert",
+   "kind": "videos",
+   "term": "desert dunes",
+   "href": "https://pixabay.com/videos/desert-sand-dunes-dry-travel-92837/",
+   "title": "Desert, Sand, Dunes. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2021/10/22/92837-638016606_large.mp4",
+   "license": true,
+   "file": "raw/desert_v1_desert-sand-dunes-dry-travel-92837.mp4"
+  },
+  {
+   "topic": "desert",
+   "kind": "videos",
+   "term": "desert dunes",
+   "href": "https://pixabay.com/videos/mountain-desert-sun-sky-sand-road-70872/",
+   "title": "Mountain, Desert, Sun. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2021/04/12/70872-536317019_large.mp4",
+   "license": true,
+   "file": "raw/desert_v2_mountain-desert-sun-sky-sand-road-70872.mp4"
+  },
+  {
+   "kind": "videos",
+   "term": "camel desert",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "desert",
+   "kind": "videos",
+   "term": "camel desert",
+   "href": "https://pixabay.com/videos/camel-bees-camel-shewing-134296/",
+   "title": "Camel, Bees, Camel Shewing. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2022/10/10/134296-759212611_large.mp4",
+   "license": true,
+   "file": "raw/desert_v0_camel-bees-camel-shewing-134296.mp4"
+  },
+  {
+   "topic": "desert",
+   "kind": "videos",
+   "term": "camel desert",
+   "href": "https://pixabay.com/videos/camel-desert-animal-farm-animals-112038/",
+   "title": "Camel, Desert, Animal. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2022/03/27/112038-695204658_large.mp4",
+   "license": true,
+   "file": "raw/desert_v1_camel-desert-animal-farm-animals-112038.mp4"
+  },
+  {
+   "topic": "desert",
+   "kind": "videos",
+   "term": "camel desert",
+   "href": "https://pixabay.com/videos/camel-desert-dromedary-animals-112040/",
+   "title": "Camel, Desert, Dromedary. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2022/03/27/112040-695204669_large.mp4",
+   "license": true,
+   "file": "raw/desert_v2_camel-desert-dromedary-animals-112040.mp4"
+  },
+  {
+   "kind": "photos",
+   "term": "sahara dunes",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "desert",
+   "kind": "photos",
+   "term": "sahara dunes",
+   "href": "https://pixabay.com/photos/desert-morocco-dunes-sand-2435404/",
+   "title": "Panoramic Sahara desert in Morocco photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2017/06/23/17/46/desert-2435404_1280.jpg",
+   "license": true,
+   "file": "raw/desert_p0_desert-morocco-dunes-sand-2435404.jpg"
+  },
+  {
+   "topic": "desert",
+   "kind": "photos",
+   "term": "sahara dunes",
+   "href": "https://pixabay.com/photos/desert-sahara-dunes-sand-hot-6223778/",
+   "title": "Sahara sand dunes in Morocco Photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2021/05/02/15/05/desert-6223778_1280.jpg",
+   "license": true,
+   "file": "raw/desert_p1_desert-sahara-dunes-sand-hot-6223778.jpg"
+  },
+  {
+   "topic": "desert",
+   "kind": "photos",
+   "term": "sahara dunes",
+   "href": "https://pixabay.com/photos/camels-sand-dunes-desert-sahara-4134934/",
+   "title": "Camels on Sahara sand dunes photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2019/04/17/18/04/camels-4134934_1280.jpg",
+   "license": true,
+   "file": "raw/desert_p2_camels-sand-dunes-desert-sahara-4134934.jpg"
+  }
+ ],
+ "ocean": [
+  {
+   "kind": "videos",
+   "term": "ocean sunset waves",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "ocean",
+   "kind": "videos",
+   "term": "ocean sunset waves",
+   "href": "https://pixabay.com/videos/sea-wave-golden-sand-sunrise-4006/",
+   "title": "Sea, Wave, Golden. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2016/07/26/4006-176282263_large.mp4",
+   "license": true,
+   "file": "raw/ocean_v0_sea-wave-golden-sand-sunrise-4006.mp4"
+  },
+  {
+   "topic": "ocean",
+   "kind": "videos",
+   "term": "ocean sunset waves",
+   "href": "https://pixabay.com/videos/beach-ocean-sea-summer-holiday-218714/",
+   "title": "Beach, Beautiful Wallpaper, Ocean. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2024/06/29/218714_large.mp4",
+   "license": true,
+   "file": "raw/ocean_v1_beach-ocean-sea-summer-holiday-218714.mp4"
+  },
+  {
+   "topic": "ocean",
+   "kind": "videos",
+   "term": "ocean sunset waves",
+   "href": "https://pixabay.com/videos/waves-water-sea-seascape-ocean-286278/",
+   "title": "Waves, Water, Sea. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2025/06/17/286278_large.mp4",
+   "license": true,
+   "file": "raw/ocean_v2_waves-water-sea-seascape-ocean-286278.mp4"
+  },
+  {
+   "kind": "videos",
+   "term": "palm beach sunset",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "ocean",
+   "kind": "videos",
+   "term": "palm beach sunset",
+   "href": "https://pixabay.com/videos/beach-ocean-sea-summer-holiday-218714/",
+   "title": "Beach, Ocean, Sea. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2024/06/29/218714_large.mp4",
+   "license": true,
+   "file": "raw/ocean_v0_beach-ocean-sea-summer-holiday-218714.mp4"
+  },
+  {
+   "topic": "ocean",
+   "kind": "videos",
+   "term": "palm beach sunset",
+   "href": "https://pixabay.com/videos/beach-sunset-vacation-island-ocean-199208/",
+   "title": "Beach, Sunset, Vacation. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2024/02/04/199208-909903146_large.mp4",
+   "license": true,
+   "file": "raw/ocean_v1_beach-sunset-vacation-island-ocean-199208.mp4"
+  },
+  {
+   "topic": "ocean",
+   "kind": "videos",
+   "term": "palm beach sunset",
+   "href": "https://pixabay.com/videos/ocean-sea-beach-sunset-waves-185864/",
+   "title": "Ocean, Sea, Beach. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2023/10/20/185864-876579642_large.mp4",
+   "license": true,
+   "file": "raw/ocean_v2_ocean-sea-beach-sunset-waves-185864.mp4"
+  },
+  {
+   "kind": "photos",
+   "term": "beach sunset palm",
+   "status": 200,
+   "found": 99
+  },
+  {
+   "topic": "ocean",
+   "kind": "photos",
+   "term": "beach sunset palm",
+   "href": "https://pixabay.com/photos/boat-coast-palm-tree-palm-ocean-166738/",
+   "title": "Rowboat and palm on beach at sunset photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2013/07/25/01/33/boat-166738_1280.jpg",
+   "license": true,
+   "file": "raw/ocean_p0_boat-coast-palm-tree-palm-ocean-166738.jpg"
+  },
+  {
+   "topic": "ocean",
+   "kind": "photos",
+   "term": "beach sunset palm",
+   "href": "https://pixabay.com/photos/seychelles-landscape-sea-beach-4916045/",
+   "title": "Tropical Seychelles beach photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2020/03/09/14/54/seychelles-4916045_1280.jpg",
+   "license": true,
+   "file": "raw/ocean_p1_seychelles-landscape-sea-beach-4916045.jpg"
+  },
+  {
+   "topic": "ocean",
+   "kind": "photos",
+   "term": "beach sunset palm",
+   "href": "https://pixabay.com/photos/ipanema-copacabana-leblon-arpoador-10117989/",
+   "title": "Tropical beach with palm trees at sunset Photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2026/02/11/15/36/dpaolaphoto-ipanema-10117989_1280.jpg",
+   "license": true,
+   "file": "raw/ocean_p2_ipanema-copacabana-leblon-arpoador-10117989.jpg"
+  }
+ ],
+ "champagne": [
+  {
+   "kind": "videos",
+   "term": "champagne",
+   "status": 200,
+   "found": 75
+  },
+  {
+   "topic": "champagne",
+   "kind": "videos",
+   "term": "champagne",
+   "href": "https://pixabay.com/videos/glass-champagne-glass-gush-blow-108078/",
+   "title": "Glass, Champagne Glass, Gush. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2022/02/18/108078-679386058_large.mp4",
+   "license": true,
+   "file": "raw/champagne_v0_glass-champagne-glass-gush-blow-108078.mp4"
+  },
+  {
+   "topic": "champagne",
+   "kind": "videos",
+   "term": "champagne",
+   "href": "https://pixabay.com/videos/sparkling-wine-give-a-glass-alcohol-14627/",
+   "title": "Sparkling Wine, Give A, Glass. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2018/03/02/14627-258543533_large.mp4",
+   "license": true,
+   "file": "raw/champagne_v1_sparkling-wine-give-a-glass-alcohol-14627.mp4"
+  },
+  {
+   "topic": "champagne",
+   "kind": "videos",
+   "term": "champagne",
+   "href": "https://pixabay.com/videos/champagne-drink-celebration-130640/",
+   "title": "Champagne, Drink, Celebration. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2022/09/08/130640-747868345_large.mp4",
+   "license": true,
+   "file": "raw/champagne_v2_champagne-drink-celebration-130640.mp4"
+  },
+  {
+   "kind": "videos",
+   "term": "champagne bubbles",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "champagne",
+   "kind": "videos",
+   "term": "champagne bubbles",
+   "href": "https://pixabay.com/videos/sparkling-wine-give-a-glass-alcohol-14627/",
+   "title": "Sparkling Wine, Give A, Glass. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2018/03/02/14627-258543533_large.mp4",
+   "license": true,
+   "file": "raw/champagne_v0_sparkling-wine-give-a-glass-alcohol-14627.mp4"
+  },
+  {
+   "topic": "champagne",
+   "kind": "videos",
+   "term": "champagne bubbles",
+   "href": "https://pixabay.com/videos/wine-glasses-toast-love-happy-253902/",
+   "title": "Wine Glasses, Toast, Love. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2025/01/22/253902_large.mp4",
+   "license": true,
+   "file": "raw/champagne_v1_wine-glasses-toast-love-happy-253902.mp4"
+  },
+  {
+   "topic": "champagne",
+   "kind": "videos",
+   "term": "champagne bubbles",
+   "href": "https://pixabay.com/videos/relax-background-abstract-bubbles-26244/",
+   "title": "Relax, Background, Abstract. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2019/08/24/26244-357512408_large.mp4",
+   "license": true,
+   "file": "raw/champagne_v2_relax-background-abstract-bubbles-26244.mp4"
+  },
+  {
+   "kind": "photos",
+   "term": "champagne glasses",
+   "status": 200,
+   "found": 99
+  },
+  {
+   "topic": "champagne",
+   "kind": "photos",
+   "term": "champagne glasses",
+   "href": "https://pixabay.com/photos/glasses-drink-beverage-champagne-498495/",
+   "title": "Toast with champagne glasses photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2014/10/22/18/10/glasses-498495_1280.jpg",
+   "license": true,
+   "file": "raw/champagne_p0_glasses-drink-beverage-champagne-498495.jpg"
+  },
+  {
+   "topic": "champagne",
+   "kind": "photos",
+   "term": "champagne glasses",
+   "href": "https://pixabay.com/photos/drinks-alcohol-glasses-champagne-1283608/",
+   "title": "Champagne flutes on serving trays Photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2016/03/27/18/53/drinks-1283608_1280.jpg",
+   "license": true,
+   "file": "raw/champagne_p1_drinks-alcohol-glasses-champagne-1283608.jpg"
+  },
+  {
+   "topic": "champagne",
+   "kind": "photos",
+   "term": "champagne glasses",
+   "href": "https://pixabay.com/photos/drink-alcohol-sparkling-wine-glass-5087479/",
+   "title": "Sparkling wine poured into glasses outdoors Photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2020/04/24/16/01/drink-5087479_1280.jpg",
+   "license": true,
+   "file": "raw/champagne_p2_drink-alcohol-sparkling-wine-glass-5087479.jpg"
+  }
+ ],
+ "papillons": [
+  {
+   "kind": "videos",
+   "term": "butterfly flower",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "papillons",
+   "kind": "videos",
+   "term": "butterfly flower",
+   "href": "https://pixabay.com/videos/butterfly-nature-insect-fauna-345137/",
+   "title": "Butterfly, Nature, Insect. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2026/04/08/345137_large.mp4",
+   "license": true,
+   "file": "raw/papillons_v0_butterfly-nature-insect-fauna-345137.mp4"
+  },
+  {
+   "topic": "papillons",
+   "kind": "videos",
+   "term": "butterfly flower",
+   "href": "https://pixabay.com/videos/butterfly-insect-flower-219728/",
+   "title": "Butterfly, Insect, Flower. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2024/07/06/219728_large.mp4",
+   "license": true,
+   "file": "raw/papillons_v1_butterfly-insect-flower-219728.mp4"
+  },
+  {
+   "topic": "papillons",
+   "kind": "videos",
+   "term": "butterfly flower",
+   "href": "https://pixabay.com/videos/butterfly-flower-wildlife-animal-212598/",
+   "title": "Butterfly, Flower, Wildlife. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2024/05/19/212598_large.mp4",
+   "license": true,
+   "file": "raw/papillons_v2_butterfly-flower-wildlife-animal-212598.mp4"
+  },
+  {
+   "kind": "videos",
+   "term": "butterflies",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "papillons",
+   "kind": "videos",
+   "term": "butterflies",
+   "href": "https://pixabay.com/videos/butterfly-botany-flower-nature-12060/",
+   "title": "Butterfly, Botany, Flower. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2017/09/18/12060-234530446_large.mp4",
+   "license": true,
+   "file": "raw/papillons_v0_butterfly-botany-flower-nature-12060.mp4"
+  },
+  {
+   "topic": "papillons",
+   "kind": "videos",
+   "term": "butterflies",
+   "href": "https://pixabay.com/videos/butterfly-flower-wildlife-animal-212598/",
+   "title": "Butterfly, Flower, Wildlife. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2024/05/19/212598_large.mp4",
+   "license": true,
+   "file": "raw/papillons_v1_butterfly-flower-wildlife-animal-212598.mp4"
+  },
+  {
+   "topic": "papillons",
+   "kind": "videos",
+   "term": "butterflies",
+   "href": "https://pixabay.com/videos/nature-flower-blue-butterflies-23551/",
+   "title": "Nature, Flower, Blue. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2019/05/12/23551-335833126_large.mp4",
+   "license": true,
+   "file": "raw/papillons_v2_nature-flower-blue-butterflies-23551.mp4"
+  },
+  {
+   "kind": "photos",
+   "term": "butterfly",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "papillons",
+   "kind": "photos",
+   "term": "butterfly",
+   "href": "https://pixabay.com/photos/butterfly-insect-nature-animal-10291275/",
+   "title": "Butterfly Insect Nature - Free photo on Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2026/05/21/10/46/10-46-51-569_1280.jpg",
+   "license": true,
+   "file": "raw/papillons_p0_butterfly-insect-nature-animal-10291275.jpg"
+  },
+  {
+   "topic": "papillons",
+   "kind": "photos",
+   "term": "butterfly",
+   "href": "https://pixabay.com/photos/butterfly-nature-insect-fauna-10410903/",
+   "title": "Butterfly Nature Insect - Free photo on Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2026/08/03/19/48/19-48-54-362_1280.jpg",
+   "license": true,
+   "file": "raw/papillons_p1_butterfly-nature-insect-fauna-10410903.jpg"
+  },
+  {
+   "topic": "papillons",
+   "kind": "photos",
+   "term": "butterfly",
+   "href": "https://pixabay.com/photos/imperial-coat-butterfly-insect-7972203/",
+   "title": "Kaisermantel butterfly on buddleja Photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2023/05/05/11/13/imperial-coat-7972203_1280.jpg",
+   "license": true,
+   "file": "raw/papillons_p2_imperial-coat-butterfly-insect-7972203.jpg"
+  }
+ ],
+ "hiver": [
+  {
+   "kind": "videos",
+   "term": "snow night village",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "hiver",
+   "kind": "videos",
+   "term": "snow night village",
+   "href": "https://pixabay.com/videos/snow-scene-mountain-village-327388/",
+   "title": "Snow Scene, Mountain Village, Heavy Snowfall Area. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2026/01/13/327388_large.mp4",
+   "license": true,
+   "file": "raw/hiver_v0_snow-scene-mountain-village-327388.mp4"
+  },
+  {
+   "topic": "hiver",
+   "kind": "videos",
+   "term": "snow night village",
+   "href": "https://pixabay.com/videos/village-snow-lights-winter-snowing-144742/",
+   "title": "Village, Snow, Lights. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2022/12/30/144742-785265007_large.mp4",
+   "license": true,
+   "file": "raw/hiver_v1_village-snow-lights-winter-snowing-144742.mp4"
+  },
+  {
+   "topic": "hiver",
+   "kind": "videos",
+   "term": "snow night village",
+   "href": "https://pixabay.com/videos/snowman-snow-particles-winter-190778/",
+   "title": "Snowman, Snow, Particles. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2023/11/26/190778-888535450_large.mp4",
+   "license": true,
+   "file": "raw/hiver_v2_snowman-snow-particles-winter-190778.mp4"
+  },
+  {
+   "kind": "videos",
+   "term": "snowfall",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "hiver",
+   "kind": "videos",
+   "term": "snowfall",
+   "href": "https://pixabay.com/videos/pine-forest-snow-winter-snowfall-142579/",
+   "title": "Pine, Forest, Snow. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2022/12/11/142579-780232342_large.mp4",
+   "license": true,
+   "file": "raw/hiver_v0_pine-forest-snow-winter-snowfall-142579.mp4"
+  },
+  {
+   "topic": "hiver",
+   "kind": "videos",
+   "term": "snowfall",
+   "href": "https://pixabay.com/videos/snowy-trees-above-winter-landscape-7328/",
+   "title": "Snowy Trees, Above, Winter. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2017/01/13/7328-199383367_large.mp4",
+   "license": true,
+   "file": "raw/hiver_v1_snowy-trees-above-winter-landscape-7328.mp4"
+  },
+  {
+   "topic": "hiver",
+   "kind": "videos",
+   "term": "snowfall",
+   "href": "https://pixabay.com/videos/forest-snow-blizzard-river-154331/",
+   "title": "Forest, Snow, Blizzard. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2023/03/12/154331-807362302_large.mp4",
+   "license": true,
+   "file": "raw/hiver_v2_forest-snow-blizzard-river-154331.mp4"
+  },
+  {
+   "kind": "photos",
+   "term": "winter snow night",
+   "status": 200,
+   "found": 99
+  },
+  {
+   "topic": "hiver",
+   "kind": "photos",
+   "term": "winter snow night",
+   "href": "https://pixabay.com/photos/castelmezzano-town-illuminated-1979546/",
+   "title": "Snowy night village in Castelmezzano Photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2017/01/14/13/59/castelmezzano-1979546_1280.jpg",
+   "license": true,
+   "file": "raw/hiver_p0_castelmezzano-town-illuminated-1979546.jpg"
+  },
+  {
+   "topic": "hiver",
+   "kind": "photos",
+   "term": "winter snow night",
+   "href": "https://pixabay.com/photos/iceland-aurora-borealis-2111811/",
+   "title": "Aurora borealis over lake Photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2017/03/02/16/54/iceland-2111811_1280.jpg",
+   "license": true,
+   "file": "raw/hiver_p1_iceland-aurora-borealis-2111811.jpg"
+  },
+  {
+   "topic": "hiver",
+   "kind": "photos",
+   "term": "winter snow night",
+   "href": "https://pixabay.com/photos/man-rain-snow-rain-alone-cigarette-3915438/",
+   "title": "Man smoking in rain and snow, Photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2019/01/05/17/05/man-3915438_1280.jpg",
+   "license": true,
+   "file": "raw/hiver_p2_man-rain-snow-rain-alone-cigarette-3915438.jpg"
+  }
+ ],
+ "feux": [
+  {
+   "kind": "videos",
+   "term": "fireworks",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "feux",
+   "kind": "videos",
+   "term": "fireworks",
+   "href": "https://pixabay.com/videos/firework-holiday-celebration-32826/",
+   "title": "Firework, Holiday, Celebration. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2020/02/25/32826-394513840_large.mp4",
+   "license": true,
+   "file": "raw/feux_v0_firework-holiday-celebration-32826.mp4"
+  },
+  {
+   "topic": "feux",
+   "kind": "videos",
+   "term": "fireworks",
+   "href": "https://pixabay.com/videos/killer-multicoloured-party-cracker-104514/",
+   "title": "Killer, Multicoloured, Party Cracker. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2022/01/15/104514-666958130_large.mp4",
+   "license": true,
+   "file": "raw/feux_v1_killer-multicoloured-party-cracker-104514.mp4"
+  },
+  {
+   "topic": "feux",
+   "kind": "videos",
+   "term": "fireworks",
+   "href": "https://pixabay.com/videos/light-firework-night-121752/",
+   "title": "Light, Firework, Night. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2022/06/22/121752-724719626_large.mp4",
+   "license": true,
+   "file": "raw/feux_v2_light-firework-night-121752.mp4"
+  },
+  {
+   "kind": "videos",
+   "term": "fireworks city",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "feux",
+   "kind": "videos",
+   "term": "fireworks city",
+   "href": "https://pixabay.com/videos/firework-holiday-celebration-32826/",
+   "title": "Firework, Holiday, Celebration. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2020/02/25/32826-394513840_large.mp4",
+   "license": true,
+   "file": "raw/feux_v0_firework-holiday-celebration-32826.mp4"
+  },
+  {
+   "topic": "feux",
+   "kind": "videos",
+   "term": "fireworks city",
+   "href": "https://pixabay.com/videos/fireworks-new-year-celebration-187509/",
+   "title": "Fireworks, New Year, Celebration. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2023/11/02/187509-880665348_large.mp4",
+   "license": true,
+   "file": "raw/feux_v1_fireworks-new-year-celebration-187509.mp4"
+  },
+  {
+   "topic": "feux",
+   "kind": "videos",
+   "term": "fireworks city",
+   "href": "https://pixabay.com/videos/festival-street-barcelona-spain-3936/",
+   "title": "Festival, Street, Barcelona. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2016/07/22/3936-320725397_large.mp4",
+   "license": true,
+   "file": "raw/feux_v2_festival-street-barcelona-spain-3936.mp4"
+  },
+  {
+   "kind": "photos",
+   "term": "fireworks",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "feux",
+   "kind": "photos",
+   "term": "fireworks",
+   "href": "https://pixabay.com/photos/fireworks-night-celebration-festive-10444646/",
+   "title": "Fireworks Night Celebration - Free photo on Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2026/08/26/03/50/03-50-53-899_1280.jpg",
+   "license": true,
+   "file": "raw/feux_p0_fireworks-night-celebration-festive-10444646.jpg"
+  },
+  {
+   "topic": "feux",
+   "kind": "photos",
+   "term": "fireworks",
+   "href": "https://pixabay.com/photos/fireworks-pyrotechnics-new-year-180553/",
+   "title": "Colorful fireworks in night sky Photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2013/09/08/19/54/fireworks-180553_1280.jpg",
+   "license": true,
+   "file": "raw/feux_p1_fireworks-pyrotechnics-new-year-180553.jpg"
+  },
+  {
+   "topic": "feux",
+   "kind": "photos",
+   "term": "fireworks",
+   "href": "https://pixabay.com/photos/fireworks-pyrotechnic-new-year-102971/",
+   "title": "Firework in night sky photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2013/04/12/14/10/fireworks-102971_1280.jpg",
+   "license": true,
+   "file": "raw/feux_p2_fireworks-pyrotechnic-new-year-102971.jpg"
+  }
+ ],
+ "aurore": [
+  {
+   "kind": "videos",
+   "term": "aurora borealis",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "aurore",
+   "kind": "videos",
+   "term": "aurora borealis",
+   "href": "https://pixabay.com/videos/aurora-borealis-northern-lights-90877/",
+   "title": "Aurora Borealis, Northern Lights, Atmosphere. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2021/10/05/90877-629483574_large.mp4",
+   "license": true,
+   "file": "raw/aurore_v0_aurora-borealis-northern-lights-90877.mp4"
+  },
+  {
+   "topic": "aurore",
+   "kind": "videos",
+   "term": "aurora borealis",
+   "href": "https://pixabay.com/videos/northern-lights-aurora-borealis-213425/",
+   "title": "Northern Lights, Aurora Borealis, Night. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2024/05/23/213425_large.mp4",
+   "license": true,
+   "file": "raw/aurore_v1_northern-lights-aurora-borealis-213425.mp4"
+  },
+  {
+   "topic": "aurore",
+   "kind": "videos",
+   "term": "aurora borealis",
+   "href": "https://pixabay.com/videos/aurora-aurora-borealis-sky-night-138593/",
+   "title": "Aurora, Aurora Borealis, Sky. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2022/11/11/138593-769988200_large.mp4",
+   "license": true,
+   "file": "raw/aurore_v2_aurora-aurora-borealis-sky-night-138593.mp4"
+  },
+  {
+   "kind": "videos",
+   "term": "northern lights",
+   "status": 200,
+   "found": 100
+  },
+  {
+   "topic": "aurore",
+   "kind": "videos",
+   "term": "northern lights",
+   "href": "https://pixabay.com/videos/universe-stars-galaxy-aurora-264488/",
+   "title": "Universe, Stars, Galaxy. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2025/03/13/264488_large.mp4",
+   "license": true,
+   "file": "raw/aurore_v0_universe-stars-galaxy-aurora-264488.mp4"
+  },
+  {
+   "topic": "aurore",
+   "kind": "videos",
+   "term": "northern lights",
+   "href": "https://pixabay.com/videos/aurora-borealis-northern-lights-snow-74183/",
+   "title": "Aurora Borealis, Northern Lights, Snow. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2021/05/15/74183-550033434_large.mp4",
+   "license": true,
+   "file": "raw/aurore_v1_aurora-borealis-northern-lights-snow-74183.mp4"
+  },
+  {
+   "topic": "aurore",
+   "kind": "videos",
+   "term": "northern lights",
+   "href": "https://pixabay.com/videos/aurora-borealis-polar-aurora-alaska-2194/",
+   "title": "Aurora Borealis, Polar Aurora, Alaska. Free Stock Video - Pixabay",
+   "src": "https://cdn.pixabay.com/video/2016/02/17/2194-155747511_large.mp4",
+   "license": true,
+   "file": "raw/aurore_v2_aurora-borealis-polar-aurora-alaska-2194.mp4"
+  },
+  {
+   "kind": "photos",
+   "term": "aurora borealis",
+   "status": 200,
+   "found": 99
+  },
+  {
+   "topic": "aurore",
+   "kind": "photos",
+   "term": "aurora borealis",
+   "href": "https://pixabay.com/photos/christmas-background-aurora-1197753/",
+   "title": "Aurora borealis over snowy landscape Photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2016/02/13/12/26/christmas-background-1197753_1280.jpg",
+   "license": true,
+   "file": "raw/aurore_p0_christmas-background-aurora-1197753.jpg"
+  },
+  {
+   "topic": "aurore",
+   "kind": "photos",
+   "term": "aurora borealis",
+   "href": "https://pixabay.com/photos/northern-lights-norway-nature-6862969/",
+   "title": "Northern lights over Lofoten mountains photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2021/12/11/15/06/northern-lights-6862969_1280.jpg",
+   "license": true,
+   "file": "raw/aurore_p1_northern-lights-norway-nature-6862969.jpg"
+  },
+  {
+   "topic": "aurore",
+   "kind": "photos",
+   "term": "aurora borealis",
+   "href": "https://pixabay.com/photos/northern-lights-aurora-night-7677986/",
+   "title": "Aurora over winter landscape Photo - Pixabay",
+   "src": "https://cdn.pixabay.com/photo/2022/12/25/22/09/northern-lights-7677986_1280.jpg",
+   "license": true,
+   "file": "raw/aurore_p2_northern-lights-aurora-night-7677986.jpg"
+  }
+ ]
+}
