@@ -83,7 +83,14 @@ class _Retail extends RetailRepository {
         Product(id: 'p1', name: 'Pagne', salePrice: 5000, quantity: 4, isPublished: true),
         Product(id: 'p2', name: 'Caché', salePrice: 900, quantity: 4),
         Product(id: 'p3', name: 'Vide', salePrice: 900, quantity: 0, isPublished: true),
+        // Ready but for its photo: request_promotion refuses it, so the
+        // sheet does not offer it.
+        Product(id: 'p4', name: 'Sans photo', salePrice: 900, quantity: 4, isPublished: true),
       ];
+
+  @override
+  Future<Map<String, String>> photoKeys(String orgId) async =>
+      const {'p1': 'o1/p1.jpg', 'p2': 'o1/p2.jpg', 'p3': 'o1/p3.jpg'};
 }
 
 class _Street extends StorefrontRepository {
@@ -189,6 +196,7 @@ void main() {
     expect(find.text('Pagne · ${_f(5000)}'), findsOneWidget);
     expect(find.textContaining('Caché'), findsNothing);
     expect(find.textContaining('Vide'), findsNothing);
+    expect(find.textContaining('Sans photo'), findsNothing);
     expect(find.text('Prix : ${zonePriceText(1000, 'XOF')}'), findsOneWidget);
 
     await tester.tap(find.text('Continuer vers le paiement'));

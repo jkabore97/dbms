@@ -54,10 +54,18 @@ const rpc = {
     { id: 'p1', name: 'Savon de karité', sale_price: 450, in_stock: true, photo_key: null, description: null },
     { id: 'p2', name: 'Bissap', sale_price: 150, in_stock: true, photo_key: null, description: null },
   ],
+  // The website offers Apple beside Google (139's switch on), so the
+  // welcome gate is checked with both doors drawn.
+  sign_in_options: { apple_web: true },
 };
+// The project has Google and Apple on (`/auth/v1/settings`).
+const authSettings = { external: { google: true, apple: true } };
 
+// A stranger on the street meets the welcome gate first (152): the sheet's
+// words, not the street's, which it keeps out of reach. A shop's own window
+// stays open to whoever has the link.
 const checks = [
-  { path: '/', words: ['Les boutiques près de vous', 'Boutique Témoin', 'Savon de karité'] },
+  { path: '/', words: ['Bienvenue sur Marakaj', 'Continuer avec Google', 'Continuer avec Apple', 'Déjà membre ? Se connecter'] },
   { path: `/s/${shop.slug}`, words: ['Boutique Témoin', 'Savon de karité', 'Bissap'] },
 ];
 
@@ -88,6 +96,8 @@ for (const check of checks) {
   });
   await ctx.route(/\/(rest|auth|storage|realtime)\/v1\//, (route) =>
     route.fulfill({ status: 200, headers: cors, contentType: 'application/json', body: '[]' }));
+  await ctx.route(/\/auth\/v1\/settings/, (route) =>
+    route.fulfill({ status: 200, headers: cors, contentType: 'application/json', body: JSON.stringify(authSettings) }));
   await ctx.route(/\/rest\/v1\/rpc\/([a-z_]+)/, (route) => {
     const name = route.request().url().match(/\/rpc\/([a-z_]+)/)[1];
     route.fulfill({ status: 200, headers: cors, contentType: 'application/json',
@@ -118,8 +128,9 @@ for (const check of checks) {
   console.log(`${ok ? 'ok  ' : 'FAIL'} ${check.path}` +
     (missing.length ? `  missing: ${missing.join(' | ')}` : '') +
     (errors.length ? `  errors: ${errors.join(' | ').slice(0, 300)}` : ''));
-  if (!ok) {
-    failed++;
+  if (!ok) failed++;
+  // The pictures are kept on a failure, or whenever asked (SMOKE_SHOTS=1).
+  if (!ok || process.env.SMOKE_SHOTS) {
     await page.screenshot({ path: `smoke-${check.path === '/' ? 'home' : 'shop'}.png` });
   }
   await ctx.close();
