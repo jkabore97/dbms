@@ -163,21 +163,28 @@ void main() {
     await flush(tester);
   }
 
-  testWidgets('a fresh device lands on the street, with a way in',
+  testWidgets('a fresh device lands on the street, behind the welcome gate',
       (tester) async {
-    // The front door is the welcome page — the vitrines — not a gate. A
-    // stranger sees the shops and "Se connecter"; the sign-in page is one
-    // tap away, and it is the tap that opens it.
+    // The front door is the welcome page — the vitrines — under the
+    // welcome gate (152): a stranger glimpses the shops and is asked for
+    // an account before anything else. The street's own « Se connecter »
+    // is out of reach under the sheet; the sheet's « Déjà membre ? Se
+    // connecter » is the tap that opens the sign-in page, and the gate is
+    // gone there.
     await pumpApp(tester);
 
     expect(find.byKey(const Key('mara-header')), findsOneWidget);
-    expect(find.text('Se connecter'), findsOneWidget);
+    expect(find.byKey(const Key('welcome-gate')), findsOneWidget);
+    expect(find.text('Bienvenue sur Marakaj'), findsOneWidget);
     expect(find.text('Connectez-vous pour ouvrir votre activité.'),
         findsNothing);
 
-    await tester.tap(find.text('Se connecter'));
+    // The sheet scrolls on a short screen: the link is brought into view.
+    await tester.ensureVisible(find.byKey(const Key('welcome-sign-in')));
+    await tester.tap(find.byKey(const Key('welcome-sign-in')));
     await flush(tester);
 
+    expect(find.byKey(const Key('welcome-gate')), findsNothing);
     expect(find.byType(MaraWordmark), findsOneWidget);
     expect(find.text('Connectez-vous pour ouvrir votre activité.'),
         findsOneWidget);

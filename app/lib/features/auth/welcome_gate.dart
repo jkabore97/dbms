@@ -2,7 +2,10 @@ import 'dart:async';
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show SystemNavigator;
 import 'package:go_router/go_router.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart'
+    show SignInWithAppleButton;
 
 import '../../core/auth/auth_repository.dart';
 import '../../core/errors.dart';
@@ -17,8 +20,19 @@ import '../../core/theme/mara_mark.dart';
 /// day and almost none of them made an account: the street is open signed
 /// out, so a visitor looks around and leaves. Now a visitor who is not
 /// signed in sees the street for a moment, dimmed under a sheet with no
-/// close — Google, an e-mail account, or « Se connecter » — the way
-/// Pinterest greets a stranger.
+/// close, the way Pinterest greets a stranger. The owner's words: « give
+/// them the two options, Google and Apple, for the website; just Google on
+/// the app; do not allow them to bypass that pop-up ».
+///
+/// So the sheet offers the social doors only — « Continuer avec Google »,
+/// and « Continuer avec Apple » on the website (Réglages' « Connexion
+/// Apple sur le site ») and the iPhone app, never on Android — plus
+/// « Déjà membre ? Se connecter » for the members who have an e-mail
+/// account, which is a way *in*, not around. The e-mail sign-up appears
+/// only in a project with neither Google nor Apple on, so nobody is ever
+/// locked out of making an account. Android's back on the sheet leaves
+/// the app (BackFirst, through [handleBack]) rather than opening the
+/// router's « Quitter ? » under it, unseen.
 ///
 /// Where it stands: the street only (`/` and `/vitrines`). A shop's own
 /// vitrine (`/s/<slug>`) stays open: the link a shop sends its customers
@@ -54,23 +68,63 @@ class WelcomeGate extends StatefulWidget {
   final AuthRepository auth;
   final Widget child;
 
+  /// Whether the sheet is up right now (main.dart's back).
+  static bool isUp(SessionController session, GoRouter router) =>
+      welcomeGateShows(session.phase, router.routerDelegate.currentConfiguration.uri.path);
+
+  /// Android's back while the sheet is up (main.dart, through BackFirst,
+  /// after the terms gate's own answer): the phone leaves the app, as from
+  /// any first page — never the router's « Quitter ? » hidden under the
+  /// sheet. Null when no sheet is shown: the back is the app's as before.
+  static Future<bool?> handleBack(SessionController session, GoRouter router) async {
+    if (!isUp(session, router)) return null;
+    unawaited(SystemNavigator.pop());
+    return true;
+  }
+
   @override
   State<WelcomeGate> createState() => _WelcomeGateState();
 }
 
 class _WelcomeGateState extends State<WelcomeGate> {
-  /// Google is offered once the project says it is on, as on the sign-in
-  /// screen; a build with no server shows e-mail only.
+  /// « Continuer avec Google »: the project has it on, as on the sign-in
+  /// screen.
   bool _google = false;
+
+  /// « Continuer avec Apple »: the iPhone app with Apple on in the
+  /// project, or the website with Réglages' « Connexion Apple sur le
+  /// site » on. Never Android.
+  bool _apple = false;
   bool _busy = false;
   String? _problem;
+
+  /// The address the router is at. Its delegate tells of a change while
+  /// it is itself being built (the first address, a redirect), which a
+  /// widget above it may not answer with a rebuild there and then; so the
+  /// change is taken after the frame. The route-information provider
+  /// would not do: it is told of a redirect without telling anybody.
+  late String _path = widget.router.routerDelegate.currentConfiguration.uri.path;
+
+  void _onRoute() {
+    final path = widget.router.routerDelegate.currentConfiguration.uri.path;
+    if (path == _path) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _path != path) setState(() => _path = path);
+    });
+    WidgetsBinding.instance.ensureVisualUpdate();
+  }
 
   @override
   void initState() {
     super.initState();
-    if (widget.auth.isConfigured) {
-      unawaited(widget.auth.googleAvailable().then((on) {
-        if (mounted && on) setState(() => _google = true);
+    widget.router.routerDelegate.addListener(_onRoute);
+    if (!widget.auth.isConfigured) return;
+    unawaited(widget.auth.googleAvailable().then((on) {
+      if (mounted && on) setState(() => _google = true);
+    }).catchError((_) {}));
+    if (appleSignInPlatform || appleWebPlatform) {
+      unawaited((appleSignInPlatform ? widget.auth.appleAvailable() : widget.auth.appleWebAvailable()).then((on) {
+        if (mounted && on) setState(() => _apple = true);
       }).catchError((_) {}));
     }
   }
@@ -78,13 +132,19 @@ class _WelcomeGateState extends State<WelcomeGate> {
   /// Leaves for Google. On the web the person comes back as a reload and
   /// the session controller takes it from there; the gate then finds them
   /// signed in and is gone.
-  Future<void> _continueWithGoogle() async {
+  Future<void> _continueWithGoogle() => _run(widget.session.signInWithGoogle);
+
+  /// Apple's own sheet (the iPhone's, or the website's popup): the session
+  /// is in hand when it closes; closing it without signing does nothing.
+  Future<void> _continueWithApple() => _run(() => widget.session.signInWithApple());
+
+  Future<void> _run(Future<void> Function() action) async {
     setState(() {
       _busy = true;
       _problem = null;
     });
     try {
-      await widget.session.signInWithGoogle();
+      await action();
     } catch (e) {
       if (mounted) setState(() => _problem = describeError(e));
     } finally {
@@ -93,16 +153,17 @@ class _WelcomeGateState extends State<WelcomeGate> {
   }
 
   @override
+  void dispose() {
+    widget.router.routerDelegate.removeListener(_onRoute);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // The address is read from the router's route-information provider,
-    // not its delegate: the delegate tells of the first address while the
-    // Router is still being built, which a widget above it may not answer
-    // with a rebuild; the provider is told after the frame.
     return ListenableBuilder(
-      listenable: Listenable.merge([widget.session, widget.router.routeInformationProvider]),
+      listenable: widget.session,
       builder: (context, _) {
-        final path = widget.router.routeInformationProvider.value.uri.path;
-        final up = welcomeGateShows(widget.session.phase, path);
+        final up = welcomeGateShows(widget.session.phase, _path);
         return Stack(
           fit: StackFit.expand,
           children: [
@@ -120,9 +181,11 @@ class _WelcomeGateState extends State<WelcomeGate> {
                 child: _WelcomeSheet(
                   key: const Key('welcome-gate'),
                   google: _google,
+                  apple: _apple,
                   busy: _busy,
                   problem: _problem,
                   onGoogle: _continueWithGoogle,
+                  onApple: _continueWithApple,
                   onEmail: () => widget.router.go('${Routes.signIn}?compte=nouveau'),
                   onSignIn: () => widget.router.go(Routes.signIn),
                   onTerms: () => widget.router.push(Routes.terms),
@@ -136,15 +199,17 @@ class _WelcomeGateState extends State<WelcomeGate> {
   }
 }
 
-/// The sheet: the street dimmed and softened behind, the seal, three ways
+/// The sheet: the street dimmed and softened behind, the seal, the doors
 /// in, the two legal texts a tap away.
 class _WelcomeSheet extends StatelessWidget {
   const _WelcomeSheet({
     super.key,
     required this.google,
+    required this.apple,
     required this.busy,
     required this.problem,
     required this.onGoogle,
+    required this.onApple,
     required this.onEmail,
     required this.onSignIn,
     required this.onTerms,
@@ -152,9 +217,11 @@ class _WelcomeSheet extends StatelessWidget {
   });
 
   final bool google;
+  final bool apple;
   final bool busy;
   final String? problem;
   final VoidCallback onGoogle;
+  final VoidCallback onApple;
   final VoidCallback onEmail;
   final VoidCallback onSignIn;
   final VoidCallback onTerms;
@@ -169,6 +236,10 @@ class _WelcomeSheet extends StatelessWidget {
       decoration: TextDecoration.underline,
       fontWeight: FontWeight.w600,
     );
+    // A project with neither social door on (a build with no server, a
+    // project with both switched off): the e-mail account, so nobody is
+    // locked out of making one.
+    final emailOnly = !google && !apple;
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -225,6 +296,20 @@ class _WelcomeSheet extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 22),
+                      if (apple) ...[
+                        // Apple's own button (its logo, its black), with
+                        // Marakaj's words, sized as the sign-in screen's.
+                        MediaQuery.withNoTextScaling(
+                          child: SignInWithAppleButton(
+                            key: const Key('welcome-apple'),
+                            text: context.tr('Continuer avec Apple'),
+                            height: 52,
+                            borderRadius: const BorderRadius.all(Radius.circular(26)),
+                            onPressed: busy ? null : onApple,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
                       if (google) ...[
                         SizedBox(
                           height: 52,
@@ -257,28 +342,19 @@ class _WelcomeSheet extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 12),
                       ],
-                      SizedBox(
-                        height: 52,
-                        child: google
-                            ? OutlinedButton(
-                                key: const Key('welcome-email'),
-                                onPressed: busy ? null : onEmail,
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: Text(context.tr('Créer un compte avec mon e-mail')),
-                                ),
-                              )
-                            : FilledButton(
-                                key: const Key('welcome-email'),
-                                onPressed: busy ? null : onEmail,
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: Text(context.tr('Créer un compte avec mon e-mail')),
-                                ),
-                              ),
-                      ),
+                      if (emailOnly)
+                        SizedBox(
+                          height: 52,
+                          child: FilledButton(
+                            key: const Key('welcome-email'),
+                            onPressed: busy ? null : onEmail,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(context.tr('Créer un compte avec mon e-mail')),
+                            ),
+                          ),
+                        ),
                       if (problem != null) ...[
                         const SizedBox(height: 10),
                         Text(

@@ -459,7 +459,10 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
     // From a page with nothing under it, back goes to its parent (122):
     // a business's home to the picker for someone with several.
     BackFirst.instance.attach(_router, businesses: () => _session.orgs.length);
-    BackFirst.instance.cover = _termsBack;
+    // The terms gate answers first; then the welcome gate (152), under
+    // which back leaves the app rather than opening « Quitter ? » unseen.
+    BackFirst.instance.cover = () async =>
+        await _termsBack() ?? await WelcomeGate.handleBack(_session, _router);
     // A tapped push on Android opens what it is about (115).
     _pushTaps = PushClient.opened.listen((path) => _router.push(path));
     // Kicks the state machine off. The router is already listening, so the
