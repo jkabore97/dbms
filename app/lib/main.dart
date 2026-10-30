@@ -56,6 +56,7 @@ import 'core/update/update_banner.dart';
 import 'core/update/update_check.dart';
 import 'core/terms/terms.dart';
 import 'features/account/terms_gate.dart';
+import 'features/auth/welcome_gate.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Supplied at build time so no credentials live in the source:
@@ -629,9 +630,16 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
                   controller: _terms,
                   navigatorKey: _termsNavigator,
                   onSignOut: _session.signOut,
-                  child: UpdateBanner(
-                    check: _update,
-                    child: child ?? const SizedBox.shrink(),
+                  // « Créez votre compte » over the street for a stranger
+                  // (152): under the terms gate, which is for members.
+                  child: WelcomeGate(
+                    session: _session,
+                    router: _router,
+                    auth: widget.auth,
+                    child: UpdateBanner(
+                      check: _update,
+                      child: child ?? const SizedBox.shrink(),
+                    ),
                   ),
                 ),
               ),

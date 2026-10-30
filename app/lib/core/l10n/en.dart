@@ -8619,4 +8619,16 @@ const enStrings = <String, String>{
       'You cannot edit this business’s items',
   'Un service ne peut pas suivre des animaux':
       'A service cannot follow animals',
+  'Créer un compte avec mon e-mail':
+      'Create an account with my e-mail',
+  'Déjà membre ? Se connecter':
+      'Already a member? Sign in',
+  'En continuant, vous acceptez les ':
+      'By continuing, you agree to the ',
+  ' et la ':
+      ' and the ',
+  'Créez votre compte gratuit pour découvrir les boutiques, fermes et associations près de chez vous, commander, et ouvrir votre propre vitrine.':
+      'Create your free account to discover the shops, farms and associations near you, order, and open your own storefront.',
+  '5 000 cauris offerts à chaque nouvelle entreprise.':
+      '5,000 cauris offered to every new business.',
 };

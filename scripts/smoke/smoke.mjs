@@ -56,8 +56,11 @@ const rpc = {
   ],
 };
 
+// A stranger on the street meets the welcome gate first (152): the sheet's
+// words, not the street's, which it keeps out of reach. A shop's own window
+// stays open to whoever has the link.
 const checks = [
-  { path: '/', words: ['Les boutiques près de vous', 'Boutique Témoin', 'Savon de karité'] },
+  { path: '/', words: ['Bienvenue sur Marakaj', 'Créer un compte avec mon e-mail', 'Déjà membre ? Se connecter'] },
   { path: `/s/${shop.slug}`, words: ['Boutique Témoin', 'Savon de karité', 'Bissap'] },
 ];
 
@@ -118,8 +121,9 @@ for (const check of checks) {
   console.log(`${ok ? 'ok  ' : 'FAIL'} ${check.path}` +
     (missing.length ? `  missing: ${missing.join(' | ')}` : '') +
     (errors.length ? `  errors: ${errors.join(' | ').slice(0, 300)}` : ''));
-  if (!ok) {
-    failed++;
+  if (!ok) failed++;
+  // The pictures are kept on a failure, or whenever asked (SMOKE_SHOTS=1).
+  if (!ok || process.env.SMOKE_SHOTS) {
     await page.screenshot({ path: `smoke-${check.path === '/' ? 'home' : 'shop'}.png` });
   }
   await ctx.close();
