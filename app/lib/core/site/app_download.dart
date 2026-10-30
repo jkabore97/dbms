@@ -64,8 +64,9 @@ const appDownloadEvery = Duration(days: 7);
 /// in the installed web app, never in the Android app — once every seven
 /// days, counted from when it was actually seen: not while a sheet covers
 /// the page or the tab is in the background. Android: Google Play (or the
-/// APK); iPhone: the App Store once it has an address, else how to add
-/// Mara to the home screen. It belongs to the page, so an order sheet or
+/// APK); iPhone: the App Store once it has an address, and nothing at all
+/// until then (152 — the home-screen tip of before waited for a listing
+/// that does not exist yet). It belongs to the page, so an order sheet or
 /// the sign-in sheet opened over the page covers it; the sign-in page has
 /// none.
 class AppDownloadPrompt extends StatefulWidget {
@@ -138,6 +139,12 @@ class _AppDownloadPromptState extends State<AppDownloadPrompt> with WidgetsBindi
   Future<void> _open() async {
     final links = await (widget.links ?? () => AppLinks.fetch(widget.client))();
     if (!mounted || !_due) return;
+    // An iPhone before the App Store has Marakaj (no address in Réglages):
+    // no card at all, not even the home-screen tip — the owner: « Apple is
+    // not ready yet … don't show the download-the-app bar yet » (152).
+    // Nothing is written as shown, so the card comes the day the address
+    // is set.
+    if (_env.phone == AppPhone.ios && links.ios == null) return;
     setState(() => _links = links);
   }
 

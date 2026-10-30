@@ -202,13 +202,15 @@ void main() {
       expect(find.text('Ouvrir l\'App Store'), findsOneWidget);
     });
 
-    testWidgets('iPhone with none: how to add Marakaj to the home screen, no dead button',
+    testWidgets('iPhone with none: nothing at all, and nothing written, until the App Store address is set',
         (tester) async {
-      await _street(tester, _Browser(AppPhone.ios));
-      expect(find.text('Marakaj sur votre écran d\'accueil'), findsOneWidget);
-      expect(find.textContaining('dans Safari, touchez Partager'), findsOneWidget);
-      expect(find.byKey(const Key('app-download-go')), findsNothing);
-      expect(find.byKey(const Key('app-download-later')), findsOneWidget);
+      // 152: the home-screen tip of before pointed at a listing that does
+      // not exist yet; the card waits for the address.
+      final b = _Browser(AppPhone.ios);
+      await _street(tester, b);
+      expect(find.byKey(const Key('app-download')), findsNothing);
+      expect(find.text('Marakaj sur votre écran d\'accueil'), findsNothing);
+      expect(b.shownAt, isNull, reason: 'not shown, not written: it comes the day the address is set');
     });
 
     testWidgets('never on a computer, in the installed web app, or twice in seven days',
@@ -221,7 +223,7 @@ void main() {
       await _street(tester, recent);
       expect(find.byKey(const Key('app-download')), findsNothing);
       expect(recent.shownAt, _now.subtract(const Duration(days: 6)), reason: 'not shown, not written');
-      await _street(tester, _Browser(AppPhone.ios, shownAt: _now.subtract(const Duration(days: 7))));
+      await _street(tester, _Browser(AppPhone.android, shownAt: _now.subtract(const Duration(days: 7))));
       expect(find.byKey(const Key('app-download')), findsOneWidget);
     });
 
@@ -263,7 +265,7 @@ void main() {
       expect(b.shownAt, _now);
 
       // The tab in the background when it came: written once back in front.
-      final hidden = _Browser(AppPhone.ios);
+      final hidden = _Browser(AppPhone.android);
       await _street(tester, hidden, wait: false);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);

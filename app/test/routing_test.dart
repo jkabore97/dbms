@@ -401,11 +401,13 @@ void main() {
     expect(find.text('Entrez votre code'), findsNothing);
   });
 
-  testWidgets("a shop's vitrine opens without signing in", (tester) async {
+  testWidgets("a shop's vitrine opens behind the welcome gate, not the sign-in page",
+      (tester) async {
     // A shopper sent the link on WhatsApp has no account. The redirect must
-    // not bounce them to the sign-in page for looking in a shop window. This
-    // build has no backend, so the window says so — but it is the window
-    // that says it, not the sign-in gate.
+    // not bounce them to the sign-in page for looking in a shop window: the
+    // window is drawn, and the welcome gate (152) stands over it — the
+    // owner wants every shared link to ask for an account. This build has
+    // no backend, so the window says so, under the sheet.
     await pumpApp(tester);
     expect(find.byKey(const Key('mara-header')), findsOneWidget);
 
@@ -414,6 +416,7 @@ void main() {
     await flush(tester);
 
     expect(find.text("La vitrine a besoin d'une connexion."), findsOneWidget);
+    expect(find.byKey(const Key('welcome-gate')), findsOneWidget);
     expect(find.text('Connectez-vous pour ouvrir votre activité.'),
         findsNothing);
   });
