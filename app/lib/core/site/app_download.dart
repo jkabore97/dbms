@@ -64,8 +64,9 @@ const appDownloadEvery = Duration(days: 7);
 /// in the installed web app, never in the Android app — once every seven
 /// days, counted from when it was actually seen: not while a sheet covers
 /// the page or the tab is in the background. Android: Google Play (or the
-/// APK); iPhone: the App Store once it has an address, else how to add
-/// Mara to the home screen. It belongs to the page, so an order sheet or
+/// APK); iPhone: the App Store once it has an address, and nothing at all
+/// until then (152 — the home-screen tip of before waited for a listing
+/// that does not exist yet). It belongs to the page, so an order sheet or
 /// the sign-in sheet opened over the page covers it; the sign-in page has
 /// none.
 class AppDownloadPrompt extends StatefulWidget {
@@ -119,7 +120,9 @@ class _AppDownloadPromptState extends State<AppDownloadPrompt> with WidgetsBindi
   DateTime _now() => (widget.now ?? DateTime.now)();
 
   bool get _due {
-    if (_env.phone == null || _env.standalone) return false;
+    // The iPhone's card only (152): Android has the bar that never goes
+    // (AndroidInstallBar), drawn over the whole app for a member.
+    if (_env.phone != AppPhone.ios || _env.standalone) return false;
     final last = _env.readShownAt();
     return last == null || _now().difference(last) >= appDownloadEvery;
   }
@@ -138,6 +141,12 @@ class _AppDownloadPromptState extends State<AppDownloadPrompt> with WidgetsBindi
   Future<void> _open() async {
     final links = await (widget.links ?? () => AppLinks.fetch(widget.client))();
     if (!mounted || !_due) return;
+    // An iPhone before the App Store has Marakaj (no address in Réglages):
+    // no card at all, not even the home-screen tip — the owner: « Apple is
+    // not ready yet … don't show the download-the-app bar yet » (152).
+    // Nothing is written as shown, so the card comes the day the address
+    // is set.
+    if (_env.phone == AppPhone.ios && links.ios == null) return;
     setState(() => _links = links);
   }
 
@@ -313,6 +322,145 @@ class _Card extends StatelessWidget {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The Android bar (152): a member on the website from an Android phone's
+/// browser is asked to install the app — and the bar never goes. The
+/// owner: « if they log in from an Android phone … force them to download
+/// the app … they can keep scrolling, but the pop-up bar to download the
+/// app on Android will never be removed ». No « Plus tard », no close:
+/// the one button opens Google Play (or the APK until the listing is
+/// live). It takes its own strip at the foot of the screen, under the
+/// welcome gate and the terms gate, for somebody signed in; the whole
+/// app is laid out above it, so nothing — no sheet, no dialog — ever
+/// comes over it. Even in the website installed on the home screen (that
+/// is not the app). Never on a computer, never in the Android app
+/// itself, never on an iPhone (the App Store card above is for that,
+/// once the listing exists).
+class AndroidInstallBar extends StatefulWidget {
+  const AndroidInstallBar({
+    super.key,
+    required this.listenable,
+    required this.signedIn,
+    required this.child,
+    this.client,
+    this.env,
+    this.links,
+  });
+
+  /// Tells of a change in who is in (the session).
+  final Listenable listenable;
+
+  /// Somebody is in — the bar is for members, the welcome gate for the
+  /// rest.
+  final bool Function() signedIn;
+  final Widget child;
+  final SupabaseClient? client;
+
+  /// The browser; [browserEnv] when null (none outside a browser).
+  final AppDownloadEnv? env;
+
+  /// The store links; [AppLinks.fetch] when null.
+  final Future<AppLinks> Function()? links;
+
+  @override
+  State<AndroidInstallBar> createState() => _AndroidInstallBarState();
+}
+
+class _AndroidInstallBarState extends State<AndroidInstallBar> {
+  late final AppDownloadEnv _env = widget.env ?? browserEnv();
+  AppLinks? _links;
+
+  // The website installed on the home screen (standalone) is still not
+  // the app: the bar there too.
+  bool get _android => _env.phone == AppPhone.android;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_android) {
+      unawaited((widget.links ?? () => AppLinks.fetch(widget.client))().then((l) {
+        if (mounted) setState(() => _links = l);
+      }));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: widget.listenable,
+      builder: (context, _) {
+        final links = _links;
+        final up = _android && links != null && widget.signedIn();
+        final mq = MediaQuery.of(context);
+        // The tree keeps one shape whether the bar is up or not, so the
+        // app under it is never built again from nothing when it comes
+        // (the street's questions asked twice, a page's scroll lost).
+        return Column(
+          children: [
+            // The app lives above the bar: the bar takes its own strip of
+            // the screen, so nothing of the app — no sheet, no dialog —
+            // ever comes over it. The phone's own bottom inset is then
+            // the bar's to honour, not the page's.
+            Expanded(
+              child: MediaQuery(
+                data: up ? mq.removePadding(removeBottom: true) : mq,
+                child: widget.child,
+              ),
+            ),
+            if (up) _bar(context, links),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _bar(BuildContext context, AppLinks links) {
+    final theme = Theme.of(context), scheme = theme.colorScheme;
+    final text = Text(
+      context.tr("Installez l'application Marakaj pour continuer sur Android."),
+      style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onInverseSurface, height: 1.25),
+    );
+    final button = FilledButton(
+      key: const Key('android-install-go'),
+      onPressed: () => launchUrl(Uri.parse(links.android), webOnlyWindowName: '_blank'),
+      child: Text(links.androidStore ? context.tr('Google Play') : context.tr('Télécharger')),
+    );
+    return Material(
+      key: const Key('android-install-bar'),
+      color: scheme.inverseSurface,
+      elevation: 8,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+          child: LayoutBuilder(
+            builder: (context, c) => c.maxWidth < 360
+                // A narrow phone: the words, then the button under them,
+                // rather than three words a line.
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      text,
+                      const SizedBox(height: 8),
+                      Align(alignment: Alignment.centerRight, child: button),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      Icon(Icons.android, color: scheme.onInverseSurface),
+                      const SizedBox(width: 10),
+                      Expanded(child: text),
+                      const SizedBox(width: 12),
+                      button,
+                    ],
+                  ),
+          ),
         ),
       ),
     );

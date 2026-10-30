@@ -61,12 +61,13 @@ const rpc = {
 // The project has Google and Apple on (`/auth/v1/settings`).
 const authSettings = { external: { google: true, apple: true } };
 
-// A stranger on the street meets the welcome gate first (152): the sheet's
-// words, not the street's, which it keeps out of reach. A shop's own window
-// stays open to whoever has the link.
+// A stranger meets the welcome gate first (152), on the street and on a
+// shop's own window alike: the sheet's words, not the page's, which it
+// keeps out of reach. The window itself is checked by the vitrine tests.
+const gate = ['Bienvenue sur Marakaj', 'Continuer avec Google', 'Continuer avec Apple', 'Déjà membre ? Se connecter'];
 const checks = [
-  { path: '/', words: ['Bienvenue sur Marakaj', 'Continuer avec Google', 'Continuer avec Apple', 'Déjà membre ? Se connecter'] },
-  { path: `/s/${shop.slug}`, words: ['Boutique Témoin', 'Savon de karité', 'Bissap'] },
+  { path: '/', words: gate },
+  { path: `/s/${shop.slug}`, words: gate },
 ];
 
 const browser = await chromium.launch(

@@ -47,6 +47,10 @@ class _Browser {
 
 final _now = DateTime(2026, 10, 9, 12);
 
+/// The App Store listing set (122 S2 / 152): the card is the iPhone's only
+/// now, and comes there once this address exists.
+const _store = AppLinks(android: apkDownloadUrl, ios: 'https://apps.apple.com/app/mara/id1');
+
 Future<void> _street(WidgetTester tester, _Browser browser,
     {AppLinks links = const AppLinks.fallback(), Size size = const Size(390, 844), bool wait = true}) async {
   tester.view.physicalSize = size;
@@ -177,23 +181,18 @@ void main() {
           'https://github.com/jkabore97/dbms/releases/latest/download/kaj-arm64-v8a.apk');
     });
 
-    testWidgets('Android before Google Play: the APK; « Plus tard » closes it; the date kept',
+    testWidgets('Android: no card — the bar that never goes is Android\'s (152)',
         (tester) async {
+      // Before 152 the card came every seven days with « Plus tard »; an
+      // Android member now has AndroidInstallBar over the whole app
+      // (android_install_bar_test), and nothing here.
       final b = _Browser(AppPhone.android);
       await _street(tester, b);
-      expect(find.byKey(const Key('app-download')), findsOneWidget);
-      expect(find.text('Marakaj sur votre téléphone'), findsOneWidget);
-      expect(find.text('Télécharger pour Android'), findsOneWidget);
-      expect(b.shownAt, _now);
-      await tester.tap(find.byKey(const Key('app-download-later')));
-      await tester.pumpAndSettle();
       expect(find.byKey(const Key('app-download')), findsNothing);
-    });
-
-    testWidgets('Android once Google Play is live: the store', (tester) async {
+      expect(b.shownAt, isNull);
       await _street(tester, _Browser(AppPhone.android),
           links: const AppLinks(android: playStoreUrl, androidStore: true));
-      expect(find.text('Ouvrir Google Play'), findsOneWidget);
+      expect(find.byKey(const Key('app-download')), findsNothing);
     });
 
     testWidgets('iPhone with an App Store address: the App Store', (tester) async {
@@ -202,13 +201,15 @@ void main() {
       expect(find.text('Ouvrir l\'App Store'), findsOneWidget);
     });
 
-    testWidgets('iPhone with none: how to add Marakaj to the home screen, no dead button',
+    testWidgets('iPhone with none: nothing at all, and nothing written, until the App Store address is set',
         (tester) async {
-      await _street(tester, _Browser(AppPhone.ios));
-      expect(find.text('Marakaj sur votre écran d\'accueil'), findsOneWidget);
-      expect(find.textContaining('dans Safari, touchez Partager'), findsOneWidget);
-      expect(find.byKey(const Key('app-download-go')), findsNothing);
-      expect(find.byKey(const Key('app-download-later')), findsOneWidget);
+      // 152: the home-screen tip of before pointed at a listing that does
+      // not exist yet; the card waits for the address.
+      final b = _Browser(AppPhone.ios);
+      await _street(tester, b);
+      expect(find.byKey(const Key('app-download')), findsNothing);
+      expect(find.text('Marakaj sur votre écran d\'accueil'), findsNothing);
+      expect(b.shownAt, isNull, reason: 'not shown, not written: it comes the day the address is set');
     });
 
     testWidgets('never on a computer, in the installed web app, or twice in seven days',
@@ -217,11 +218,11 @@ void main() {
       expect(find.byKey(const Key('app-download')), findsNothing);
       await _street(tester, _Browser(AppPhone.android, standalone: true));
       expect(find.byKey(const Key('app-download')), findsNothing);
-      final recent = _Browser(AppPhone.android, shownAt: _now.subtract(const Duration(days: 6)));
-      await _street(tester, recent);
+      final recent = _Browser(AppPhone.ios, shownAt: _now.subtract(const Duration(days: 6)));
+      await _street(tester, recent, links: _store);
       expect(find.byKey(const Key('app-download')), findsNothing);
       expect(recent.shownAt, _now.subtract(const Duration(days: 6)), reason: 'not shown, not written');
-      await _street(tester, _Browser(AppPhone.ios, shownAt: _now.subtract(const Duration(days: 7))));
+      await _street(tester, _Browser(AppPhone.ios, shownAt: _now.subtract(const Duration(days: 7))), links: _store);
       expect(find.byKey(const Key('app-download')), findsOneWidget);
     });
 
@@ -237,7 +238,7 @@ void main() {
     });
 
     testWidgets('a bottom card: never over the header\'s sign-in corner', (tester) async {
-      await _street(tester, _Browser(AppPhone.android));
+      await _street(tester, _Browser(AppPhone.ios), links: _store);
       final card = tester.getRect(find.byKey(const Key('app-download')));
       final signIn = tester.getRect(find.byKey(const Key('sign-in')));
       expect(card.overlaps(signIn), isFalse);
@@ -249,8 +250,8 @@ void main() {
         (tester) async {
       // A sheet opened before the card came: it comes under the sheet,
       // unseen; the sheet closed, it is seen — and only then written.
-      final b = _Browser(AppPhone.android);
-      await _street(tester, b, wait: false);
+      final b = _Browser(AppPhone.ios);
+      await _street(tester, b, wait: false, links: _store);
       await tester.tap(find.byKey(const Key('open-order')));
       await tester.pump(const Duration(seconds: 2));
       await tester.pumpAndSettle();
@@ -264,7 +265,7 @@ void main() {
 
       // The tab in the background when it came: written once back in front.
       final hidden = _Browser(AppPhone.ios);
-      await _street(tester, hidden, wait: false);
+      await _street(tester, hidden, wait: false, links: _store);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
       await tester.pump(const Duration(seconds: 2));
@@ -277,7 +278,7 @@ void main() {
     });
 
     testWidgets('an order sheet opened over the page covers it', (tester) async {
-      await _street(tester, _Browser(AppPhone.android));
+      await _street(tester, _Browser(AppPhone.ios), links: _store);
       expect(find.byKey(const Key('app-download')).hitTestable(), findsOneWidget);
       await tester.tap(find.byKey(const Key('open-order')));
       await tester.pumpAndSettle();

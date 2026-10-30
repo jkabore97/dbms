@@ -57,6 +57,7 @@ import 'core/update/update_check.dart';
 import 'core/terms/terms.dart';
 import 'features/account/terms_gate.dart';
 import 'features/auth/welcome_gate.dart';
+import 'core/site/app_download.dart' show AndroidInstallBar;
 import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Supplied at build time so no credentials live in the source:
@@ -639,9 +640,16 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
                     session: _session,
                     router: _router,
                     auth: widget.auth,
-                    child: UpdateBanner(
-                      check: _update,
-                      child: child ?? const SizedBox.shrink(),
+                    // A member on an Android phone's browser: the bar that
+                    // asks for the app and never goes (152).
+                    child: AndroidInstallBar(
+                      listenable: _session,
+                      signedIn: () => _signedIn,
+                      client: widget.auth.isConfigured ? widget.auth.client : null,
+                      child: UpdateBanner(
+                        check: _update,
+                        child: child ?? const SizedBox.shrink(),
+                      ),
                     ),
                   ),
                 ),

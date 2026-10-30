@@ -34,24 +34,30 @@ import '../../core/theme/mara_mark.dart';
 /// the app (BackFirst, through [handleBack]) rather than opening the
 /// router's « Quitter ? » under it, unseen.
 ///
-/// Where it stands: the street only (`/` and `/vitrines`). A shop's own
-/// vitrine (`/s/<slug>`) stays open: the link a shop sends its customers
-/// must not greet them with a wall; they are asked when they order (F1).
-/// The sign-in page and the legal pages are where the sheet sends people,
-/// so they are never gated. Somebody signed in never sees it; while the
-/// session is still being read at start, nothing is shown either, so a
-/// member reloading the page does not see the sheet flash.
+/// Where it stands: every page a stranger can reach — the street, a shop's
+/// own vitrine (`/s/<slug>`: the owner, once the street alone was gated,
+/// « if someone shares their vitrine with their own link, the website
+/// doesn't ask … every link that will take to the app, they need the
+/// pop-up »), the help and the rest. Not the sign-in page, nor the two
+/// legal texts the sheet links to, nor the payment page Wave sends a
+/// person back to. After Google or Apple the person lands on the very
+/// page they opened (the session's return-to), not on the street.
+/// Somebody signed in never sees it; while the session is still being
+/// read at start, nothing is shown either, so a member reloading the page
+/// does not see the sheet flash.
 ///
 /// [kWelcomeGate] switches it off in one line, should the numbers say the
 /// wall sends more people away than it signs up.
 const kWelcomeGate = true;
 
+/// The pages that stay open to a stranger: the way in, and what the sheet
+/// itself links to.
+const _openToStrangers = [Routes.signIn, Routes.terms, Routes.privacy, Routes.payment];
+
 /// Whether the gate stands over [path] for somebody in [phase].
 bool welcomeGateShows(SessionPhase phase, String path) {
-  if (!kWelcomeGate || phase != SessionPhase.signedOut) return false;
-  return path == '/' ||
-      path == Routes.directory ||
-      path.startsWith('${Routes.directory}/');
+  if (!kWelcomeGate || !WelcomeGate.enabled || phase != SessionPhase.signedOut) return false;
+  return !_openToStrangers.any((p) => path == p || path.startsWith('$p/'));
 }
 
 class WelcomeGate extends StatefulWidget {
@@ -67,6 +73,11 @@ class WelcomeGate extends StatefulWidget {
   final GoRouter router;
   final AuthRepository auth;
   final Widget child;
+
+  /// For tests only: the vitrine and order flows written before the gate
+  /// walk the app as a stranger and switch it off; the gate's own tests
+  /// keep it on. The app never touches this.
+  static bool enabled = true;
 
   /// Whether the sheet is up right now (main.dart's back).
   static bool isUp(SessionController session, GoRouter router) =>
@@ -138,12 +149,21 @@ class _WelcomeGateState extends State<WelcomeGate> {
   /// is in hand when it closes; closing it without signing does nothing.
   Future<void> _continueWithApple() => _run(() => widget.session.signInWithApple());
 
+  /// The page the sheet interrupted — a vitrine opened from a shared link,
+  /// say — is where the person lands once in (the session's return-to, as
+  /// the vitrine's own sign-in sheet does); the street needs no note.
+  void _rememberHere() {
+    final path = widget.router.routerDelegate.currentConfiguration.uri.toString();
+    if (path != '/' && path != Routes.directory) widget.session.stashReturnTo(path);
+  }
+
   Future<void> _run(Future<void> Function() action) async {
     setState(() {
       _busy = true;
       _problem = null;
     });
     try {
+      _rememberHere();
       await action();
     } catch (e) {
       if (mounted) setState(() => _problem = describeError(e));

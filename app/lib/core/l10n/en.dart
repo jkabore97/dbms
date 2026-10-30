@@ -8631,4 +8631,8 @@ const enStrings = <String, String>{
       'Create your free account to discover the shops, farms and associations near you, order, and open your own storefront.',
   '5 000 cauris offerts à chaque nouvelle entreprise.':
       '5,000 cauris offered to every new business.',
+  'Installez l\'application Marakaj pour continuer sur Android.':
+      'Install the Marakaj app to continue on Android.',
+  'Google Play':
+      'Google Play',
 };
