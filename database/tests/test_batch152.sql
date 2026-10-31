@@ -48,9 +48,13 @@ begin;
 drop extension if exists pgcrypto;
 create schema if not exists extensions;
 create extension pgcrypto schema extensions;
+-- 152, then 153 over it as the migrations run: 153 drops 152's
+-- six-argument event_create for its seven-argument one, so a call names
+-- one function.
 \i database/migrations/152_events.sql
+\i database/migrations/153_events_kind.sql
 insert into orgs (id, name, slug, profile, default_currency) values
-    ('15215215-1111-0000-0000-000000000009', 'Sans pgcrypto', 'sans-pgcrypto-152', 'retail', 'XOF');
+    ('15215215-1111-0000-0000-000000000009', 'Sans pgcrypto', 'sans-pgcrypto-152', 'events', 'XOF');
 do $$
 declare r events;
 begin
@@ -60,12 +64,16 @@ begin
     assert event_slug('Inès & Thomas') ~ '^ines-thomas-[0-9a-f]{4}$', 'the address minted without pgcrypto';
     r := event_create('15215215-1111-0000-0000-000000000009', 'Inès & Thomas', 'mariage', 'come', null, null);
     assert r.preview_token ~ '^[0-9a-f]{24}$', 'the preview token minted without pgcrypto: ' || r.preview_token;
-    raise notice 'PASS: 152 installs and mints with pgcrypto in `extensions`, as on Supabase';
+    raise notice 'PASS: 152 and 153 install and mint with pgcrypto in `extensions`, as on Supabase';
 end $$;
 rollback;
 
 \i database/migrations/152_events.sql
 \i database/migrations/152_events.sql
+-- 153 moved the cards to the Événementiel kind and gave event_create its
+-- seventh argument: restored after 152's re-run, as the migrations run in
+-- order. The claims below hold with the businesses being Événementiels.
+\i database/migrations/153_events_kind.sql
 
 begin;
 
@@ -87,11 +95,11 @@ begin
         assert has_function_privilege('anon', f, 'execute'), 'the street may call ' || f;
         assert has_function_privilege('authenticated', f, 'execute'), 'a member may call ' || f;
     end loop;
-    assert not (select prosecdef from pg_proc where oid = to_regprocedure('event_create(uuid, text, text, text, timestamptz, text)')),
+    assert not (select prosecdef from pg_proc where oid = to_regprocedure('event_create(uuid, text, text, text, timestamptz, text, text)')),
         'event_create is SECURITY INVOKER: bound by the policies';
-    assert has_function_privilege('authenticated', 'event_create(uuid, text, text, text, timestamptz, text)', 'execute'),
+    assert has_function_privilege('authenticated', 'event_create(uuid, text, text, text, timestamptz, text, text)', 'execute'),
         'a member may call event_create';
-    foreach f in array array['event_create(uuid, text, text, text, timestamptz, text)', 'events_open()',
+    foreach f in array array['event_create(uuid, text, text, text, timestamptz, text, text)', 'events_open()',
                              'events_public_on()', 'event_visible(events, text)'] loop
         assert not has_function_privilege('anon', f, 'execute'), 'the street cannot call ' || f;
         assert not has_function_privilege('public', f, 'execute'), 'PUBLIC cannot call ' || f;
@@ -109,9 +117,11 @@ insert into auth.users (id, phone, email, raw_user_meta_data, created_at) values
     ('15215215-0000-0000-0000-000000000004', '+22615210004', 'assoc152@example.com',  '{"full_name": "Salif Anciens"}', now());
 update profiles set is_platform_admin = true where id = '15215215-0000-0000-0000-000000000003';
 
+-- Two Événementiels (153): a planner's, and an association's own events
+-- activity.
 insert into orgs (id, name, slug, profile, default_currency) values
-    ('15215215-1111-0000-0000-000000000001', 'Boutique Mariages d''Awa', 'mariages-awa-152', 'retail', 'XOF'),
-    ('15215215-1111-0000-0000-000000000002', 'Association des Anciens', 'anciens-152', 'church', 'XOF');
+    ('15215215-1111-0000-0000-000000000001', 'Boutique Mariages d''Awa', 'mariages-awa-152', 'events', 'XOF'),
+    ('15215215-1111-0000-0000-000000000002', 'Association des Anciens', 'anciens-152', 'events', 'XOF');
 insert into memberships (user_id, org_id, role, scope_kind, scope_id, visibility) values
     ('15215215-0000-0000-0000-000000000001', '15215215-1111-0000-0000-000000000001', 'owner',    'org', '15215215-1111-0000-0000-000000000001', 'full'),
     ('15215215-0000-0000-0000-000000000002', '15215215-1111-0000-0000-000000000001', 'employee', 'org', '15215215-1111-0000-0000-000000000001', 'full'),
@@ -169,7 +179,7 @@ begin
         v_refused := true;
     end;
     assert v_refused, 'and cannot create one';
-    -- An association's owner has the same door.
+    -- A second Événementiel's owner has the same door.
     perform set_config('request.jwt.claim.sub', '15215215-0000-0000-0000-000000000004', true);
     r := event_create('15215215-1111-0000-0000-000000000002', 'Gala des Anciens', 'gala', 'gala', '2027-03-11 18:30+00', 'Hôtel Bravia');
     assert r.kind = 'gala' and r.card = 'gala', 'the association''s gala';

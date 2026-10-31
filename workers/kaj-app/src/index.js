@@ -130,8 +130,9 @@ async function serve(request, env) {
     if (event && request.method === "GET") {
       return eventPage(request, env, event[1], url.searchParams.get("apercu"));
     }
-    // The cards' pages are not addresses of their own: only /e/<slug> is.
-    if (/^\/cartes\/[a-z]+\.html$/.test(url.pathname)) {
+    // The cards' pages — the twelve under /cartes, the animated one under
+    // /evenements — are not addresses of their own: only /e/<slug> is.
+    if (/^\/(cartes\/[a-z]+|evenements\/index)\.html$/.test(url.pathname)) {
       return new Response("Introuvable.", {
         status: 404,
         headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
@@ -306,6 +307,43 @@ const EVENT_CARDS = new Set([
   "come", "ravello", "sahel", "jardin", "minuit", "anniv",
   "bapteme", "naissance", "diplome", "gala", "dot", "hommage",
 ]);
+// An animated design's key (event_templates, 153): anime_<layout>, the
+// Premium ones anime_<layout>_p.
+const ANIMATED = /^anime_[a-z]+(_p)?$/;
+
+// The day and hour of an instant on the organiser's clock: the zone's name
+// (Africa/Ouagadougou, America/New_York) or the phone's offset for that
+// day (« -05:00 »); an unknown zone reads on Ouagadougou's clock.
+function localParts(iso, tz) {
+  const none = { date: null, time: null };
+  if (!iso) return none;
+  const t = new Date(iso);
+  if (Number.isNaN(t.getTime())) return none;
+  const pad = (n) => String(n).padStart(2, "0");
+  const offset = /^([+-])(\d\d):(\d\d)$/.exec(String(tz || ""));
+  if (offset) {
+    const minutes = (offset[1] === "-" ? -1 : 1) * (Number(offset[2]) * 60 + Number(offset[3]));
+    const l = new Date(t.getTime() + minutes * 60000);
+    return {
+      date: `${l.getUTCFullYear()}-${pad(l.getUTCMonth() + 1)}-${pad(l.getUTCDate())}`,
+      time: `${pad(l.getUTCHours())}:${pad(l.getUTCMinutes())}`,
+    };
+  }
+  for (const zone of [tz, "Africa/Ouagadougou"]) {
+    if (!zone) continue;
+    try {
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: zone, year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+      }).formatToParts(t);
+      const p = Object.fromEntries(parts.filter((x) => x.type !== "literal").map((x) => [x.type, x.value]));
+      return { date: `${p.year}-${p.month}-${p.day}`, time: `${p.hour}:${p.minute}` };
+    } catch (_) {
+      // An unknown zone: the next.
+    }
+  }
+  return none;
+}
 
 // /e/<slug> — the card page with the event in it (152). Never cached:
 // a preview link is private, and the organiser's change shows at once.
@@ -323,16 +361,32 @@ export async function eventPage(request, env, slug, preview) {
   }
   if (!data || typeof data !== "object" || !data.title) return gone();
 
-  const card = EVENT_CARDS.has(data.card) ? data.card : "come";
-  const page = await env.ASSETS.fetch(new Request(new URL(`/cartes/${card}.html`, request.url), request));
+  // Two families of design (153): the twelve cards under /cartes, each its
+  // own page; the animated layouts, one page under /evenements that draws
+  // the layout the event names (window.CARTE.lay).
+  const animated = data.family === "anime" || ANIMATED.test(String(data.card || ""));
+  const card = animated
+    ? (ANIMATED.test(String(data.card || "")) ? String(data.card) : "anime_lettre")
+    : (EVENT_CARDS.has(data.card) ? data.card : "come");
+  const base = animated ? "/evenements/" : "/cartes/";
+  const page = await env.ASSETS.fetch(new Request(new URL(animated ? "/evenements/index.html" : `/cartes/${card}.html`, request.url), request));
   if (!page.ok) return gone();
 
+  // The day and hour on the organiser's clock (events.tz, 153): the
+  // animated page composes its own date from them.
+  const when = localParts(data.starts_at, data.tz);
   const boot = {
     slug: data.slug,
     kind: data.kind,
     card,
+    family: animated ? "anime" : "classique",
+    premium: data.premium === true,
+    lay: animated ? card.slice("anime_".length) : null,
     title: data.title,
     starts_at: data.starts_at || null,
+    tz: data.tz || null,
+    date: when.date,
+    time: when.time,
     place: data.place || null,
     content: data.content && typeof data.content === "object" ? data.content : {},
     rsvp_on: data.rsvp_on !== false,
@@ -354,8 +408,9 @@ export async function eventPage(request, env, slug, preview) {
     .on("title", { element(e) { e.setInnerContent(title); } })
     .on("head", {
       element(e) {
-        // The page's stylesheet, script and pictures are relative to /cartes/.
-        e.prepend('<base href="/cartes/">', { html: true });
+        // The page's stylesheet, script and pictures are relative to its
+        // folder (/cartes/ or /evenements/).
+        e.prepend(`<base href="${base}">`, { html: true });
         e.append(
           `<meta property="og:title" content="${escapeHtml(data.title)}">` +
           `<meta property="og:description" content="${escapeHtml(description)}">` +

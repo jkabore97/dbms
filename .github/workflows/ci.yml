@@ -252,6 +252,14 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch152.sql
 
+      # 153: Événementiel is the fourth kind of business — Marakaj's admins'
+      # to create while the switch is off, anyone's once on; the cards are
+      # its alone, from forty-seven templates, on the organiser's clock.
+      - name: Prove the fourth kind, its templates and its clock (153)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch153.sql
+
       # The bell: the right people hear the right events and nobody else,
       # a threshold rings on the crossing rather than on every sale below
       # it, and the neighbour hears nothing at all.

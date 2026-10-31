@@ -44,6 +44,7 @@ export '../../features/admin/settlement_screen.dart';
 export '../../features/admin/featured_screen.dart';
 export '../../features/admin/showcase_screen.dart';
 export '../../features/events/events_screens.dart';
+export '../../features/events/templates_gallery_screen.dart';
 export '../../features/courier/courier_screen.dart';
 export '../../features/courier/become_courier_screen.dart';
 export '../../features/courier/job_map_screen.dart';

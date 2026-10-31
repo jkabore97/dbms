@@ -201,6 +201,7 @@ class _OrgColoursScreenState extends State<OrgColoursScreen> {
         'farm' => 'La couleur des fermes',
         'church' || 'association' => 'La couleur des associations',
         'retail' => 'La couleur des boutiques',
+        'events' => 'La couleur des événementiels',
         _ => "La couleur de l'application",
       };
 }

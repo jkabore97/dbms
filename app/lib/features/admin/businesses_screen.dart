@@ -330,6 +330,7 @@ class _BusinessCard extends StatelessWidget {
         'church' || 'association' => Icons.groups_outlined,
         'farm' => Icons.agriculture_outlined,
         'retail' => Icons.storefront_outlined,
+        'events' => Icons.celebration_outlined,
         _ => Icons.work_outline,
       };
 
@@ -337,6 +338,7 @@ class _BusinessCard extends StatelessWidget {
         'church' || 'association' => 'Association',
         'farm' => 'Ferme',
         'retail' => 'Commerce',
+        'events' => 'Événementiel',
         _ => 'Autre',
       };
 }
@@ -567,6 +569,8 @@ class _EditBusinessSheetState extends State<EditBusinessSheet> {
                 DropdownMenuItem(value: 'farm', child: Text(context.tr('Ferme'))),
                 DropdownMenuItem(
                     value: 'retail', child: Text(context.tr('Commerce'))),
+                DropdownMenuItem(
+                    value: 'events', child: Text(context.tr('Événementiel'))),
                 // A business not yet migrated by 035 still reads 'church';
                 // keep it selectable so its edit form does not crash on a
                 // value with no item, without offering it to anyone else.

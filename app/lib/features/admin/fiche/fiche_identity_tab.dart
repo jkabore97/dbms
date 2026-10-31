@@ -190,6 +190,11 @@ class _FicheIdentityTabState extends State<FicheIdentityTab> {
                       value: 'association',
                       icon: icons ? const Icon(Icons.groups_outlined) : null,
                       label: Text(context.tr('Association'))),
+                  // The fourth kind (153).
+                  ButtonSegment(
+                      value: 'events',
+                      icon: icons ? const Icon(Icons.celebration_outlined) : null,
+                      label: Text(context.tr('Événementiel'))),
                 ],
                 selected: {_kind},
                 showSelectedIcon: false,

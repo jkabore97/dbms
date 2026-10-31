@@ -4,12 +4,15 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:kaj_app/core/auth/models.dart';
 import 'package:kaj_app/core/events/events_repository.dart';
 import 'package:kaj_app/features/admin/center/settings_section.dart';
+import 'package:kaj_app/features/events/events_home_screen.dart';
 import 'package:kaj_app/features/events/events_screens.dart';
+import 'package:kaj_app/features/events/templates_gallery_screen.dart';
 import 'package:kaj_app/l10n/strings.dart';
 
-/// 152, piece 1: Événementiel in the app — the list, the new-card sheet,
-/// one card's page (preview, link, published, answers), and Réglages'
-/// ninth card with its one switch.
+/// 152 and 153: Événementiel in the app — the Événementiel's home and its
+/// bar, « Nouvelle carte » (the words, then the design from the gallery,
+/// or the design first), one card's page (preview, link, published,
+/// answers), the guests' list, and Réglages' ninth card with its switch.
 class _Events extends EventsRepository {
   _Events() : super(null);
 
@@ -23,6 +26,9 @@ class _Events extends EventsRepository {
 
   @override
   Future<bool> isPublic() async => false;
+
+  @override
+  Future<List<EventTemplate>> templates() async => knownTemplates;
 
   @override
   Future<List<EventSummary>> list(String orgId) async {
@@ -93,9 +99,22 @@ class _Events extends EventsRepository {
 
   @override
   Future<List<EventRsvp>> rsvps(String eventId) async => answers[eventId] ?? const [];
+
+  @override
+  Future<List<EventRsvp>> allRsvps(String orgId) async {
+    if (failWith != null) throw failWith!;
+    return [
+      for (final e in rows)
+        for (final r in answers[e.id] ?? const <EventRsvp>[])
+          EventRsvp(
+            id: r.id, name: r.name, people: r.people, answer: r.answer, message: r.message,
+            extra: r.extra, createdAt: r.createdAt, eventId: e.id, eventTitle: e.title,
+          ),
+    ];
+  }
 }
 
-const _org = OrgSummary(id: 'o1', name: 'Mariages d\'Awa', slug: 'mariages-awa', profile: 'retail', roles: ['owner']);
+const _org = OrgSummary(id: 'o1', name: 'Awa Événements', slug: 'awa-evenements', profile: 'events', roles: ['owner']);
 
 Future<void> _pump(WidgetTester tester, Widget home) async {
   tester.view.physicalSize = const Size(400, 860);
@@ -117,7 +136,8 @@ void main() {
   });
 
   group('the list and the new card', () {
-    testWidgets('empty: a word and the button; the sheet creates a card and opens it', (tester) async {
+    testWidgets('empty: a word and the button; the words, then the design from the gallery, then the card',
+        (tester) async {
       final repo = _Events();
       await _pump(tester, EventsScreen(events: repo, org: _org, now: () => DateTime(2026, 10, 31)));
       expect(find.text('Aucune carte pour le moment'), findsOneWidget);
@@ -131,22 +151,69 @@ void main() {
       expect(repo.calls, isEmpty);
       await tester.enterText(find.byKey(const Key('event-title')), 'Inès & Thomas');
       await tester.enterText(find.byKey(const Key('event-place')), 'Villa Serena');
-      // The kind picks its card: a birthday → « Trente ».
       await tester.tap(find.byKey(const Key('event-kind')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Anniversaire').last);
       await tester.pumpAndSettle();
+      // « Choisir le modèle »: the gallery, for this card, the birthday's
+      // design first.
+      expect(find.text('Choisir le modèle'), findsOneWidget);
       await tester.tap(find.byKey(const Key('event-save')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('gallery-for')), findsOneWidget);
+      expect(find.text('Le modèle de « Inès & Thomas »'), findsOneWidget);
+      expect(find.byKey(const Key('gallery-tabs')), findsOneWidget);
+      expect(find.byKey(const Key('template-anniv')), findsOneWidget);
+      expect(repo.calls, isEmpty, reason: 'nothing created before a design is chosen');
+      await tester.tap(find.byKey(const Key('template-anniv')));
       await tester.pumpAndSettle();
       expect(repo.calls, ['create:Inès & Thomas/anniversaire/anniv/-/Villa Serena']);
       // Opened on the new card's page.
       expect(find.byKey(const Key('event-preview')), findsOneWidget);
       expect(find.text('Brouillon'), findsOneWidget);
+      expect(find.textContaining('modèle Trente'), findsOneWidget);
       // Back: the list has it.
       Navigator.of(tester.element(find.byKey(const Key('event-preview')))).pop();
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('event-e1')), findsOneWidget);
       expect(find.text('Inès & Thomas'), findsOneWidget);
+    });
+
+    testWidgets('the animated family is the gallery\'s second tab, the Premium films marked', (tester) async {
+      final repo = _Events();
+      await _pump(tester, TemplatesGalleryScreen(
+          events: repo, org: _org, draft: const EventDraft(title: 'Gala', kind: 'gala')));
+      expect(find.byKey(const Key('template-come')), findsOneWidget);
+      expect(find.byKey(const Key('template-anime_lotus_p')), findsNothing);
+      await tester.tap(find.byKey(const Key('family-anime')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('template-anime_lettre')), findsOneWidget);
+      await tester.dragUntilVisible(
+          find.byKey(const Key('template-anime_lotus_p')), find.byType(GridView).last, const Offset(0, -400));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const Key('template-anime_lotus_p')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('template-anime_lotus_p')), findsOneWidget);
+      expect(find.text('Premium'), findsWidgets);
+      await tester.tap(find.byKey(const Key('template-anime_lotus_p')));
+      await tester.pumpAndSettle();
+      expect(repo.calls, ['create:Gala/gala/anime_lotus_p/-/-']);
+    });
+
+    testWidgets('browsing the designs: one chosen first, then the words, then the card', (tester) async {
+      final repo = _Events();
+      await _pump(tester, TemplatesGalleryScreen(events: repo, org: _org, now: () => DateTime(2026, 10, 31)));
+      expect(find.text('Modèles'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('template-come')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('event-card-chosen')), findsOneWidget);
+      expect(find.text('Modèle : Côme'), findsOneWidget);
+      expect(find.text('Créer la carte'), findsOneWidget);
+      await tester.enterText(find.byKey(const Key('event-title')), 'Inès & Thomas');
+      await tester.tap(find.byKey(const Key('event-save')));
+      await tester.pumpAndSettle();
+      expect(repo.calls, ['create:Inès & Thomas/mariage/come/-/-']);
+      expect(find.byKey(const Key('event-preview')), findsOneWidget);
     });
 
     testWidgets('the server refuses: the word, and « Réessayer »', (tester) async {
@@ -157,6 +224,24 @@ void main() {
       await tester.tap(find.text('Réessayer'));
       await tester.pumpAndSettle();
       expect(find.text('Aucune carte pour le moment'), findsOneWidget);
+    });
+  });
+
+  group('the Événementiel\'s home', () {
+    testWidgets('its bar: Cartes, Modèles, Invités, Plus; the cards under it; « Nouvelle carte »', (tester) async {
+      final repo = _Events();
+      await repo.create(orgId: 'o1', title: 'Inès & Thomas', kind: 'mariage', card: 'come');
+      await _pump(tester, EventsHomeScreen(org: _org, events: repo));
+      expect(find.text('Awa Événements'), findsOneWidget);
+      expect(find.text('Cartes'), findsOneWidget);
+      expect(find.text('Modèles'), findsOneWidget);
+      expect(find.text('Invités'), findsOneWidget);
+      expect(find.text('Plus'), findsOneWidget);
+      expect(find.byKey(const Key('event-e1')), findsOneWidget);
+      expect(find.byKey(const Key('event-new')), findsOneWidget);
+      // No till, no stock, no vitrine on this bar.
+      expect(find.text('Vendre'), findsNothing);
+      expect(find.text('Stock'), findsNothing);
     });
   });
 
@@ -220,6 +305,52 @@ void main() {
       await tester.pumpAndSettle();
       expect(repo.calls.last, 'delete:${e.id}');
       expect(find.text('Aucune carte pour le moment'), findsOneWidget);
+    });
+  });
+
+  group('the guests', () {
+    testWidgets('every answer across the cards, each under its card; empty, a word', (tester) async {
+      final repo = _Events();
+      await _pump(tester, GuestsScreen(events: repo, org: _org));
+      expect(find.byKey(const Key('guests-empty')), findsOneWidget);
+      final a = await repo.create(orgId: 'o1', title: 'Inès & Thomas', kind: 'mariage', card: 'come');
+      final b = await repo.create(orgId: 'o1', title: 'Gala des Anciens', kind: 'gala', card: 'anime_lotus_p');
+      repo.answers[a.id] = [
+        EventRsvp(id: 'r1', name: 'Tanti Rose', people: 2, answer: 'oui', message: null, extra: const {}, createdAt: DateTime(2026, 11, 1)),
+      ];
+      repo.answers[b.id] = [
+        EventRsvp(id: 'r2', name: 'Salif', people: 1, answer: 'non', message: null, extra: const {}, createdAt: DateTime(2026, 11, 2)),
+      ];
+      // A new screen (its own key): the first one's state would stay.
+      await _pump(tester, GuestsScreen(key: const ValueKey('again'), events: repo, org: _org));
+      expect(find.text('Réponses des invités · 2'), findsOneWidget);
+      expect(find.text('Tanti Rose'), findsOneWidget);
+      expect(find.textContaining('Inès & Thomas'), findsOneWidget);
+      expect(find.text('Salif'), findsOneWidget);
+      expect(find.textContaining('Gala des Anciens'), findsOneWidget);
+    });
+  });
+
+  group('the repository', () {
+    test('the phone\'s offset for the day, as the server takes it', () {
+      // A local time: the offset is this machine's for that day — well-formed
+      // whatever it is.
+      final s = EventsRepository.offsetOf(DateTime(2026, 12, 12, 23));
+      expect(s, matches(RegExp(r'^[+-]\d\d:\d\d$')));
+      final utc = DateTime.utc(2026, 12, 12, 23);
+      expect(EventsRepository.offsetOf(utc), '+00:00');
+    });
+
+    test('the forty-seven templates the app knows: twelve cards, twenty-one layouts, fourteen Premium', () {
+      expect(knownTemplates, hasLength(47));
+      expect(knownTemplates.where((t) => !t.isAnimated), hasLength(12));
+      expect(knownTemplates.where((t) => t.isAnimated && !t.premium), hasLength(21));
+      expect(knownTemplates.where((t) => t.premium), hasLength(14));
+      expect({for (final t in knownTemplates) t.key}, hasLength(47), reason: 'keys unique');
+      expect(eventCardName('anime_lotus_p'), 'Étang de lotus');
+      expect(eventCardName('anniv'), 'Trente');
+      expect(EventTemplate.fromJson(const {'key': 'x', 'family': 'anime', 'name': 'X', 'premium': true}).previewPath(),
+          '/cartes/apercu/x.jpg');
     });
   });
 

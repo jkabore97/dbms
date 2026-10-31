@@ -7,6 +7,7 @@ import '../../core/access/org_access.dart';
 import '../../core/auth/models.dart';
 import '../../core/capture/capture_repository.dart';
 import '../../core/db/local_db.dart';
+import '../../core/events/events_repository.dart';
 import '../../core/farm/farm_repository.dart';
 import '../../core/invoicing/invoicing_repository.dart';
 import '../../core/reports/reports_repository.dart';
@@ -14,6 +15,7 @@ import '../../core/retail/retail_repository.dart';
 import '../../core/retail/staff.dart';
 import '../../core/theme/kaj_theme.dart';
 import '../church/church_home_screen.dart';
+import '../events/events_home_screen.dart';
 import '../farm/farm_home_screen.dart';
 import '../retail/store_home_screen.dart';
 import '../setup/setup_screen.dart';
@@ -35,6 +37,7 @@ Widget homeScreenFor({
   RetailRepository? retail,
   StaffRepository? staff,
   CaptureRepository? capture,
+  EventsRepository? events,
   Widget? accountAction,
   VoidCallback? onHistory,
   OrgAccess access = OrgAccess.allEdit,
@@ -86,6 +89,14 @@ Widget homeScreenFor({
           accountAction: accountAction,
           access: access,
         )))),
+      // An Événementiel (153): its cards, its guests. No first setup to
+      // hold it: the business is made, the first card is the next step.
+      'events' => EventsHomeScreen(
+          org: org,
+          events: events ?? EventsRepository(null),
+          staff: staff,
+          accountAction: accountAction,
+        ),
       // Anything else — a profile added server-side that this build has never
       // heard of — lands here rather than failing.
       _ => ProfilePendingScreen(org: org, accountAction: accountAction),

@@ -19,6 +19,7 @@ import '../../core/theme/mara_mark.dart';
 import '../admin/create_business_screen.dart' show CreateBusinessScreen;
 import '../auth/org_picker_screen.dart' show iconForProfile, kindColour, kindInk;
 import '../common/phone_field.dart';
+import '../events/events_access.dart';
 import '../storefront/whatsapp_verify_screen.dart';
 import 'association_setup_screen.dart' show associationKinds;
 import '../../core/notify/bell_room.dart';
@@ -87,10 +88,18 @@ class CreateMyBusinessScreen extends StatefulWidget {
 }
 
 /// A shop's and a farm's lines of trade, in the server's order
-/// (111's business_activities); an association's are 102's kinds.
+/// (111's business_activities); an association's are 102's kinds; an
+/// Événementiel's events (153).
 List<({String key, IconData icon, String name})> businessActivities(
         BuildContext context, String profile) =>
     switch (profile) {
+      'events' => [
+          (key: 'mariage', icon: Icons.favorite_outline, name: context.tr('Mon mariage, mes fiançailles')),
+          (key: 'famille', icon: Icons.cake_outlined, name: context.tr('Une fête de famille')),
+          (key: 'organisateur', icon: Icons.celebration_outlined, name: context.tr('Organisateur d’événements')),
+          (key: 'entreprise', icon: Icons.business_center_outlined, name: context.tr('Événements d’entreprise')),
+          (key: 'autre', icon: Icons.more_horiz, name: context.tr('Autre')),
+        ],
       'retail' => [
           (key: 'alimentation', icon: Icons.local_grocery_store_outlined, name: context.tr('Alimentation')),
           (key: 'telephonie', icon: Icons.smartphone_outlined, name: context.tr('Téléphonie et électronique')),
@@ -255,9 +264,12 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
   List<FormQuestion> get _questions => _form?.questions ?? const [];
   String _idOf(FormQuestion q) => q.id ?? 'q${_questions.indexOf(q)}';
 
+  /// The kinds on the first screen: the three, and the Événementiel (153)
+  /// for Marakaj's admins, or everyone once the platform's switch is on —
+  /// each as the creation page offers it.
   List<String> get _offered => [
-        for (final k in const ['retail', 'farm', 'association'])
-          if (_form?.offers(k) ?? true) k,
+        for (final k in const ['retail', 'farm', 'association', 'events'])
+          if ((_form?.offers(k) ?? true) && (k != 'events' || eventsShownFor(context))) k,
       ];
 
   /// The screens, in order: the five, Mara's questions, the summary.
@@ -552,6 +564,7 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
   String _kindWord(String? profile) => switch (profile) {
         'farm' => context.tr('Ferme'),
         'association' => context.tr('Association'),
+        'events' => context.tr('Événementiel'),
         _ => context.tr('Boutique'),
       };
 
@@ -803,9 +816,10 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
         ),
       );
 
-  String _ofKind(String retail, String farm, String association) => switch (_draft.profile) {
+  String _ofKind(String retail, String farm, String association, {String? events}) => switch (_draft.profile) {
         'farm' => farm,
         'association' => association,
+        'events' => events ?? retail,
         _ => retail,
       };
 
@@ -834,6 +848,7 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
       'retail': context.tr('Vous vendez des articles : alimentation, téléphones, vêtements…'),
       'farm': context.tr('Vous élevez ou cultivez, et vous vendez votre production.'),
       'association': context.tr('Une tontine, une église, un groupement : ses membres et ses cotisations.'),
+      'events': context.tr('Un mariage, une fête, un gala : la carte d’invitation en ligne, les réponses des invités.'),
     };
     return [
       if (welcome != null)
@@ -914,7 +929,7 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
     }
     return [
       _title(theme, _ofKind(context.tr('Le nom de votre boutique'), context.tr('Le nom de votre ferme'),
-          context.tr('Le nom de votre association'))),
+          context.tr('Le nom de votre association'), events: context.tr('Le nom de votre événementiel'))),
       TextField(
         key: const Key('create-name'),
         controller: _name,
@@ -925,7 +940,8 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
         onChanged: _onName,
         decoration: InputDecoration(
           hintText: _ofKind(context.tr('Ex. : Maison Élégance, Le Comptoir Doré, Atelier Lumière'), context.tr('Ex. : Domaine des Acacias, Ferme Horizon Vert, Les Jardins du Sahel'),
-              context.tr('Ex. : Cercle des Bâtisseurs, Fondation Espoir, Club Horizon')),
+              context.tr('Ex. : Cercle des Bâtisseurs, Fondation Espoir, Club Horizon'),
+              events: context.tr('Ex. : Awa Événements, Les Noces d’Inès et Thomas, Les 30 ans de Rokia')),
           hintMaxLines: 2,
           border: const OutlineInputBorder(),
         ),
@@ -977,7 +993,7 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
     final profile = _draft.profile ?? 'retail';
     return [
       _title(theme, _ofKind(context.tr('Que vend votre boutique ?'), context.tr('Que produit votre ferme ?'),
-          context.tr('Quel genre d\'association ?'))),
+          context.tr('Quel genre d\'association ?'), events: context.tr('Quels événements ?'))),
       Wrap(
         spacing: 10,
         runSpacing: 10,
@@ -1013,7 +1029,8 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
           labelText: context.tr('En une phrase (facultatif)'),
           hintText: _ofKind(context.tr('Ex. : Riz et savon au détail, café et pâtisseries, vêtements'),
               context.tr('Ex. : Œufs frais, légumes bio, miel'),
-              context.tr('Ex. : On cotise chaque semaine depuis 2019')),
+              context.tr('Ex. : On cotise chaque semaine depuis 2019'),
+              events: context.tr('Ex. : Mariages, baptêmes, anniversaires')),
           hintMaxLines: 2,
           helperText: context.tr('Elle paraîtra sur votre vitrine.'),
           border: const OutlineInputBorder(),
@@ -1024,7 +1041,8 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
 
   List<Widget> _placePage(ThemeData theme) => [
         _title(theme, _ofKind(context.tr('Où se trouve votre boutique ?'),
-            context.tr('Où se trouve votre ferme ?'), context.tr('Où se trouve votre association ?'))),
+            context.tr('Où se trouve votre ferme ?'), context.tr('Où se trouve votre association ?'),
+            events: context.tr('Où se trouve votre activité ?'))),
         TextField(
           key: const Key('create-city'),
           controller: _city,
@@ -1076,7 +1094,7 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
     final currencies = currencyChoices(_currency);
     return [
       _title(theme, _ofKind(context.tr('Le numéro de votre boutique'), context.tr('Le numéro de votre ferme'),
-              context.tr('Le numéro de votre association')),
+              context.tr('Le numéro de votre association'), events: context.tr('Le numéro de votre activité')),
           context.tr('Vos clients vous appellent ou vous écrivent sur WhatsApp à ce numéro.')),
       if (required && !_phoneProved)
         Container(
@@ -1266,7 +1284,8 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
             : _ofKind(
                 context.tr('Vous en êtes le propriétaire tout de suite. Ensuite, la mise en route : votre premier article, votre vitrine.'),
                 context.tr('Vous en êtes le propriétaire tout de suite. Ensuite, la mise en route : ce que vous vendez, votre vitrine.'),
-                context.tr('Vous en êtes le propriétaire tout de suite. Ensuite, la mise en route : vos premiers membres, votre vitrine.')),
+                context.tr('Vous en êtes le propriétaire tout de suite. Ensuite, la mise en route : vos premiers membres, votre vitrine.'),
+                events: context.tr('Vous en êtes le propriétaire tout de suite. Ensuite : votre première carte, envoyée à vos invités.')),
         key: const Key('create-after'),
         textAlign: TextAlign.center,
         style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),

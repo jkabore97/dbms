@@ -1250,6 +1250,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         'retail' => 'Boutique',
         'farm' => 'Ferme',
         'association' || 'church' => 'Association',
+        'events' => 'Événementiel',
         _ => _profile,
       },
     ),

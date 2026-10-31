@@ -1163,8 +1163,10 @@ GoRouter buildRouter(SessionController session) {
               ),
             ],
           ),
-          // Événementiel (152): the business's cards, for its admins —
-          // Marakaj's own alone until the platform's switch opens it.
+          // Événementiel (152, 153): an Événementiel's cards, for its
+          // admins — Marakaj's own alone until the platform's switch opens
+          // the kind to everyone. Its home is the list; these are its
+          // pages: one card, the designs, the guests' answers.
           GoRoute(
             path: 'evenements',
             builder: (context, state) => _withOrg(
@@ -1174,7 +1176,7 @@ GoRouter buildRouter(SessionController session) {
                 events: scope.events ?? EventsRepository(scope.auth.client),
                 org: org,
               ),
-              allow: (org) => _admins(org) && eventsShownFor(context),
+              allow: (org) => _eventsAdmins(context, org),
             ),
             routes: [
               GoRoute(
@@ -1187,10 +1189,34 @@ GoRouter buildRouter(SessionController session) {
                     org: org,
                     eventId: state.pathParameters['eventId']!,
                   ),
-                  allow: (org) => _admins(org) && eventsShownFor(context),
+                  allow: (org) => _eventsAdmins(context, org),
                 ),
               ),
             ],
+          ),
+          GoRoute(
+            path: 'modeles',
+            builder: (context, state) => _withOrg(
+              context,
+              state,
+              (scope, org) => biz.TemplatesGalleryScreen(
+                events: scope.events ?? EventsRepository(scope.auth.client),
+                org: org,
+              ),
+              allow: (org) => _eventsAdmins(context, org),
+            ),
+          ),
+          GoRoute(
+            path: 'invites',
+            builder: (context, state) => _withOrg(
+              context,
+              state,
+              (scope, org) => biz.GuestsScreen(
+                events: scope.events ?? EventsRepository(scope.auth.client),
+                org: org,
+              ),
+              allow: (org) => _eventsAdmins(context, org),
+            ),
           ),
           GoRoute(
             path: 'administration',
@@ -2192,6 +2218,11 @@ Widget _withOrg(
 /// Who may open the administration's pages and Équipe: the business's
 /// administrators (the owner, an admin, Mara's own).
 bool _admins(OrgSummary org) => org.isAdmin;
+
+/// The Événementiel's pages (153): the kind's own admins, while the module
+/// is theirs (a platform admin, or the platform's switch on).
+bool _eventsAdmins(BuildContext context, OrgSummary org) =>
+    org.isEvents && org.isAdmin && eventsShownFor(context);
 
 /// « Réservé aux administrateurs »: what somebody else sees at one of their
 /// addresses — a word and the way back, never the form.

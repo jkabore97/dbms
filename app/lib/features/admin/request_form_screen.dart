@@ -294,6 +294,7 @@ class _RequestFormScreenState extends State<RequestFormScreen> {
               ('association', context.tr('Association')),
               ('farm', context.tr('Ferme')),
               ('retail', context.tr('Boutique')),
+              ('events', context.tr('Événementiel')),
             ])
               FilterChip(
                 key: Key('form-kind-$k'),

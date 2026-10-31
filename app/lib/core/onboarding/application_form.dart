@@ -13,12 +13,14 @@ class ApplicationForm {
   /// A few words at the top of the page.
   final String? welcome;
 
-  /// 'association' | 'farm' | 'retail' that may be asked for; null: all.
+  /// 'association' | 'farm' | 'retail' | 'events' that may be asked for;
+  /// null: all.
   final List<String>? kinds;
   final List<FormQuestion> questions;
 
-  /// The three kinds the page can offer, in the page's order.
-  static const allKinds = ['association', 'farm', 'retail'];
+  /// The four kinds the page can offer, in the page's order (153 added
+  /// 'events', the Événementiel).
+  static const allKinds = ['association', 'farm', 'retail', 'events'];
 
   bool offers(String kind) => kinds == null || kinds!.contains(kind);
 
