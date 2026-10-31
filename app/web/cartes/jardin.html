@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Clara & Yacouba</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Parisienne&family=Nunito+Sans:ital,wght@0,300;0,400;0,600;1,300&display=swap">
+<link rel="stylesheet" href="shared.css">
+<style>
+/* Carte 4 « Jardin » — blush and olive, an arch for the couple's photo,
+   drawn eucalyptus, round medallions for the date and the place. */
+:root{
+  --back:#6b7557;--paper:#fbf6f1;--ink:#3a3a33;--blush:#f1dcd3;--olive:#6b7557;--olive-deep:#4f5a3f;--rose:#c98b83;--line:#d8cbc0;
+  --accent:#6b7557;--on-accent:#fbf6f1;
+  --slot-a:#e7c9bf;--slot-b:#9aa283;--slot-c:#b8a89c;--slot-ink:#fbf6f1;
+  --display:'Marcellus','Georgia',serif;--script:'Parisienne','Snell Roundhand',cursive;--body:'Nunito Sans','Helvetica Neue',Arial,sans-serif;
+}
+body{font-weight:300}
+.hero{position:relative;padding:44px 24px 30px;text-align:center;background:linear-gradient(180deg,#fbf6f1,#f6e9e2);overflow:hidden}
+.hero .arch{position:relative;width:min(72%,300px);margin:0 auto;aspect-ratio:3/4.2;border-radius:999px 999px 0 0;overflow:hidden;box-shadow:0 20px 50px rgba(79,90,63,.18)}
+.hero .arch .slot{position:absolute;inset:0}
+.hero svg.leaf{position:absolute;width:46%;height:auto;stroke:var(--olive);fill:none;stroke-width:1.1;stroke-linecap:round;opacity:.9;pointer-events:none}
+.hero svg.l1{left:-6%;top:6%;transform:rotate(-20deg)}
+.hero svg.l2{right:-8%;bottom:4%;transform:scaleX(-1) rotate(-30deg)}
+.hero .names{margin-top:26px}
+.hero h1{font-family:var(--script);font-weight:400;font-size:clamp(52px,15vw,84px);line-height:1;margin:0;color:var(--olive-deep)}
+.hero h1 span{display:block;font-family:var(--display);font-size:.26em;letter-spacing:.3em;text-transform:uppercase;color:var(--rose);margin:8px 0 2px}
+.hero .sub{font-family:var(--display);font-size:13px;letter-spacing:.24em;text-transform:uppercase;margin-top:14px;color:var(--olive-deep)}
+.medals{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:36px 24px 10px;justify-items:center}
+.medal{width:min(100%,180px);aspect-ratio:1;border-radius:50%;border:1px solid var(--olive);display:grid;place-content:center;text-align:center;padding:14px;position:relative}
+.medal::before{content:"";position:absolute;inset:6px;border-radius:50%;border:1px solid var(--line)}
+.medal .k{font-size:9px;letter-spacing:.26em;text-transform:uppercase;color:var(--rose);margin-bottom:4px}
+.medal .v{font-family:var(--display);font-size:22px;line-height:1.1;color:var(--olive-deep)}
+.medal .s{font-size:12px;margin-top:4px;opacity:.8}
+.center{text-align:center;padding-top:10px}
+.center .btn{margin-top:4px}
+.word{position:relative;text-align:center;isolation:isolate}
+.word::before{content:"";position:absolute;z-index:-1;left:50%;top:50%;width:min(92%,420px);height:82%;transform:translate(-50%,-50%) rotate(-3deg);background:radial-gradient(70% 70% at 40% 40%,#f3dcd4 0%,#f1dcd3 55%,transparent 72%);opacity:.9;border-radius:48% 52% 46% 54%/56% 44% 56% 44%}
+.word h2{font-family:var(--script);font-size:46px;color:var(--olive-deep);font-weight:400}
+.word p{max-width:30em;margin:14px auto 0;font-size:14px;line-height:1.8}
+.word .sign{font-family:var(--script);font-size:32px;display:block;margin-top:16px;color:var(--rose)}
+.vine{position:relative;padding-left:44px;list-style:none;margin:26px 0 0;display:grid;gap:22px}
+.vine::before{content:"";position:absolute;left:15px;top:6px;bottom:6px;width:1px;background:var(--olive)}
+.vine li{position:relative;display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:center}
+.vine li::before{content:"";position:absolute;left:-33px;top:50%;width:9px;height:9px;border-radius:50%;background:var(--paper);border:1px solid var(--olive);transform:translateY(-50%)}
+.vine li::after{content:"";position:absolute;left:-26px;top:calc(50% - 7px);width:12px;height:7px;border:1px solid var(--olive);border-radius:0 100% 0 100%;transform:rotate(-30deg);background:var(--blush)}
+.vine svg{width:34px;height:34px;stroke:var(--olive-deep);fill:none;stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round}
+.vine b{display:block;font-family:var(--display);font-weight:400;font-size:16px;color:var(--olive-deep)}
+.vine small{font-size:12px;opacity:.8}
+.vine .t{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--rose)}
+.pics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 24px 40px}
+.pics .slot{aspect-ratio:3/4;border-radius:999px 999px 8px 8px}
+.pics .slot:nth-child(2){border-radius:8px 8px 999px 999px}
+.infos svg{color:var(--olive-deep)}
+.rsvp{padding:0 24px 44px}
+.rsvp .box{background:#fff;border:1px solid var(--line);padding:30px 22px;box-shadow:0 18px 40px rgba(79,90,63,.1)}
+.rsvp h2{color:var(--olive-deep);text-align:center}
+.rsvp .lead{text-align:center;font-size:13px;margin:10px 0 22px}
+.rsvp .btn{width:100%}
+.album-sec{background:var(--blush)}
+.album-sec h2{color:var(--olive-deep)}
+.album-sec .album figure{border-radius:12px}
+.album-sec .album figure:nth-child(3n+1){border-radius:999px 999px 12px 12px}
+.album-sec .drop{background:rgba(255,255,255,.5)}
+.foot{color:var(--olive-deep)}
+</style>
+</head>
+<body>
+<div class="back"><a href="index.html">← Les cinq cartes</a></div>
+<article class="card" data-card="jardin" data-type="mariage">
+  <header class="hero">
+    <svg class="leaf l1" viewBox="0 0 120 200" aria-hidden="true">
+      <path d="M60 196C50 150 46 100 60 20"/>
+      <g id="lf"><path d="M60 150c-16-2-28-12-30-28 16 2 28 12 30 28z"/></g>
+      <use href="#lf" transform="translate(0 -34) rotate(-8 60 120)"/><use href="#lf" transform="translate(0 -70) rotate(-14 60 90)"/><use href="#lf" transform="translate(0 -104) rotate(-20 60 60)"/>
+      <path d="M60 134c16-2 28-12 30-28-16 2-28 12-30 28zM60 100c16-2 28-12 30-28-16 2-28 12-30 28zM60 66c16-2 28-12 30-28-16 2-28 12-30 28zM60 36c12-2 20-10 22-22-12 2-20 10-22 22z"/>
+    </svg>
+    <svg class="leaf l2" viewBox="0 0 120 200" aria-hidden="true">
+      <path d="M60 196C50 150 46 100 60 20"/>
+      <path d="M60 150c-16-2-28-12-30-28 16 2 28 12 30 28zM60 116c-16-2-28-12-30-28 16 2 28 12 30 28zM60 82c-16-2-28-12-30-28 16 2 28 12 30 28z"/>
+      <path d="M60 134c16-2 28-12 30-28-16 2-28 12-30 28zM60 100c16-2 28-12 30-28-16 2-28 12-30 28zM60 66c16-2 28-12 30-28-16 2-28 12-30 28zM60 36c12-2 20-10 22-22-12 2-20 10-22 22z"/>
+    </svg>
+    <div class="arch"><div class="slot" data-pic="hero"><img src="img/garden-1.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div></div>
+    <div class="names">
+      <h1 data-edit="names">Clara<span>et</span>Yacouba</h1>
+      <p class="sub" data-role="sub" data-edit="sub">Vous invitent à leur mariage</p>
+    </div>
+  </header>
+
+  <div class="medals">
+    <div class="medal"><div class="k">Le jour</div><div class="v" data-edit="date">Samedi<br>24 avril</div><div class="s" data-edit="date2">2027 · 15 h</div></div>
+    <div class="medal"><div class="k">Le lieu</div><div class="v" data-edit="place">Domaine des<br>Manguiers</div><div class="s" data-edit="place2">Bobo-Dioulasso</div></div>
+  </div>
+  <div class="center">
+    <a class="btn ghost" style="color:var(--olive-deep)" href="https://calendar.google.com/calendar/render?action=TEMPLATE&amp;text=Mariage+de+Clara+et+Yacouba&amp;dates=20270424T150000Z/20270425T000000Z&amp;location=Domaine+des+Manguiers%2C+Bobo-Dioulasso" target="_blank" rel="noopener">Ajouter à l’agenda</a>
+  </div>
+
+  <section class="word">
+    <h2 data-role="word-title" data-edit="word-title">Notre histoire</h2>
+    <p data-edit="w1">Un café partagé un matin de saison des pluies, puis mille autres. Nous avons choisi un jardin pour nous dire oui, parce que c’est là que tout a commencé.</p>
+    <p data-edit="w2">Nous serions tellement heureux que vous soyez avec nous ce jour-là.</p>
+    <span class="sign" data-edit="sign">Clara &amp; Yacouba</span>
+  </section>
+
+  <div class="pics">
+    <div class="slot" data-pic="p2"><img src="img/garden-2.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Photo</div></div>
+    <div class="slot" style="--slot-a:#9aa283;--slot-b:#e7c9bf" data-pic="p3"><img src="img/wed-couple-2.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Photo</div></div>
+    <div class="slot" style="--slot-a:#c98b83;--slot-b:#b8a89c" data-pic="p4"><img src="img/garden-3.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Photo</div></div>
+  </div>
+
+  <section style="padding-top:0">
+    <p class="eyebrow" style="color:var(--rose)">Le programme</p>
+    <h2 style="color:var(--olive-deep)" data-role="prog-title" data-edit="prog-title">Une journée au jardin</h2>
+    <ol class="vine" data-prog>
+      <li><svg><use href="#i-rings"/></svg><div><span class="t" data-t>15 h</span><b data-b>La cérémonie</b><small data-s>Sous la grande tonnelle, au fond du jardin</small></div></li>
+      <li><svg><use href="#i-glass"/></svg><div><span class="t" data-t>16 h 30</span><b data-b>Le cocktail</b><small data-s>Jus frais, zoom-koom, petites bouchées</small></div></li>
+      <li><svg><use href="#i-camera"/></svg><div><span class="t" data-t>18 h</span><b data-b>Les photos</b><small data-s>Avec chaque famille, puis avec vous tous</small></div></li>
+      <li><svg><use href="#i-dinner"/></svg><div><span class="t" data-t>19 h 30</span><b data-b>Le dîner</b><small data-s>Tables sous les manguiers, lanternes allumées</small></div></li>
+      <li><svg><use href="#i-cake"/></svg><div><span class="t" data-t>21 h</span><b data-b>Le gâteau</b><small data-s>Et la première danse</small></div></li>
+      <li><svg><use href="#i-party"/></svg><div><span class="t" data-t>22 h</span><b data-b>La soirée</b><small data-s>Jusqu’au bout de la nuit</small></div></li>
+    </ol>
+  </section>
+
+  <section style="padding-top:0">
+    <p class="eyebrow" style="color:var(--rose)">Infos pratiques</p>
+    <ul class="infos">
+      <li><svg><use href="#i-pin"/></svg><div><b>Le lieu</b><p>Domaine des Manguiers, route de Banfora, à 10 minutes du centre.</p><a href="https://maps.google.com/?q=Bobo-Dioulasso+route+de+Banfora" target="_blank" rel="noopener">Itinéraire</a></div></li>
+      <li><svg><use href="#i-dress"/></svg><div><b>Tenue</b><p>Couleurs du jardin : vert olive, rose poudré, sable. Chaussures de jardin conseillées.</p></div></li>
+      <li><svg><use href="#i-bed"/></svg><div><b>Hébergement</b><p>Des chambres sont réservées à l’Auberge du Houet. Dites « mariage Clara &amp; Yacouba ».</p></div></li>
+    </ul>
+  </section>
+
+  <section class="rsvp">
+    <div class="box">
+      <h2 data-role="rsvp-title" data-edit="rsvp-title">Serez-vous des nôtres ?</h2>
+      <p class="lead" data-role="rsvp-lead" data-edit="rsvp-lead">Merci de répondre avant le 20 mars 2027.</p>
+      <form class="rsvp" data-key="jardin">
+        <div class="row">
+          <label class="f">Votre nom <input id="c4-name" name="name" required autocomplete="name"></label>
+          <div class="row two">
+            <label class="f">Personnes <select id="c4-n" name="n"><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
+            <label class="f">Enfants <select id="c4-k" name="k"><option>0</option><option>1</option><option>2</option><option>3</option></select></label>
+          </div>
+          <div class="choice">
+            <label><input type="radio" name="rep" value="oui" checked> Avec joie</label>
+            <label><input type="radio" name="rep" value="non"> Avec regret</label>
+          </div>
+          <label class="f">Un petit mot <textarea id="c4-msg" name="msg"></textarea></label>
+          <button class="btn" type="submit">Envoyer ma réponse</button>
+        </div>
+        <div class="ok" role="status"></div>
+      </form>
+    </div>
+  </section>
+
+  <section class="album-sec">
+    <p class="eyebrow" style="color:var(--rose)">Vos souvenirs</p>
+    <h2 data-role="album-title" data-edit="album-title">Les photos que vous prendrez</h2>
+    <p class="lead" style="margin:12px 0 22px;font-size:14px" data-role="album-lead" data-edit="album-lead">Pendant la journée, ajoutez vos photos ici. Elles composent l’album des invités, que Clara et Yacouba garderont précieusement.</p>
+    <div class="album-box">
+      <label class="drop" for="c4-files" tabindex="0">
+        <svg><use href="#i-up"/></svg>
+        <span>Glissez vos photos ici ou</span>
+        <span class="btn">Choisir des photos</span>
+        <input id="c4-files" type="file" accept="image/*" multiple>
+      </label>
+      <label class="who">Votre prénom <input id="c4-who" name="who" placeholder="Aïda"></label>
+      <div class="album-meta"><span><span class="count">3 photos</span> dans l’album</span><span>Validées par les mariés</span></div>
+      <div class="album">
+        <figure class="slot"><img src="img/guest-4.jpg" alt="" onerror="this.remove()"><div class="tag">Aïda</div><figcaption>Aïda</figcaption></figure>
+        <figure class="slot"><img src="img/guest-3.jpg" alt="" onerror="this.remove()"><div class="tag">Tonton Issa</div><figcaption>Tonton Issa</figcaption></figure>
+        <figure class="slot"><img src="img/guest-2.jpg" alt="" onerror="this.remove()"><div class="tag">Les petits</div><figcaption>Les petits</figcaption></figure>
+      </div>
+      <p class="note">Maquette : les photos restent sur votre téléphone. Dans Marakaj, elles arrivent dans l’album du couple.</p>
+    </div>
+  </section>
+
+  <footer class="foot">Clara &amp; Yacouba · 24 avril 2027 · Carte créée avec Marakaj</footer>
+</article>
+<script src="shared.js"></script>
+</body>
+</html>

@@ -195,9 +195,13 @@ const platformSettingDefs = <SettingDef>[
   SettingDef('order_first_open_max', 'fraud', SettingType.count),
   SettingDef('courier_cash_cap', 'fraud', SettingType.money),
   SettingDef('till_gap_review', 'fraud', SettingType.money),
+  // 152: Événementiel open to every business — off, the module is
+  // Marakaj's admins' alone (the owner: « admin only can view … a tab in
+  // admin that can allow me to switch the feature to public view »).
+  SettingDef('events_public', 'events', SettingType.flag),
 ];
 
-/// One of Réglages' eight cards (135): its address, its icon, and the
+/// One of Réglages' nine cards (135, 152): its address, its icon, and the
 /// sub-headings of its short page, each with its settings in order.
 class SettingCard {
   const SettingCard(this.key, this.icon, this.parts, {this.links = const []});
@@ -216,7 +220,7 @@ class SettingCard {
   String get route => '${Routes.consoleSettings}/$key';
 }
 
-/// Réglages folded (135): « Quelles sont les règles ? » in eight cards,
+/// Réglages folded (135): « Quelles sont les règles ? » in nine cards (152),
 /// every setting on exactly one (test/batch135_test.dart proves none is
 /// lost). The sub-headings' names are [settingPartLabel]'s.
 const settingCards = <SettingCard>[
@@ -286,6 +290,10 @@ const settingCards = <SettingCard>[
     // 142 (batch 147): the documents everyone accepts, and a new version.
     ('Conditions d\'utilisation', Routes.consoleTerms),
   ]),
+  // 152: the ninth card — one switch, the whole module's.
+  SettingCard('evenements', Icons.celebration_outlined, [
+    ('visibility', ['events_public']),
+  ]),
 ];
 
 /// The card a setting is on (135), or null for none (a test fails then).
@@ -314,6 +322,7 @@ String settingCardTitle(BuildContext context, String card) => switch (card) {
       'creation' => context.tr('Création'),
       'notifications' => context.tr('Notifications'),
       'securite' => context.tr('Sécurité, journal'),
+      'evenements' => context.tr('Événementiel'),
       _ => card,
     };
 
@@ -326,6 +335,7 @@ String settingCardHint(BuildContext context, String card) => switch (card) {
       'creation' => context.tr('Types d\'activité, parcours'),
       'notifications' => context.tr('Comptes, aide, applications'),
       'securite' => context.tr('Deux étapes, connexion, fraude, actions'),
+      'evenements' => context.tr('Cartes d\'événement : qui les voit'),
       _ => '',
     };
 
@@ -356,6 +366,7 @@ String settingPartLabel(BuildContext context, String part) => switch (part) {
       'security' => context.tr('Sécurité'),
       'signin' => context.tr('Connexion'),
       'fraud' => context.tr('Protections contre la fraude'),
+      'visibility' => context.tr('Visibilité'),
       _ => part,
     };
 
@@ -412,11 +423,14 @@ String settingGroupLabel(BuildContext context, String group) => switch (group) {
       'helppro' => context.tr('Aide Pro'),
       'signin' => context.tr('Connexion'),
       'fraud' => context.tr('Protections contre la fraude'),
+      'events' => context.tr('Événementiel'),
       _ => group,
     };
 
 String settingLabel(BuildContext context, String key) => switch (key) {
-      'pro_price_month' => context.tr('Prix de Marakaj Pro, par mois — FCFA (zone franc CFA)'),
+      'events_public' =>
+        context.tr('Événementiel visible par toutes les entreprises (sinon : les administrateurs de Marakaj seulement)'),
+      'pro_price_month' =>context.tr('Prix de Marakaj Pro, par mois — FCFA (zone franc CFA)'),
       'pro_price_year' => context.tr('Prix de Marakaj Pro, par an — FCFA (zone franc CFA)'),
       'pro_price_month_eur' => context.tr('Prix de Marakaj Pro, par mois — euros (zone euro)'),
       'pro_price_year_eur' => context.tr('Prix de Marakaj Pro, par an — euros (zone euro)'),

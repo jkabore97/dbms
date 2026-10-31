@@ -22,6 +22,7 @@ import '../../core/farm/models.dart';
 import '../../core/theme/kaj_theme.dart';
 import '../../core/invoicing/invoicing_repository.dart';
 import '../../core/nav/app_scope.dart';
+import '../events/events_access.dart';
 import '../cauris/path_card.dart';
 import '../common/refused_notice.dart';
 import '../admin/admin_pill.dart' show AdminPill;
@@ -696,6 +697,16 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
             route: 'administration',
             group: PlusGroup.team,
             onTap: () => _push(Routes.inside(id, 'administration')),
+          ),
+        // Événementiel (152): the farm's cards for its guests (an open
+        // day, a fair) — Marakaj's own admins' until the platform opens it.
+        if (widget.org.isAdmin && eventsShownFor(context))
+          HomeDestination(
+            icon: Icons.celebration_outlined,
+            label: context.tr('Événements'),
+            route: 'evenements',
+            group: PlusGroup.vitrine,
+            onTap: () => _push(Routes.inside(id, 'evenements')),
           ),
         // MOI.
         HomeDestination(

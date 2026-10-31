@@ -244,6 +244,14 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_sale_on_credit.sql
 
+      # 152: the events stay Marakaj's admins' while the switch is off, open
+      # to every business's admins once on; the street reaches a card and
+      # leaves an answer through its doors only.
+      - name: Prove the events' switch, card and answers (152)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch152.sql
+
       # The bell: the right people hear the right events and nobody else,
       # a threshold rings on the crossing rather than on every sale below
       # it, and the neighbour hears nothing at all.

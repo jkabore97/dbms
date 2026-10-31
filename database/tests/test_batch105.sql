@@ -808,7 +808,10 @@ declare
         'max_item_photos_pro',
         -- 146: read by trg_orders_guard() (every order's door), by
         -- courier_cash_cap_for() (take_delivery) and review_queue_rows().
-        'order_open_max_per_shop', 'order_first_open_max', 'courier_cash_cap', 'till_gap_review'];
+        'order_open_max_per_shop', 'order_first_open_max', 'courier_cash_cap', 'till_gap_review',
+        -- 152: read by events_public_on(), which the events' policies, the
+        -- card (event_public) and the street's switch (events_options) ask.
+        'events_public'];
     v_dead text;
     v_missing text;
 begin

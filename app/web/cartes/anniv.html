@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rokia, 30 ans</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=DM+Sans:wght@300;400;500&display=swap">
+<link rel="stylesheet" href="shared.css">
+<style>
+/* Carte 6 « Trente » — a birthday: coral, butter yellow and black, a huge
+   number, confetti over the photo, time pills for the evening. */
+:root{
+  --back:#1d1a1a;--paper:#fff4e6;--ink:#1d1a1a;--coral:#ff6f59;--butter:#ffd166;--line:#e6cfbb;
+  --accent:#1d1a1a;--on-accent:#fff4e6;
+  --slot-a:#ffd166;--slot-b:#ff6f59;--slot-c:#d9876f;--slot-ink:#1d1a1a;
+  --display:'Syne','Arial Black',sans-serif;--script:'Syne',sans-serif;--body:'DM Sans','Helvetica Neue',Arial,sans-serif;
+}
+.hero{position:relative;background:var(--coral);color:var(--ink);padding:0;overflow:hidden}
+.hero .photo{position:relative;aspect-ratio:4/4.6}
+.hero .photo .slot{position:absolute;inset:0}
+.hero canvas{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+.hero .text{position:relative;z-index:3;padding:26px 24px 30px;background:var(--coral)}
+.hero .kicker{font-size:11px;letter-spacing:.3em;text-transform:uppercase;font-weight:500}
+.hero .big{font-family:var(--display);font-weight:800;font-size:clamp(110px,36vw,190px);line-height:.8;letter-spacing:-.04em;margin:8px 0 6px;color:var(--paper);text-shadow:6px 6px 0 var(--ink)}
+.hero h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,8vw,44px);line-height:1;margin:0;letter-spacing:-.01em}
+.hero h1 em{font-style:normal;font-weight:500;display:block;font-size:.5em;margin-top:6px;letter-spacing:.04em}
+.when{display:grid;grid-template-columns:1fr 1fr;border-top:4px solid var(--ink);border-bottom:4px solid var(--ink)}
+.when div{padding:18px 20px}
+.when div+div{border-left:4px solid var(--ink)}
+.when .k{font-size:10px;letter-spacing:.24em;text-transform:uppercase;opacity:.7}
+.when .v{font-family:var(--display);font-weight:700;font-size:22px;line-height:1.05;margin-top:6px}
+.when .s{font-size:12px;margin-top:4px}
+.center{text-align:center;padding:26px 24px 8px}
+.word{background:var(--butter)}
+.word h2{font-family:var(--display);font-weight:800;font-size:30px}
+.word p{margin-top:14px;font-size:15px;line-height:1.7;max-width:32em}
+.word .sign{display:block;margin-top:16px;font-family:var(--display);font-weight:700;font-size:18px}
+.pics{display:grid;grid-template-columns:1.2fr 1fr;gap:10px;padding:10px}
+.pics .slot{aspect-ratio:1}
+.pics .slot:nth-child(2){margin-top:30px;aspect-ratio:3/4}
+.list{list-style:none;margin:24px 0 0;padding:0;display:grid;gap:12px}
+.list li{display:grid;grid-template-columns:auto 34px 1fr;gap:12px;align-items:center}
+.list .t{font-family:var(--display);font-weight:700;font-size:13px;background:var(--ink);color:var(--paper);padding:7px 10px;border-radius:999px;min-width:68px;text-align:center;font-variant-numeric:tabular-nums}
+.list svg{width:30px;height:30px;stroke:var(--coral);fill:none;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}
+.list b{display:block;font-weight:500;font-size:16px}
+.list small{font-size:12px;opacity:.75}
+.infos svg{color:var(--coral)}
+.rsvp{background:var(--ink);color:var(--paper)}
+.rsvp h2{font-family:var(--display);font-weight:800;color:var(--paper);font-size:30px}
+.rsvp .lead{margin:10px 0 24px;opacity:.85;font-size:14px}
+.rsvp label.f input,.rsvp label.f select,.rsvp label.f textarea{border-color:rgba(255,244,230,.4)}
+.rsvp .btn{background:var(--coral);border-color:var(--coral);color:var(--ink)}
+.rsvp .choice input{accent-color:var(--coral)}
+.rsvp .ok{border-color:rgba(255,244,230,.4)}
+.album-sec h2{font-family:var(--display);font-weight:800;font-size:30px}
+.album-sec .eyebrow{color:var(--coral);opacity:1}
+.album-sec .album figure{border-radius:14px}
+.album-sec .btn{border-radius:999px}
+.btn{border-radius:999px}
+.foot{background:var(--coral);color:var(--ink);opacity:1}
+</style>
+</head>
+<body>
+<div class="back"><a href="index.html" style="color:#fff4e6">← Les douze cartes</a></div>
+<article class="card" data-card="anniv" data-type="anniversaire">
+  <header class="hero">
+    <div class="photo">
+      <div class="slot" data-pic="hero"><img src="img/party-1.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div>
+      <canvas id="confetti" aria-hidden="true"></canvas>
+    </div>
+    <div class="text">
+      <p class="kicker" data-role="kicker" data-edit="kicker">Anniversaire</p>
+      <div class="big" data-edit="big">30</div>
+      <h1><span data-edit="names">Rokia</span><em data-role="sub" data-edit="sub">fête ses 30 ans</em></h1>
+    </div>
+  </header>
+
+  <div class="when">
+    <div><div class="k">Quand</div><div class="v" data-edit="date">Samedi<br>21 novembre</div><div class="s" data-edit="date2">2026 · dès 19 h</div></div>
+    <div><div class="k">Où</div><div class="v" data-edit="place">Le Toit,<br>Koulouba</div><div class="s" data-edit="place2">Ouagadougou · terrasse</div></div>
+  </div>
+  <div class="center">
+    <a class="btn" href="https://calendar.google.com/calendar/render?action=TEMPLATE&amp;text=Les+30+ans+de+Rokia&amp;dates=20261121T190000Z/20261122T020000Z&amp;location=Le+Toit%2C+Koulouba%2C+Ouagadougou" target="_blank" rel="noopener">Ajouter à l’agenda</a>
+  </div>
+
+  <section class="word">
+    <h2 data-role="word-title" data-edit="word-title">Un mot</h2>
+    <p data-edit="w1">Trente ans, ça se fête avec les gens qu’on aime. Pas de discours, pas de protocole : de la musique, à manger, et vous. Venez comme vous êtes, mais venez.</p>
+    <span class="sign" data-edit="sign">Rokia</span>
+  </section>
+
+  <div class="pics">
+    <div class="slot" data-pic="p1"><img src="img/party-2.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div>
+    <div class="slot" data-pic="p2" style="--slot-a:#ff6f59;--slot-b:#1d1a1a"><img src="img/birthday-cake.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div>
+  </div>
+
+  <section>
+    <p class="eyebrow" data-edit="prog-k">Le programme</p>
+    <h2 style="font-family:var(--display);font-weight:800" data-role="prog-title" data-edit="prog-title">La soirée</h2>
+    <p class="lead" style="margin-top:8px;font-size:14px" data-role="prog-intro" data-edit="prog-intro">Les portes ouvrent à 19 h. Le gâteau n’attend pas.</p>
+    <ol class="list" data-prog>
+      <li><span class="t" data-t>19 h</span><svg><use href="#i-glass"/></svg><div><b data-b>Accueil</b><small data-s>Un verre pour commencer, vue sur la ville</small></div></li>
+      <li><span class="t" data-t>20 h 30</span><svg><use href="#i-dinner"/></svg><div><b data-b>Dîner</b><small data-s>Buffet, brochettes, et le fameux poulet</small></div></li>
+      <li><span class="t" data-t>22 h</span><svg><use href="#i-cake"/></svg><div><b data-b>Gâteau</b><small data-s>Trente bougies, une seule chance</small></div></li>
+      <li><span class="t" data-t>22 h 30</span><svg><use href="#i-party"/></svg><div><b data-b>DJ</b><small data-s>Jusqu’à 2 h</small></div></li>
+    </ol>
+  </section>
+
+  <section style="padding-top:0">
+    <p class="eyebrow">Bon à savoir</p>
+    <ul class="infos">
+      <li><svg><use href="#i-pin"/></svg><div><b>Le lieu</b><p>Le Toit, rooftop de l’hôtel Koulouba, dernier étage. Ascenseur à droite de l’accueil.</p><a href="https://maps.google.com/?q=Koulouba+Ouagadougou" target="_blank" rel="noopener">Itinéraire</a></div></li>
+      <li><svg><use href="#i-dress"/></svg><div><b>Tenue</b><p>Couleurs vives. Le noir est toléré, le gris non.</p></div></li>
+      <li><svg><use href="#i-gift"/></svg><div><b>Cadeaux</b><p>Votre présence suffit. Pour les têtus : une cagnotte pour mon voyage à Zanzibar.</p></div></li>
+    </ul>
+  </section>
+
+  <section class="rsvp">
+    <p class="eyebrow" data-edit="rsvp-k">Tu viens ?</p>
+    <h2 data-role="rsvp-title" data-edit="rsvp-title">Dis-moi avant le 10 novembre</h2>
+    <p class="lead" data-role="rsvp-lead" data-edit="rsvp-lead">Je compte les parts de gâteau en fonction des réponses.</p>
+    <form class="rsvp" data-key="anniv">
+      <div class="row">
+        <label class="f">Ton nom <input id="c6-name" name="name" required autocomplete="name"></label>
+        <label class="f">Vous serez <select id="c6-n" name="n"><option>1</option><option>2</option><option>3</option></select></label>
+        <div class="choice">
+          <label><input type="radio" name="rep" value="oui" checked> Je serai là</label>
+          <label><input type="radio" name="rep" value="non"> Je ne pourrai pas</label>
+        </div>
+        <label class="f">Un mot <textarea id="c6-msg" name="msg"></textarea></label>
+        <div><button class="btn" type="submit">Envoyer</button></div>
+      </div>
+      <div class="ok" role="status"></div>
+    </form>
+  </section>
+
+  <section class="album-sec">
+    <p class="eyebrow">Vos photos</p>
+    <h2 data-role="album-title" data-edit="album-title">Vos photos de la soirée</h2>
+    <p class="lead" style="margin:12px 0 22px;font-size:14px" data-role="album-lead" data-edit="album-lead">Ajoutez vos photos de la fête : elles iront dans l’album de la soirée, pour tout le monde.</p>
+    <div class="album-box">
+      <label class="drop" for="c6-files" tabindex="0">
+        <svg><use href="#i-up"/></svg>
+        <span>Glissez vos photos ici ou</span>
+        <span class="btn">Choisir des photos</span>
+        <input id="c6-files" type="file" accept="image/*" multiple>
+      </label>
+      <label class="who">Ton prénom <input id="c6-who" name="who" placeholder="Nabi"></label>
+      <div class="album-meta"><span><span class="count">3 photos</span> dans l’album</span><span>Validées par Rokia</span></div>
+      <div class="album">
+        <figure class="slot"><img src="img/guest-4.jpg" alt="" onerror="this.remove()"><div class="tag">Nabi</div><figcaption>Nabi</figcaption></figure>
+        <figure class="slot"><img src="img/guest-1.jpg" alt="" onerror="this.remove()"><div class="tag">Les collègues</div><figcaption>Les collègues</figcaption></figure>
+        <figure class="slot"><img src="img/guest-2.jpg" alt="" onerror="this.remove()"><div class="tag">Maman</div><figcaption>Maman</figcaption></figure>
+      </div>
+      <p class="note">Maquette : les photos restent sur votre téléphone. Dans Marakaj, elles arrivent dans l’album de la fête.</p>
+    </div>
+  </section>
+
+  <footer class="foot">Rokia · 30 ans · 21 novembre 2026 · Carte créée avec Marakaj</footer>
+</article>
+<script src="shared.js"></script>
+<script>
+(function () {
+  var c = document.getElementById('confetti'), ctx = c.getContext('2d');
+  var bits = [], still = window.matchMedia('(prefers-reduced-motion: reduce)').matches, W = 0, H = 0;
+  var colors = ['#ffd166', '#1d1a1a', '#fff4e6', '#ff6f59', '#2f6bff'];
+  function size() {
+    var r = c.parentNode.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = r.width; H = r.height;
+    c.width = Math.round(W * dpr); c.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    bits = [];
+    for (var i = 0; i < 70; i++) bits.push({ x: Math.random() * W, y: Math.random() * H, w: 6 + Math.random() * 8, h: 3 + Math.random() * 5, a: Math.random() * 6.28, v: .3 + Math.random() * .7, s: (Math.random() - .5) * .04, c: colors[i % colors.length] });
+    draw();
+  }
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    bits.forEach(function (b) {
+      ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.a); ctx.fillStyle = b.c; ctx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h); ctx.restore();
+      if (!still) { b.y += b.v; b.a += b.s; b.x += Math.sin(b.y / 40) * .3; if (b.y > H + 10) { b.y = -10; b.x = Math.random() * W; } }
+    });
+  }
+  function loop() { draw(); requestAnimationFrame(loop); }
+  size(); window.addEventListener('resize', size);
+  if (!still) requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

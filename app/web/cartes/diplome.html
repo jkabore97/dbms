@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Promotion 2027</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@300;400;600&display=swap">
+<link rel="stylesheet" href="shared.css">
+<style>
+/* Carte 9 « Promotion » — a graduation: burgundy, cream and a gold rule,
+   academic serif, the photo under a burgundy veil, a seated programme. */
+:root{
+  --back:#4a1520;--paper:#f7f2ea;--ink:#2a1a1c;--bordeaux:#6b1f2a;--gold:#b8963e;--line:#d9cdb8;
+  --accent:#6b1f2a;--on-accent:#f7f2ea;
+  --slot-a:#b8963e;--slot-b:#6b1f2a;--slot-c:#8c5a5f;--slot-ink:#f7f2ea;
+  --display:'Playfair Display','Georgia',serif;--script:'Playfair Display','Georgia',serif;--body:'Source Sans 3','Helvetica Neue',Arial,sans-serif;
+}
+.hero{position:relative;min-height:440px;display:grid;align-items:end;color:var(--paper);isolation:isolate}
+.hero .slot{position:absolute;inset:0;z-index:-1}
+.hero::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(107,31,42,.2),rgba(74,21,32,.9));z-index:0;pointer-events:none}
+/* The veil and the text let taps through to the picture, except on the
+   words themselves, which are edited in place. */
+.hero .text{position:relative;z-index:1;padding:40px 24px 34px;pointer-events:none}
+.hero .text [data-edit]{pointer-events:auto}
+.hero .kicker{font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--gold)}
+.hero h1{font-family:var(--display);font-weight:400;font-size:clamp(36px,10vw,56px);line-height:1.02;margin:10px 0 0}
+.hero h1 em{display:block;font-style:italic;font-size:.44em;margin-top:10px;color:#e9dcc7;font-weight:400}
+.hero .gold{width:56px;height:2px;background:var(--gold);margin-top:18px}
+.when{display:grid;grid-template-columns:1fr;gap:0;border-bottom:1px solid var(--line)}
+@media (min-width:480px){.when{grid-template-columns:1fr 1fr}}
+.when div{padding:22px 24px;display:grid;gap:4px}
+.when div+div{border-top:1px solid var(--line)}
+@media (min-width:480px){.when div+div{border-top:0;border-left:1px solid var(--line)}}
+.when .k{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--bordeaux);font-weight:600}
+.when .v{font-family:var(--display);font-size:22px;line-height:1.2}
+.when .s{font-size:13px;opacity:.8}
+.center{text-align:center;padding:26px 24px 10px}
+.word{text-align:center}
+.word h2{color:var(--bordeaux)}
+.word p{max-width:32em;margin:14px auto 0;font-size:15px;line-height:1.75}
+.word .sign{display:block;margin-top:16px;font-family:var(--display);font-style:italic;font-size:20px;color:var(--bordeaux)}
+.pics{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 24px 40px}
+.pics .slot{aspect-ratio:4/5;outline:1px solid var(--gold);outline-offset:5px}
+.band{background:var(--bordeaux);color:var(--paper)}
+.band h2{color:var(--paper)}
+.band .eyebrow{color:var(--gold);opacity:1}
+.steps{list-style:none;margin:22px 0 0;padding:0;display:grid;gap:0}
+.steps li{display:grid;grid-template-columns:64px 34px 1fr;gap:12px;align-items:center;padding:13px 0;border-top:1px solid rgba(247,242,234,.25)}
+.steps .t{font-family:var(--display);font-size:16px;color:var(--gold);font-variant-numeric:tabular-nums}
+.steps svg{width:30px;height:30px;stroke:var(--paper);fill:none;stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round}
+.steps b{display:block;font-weight:600;font-size:15px}
+.steps small{font-size:12px;opacity:.8}
+.infos svg{color:var(--bordeaux)}
+.rsvp .box{border:1px solid var(--line);padding:28px 22px;position:relative}
+.rsvp .box::before{content:"";position:absolute;inset:6px;border:1px solid var(--gold);pointer-events:none}
+.rsvp h2{color:var(--bordeaux)}
+.rsvp .lead{margin:10px 0 22px;font-size:14px}
+.album-sec{background:#efe7da}
+.album-sec h2{color:var(--bordeaux)}
+.album-sec .album figure{outline:1px solid var(--gold);outline-offset:3px}
+.foot{color:var(--bordeaux)}
+</style>
+</head>
+<body>
+<div class="back"><a href="index.html" style="color:#f7f2ea">← Les douze cartes</a></div>
+<article class="card" data-card="diplome" data-type="diplome">
+  <header class="hero">
+    <div class="slot" data-pic="hero"><img src="img/grad-1.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div>
+    <div class="text">
+      <p class="kicker" data-role="kicker" data-edit="kicker">Remise de diplômes</p>
+      <h1><span data-edit="names">Fatim Ouédraogo</span><em data-role="sub" data-edit="sub">Promotion 2027 · Master en droit des affaires</em></h1>
+      <div class="gold"></div>
+    </div>
+  </header>
+
+  <div class="when">
+    <div><span class="k">La cérémonie</span><span class="v" data-edit="date">Samedi 3 juillet 2027 · 9 h</span><span class="s" data-edit="date2">Les familles sont attendues dès 8 h 30</span></div>
+    <div><span class="k">Le lieu</span><span class="v" data-edit="place">Université Thomas-Sankara</span><span class="s" data-edit="place2">Grand amphithéâtre, Ouaga 2000</span></div>
+  </div>
+  <div class="center">
+    <a class="btn" href="https://calendar.google.com/calendar/render?action=TEMPLATE&amp;text=Remise+de+dipl%C3%B4mes+de+Fatim&amp;dates=20270703T090000Z/20270703T140000Z&amp;location=Universit%C3%A9+Thomas-Sankara%2C+Ouagadougou" target="_blank" rel="noopener">Ajouter à l’agenda</a>
+  </div>
+
+  <section class="word">
+    <h2 data-role="word-title" data-edit="word-title">Un mot</h2>
+    <p data-edit="w1">Cinq ans, deux déménagements, un mémoire de 180 pages et beaucoup de cafés. Le 3 juillet, je reçois mon diplôme, et je voudrais que vous soyez là, vous qui m’avez portée jusqu’ici.</p>
+    <span class="sign" data-edit="sign">Fatim</span>
+  </section>
+
+  <div class="pics">
+    <div class="slot" data-pic="p1"><img src="img/grad-2.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div>
+    <div class="slot" data-pic="p2" style="--slot-a:#6b1f2a;--slot-b:#b8963e"><img src="img/grad-3.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div>
+  </div>
+
+  <section class="band">
+    <p class="eyebrow" data-edit="prog-k">Le programme</p>
+    <h2 data-role="prog-title" data-edit="prog-title">La cérémonie</h2>
+    <p class="lead" style="margin-top:8px;font-size:14px;opacity:.9" data-role="prog-intro" data-edit="prog-intro">Les familles sont attendues dès 8 h 30. Les diplômés entrent en toge à 9 h.</p>
+    <ol class="steps" data-prog>
+      <li><span class="t" data-t>9 h</span><svg><use href="#i-cap"/></svg><div><b data-b>Remise des diplômes</b><small data-s>Par filière, dans l’amphithéâtre</small></div></li>
+      <li><span class="t" data-t>11 h</span><svg><use href="#i-mic"/></svg><div><b data-b>Discours</b><small data-s>Le major, le parrain de la promotion</small></div></li>
+      <li><span class="t" data-t>12 h</span><svg><use href="#i-camera"/></svg><div><b data-b>Photos</b><small data-s>Sur les marches, avec les familles</small></div></li>
+      <li><span class="t" data-t>13 h</span><svg><use href="#i-glass"/></svg><div><b data-b>Réception</b><small data-s>Dans le jardin de la faculté</small></div></li>
+    </ol>
+  </section>
+
+  <section>
+    <p class="eyebrow">Bon à savoir</p>
+    <ul class="infos">
+      <li><svg><use href="#i-pin"/></svg><div><b>Le lieu</b><p>Université Thomas-Sankara, grand amphithéâtre. Entrée par le portail sud, badge « Promotion 2027 » à l’accueil.</p><a href="https://maps.google.com/?q=Universit%C3%A9+Thomas+Sankara+Ouagadougou" target="_blank" rel="noopener">Itinéraire</a></div></li>
+      <li><svg><use href="#i-dress"/></svg><div><b>Tenue</b><p>Toge fournie pour les diplômés. Tenue de ville pour les familles.</p></div></li>
+      <li><svg><use href="#i-car"/></svg><div><b>Stationnement</b><p>Parking des visiteurs à gauche après le portail. Prévoyez d’arriver tôt.</p></div></li>
+    </ul>
+  </section>
+
+  <section class="rsvp" style="padding-top:0">
+    <div class="box">
+      <p class="eyebrow" data-edit="rsvp-k">Places</p>
+      <h2 data-role="rsvp-title" data-edit="rsvp-title">Inscription</h2>
+      <p class="lead" data-role="rsvp-lead" data-edit="rsvp-lead">Chaque diplômé dispose de quatre places. Dites-moi combien vous serez, avant le 15 juin.</p>
+      <form class="rsvp" data-key="diplome">
+        <div class="row">
+          <label class="f">Votre nom <input id="c9-name" name="name" required autocomplete="name"></label>
+          <label class="f">Places <select id="c9-n" name="n"><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
+          <div class="choice">
+            <label><input type="radio" name="rep" value="oui" checked> Je serai là</label>
+            <label><input type="radio" name="rep" value="non"> Je ne pourrai pas</label>
+          </div>
+          <label class="f">Un mot <textarea id="c9-msg" name="msg"></textarea></label>
+          <div><button class="btn" type="submit">Envoyer</button></div>
+        </div>
+        <div class="ok" role="status"></div>
+      </form>
+    </div>
+  </section>
+
+  <section class="album-sec">
+    <p class="eyebrow">Vos photos</p>
+    <h2 data-role="album-title" data-edit="album-title">Vos photos de la cérémonie</h2>
+    <p class="lead" style="margin:12px 0 22px;font-size:14px" data-role="album-lead" data-edit="album-lead">Ajoutez vos photos : elles iront dans l’album de la promotion.</p>
+    <div class="album-box">
+      <label class="drop" for="c9-files" tabindex="0">
+        <svg><use href="#i-up"/></svg>
+        <span>Glissez vos photos ici ou</span>
+        <span class="btn">Choisir des photos</span>
+        <input id="c9-files" type="file" accept="image/*" multiple>
+      </label>
+      <label class="who">Votre prénom <input id="c9-who" name="who" placeholder="Papa"></label>
+      <div class="album-meta"><span><span class="count">3 photos</span> dans l’album</span><span>Validées par Fatim</span></div>
+      <div class="album">
+        <figure class="slot"><img src="img/guest-1.jpg" alt="" onerror="this.remove()"><div class="tag">Papa</div><figcaption>Papa</figcaption></figure>
+        <figure class="slot"><img src="img/guest-4.jpg" alt="" onerror="this.remove()"><div class="tag">La promo</div><figcaption>La promo</figcaption></figure>
+        <figure class="slot"><img src="img/guest-2.jpg" alt="" onerror="this.remove()"><div class="tag">Maman</div><figcaption>Maman</figcaption></figure>
+      </div>
+      <p class="note">Maquette : les photos restent sur votre téléphone. Dans Marakaj, elles arrivent dans l’album de la promotion.</p>
+    </div>
+  </section>
+
+  <footer class="foot">Fatim Ouédraogo · Promotion 2027 · Carte créée avec Marakaj</footer>
+</article>
+<script src="shared.js"></script>
+</body>
+</html>
