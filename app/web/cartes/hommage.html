@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jean-Baptiste Zongo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400;500&display=swap">
+<link rel="stylesheet" href="shared.css">
+<style>
+/* Carte 12 « Hommage » — a memorial: ivory, graphite and a grey-green,
+   a portrait in a thin ring, the ceremonies, a book of words. */
+:root{
+  --back:#3a3d3a;--paper:#f8f6f1;--ink:#2e2e2e;--moss:#8c9a8e;--line:#d9d6cf;--gold:#c9b98a;
+  --accent:#2e2e2e;--on-accent:#f8f6f1;
+  --slot-a:#c9c9c0;--slot-b:#8c9a8e;--slot-c:#a7aba3;--slot-ink:#f8f6f1;
+  --display:'Cormorant Garamond','Georgia',serif;--script:'Cormorant Garamond','Georgia',serif;--body:'Jost','Helvetica Neue',Arial,sans-serif;
+}
+body{font-weight:300}
+.hero{text-align:center;padding:50px 24px 36px}
+.hero .ring{position:relative;width:min(56%,220px);aspect-ratio:1;margin:0 auto;border-radius:50%;padding:6px;border:1px solid var(--gold)}
+.hero .ring .slot{position:absolute;inset:6px;border-radius:50%;filter:grayscale(.6) sepia(.1)}
+.hero .kicker{font-size:11px;letter-spacing:.34em;text-transform:uppercase;margin-top:28px;opacity:.75}
+.hero h1{font-family:var(--display);font-weight:400;font-size:clamp(34px,9.5vw,50px);line-height:1.05;margin:10px 0 0}
+.hero .years{font-family:var(--display);font-size:22px;margin-top:8px;color:var(--moss);font-variant-numeric:tabular-nums}
+.hero .line{width:40px;height:1px;background:var(--gold);margin:22px auto 0}
+.hero .ann{max-width:30em;margin:22px auto 0;font-size:15px;line-height:1.7}
+.word{background:#eeece6;text-align:center}
+.word h2{font-style:italic}
+.word p{max-width:30em;margin:14px auto 0;font-size:15px;line-height:1.75}
+.word .sign{display:block;margin-top:16px;font-family:var(--display);font-style:italic;font-size:20px}
+.pics{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 24px 36px}
+.pics .slot{aspect-ratio:4/5;filter:grayscale(.6) sepia(.1)}
+.steps{list-style:none;margin:24px 0 0;padding:0;display:grid;gap:0;border-top:1px solid var(--gold)}
+.steps li{display:grid;grid-template-columns:70px 34px 1fr;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.steps .t{font-family:var(--display);font-size:18px;font-variant-numeric:tabular-nums}
+.steps svg{width:30px;height:30px;stroke:var(--moss);fill:none;stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round}
+.steps b{display:block;font-weight:500;font-size:15px}
+.steps small{font-size:12px;opacity:.75}
+.steps .day{grid-column:1/-1;font-size:10px;letter-spacing:.24em;text-transform:uppercase;opacity:.7;padding:4px 0 0}
+.infos svg{color:var(--moss)}
+.book{background:var(--ink);color:var(--paper)}
+.book h2{color:var(--paper);font-style:italic}
+.book .lead{margin:10px 0 22px;font-size:14px;opacity:.85}
+.book label.f input,.book label.f textarea{border-color:rgba(248,246,241,.4)}
+.book .btn{background:transparent;color:var(--paper);border-color:rgba(248,246,241,.6)}
+.book .ok{border-color:rgba(248,246,241,.4)}
+.album-sec h2{font-style:italic}
+.album-sec .album img{filter:grayscale(.6) sepia(.1)}
+.album-sec .album figure{outline:1px solid var(--gold);outline-offset:3px}
+.foot{opacity:.6}
+</style>
+</head>
+<body>
+<div class="back"><a href="index.html" style="color:#f8f6f1">← Les douze cartes</a></div>
+<article class="card" data-card="hommage" data-type="hommage">
+  <header class="hero">
+    <div class="ring"><div class="slot" data-pic="hero"><img src="img/memorial-1.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Sa photo</div></div></div>
+    <p class="kicker" data-role="kicker" data-edit="kicker">À la mémoire de</p>
+    <h1 data-edit="names">Jean-Baptiste Zongo</h1>
+    <div class="years" data-edit="years">1948 – 2026</div>
+    <div class="line"></div>
+    <p class="ann" data-edit="ann">Sa famille vous fait part de son rappel à Dieu, survenu le 12 octobre 2026 à Ouagadougou, dans sa 79<sup>e</sup> année. Instituteur, père de six enfants, grand-père de quatorze, il aimait les livres, le dolo du samedi et les longues conversations sous le néré.</p>
+  </header>
+
+  <section class="word">
+    <h2 data-role="word-title" data-edit="word-title">Un mot de la famille</h2>
+    <p data-edit="w1">Il nous a appris à lire, à nous taire quand il faut, et à rire fort. Nous voulons l’accompagner comme il a accompagné tant d’élèves : avec patience, et ensemble.</p>
+    <p data-edit="w2">Merci d’être là, de près ou de loin.</p>
+    <span class="sign" data-edit="sign">Les familles Zongo, Kaboré et alliées</span>
+  </section>
+
+  <div class="pics">
+    <div class="slot" data-pic="p1"><img src="img/memorial-2.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Photo</div></div>
+    <div class="slot" data-pic="p2" style="--slot-a:#8c9a8e;--slot-b:#d9d6cf"><img src="img/family-1.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Photo</div></div>
+  </div>
+
+  <section style="padding-top:0">
+    <p class="eyebrow" data-edit="prog-k">Programme</p>
+    <h2 data-role="prog-title" data-edit="prog-title">Les cérémonies</h2>
+    <p class="lead" style="margin-top:8px;font-size:14px" data-role="prog-intro" data-edit="prog-intro">Samedi 24 octobre 2026. La famille vous accueille dès 7 h 30.</p>
+    <ol class="steps" data-prog>
+      <li><span class="t" data-t>8 h</span><svg><use href="#i-candle"/></svg><div><b data-b>Levée du corps</b><small data-s>Morgue du CHU Yalgado</small></div></li>
+      <li><span class="t" data-t>10 h</span><svg><use href="#i-dove"/></svg><div><b data-b>Messe</b><small data-s>Cathédrale de l’Immaculée-Conception</small></div></li>
+      <li><span class="t" data-t>12 h</span><svg><use href="#i-pin"/></svg><div><b data-b>Inhumation</b><small data-s>Cimetière de Gounghin</small></div></li>
+      <li><span class="t" data-t>14 h</span><svg><use href="#i-dinner"/></svg><div><b data-b>Retour</b><small data-s>À la maison familiale, Gounghin</small></div></li>
+    </ol>
+  </section>
+
+  <section style="padding-top:0">
+    <p class="eyebrow">Bon à savoir</p>
+    <ul class="infos">
+      <li><svg><use href="#i-pin"/></svg><div><b>La maison familiale</b><p>Gounghin, secteur 9, rue de l’école Zongo. Le deuil est ouvert dès le jeudi 22.</p><a href="https://maps.google.com/?q=Gounghin+Ouagadougou" target="_blank" rel="noopener">Itinéraire</a></div></li>
+      <li><svg><use href="#i-cal"/></svg><div><b>Contact</b><p>Pour la famille : Honoré Zongo, 70 00 00 00.</p><button class="btn ghost" type="button" data-copy="70 00 00 00" style="margin-top:8px;padding:8px 12px">Copier le numéro</button></div></li>
+      <li><svg><use href="#i-gift"/></svg><div><b>Ni fleurs ni couronnes</b><p>Vos dons iront à l’école de Koudougou où il a enseigné trente ans.</p></div></li>
+    </ul>
+  </section>
+
+  <section class="book">
+    <p class="eyebrow" data-edit="rsvp-k">Livre de condoléances</p>
+    <h2 data-role="rsvp-title" data-edit="rsvp-title">Témoignages</h2>
+    <p class="lead" data-role="rsvp-lead" data-edit="rsvp-lead">Laissez un mot à la famille. Il sera lu, et gardé.</p>
+    <form class="rsvp" data-key="hommage">
+      <input type="hidden" name="rep" value="mot">
+      <div class="row">
+        <label class="f">Votre nom <input id="c12-name" name="name" required autocomplete="name"></label>
+        <label class="f">Votre mot <textarea id="c12-msg" name="msg" required></textarea></label>
+        <div><button class="btn" type="submit">Déposer mon mot</button></div>
+      </div>
+      <div class="ok" role="status"></div>
+    </form>
+  </section>
+
+  <section class="album-sec">
+    <p class="eyebrow">Souvenirs</p>
+    <h2 data-role="album-title" data-edit="album-title">Vos photos de lui</h2>
+    <p class="lead" style="margin:12px 0 22px;font-size:14px" data-role="album-lead" data-edit="album-lead">Partagez vos photos avec la famille : celles d’hier, et celles des cérémonies.</p>
+    <div class="album-box">
+      <label class="drop" for="c12-files" tabindex="0">
+        <svg><use href="#i-up"/></svg>
+        <span>Glissez vos photos ici ou</span>
+        <span class="btn ghost">Choisir des photos</span>
+        <input id="c12-files" type="file" accept="image/*" multiple>
+      </label>
+      <label class="who">Votre nom <input id="c12-who" name="who" placeholder="Un ancien élève"></label>
+      <div class="album-meta"><span><span class="count">3 photos</span> partagées</span><span>Gardées par la famille</span></div>
+      <div class="album">
+        <figure class="slot"><img src="img/guest-3.jpg" alt="" onerror="this.remove()"><div class="tag">Ses collègues</div><figcaption>Ses collègues</figcaption></figure>
+        <figure class="slot"><img src="img/guest-1.jpg" alt="" onerror="this.remove()"><div class="tag">Les petits-enfants</div><figcaption>Les petits-enfants</figcaption></figure>
+        <figure class="slot"><img src="img/guest-2.jpg" alt="" onerror="this.remove()"><div class="tag">Les voisins</div><figcaption>Les voisins</figcaption></figure>
+      </div>
+      <p class="note">Maquette : les photos restent sur votre téléphone. Dans Marakaj, elles arrivent dans l’album de la famille.</p>
+    </div>
+  </section>
+
+  <footer class="foot">Jean-Baptiste Zongo · 1948 – 2026 · Carte créée avec Marakaj</footer>
+</article>
+<script src="shared.js"></script>
+</body>
+</html>

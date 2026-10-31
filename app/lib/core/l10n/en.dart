@@ -8635,4 +8635,108 @@ const enStrings = <String, String>{
       'Install the Marakaj app to continue on Android.',
   'Google Play':
       'Google Play',
+  'Événementiel':
+      'Events',
+  'Cartes d\'événement : qui les voit':
+      'Event cards: who sees them',
+  'Événementiel visible par toutes les entreprises (sinon : les administrateurs de Marakaj seulement)':
+      'Events open to every business (otherwise: Marakaj’s administrators only)',
+  'Nouvelle carte':
+      'New card',
+  'Aucune carte pour le moment':
+      'No card yet',
+  'Un mariage, une dot, un anniversaire, une soirée : créez la carte, envoyez son adresse aux invités, et lisez leurs réponses ici.':
+      'A wedding, a dowry ceremony, a birthday, an evening: create the card, send its address to the guests, and read their answers here.',
+  'Date à fixer':
+      'Date to be set',
+  'Publiée':
+      'Published',
+  'Donnez un nom à l’événement : les prénoms, le nom de la fête.':
+      'Give the event a name: the first names, the name of the party.',
+  'Choisir le jour et l’heure':
+      'Choose the day and time',
+  'Nom de l’événement':
+      'Name of the event',
+  'Inès & Thomas, Les 30 ans de Rokia…':
+      'Inès & Thomas, Rokia’s 30th…',
+  'Genre d’événement':
+      'Kind of event',
+  'Jardins de Koulouba, Ouagadougou':
+      'Jardins de Koulouba, Ouagadougou',
+  'Créer la carte':
+      'Create the card',
+  'Supprimer cette carte ?':
+      'Delete this card?',
+  'Son adresse ne mènera plus nulle part, et les réponses des invités seront effacées.':
+      'Its address will lead nowhere, and the guests’ answers will be erased.',
+  'Cette carte n’existe plus.':
+      'This card no longer exists.',
+  'Le lien à envoyer aux invités : la carte est publiée.':
+      'The link to send the guests: the card is published.',
+  'Brouillon : le lien copié est celui de l’aperçu, qui ouvre la carte avant sa publication. Publiez-la pour l’adresse courte à envoyer aux invités.':
+      'Draft: the copied link is the preview’s, which opens the card before it is published. Publish it for the short address to send the guests.',
+  'Carte publiée':
+      'Card published',
+  'Visible par toute personne qui a le lien.':
+      'Visible to anyone with the link.',
+  'Carte remise en brouillon':
+      'Card back to draft',
+  'Réponses ouvertes':
+      'Answers open',
+  'Les invités peuvent répondre sur la carte.':
+      'Guests can answer on the card.',
+  'Réponses des invités':
+      'Guests’ answers',
+  'Personne n’a encore répondu.':
+      'Nobody has answered yet.',
+  'Ne viendra pas':
+      'Will not come',
+  'Un mot':
+      'A word',
+  'Vient':
+      'Coming',
+  'Mariage':
+      'Wedding',
+  'Fiançailles, dot':
+      'Engagement, dowry',
+  'Anniversaire':
+      'Birthday',
+  'Baptême':
+      'Christening',
+  'Naissance, dénomination':
+      'Birth, naming day',
+  'Remise de diplômes':
+      'Graduation',
+  'Soirée, gala':
+      'Evening, gala',
+  'Inauguration':
+      'Opening',
+  'Départ à la retraite':
+      'Retirement',
+  'Hommage':
+      'Memorial',
+  'Côme':
+      'Como',
+  'Ravello':
+      'Ravello',
+  'Sahel':
+      'Sahel',
+  'Jardin':
+      'Garden',
+  'Minuit':
+      'Midnight',
+  'Trente':
+      'Thirty',
+  'Noé':
+      'Noé',
+  'Imani':
+      'Imani',
+  'Promotion':
+      'Class',
+  'Dix ans':
+      'Ten years',
+  'Dot':
+      'Dowry',
+  'Lieu':
+      'Place',
 };

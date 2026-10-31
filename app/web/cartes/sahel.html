@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Awa & Idrissa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300;0,9..144,500;1,9..144,300;1,9..144,400&family=DM+Sans:wght@300;400;500&display=swap">
+<link rel="stylesheet" href="shared.css">
+<style>
+/* Carte 3 « Sahel » — terracotta, ochre and indigo; a baobab at sunset,
+   bogolan bands, the date in huge numerals. */
+:root{
+  --back:#2a2342;--paper:#f4e9d8;--ink:#2b1d14;--terra:#b9552f;--ochre:#d8a24a;--indigo:#2a2342;--sand:#e9d7b7;--line:#c9ab85;
+  --accent:#b9552f;--on-accent:#f4e9d8;
+  --slot-a:#d8a24a;--slot-b:#b9552f;--slot-c:#8c4a2e;--slot-ink:#f4e9d8;
+  --display:'Fraunces','Georgia',serif;--script:'Fraunces','Georgia',serif;--body:'DM Sans','Helvetica Neue',Arial,sans-serif;
+}
+.band{height:18px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='18'%3E%3Cpath d='M0 9l9-8 9 8-9 8zM18 9l9-8 9 8-9 8z' fill='none' stroke='%23d8a24a' stroke-width='1.6'/%3E%3C/svg%3E") center/36px 18px repeat-x var(--indigo)}
+.hero{position:relative;color:var(--paper);text-align:center;isolation:isolate;overflow:hidden;padding:54px 24px 46px}
+.hero svg.scene{position:absolute;inset:0;width:100%;height:100%;z-index:-3}
+.hero.slot>img{z-index:-2}
+.hero.slot::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(43,29,20,.15),rgba(43,29,20,.55))}
+.hero.slot{background:none}.hero.slot::after{display:none}
+.hero .kicker,.hero h1,.hero .place{position:relative;z-index:1}
+.hero .kicker{font-size:11px;letter-spacing:.34em;text-transform:uppercase;opacity:.9}
+.hero h1{font-family:var(--display);font-weight:300;font-size:clamp(50px,14vw,84px);line-height:.92;margin:16px 0 0;letter-spacing:-.01em;font-variation-settings:"SOFT" 100,"opsz" 144}
+.hero h1 em{font-style:italic;font-weight:300;display:block;font-size:.5em;margin:6px 0 4px;opacity:.95}
+.hero .place{margin-top:150px;font-size:11px;letter-spacing:.3em;text-transform:uppercase}
+.save{text-align:center;padding:40px 24px 34px}
+.save .eyebrow{color:var(--terra)}
+.save .num{font-family:var(--display);font-weight:500;font-size:clamp(56px,16vw,92px);line-height:1;letter-spacing:.02em;color:var(--terra);font-variant-numeric:tabular-nums;font-variation-settings:"opsz" 144}
+.save .num span{color:var(--ochre);font-weight:300;margin:0 .05em}
+.save .day{font-family:var(--display);font-style:italic;font-size:24px;margin-top:6px}
+.save .btn{margin-top:22px}
+.word{background:var(--indigo);color:var(--paper);text-align:center}
+.word h2{font-style:italic;font-weight:300;color:var(--ochre)}
+.word p{max-width:32em;margin:14px auto 0;font-size:14px;line-height:1.8;font-weight:300}
+.word .sign{font-family:var(--display);font-style:italic;font-size:26px;display:block;margin-top:18px}
+.pics{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px}
+.pics .slot:first-child{grid-column:1/-1;aspect-ratio:16/9}
+.pics .slot{aspect-ratio:1}
+.plan{background:var(--sand)}
+.plan h2{color:var(--terra)}
+.steps{list-style:none;margin:26px 0 0;padding:0;display:grid;gap:0;border-top:1px solid var(--line)}
+.steps li{display:grid;grid-template-columns:64px 44px 1fr;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.steps .t{font-family:var(--display);font-weight:500;font-size:20px;color:var(--terra);font-variant-numeric:tabular-nums}
+.steps svg{width:34px;height:34px;stroke:var(--indigo);fill:none;stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round}
+.steps b{display:block;font-weight:500;font-size:14px}
+.steps small{font-size:12px;opacity:.75}
+.infos svg{color:var(--terra)}
+.rsvp{background:var(--terra);color:var(--paper)}
+.rsvp h2{color:var(--paper)}
+.rsvp .lead{font-size:13px;margin:10px 0 24px;opacity:.95}
+.rsvp label.f input,.rsvp label.f select,.rsvp label.f textarea{border-color:rgba(244,233,216,.6)}
+.rsvp .btn{background:var(--indigo);border-color:var(--indigo);color:var(--paper)}
+.rsvp .ok{border-color:rgba(244,233,216,.6)}
+.rsvp .choice input{accent-color:var(--indigo)}
+.album-sec{background:var(--paper)}
+.album-sec h2{color:var(--indigo)}
+.album-sec .eyebrow{color:var(--terra)}
+.album-sec .album{grid-template-columns:repeat(3,1fr);gap:10px}
+.album-sec .album figure{background:#fff;padding:5px 5px 18px;aspect-ratio:auto;box-shadow:0 6px 18px rgba(43,29,20,.18);transform:rotate(-2deg)}
+.album-sec .album figure:nth-child(3n+2){transform:rotate(1.5deg)}
+.album-sec .album figure:nth-child(3n){transform:rotate(-.5deg)}
+.album-sec .album figure img,.album-sec .album figure.slot{aspect-ratio:1}
+.album-sec .album figure img{height:auto}
+.album-sec .album figure.slot{padding:0;background:var(--slot-c);transform:none;box-shadow:0 6px 18px rgba(43,29,20,.18);outline:5px solid #fff;outline-offset:-5px}
+.album-sec .album figure.slot>img{inset:5px;width:auto;height:auto;right:5px;bottom:5px}
+.album-sec .album figure.slot figcaption{position:absolute;bottom:0;left:0;right:0;background:#fff;padding:3px 0 5px}
+.album-sec .album figcaption{background:none;color:var(--ink);padding:4px 0 0;position:static;text-align:center;font-family:var(--display);font-style:italic;font-size:12px;letter-spacing:0}
+.foot{background:var(--indigo);color:var(--paper);opacity:1}
+</style>
+</head>
+<body>
+<div class="back"><a href="index.html">← Les cinq cartes</a></div>
+<article class="card" data-card="sahel" data-type="mariage">
+  <div class="band" aria-hidden="true"></div>
+  <header class="hero slot" data-pic="hero">
+    <img src="img/africa-sunset.jpg" alt="" onerror="this.remove()">
+    <svg class="scene" viewBox="0 0 640 520" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+      <defs>
+        <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2a4a"/><stop offset=".45" stop-color="#b9552f"/><stop offset=".8" stop-color="#e5a04c"/><stop offset="1" stop-color="#f1c27a"/></linearGradient>
+      </defs>
+      <rect width="640" height="520" fill="url(#sun)"/>
+      <circle cx="400" cy="372" r="74" fill="#f6d48a"/>
+      <path d="M0 402c120-16 230-10 320-12s220-8 320 6v118H0z" fill="#3b2516"/>
+      <path d="M0 440c160-10 320-14 640-4v84H0z" fill="#2b1d14"/>
+      <g fill="#2b1d14">
+        <path d="M212 452c-8-40-6-80 0-110l6-28 6 2-4 28c-4 30-4 68 2 108z"/>
+        <path d="M218 320c-16-10-30-26-40-44l-12-18 4-3 12 18c10 16 22 28 36 38zM222 310c-24-14-36-38-40-66l10-2c2 24 12 44 30 58zM226 316c10-24 26-40 50-52l4 8c-22 10-36 24-46 46zM224 330c24-6 48-2 70 10l-4 8c-20-10-42-14-66-10zM220 304c-4-30 4-58 20-82l6 4c-14 22-20 48-16 76z"/>
+        <path d="M94 456c-4-18-2-38 2-54l4 2c-3 16-4 34-1 52zM92 408c-10-6-18-16-22-28l6-2c4 10 10 18 20 24zM96 404c6-12 16-20 28-24l2 6c-10 4-18 10-24 20z"/>
+        <path d="M548 458c-3-14-2-30 1-44l4 1c-3 14-4 28-1 43zM546 420c-8-4-14-12-18-22l5-2c3 8 8 15 16 19zM550 416c5-10 12-16 22-19l2 5c-9 3-15 8-20 17z"/>
+      </g>
+      <g fill="none" stroke="#2b1d14" stroke-width="1.4" stroke-linecap="round"><path d="M470 250c6-4 10-4 16 0M490 236c5-3 9-3 14 0M120 260c5-3 9-3 14 0"/></g>
+    </svg>
+    <p class="kicker" data-role="kicker" data-edit="kicker">Nous nous marions</p>
+    <h1 data-edit="names">Awa<em>&amp;</em>Idrissa</h1>
+    <p class="place" data-edit="place">Ouagadougou · Jardins de Koulouba</p>
+  </header>
+  <div class="band" aria-hidden="true"></div>
+
+  <section class="save">
+    <p class="eyebrow" data-edit="save-k">Réservez la date</p>
+    <div class="num" data-edit="num">12<span>·</span>12<span>·</span>26</div>
+    <p class="day" data-edit="day">Samedi 12 décembre 2026, à partir de 16 h</p>
+    <a class="btn" href="https://calendar.google.com/calendar/render?action=TEMPLATE&amp;text=Mariage+d%27Awa+et+Idrissa&amp;dates=20261212T160000Z/20261213T010000Z&amp;location=Jardins+de+Koulouba%2C+Ouagadougou" target="_blank" rel="noopener">Ajouter à l’agenda</a>
+  </section>
+
+  <div class="pics">
+    <div class="slot" data-pic="p1"><img src="img/wed-africa-1.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div>
+    <div class="slot" style="--slot-a:#2a2342;--slot-b:#d8a24a" data-pic="p2"><img src="img/wed-africa-2.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div>
+    <div class="slot" style="--slot-a:#e9d7b7;--slot-b:#b9552f" data-pic="p3"><img src="img/wed-table.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div>
+  </div>
+
+  <section class="word">
+    <h2 data-role="word-title" data-edit="word-title">Un mot de nous deux</h2>
+    <p data-edit="w1">Depuis le jour où nos chemins se sont croisés à Gounghin, nous savions que cette fête aurait lieu. Nous voulons la vivre entourés de nos familles, de nos amis, de celles et ceux qui nous ont vus grandir.</p>
+    <p data-edit="w2">Venez danser, manger, rire avec nous. La nuit sera longue.</p>
+    <span class="sign" data-edit="sign">Awa &amp; Idrissa</span>
+  </section>
+
+  <section class="plan">
+    <p class="eyebrow" style="color:var(--terra)">Le programme</p>
+    <h2 data-role="prog-title" data-edit="prog-title">Le jour, heure par heure</h2>
+    <ol class="steps" data-prog>
+      <li><span class="t" data-t>10 h</span><svg><use href="#i-rings"/></svg><div><b data-b>Mairie de Baskuy</b><small data-s>Cérémonie civile, famille proche</small></div></li>
+      <li><span class="t" data-t>16 h</span><svg><use href="#i-rings"/></svg><div><b data-b>Cérémonie aux Jardins</b><small data-s>Sous les manguiers, dès 15 h 30 pour s’installer</small></div></li>
+      <li><span class="t" data-t>17 h 30</span><svg><use href="#i-glass"/></svg><div><b data-b>Cocktail et photos</b><small data-s>Bissap, gingembre, jus de tamarin</small></div></li>
+      <li><span class="t" data-t>19 h 30</span><svg><use href="#i-dinner"/></svg><div><b data-b>Dîner</b><small data-s>Buffet du pays et de la mer</small></div></li>
+      <li><span class="t" data-t>21 h 30</span><svg><use href="#i-cake"/></svg><div><b data-b>Le gâteau</b><small data-s>Et les discours, courts promis</small></div></li>
+      <li><span class="t" data-t>22 h</span><svg><use href="#i-party"/></svg><div><b data-b>La soirée</b><small data-s>DJ jusqu’à 2 h, coupé-décalé garanti</small></div></li>
+    </ol>
+  </section>
+
+  <section>
+    <p class="eyebrow" style="color:var(--terra)">Infos pratiques</p>
+    <ul class="infos">
+      <li><svg><use href="#i-pin"/></svg><div><b>Le lieu</b><p>Jardins de Koulouba, avenue de la Nation. Entrée côté boulevard, parking gardé.</p><a href="https://maps.google.com/?q=Koulouba+Ouagadougou" target="_blank" rel="noopener">Itinéraire</a></div></li>
+      <li><svg><use href="#i-dress"/></svg><div><b>Tenue</b><p>Le pagne de la famille est le bogolan ocre. Les invités : couleurs chaudes, tenue de fête.</p></div></li>
+      <li><svg><use href="#i-car"/></svg><div><b>Transport</b><p>Un car part de Gounghin à 15 h et vous ramène après la soirée. Dites-nous si vous le prenez.</p></div></li>
+      <li><svg><use href="#i-gift"/></svg><div><b>Contribution</b><p>Pour celles et ceux qui le souhaitent : Orange Money au 70 00 00 00 (Awa) ou l’enveloppe le jour même.</p><button class="btn ghost" type="button" data-copy="70 00 00 00" style="margin-top:8px;padding:8px 12px">Copier le numéro</button></div></li>
+    </ul>
+  </section>
+
+  <section class="rsvp">
+    <p class="eyebrow" data-edit="rsvp-k">Vous venez ?</p>
+    <h2 data-role="rsvp-title" data-edit="rsvp-title">Répondez avant le 15 novembre</h2>
+    <p class="lead" data-role="rsvp-lead" data-edit="rsvp-lead">Un mot suffit : nous préparons les tables en fonction de vos réponses.</p>
+    <form class="rsvp" data-key="sahel">
+      <div class="row">
+        <label class="f">Votre nom <input id="c3-name" name="name" required autocomplete="name"></label>
+        <div class="row two">
+          <label class="f">Vous serez <select id="c3-n" name="n"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+          <label class="f">Le car de Gounghin <select id="c3-bus" name="bus"><option>Non</option><option>Oui</option></select></label>
+        </div>
+        <div class="choice">
+          <label><input type="radio" name="rep" value="oui" checked> Je serai là</label>
+          <label><input type="radio" name="rep" value="non"> Je ne pourrai pas</label>
+        </div>
+        <label class="f">Un mot pour nous <textarea id="c3-msg" name="msg"></textarea></label>
+        <div><button class="btn" type="submit">Envoyer</button></div>
+      </div>
+      <div class="ok" role="status"></div>
+    </form>
+  </section>
+
+  <section class="album-sec">
+    <p class="eyebrow">Le mur des invités</p>
+    <h2 data-role="album-title" data-edit="album-title">Vos photos de la fête</h2>
+    <p class="lead" style="margin:12px 0 22px;font-size:14px" data-role="album-lead" data-edit="album-lead">Chaque photo que vous ajoutez s’accroche au mur, avec votre prénom. Les mariés gardent tout dans leur album.</p>
+    <div class="album-box">
+      <label class="drop" for="c3-files" tabindex="0">
+        <svg><use href="#i-up"/></svg>
+        <span>Ajoutez une photo au mur</span>
+        <span class="btn">Choisir des photos</span>
+        <input id="c3-files" type="file" accept="image/*" multiple>
+      </label>
+      <label class="who">Votre prénom <input id="c3-who" name="who" placeholder="Maman Fati"></label>
+      <div class="album-meta"><span><span class="count">3 photos</span> sur le mur</span><span>Validées par les mariés</span></div>
+      <div class="album">
+        <figure class="slot"><img src="img/guest-3.jpg" alt="" onerror="this.remove()"><div class="tag">Maman Fati</div><figcaption>Maman Fati</figcaption></figure>
+        <figure class="slot"><img src="img/guest-1.jpg" alt="" onerror="this.remove()"><div class="tag">Salif</div><figcaption>Salif</figcaption></figure>
+        <figure class="slot"><img src="img/guest-4.jpg" alt="" onerror="this.remove()"><div class="tag">Les amies d’Awa</div><figcaption>Les amies d’Awa</figcaption></figure>
+      </div>
+      <p class="note">Maquette : les photos restent sur votre téléphone. Dans Marakaj, elles arrivent dans l’album du couple.</p>
+    </div>
+  </section>
+
+  <footer class="foot">Awa &amp; Idrissa · 12 décembre 2026 · Carte créée avec Marakaj</footer>
+</article>
+<script src="shared.js"></script>
+</body>
+</html>

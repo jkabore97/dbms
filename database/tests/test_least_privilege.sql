@@ -129,6 +129,9 @@ begin
                              'sign_in_options',
                              -- 140: each street card's money (batch 144).
                              'storefront_currencies',
+                             -- 152: the events' switch, a card and a guest's
+                             -- answer — the street's, by design.
+                             'events_options', 'event_public', 'event_rsvp',
                              -- 077's pre-request hook runs on every request,
                              -- the street's included; it reads nothing for anon.
                              'two_step_gate')
@@ -139,10 +142,12 @@ begin
     end if;
     -- The helpers are a short, known family; a policy calling something
     -- new should be a deliberate change, not a silent widening.
-    if v_helpers <> 'can_write_org, feature_access, has_full_visibility, is_org_admin, is_org_member, my_org_ids' then
+    -- 152: events_open() joined them — the events' policies ask it; it is
+    -- a member's (authenticated), never the street's.
+    if v_helpers <> 'can_write_org, events_open, feature_access, has_full_visibility, is_org_admin, is_org_member, my_org_ids' then
         raise exception 'FAIL: the policies now call % — check 063 means to open it to anon', v_helpers;
     end if;
-    raise notice 'PASS: outside the street and the six policy helpers, every definer function is closed to anon';
+    raise notice 'PASS: outside the street and the seven policy helpers, every definer function is closed to anon';
 end $$;
 
 \echo ''

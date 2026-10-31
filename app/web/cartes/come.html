@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inès & Thomas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Pinyon+Script&family=Jost:wght@300;400;500&display=swap">
+<link rel="stylesheet" href="shared.css">
+<style>
+/* Carte 1 « Côme » — the lakeside card the sister pointed at: sage and
+   cream, a Didone serif with a script accent, one long column. */
+:root{
+  --back:#4e5c47;--paper:#f6f2e8;--ink:#2f3a2c;--sage:#5b6b52;--sage-deep:#43503c;--line:#c9c4b1;
+  --accent:#5b6b52;--on-accent:#f6f2e8;
+  --slot-a:#8a9a7a;--slot-b:#b7ad8e;--slot-c:#6f7d66;--slot-ink:#f6f2e8;
+  --display:'Bodoni Moda','Didot','Times New Roman',serif;--script:'Pinyon Script','Snell Roundhand',cursive;--body:'Jost','Helvetica Neue',Arial,sans-serif;
+}
+body{font-weight:300}
+.hero{position:relative;color:#fff;text-align:center;min-height:420px;display:grid;place-items:center;isolation:isolate;overflow:hidden}
+.hero svg.scene{position:absolute;inset:0;width:100%;height:100%;z-index:-3}
+.hero.slot>img{z-index:-2}
+.hero .names{position:relative;z-index:1}
+.hero.slot{background:none}.hero.slot::after{display:none}
+.hero::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(63,78,58,.35),rgba(63,78,58,.62));z-index:-1}
+.hero .names{padding:60px 24px}
+.hero h1{font-family:var(--display);font-weight:400;font-size:clamp(44px,12vw,72px);line-height:.95;margin:0;letter-spacing:.02em;text-shadow:0 2px 18px rgba(0,0,0,.25)}
+.hero h1 .et{display:block;font-family:var(--script);font-size:.52em;line-height:.9;margin:4px 0 2px;letter-spacing:0}
+.hero .sub{font-size:11px;letter-spacing:.3em;text-transform:uppercase;margin-top:18px}
+.when{display:grid;grid-template-columns:1fr;gap:26px;align-items:center;padding:36px 24px}
+@media (min-width:520px){.when{grid-template-columns:1fr 1fr}}
+.frame{border:1px solid var(--sage-deep);padding:7px}
+.frame .inner{border:1px solid var(--sage-deep);padding:6px}
+.frame .slot{aspect-ratio:3/4;filter:saturate(.2) contrast(1.05)}
+.date{text-align:center;font-family:var(--display)}
+.date .d{font-family:var(--script);font-size:46px;line-height:1;color:var(--sage-deep)}
+.date .at{font-family:var(--script);font-size:24px;display:block;margin:4px 0}
+.date .v{font-size:19px;letter-spacing:.14em;text-transform:uppercase}
+.date .h{font-family:var(--body);font-size:11px;letter-spacing:.24em;text-transform:uppercase;margin-top:10px;opacity:.8}
+.date .btn{margin-top:18px}
+.word{position:relative;padding:22px;isolation:isolate}
+.word .bg{position:absolute;inset:0;z-index:-2;background:
+  radial-gradient(90% 60% at 50% 0%,#9aa78e 0%,transparent 70%),linear-gradient(180deg,#8c9a80,#5b6b52)}
+.word .bg::after{content:"";position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.4'/%3E%3C/svg%3E");mix-blend-mode:soft-light}
+.word .panel{background:rgba(67,80,60,.86);color:#f6f2e8;padding:34px 22px;text-align:center}
+.word h2{font-family:var(--script);font-size:38px;color:#f6f2e8}
+.word p{font-size:13px;line-height:1.75;max-width:30em;margin:14px auto 0}
+.word .sign{font-family:var(--script);font-size:30px;margin-top:18px;display:block}
+.day{text-align:center}
+.day h2{letter-spacing:.14em;text-transform:uppercase;font-size:24px}
+.day .intro{font-family:var(--script);font-size:22px;color:var(--sage-deep);margin:8px 0 28px}
+.prog{color:var(--sage-deep)}
+.rsvp{display:grid;grid-template-columns:1fr 56px;background:var(--sage-deep);color:#f6f2e8;padding:0}
+.rsvp .in{padding:40px 22px 40px 24px}
+.rsvp h2{font-size:30px;letter-spacing:.12em;color:#f6f2e8}
+.rsvp .lead{font-size:13px;margin:10px 0 24px;opacity:.9}
+.rsvp .stripes{background:repeating-linear-gradient(90deg,#f6f2e8 0 7px,var(--sage-deep) 7px 14px)}
+.rsvp label.f input,.rsvp label.f select,.rsvp label.f textarea{border-color:rgba(246,242,232,.5)}
+.rsvp .btn{background:#f6f2e8;color:var(--sage-deep);border-color:#f6f2e8}
+.rsvp .ok{border-color:rgba(246,242,232,.5)}
+.album-sec h2{font-size:30px}
+.album-sec .eyebrow{color:var(--sage-deep)}
+.infos svg{color:var(--sage-deep)}
+</style>
+</head>
+<body>
+<div class="back"><a href="index.html">← Les cinq cartes</a></div>
+<article class="card" data-card="come" data-type="mariage">
+  <header class="hero slot" data-pic="hero">
+    <img src="img/wed-lake.jpg" alt="" onerror="this.remove()">
+    <svg class="scene" viewBox="0 0 640 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9ecdf"/><stop offset="1" stop-color="#c7cfbb"/></linearGradient>
+        <linearGradient id="lake" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a9b86"/><stop offset="1" stop-color="#5c7060"/></linearGradient>
+        <linearGradient id="hill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8f9d7c"/><stop offset="1" stop-color="#5f6f52"/></linearGradient>
+      </defs>
+      <rect width="640" height="420" fill="url(#sky)"/>
+      <path d="M0 150C120 90 220 60 330 70s200 20 310 10v160H0z" fill="#a9b399"/>
+      <path d="M0 190C140 120 260 110 380 130s170 20 260 0v120H0z" fill="url(#hill)"/>
+      <path d="M0 240c90-30 170-60 300-50s220 30 340 10v110H0z" fill="#4f5e46"/>
+      <g fill="#e3d6bd" stroke="#8c8168" stroke-width=".8">
+        <rect x="128" y="186" width="34" height="42"/><rect x="170" y="176" width="26" height="52" fill="#d9c7a8"/><rect x="204" y="190" width="40" height="38"/>
+        <rect x="256" y="172" width="30" height="56" fill="#cfbfa4"/><rect x="294" y="196" width="46" height="32"/><rect x="350" y="180" width="28" height="48" fill="#e6dcc8"/>
+        <rect x="388" y="192" width="38" height="36" fill="#d4c3a6"/><rect x="434" y="200" width="30" height="28"/>
+      </g>
+      <g fill="#7a5a45"><path d="M126 186h38l-19-12zM168 176h30l-15-10zM254 172h34l-17-11zM348 180h32l-16-10z"/></g>
+      <g fill="#5d6b4c" stroke="#5d6b4c"><rect x="149" y="196" width="4" height="7"/><rect x="178" y="188" width="4" height="7"/><rect x="186" y="200" width="4" height="7"/><rect x="214" y="200" width="4" height="7"/><rect x="226" y="200" width="4" height="7"/><rect x="264" y="184" width="4" height="7"/><rect x="274" y="198" width="4" height="7"/><rect x="306" y="206" width="4" height="7"/><rect x="322" y="206" width="4" height="7"/><rect x="358" y="192" width="4" height="7"/><rect x="398" y="202" width="4" height="7"/><rect x="412" y="202" width="4" height="7"/></g>
+      <g fill="#3f4d38"><ellipse cx="110" cy="206" rx="6" ry="26"/><ellipse cx="248" cy="210" rx="5" ry="24"/><ellipse cx="342" cy="212" rx="5" ry="22"/><ellipse cx="476" cy="214" rx="6" ry="24"/><ellipse cx="520" cy="220" rx="5" ry="20"/></g>
+      <rect y="228" width="640" height="192" fill="url(#lake)"/>
+      <g stroke="#dfe6d6" stroke-opacity=".45" stroke-width="1" fill="none">
+        <path d="M40 262h90M180 258h60M300 266h120M470 260h80M20 300h140M240 298h90M420 306h150M100 350h80M260 346h160M500 354h100"/>
+      </g>
+      <g opacity=".35" fill="#2f3a2c"><rect x="128" y="228" width="34" height="30"/><rect x="204" y="228" width="40" height="26"/><rect x="294" y="228" width="46" height="24"/><rect x="388" y="228" width="38" height="26"/></g>
+      <path d="M560 238h64v6h-64z" fill="#6e5a46"/><g stroke="#6e5a46" stroke-width="3"><path d="M566 244v16M590 244v16M614 244v16"/></g>
+    </svg>
+    <div class="names">
+      <h1 data-edit="names">Inès<span class="et">et</span>Thomas</h1>
+      <p class="sub" data-role="sub" data-edit="sub">se marient !</p>
+    </div>
+  </header>
+
+  <section class="when">
+    <div class="frame"><div class="inner"><div class="slot" data-pic="p1"><img src="img/wed-couple-1.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div></div></div>
+    <div class="date">
+      <div class="d" data-edit="date">Samedi 5 juin</div>
+      <span class="at" data-edit="at">à la</span>
+      <div class="v" data-edit="place">Villa Serena</div>
+      <div class="h" data-edit="when">Lac de Côme · 2027 · 15 h</div>
+      <a class="btn ghost" style="color:var(--sage-deep)" href="https://calendar.google.com/calendar/render?action=TEMPLATE&amp;text=Mariage+d%27In%C3%A8s+et+Thomas&amp;dates=20270605T130000Z/20270605T230000Z&amp;location=Villa+Serena%2C+Lac+de+C%C3%B4me&amp;details=Nous+nous+marions+%21" target="_blank" rel="noopener">Ajouter à l’agenda</a>
+    </div>
+  </section>
+
+  <section class="word">
+    <div class="bg"></div>
+    <div class="panel">
+      <h2 data-role="word-title" data-edit="word-title">Notre jour</h2>
+      <p data-edit="w1">Nous sommes si heureux de partager ce moment avec les personnes qui comptent le plus pour nous. Votre amour et votre soutien sont tout pour nous, et nous avons hâte de vivre cette journée inoubliable à vos côtés.</p>
+      <p data-edit="w2">En attendant le grand jour, cette carte vous tiendra au courant de tous les détails.</p>
+      <p data-edit="w3">Merci de faire partie de notre histoire.</p>
+      <span class="sign" data-edit="sign">Inès et Thomas</span>
+    </div>
+  </section>
+
+  <section class="day">
+    <h2 data-role="prog-title" data-edit="prog-title">Le jour J</h2>
+    <p class="intro" data-role="prog-intro" data-edit="prog-intro">Rendez-vous à la villa dès 14 h 30. La cérémonie commence à 15 h.</p>
+    <ul class="prog" data-prog>
+      <li><svg><use href="#i-rings"/></svg><b data-t>15 H</b><i data-b>cérémonie</i></li>
+      <li><svg><use href="#i-glass"/></svg><b data-t>16 H 30</b><i data-b>cocktail</i></li>
+      <li><svg><use href="#i-camera"/></svg><b data-t>18 H</b><i data-b>photos</i></li>
+      <li><svg><use href="#i-dinner"/></svg><b data-t>19 H 30</b><i data-b>dîner</i></li>
+      <li><svg><use href="#i-cake"/></svg><b data-t>21 H</b><i data-b>gâteau</i></li>
+      <li><svg><use href="#i-party"/></svg><b data-t>22 H</b><i data-b>soirée</i></li>
+    </ul>
+  </section>
+
+  <hr class="rule">
+
+  <section>
+    <p class="eyebrow">Infos pratiques</p>
+    <ul class="infos">
+      <li><svg><use href="#i-pin"/></svg><div><b>Le lieu</b><p>Villa Serena, Via Regina 12, Tremezzina. Un parking vous attend à l’entrée du domaine.</p><a href="https://maps.google.com/?q=Villa+Serena+Tremezzina" target="_blank" rel="noopener">Itinéraire</a></div></li>
+      <li><svg><use href="#i-dress"/></svg><div><b>Tenue</b><p>Élégante et légère : tons sauge, crème, lin. Pas de blanc, s’il vous plaît.</p></div></li>
+      <li><svg><use href="#i-bed"/></svg><div><b>Dormir sur place</b><p>Quinze chambres sont réservées à l’Albergo del Lago, à 5 minutes à pied. Dites « mariage Inès &amp; Thomas ».</p></div></li>
+      <li><svg><use href="#i-gift"/></svg><div><b>Cadeaux</b><p>Votre présence est le plus beau. Pour celles et ceux qui y tiennent, une cagnotte voyage de noces est ouverte.</p></div></li>
+    </ul>
+  </section>
+
+  <section class="rsvp">
+    <div class="in">
+      <h2 data-role="rsvp-title" data-edit="rsvp-title">RSVP</h2>
+      <p class="lead" data-role="rsvp-lead" data-edit="rsvp-lead">Dites-nous si vous pouvez être des nôtres avant le 1<sup>er</sup> mai.</p>
+      <form class="rsvp" data-key="come">
+        <div class="row">
+          <label class="f">Votre nom <input id="c1-name" name="name" required autocomplete="name"></label>
+          <div class="row two">
+            <label class="f">Personnes <select id="c1-n" name="n"><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
+            <label class="f">Régime <input id="c1-diet" name="diet" placeholder="végétarien, sans porc…"></label>
+          </div>
+          <div class="choice">
+            <label><input type="radio" name="rep" value="oui" checked> Avec joie</label>
+            <label><input type="radio" name="rep" value="non"> Avec regret</label>
+          </div>
+          <label class="f">Un mot pour les mariés <textarea id="c1-msg" name="msg"></textarea></label>
+          <div><button class="btn" type="submit">Envoyer ma réponse</button></div>
+        </div>
+        <div class="ok" role="status"></div>
+      </form>
+    </div>
+    <div class="stripes" aria-hidden="true"></div>
+  </section>
+
+  <section class="album-sec">
+    <p class="eyebrow">L’album des invités</p>
+    <h2 data-role="album-title" data-edit="album-title">Vos photos du jour</h2>
+    <p class="lead" style="margin:12px 0 22px;font-size:14px" data-role="album-lead" data-edit="album-lead">Vous avez pris une belle photo pendant la fête ? Ajoutez-la ici : les mariés la verront, et tout le monde la retrouvera dans l’album.</p>
+    <div class="album-box">
+      <label class="drop" for="c1-files" tabindex="0">
+        <svg><use href="#i-up"/></svg>
+        <span>Glissez vos photos ici ou</span>
+        <span class="btn ghost">Choisir des photos</span>
+        <input id="c1-files" type="file" accept="image/*" multiple>
+      </label>
+      <label class="who">Votre prénom (sous la photo) <input id="c1-who" name="who" placeholder="Tanti Rose"></label>
+      <div class="album-meta"><span><span class="count">3 photos</span> dans l’album</span><span>Les mariés valident avant publication</span></div>
+      <div class="album">
+        <figure class="slot"><img src="img/guest-1.jpg" alt="" onerror="this.remove()"><div class="tag">Cousin Malik</div><figcaption>Cousin Malik</figcaption></figure>
+        <figure class="slot"><img src="img/guest-2.jpg" alt="" onerror="this.remove()"><div class="tag">Tanti Rose</div><figcaption>Tanti Rose</figcaption></figure>
+        <figure class="slot"><img src="img/guest-3.jpg" alt="" onerror="this.remove()"><div class="tag">Papa Jo</div><figcaption>Papa Jo</figcaption></figure>
+      </div>
+      <p class="note">Dans cette maquette, les photos restent sur votre téléphone. Dans Marakaj, elles arrivent dans l’album du couple.</p>
+    </div>
+  </section>
+
+  <footer class="foot">Inès &amp; Thomas · 5 juin 2027 · Carte créée avec Marakaj</footer>
+</article>
+<script src="shared.js"></script>
+</body>
+</html>

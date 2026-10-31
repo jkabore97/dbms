@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Léa & Marc</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Montserrat:wght@300;400;500&family=Mrs+Saint+Delafield&display=swap">
+<link rel="stylesheet" href="shared.css">
+<style>
+/* Carte 2 « Ravello » — black and white editorial: tall serif capitals, a
+   monogram header, a five-step timeline on a black band, underlined fields. */
+:root{
+  --back:#141414;--paper:#f3f1ec;--ink:#151515;--line:#9d9a92;--black:#0f0f0f;
+  --accent:#0f0f0f;--on-accent:#f3f1ec;
+  --slot-a:#8f8f8f;--slot-b:#3c3c3c;--slot-c:#5d5d5d;--slot-ink:#f3f1ec;
+  --display:'Cormorant','Cormorant Garamond','Times New Roman',serif;--script:'Mrs Saint Delafield','Snell Roundhand',cursive;--body:'Montserrat','Helvetica Neue',Arial,sans-serif;
+}
+body{font-weight:300;font-size:14px}
+.top{border-bottom:1px solid var(--line)}
+.top .mono{font-family:var(--display);font-size:22px;letter-spacing:.2em;font-weight:400}
+.top .mono span{opacity:.5;margin:0 4px}
+.hero{display:grid;grid-template-columns:1fr;background:var(--black);color:#f3f1ec}
+@media (min-width:560px){.hero{grid-template-columns:1fr 1fr}}
+.hero .text{padding:46px 24px 40px;display:grid;align-content:center;gap:10px}
+.hero .fam{font-size:10px;letter-spacing:.3em;text-transform:uppercase;opacity:.8}
+.hero h1{font-family:var(--display);font-weight:300;font-size:clamp(54px,14vw,86px);line-height:.9;margin:6px 0 10px;letter-spacing:.02em;text-transform:uppercase}
+.hero h1 em{display:block;font-style:italic;text-transform:none;font-size:.44em;line-height:1;margin:6px 0 4px}
+.hero .meta{font-size:11px;letter-spacing:.26em;text-transform:uppercase;line-height:2}
+.hero .dash{width:36px;height:1px;background:#f3f1ec;opacity:.7;margin:8px 0}
+.hero .pic{position:relative;min-height:380px}
+.hero .pic .slot{position:absolute;inset:0;filter:grayscale(1) contrast(1.1)}
+.hero .pic svg.cypress{z-index:2}
+.hero .pic svg.cypress{position:absolute;left:0;right:0;bottom:0;width:100%;height:46%;opacity:.5}
+.welcome{display:grid;grid-template-columns:1fr;gap:26px;align-items:center}
+@media (min-width:560px){.welcome{grid-template-columns:1fr 1.1fr}}
+.welcome .slot{aspect-ratio:4/5;filter:grayscale(1)}
+.welcome h2{font-size:clamp(32px,7vw,42px);font-weight:300}
+.welcome .lead{margin:14px 0 18px;font-size:13px;line-height:1.8}
+.welcome .sign{font-family:var(--script);font-size:38px;line-height:1}
+.band{background:var(--black);color:#f3f1ec;padding:42px 0 38px}
+.band .head{text-align:center;padding:0 24px}
+.band h2{color:#f3f1ec;font-size:34px;font-weight:300}
+.band .eyebrow{opacity:.7}
+.steps{display:grid;grid-template-columns:repeat(5,minmax(118px,1fr));gap:0;overflow-x:auto;padding:30px 24px 6px;scroll-snap-type:x proximity;margin:0;list-style:none}
+.steps li{position:relative;text-align:center;padding:0 8px;scroll-snap-align:center}
+.steps li::before{content:"";position:absolute;left:0;right:0;top:9px;height:1px;background:rgba(243,241,236,.35)}
+.steps li:first-child::before{left:50%}.steps li:last-child::before{right:50%}
+.steps .dot{position:relative;width:9px;height:9px;border-radius:50%;background:#f3f1ec;margin:5px auto 14px;z-index:1}
+.steps .n{font-family:var(--display);font-size:13px;letter-spacing:.2em;display:block;margin-bottom:12px}
+.steps b{display:block;font-size:10px;letter-spacing:.22em;font-weight:500;text-transform:uppercase;line-height:1.5;margin-bottom:8px}
+.steps p{font-size:11px;line-height:1.7;opacity:.85}
+.band .more{text-align:center;margin-top:20px}
+.band .more a{font-size:10px;letter-spacing:.26em;text-transform:uppercase;text-decoration:none;border-bottom:1px solid rgba(243,241,236,.5);padding-bottom:4px}
+.rsvp{display:grid;grid-template-columns:1fr;gap:0}
+@media (min-width:560px){.rsvp{grid-template-columns:1fr 1.2fr}}
+.rsvp .slot{min-height:280px;filter:grayscale(1)}
+.rsvp .form{padding:40px 24px}
+.rsvp h2{font-size:34px;font-weight:300}
+.rsvp .lead{font-size:12px;margin:12px 0 24px}
+.rsvp label.f input,.rsvp label.f select,.rsvp label.f textarea{border-width:0 0 1px;padding-left:0;padding-right:0}
+.rsvp .choice label{font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+.album-sec{background:#1a1a1a;color:#f3f1ec}
+.album-sec h2{color:#f3f1ec;font-weight:300;font-size:34px}
+.album-sec .eyebrow{opacity:.7}
+.album-sec .drop,.album-sec .who input,.album-sec .ok{border-color:rgba(243,241,236,.45)}
+.album-sec .album{gap:4px}
+.album-sec .album figure{outline:1px solid rgba(243,241,236,.25);outline-offset:-1px}
+.album-sec .album img{filter:grayscale(1)}
+.album-sec .btn.ghost{color:#f3f1ec}
+.foot{letter-spacing:.3em}
+</style>
+</head>
+<body>
+<div class="back"><a href="index.html">← Les cinq cartes</a></div>
+<article class="card" data-card="ravello" data-type="mariage">
+  <header class="top">
+    <div class="mono">L<span>|</span>M</div>
+    <nav><a href="#details">Détails</a><a href="#programme">Programme</a><a href="#rsvp">RSVP</a></nav>
+  </header>
+
+  <div class="hero">
+    <div class="text">
+      <p class="fam" data-role="kicker" data-edit="kicker">Avec leurs familles</p>
+      <h1 data-edit="names">Léa<em>et</em>Marc</h1>
+      <div class="dash"></div>
+      <p class="meta" data-edit="meta">Samedi 18 septembre 2027<br>Domaine des Oliviers · Ravello, Italie</p>
+    </div>
+    <div class="pic">
+      <div class="slot" data-pic="hero"><img src="img/wed-bw-1.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div>
+      <svg class="cypress" viewBox="0 0 320 150" preserveAspectRatio="xMidYMax slice" aria-hidden="true" fill="none" stroke="#f3f1ec" stroke-width="1">
+        <path d="M0 118c40-10 70-6 110-14s70-20 120-18 60 8 90 4"/>
+        <path d="M0 132c50 2 90-8 140-6s100 12 180 4"/>
+        <path d="M40 120c-6-20-4-50 4-70 8 20 10 50 4 70zM58 124c-4-14-3-36 3-50 6 14 7 36 3 50zM250 112c-7-24-5-58 5-80 10 22 12 56 5 80zM272 116c-5-16-3-40 4-56 7 16 8 40 4 56zM292 120c-3-10-2-26 3-36 5 10 6 26 3 36z"/>
+        <path d="M150 112c20-6 36 0 46 10"/>
+      </svg>
+    </div>
+  </div>
+
+  <section class="welcome" id="details">
+    <div class="slot" data-pic="p2"><img src="img/wed-bw-2.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div>
+    <div>
+      <p class="eyebrow" data-edit="welcome-k">Bienvenue</p>
+      <h2 data-edit="welcome-title">Nous avons hâte de célébrer avec vous.</h2>
+      <p class="lead" data-edit="welcome-lead">Un week-end d’amour, de rires et de souvenirs, pour nous dire « oui » face à la mer, dans le plus bel endroit que nous connaissions.</p>
+      <span class="sign" data-edit="sign">Léa + Marc</span>
+    </div>
+  </section>
+
+  <section class="band" id="programme">
+    <div class="head">
+      <p class="eyebrow" data-edit="prog-k">Le week-end</p>
+      <h2 data-role="prog-title" data-edit="prog-title">La célébration</h2>
+    </div>
+    <ol class="steps" data-prog>
+      <li><span class="dot"></span><span class="n">01</span><b data-b>Dîner de bienvenue</b><p data-s>Vendredi 17 sept.<br>19 h 30<br>Terrasse du domaine</p></li>
+      <li><span class="dot"></span><span class="n">02</span><b data-b>Cérémonie</b><p data-s>Samedi 18 sept.<br>16 h 30<br>Belvédère</p></li>
+      <li><span class="dot"></span><span class="n">03</span><b data-b>Cocktail</b><p data-s>Samedi 18 sept.<br>17 h 30<br>Loggia</p></li>
+      <li><span class="dot"></span><span class="n">04</span><b data-b>Réception</b><p data-s>Samedi 18 sept.<br>19 h<br>Grande salle</p></li>
+      <li><span class="dot"></span><span class="n">05</span><b data-b>Brunch d’adieu</b><p data-s>Dimanche 19 sept.<br>11 h<br>Le jardin</p></li>
+    </ol>
+    <p class="more"><a href="https://maps.google.com/?q=Ravello+Italie" target="_blank" rel="noopener">Voir l’itinéraire →</a></p>
+  </section>
+
+  <section>
+    <p class="eyebrow">Bon à savoir</p>
+    <ul class="infos">
+      <li><svg><use href="#i-dress"/></svg><div><b>Tenue</b><p>Black tie. Noir, blanc, ivoire : le reste, c’est pour nous.</p></div></li>
+      <li><svg><use href="#i-car"/></svg><div><b>Navettes</b><p>Depuis Amalfi et Sorrente, des navettes partent à 15 h et reviennent à 1 h.</p></div></li>
+      <li><svg><use href="#i-bed"/></svg><div><b>Hébergement</b><p>Une liste d’hôtels à tarif négocié vous attend. Réservez avant le 1<sup>er</sup> juillet.</p></div></li>
+    </ul>
+  </section>
+
+  <section class="rsvp" id="rsvp" style="padding:0">
+    <div class="slot" data-pic="p3"><img src="img/wed-bw-3.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div>
+    <div class="form">
+      <p class="eyebrow">RSVP</p>
+      <h2 data-role="rsvp-title" data-edit="rsvp-title">Répondez-nous</h2>
+      <p class="lead" data-role="rsvp-lead" data-edit="rsvp-lead">Merci de répondre avant le 1<sup>er</sup> août 2027.</p>
+      <form class="rsvp" data-key="ravello">
+        <div class="row">
+          <label class="f">Nom(s) <input id="c2-name" name="name" required autocomplete="name"></label>
+          <label class="f">Nombre de personnes <select id="c2-n" name="n"><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
+          <div class="choice">
+            <label><input type="radio" name="rep" value="oui" checked> Accepte avec joie</label>
+            <label><input type="radio" name="rep" value="non"> Décline avec regret</label>
+          </div>
+          <label class="f">Un mot <textarea id="c2-msg" name="msg"></textarea></label>
+          <div><button class="btn" type="submit">Envoyer</button></div>
+        </div>
+        <div class="ok" role="status"></div>
+      </form>
+    </div>
+  </section>
+
+  <section class="album-sec">
+    <p class="eyebrow">Vos photos</p>
+    <h2 data-role="album-title" data-edit="album-title">Le week-end par vos yeux</h2>
+    <p class="lead" style="margin:12px 0 22px;font-size:13px;opacity:.85" data-role="album-lead" data-edit="album-lead">Ajoutez les photos que vous prenez pendant le week-end. Elles rejoignent l’album du couple, en noir et blanc comme cette carte.</p>
+    <div class="album-box">
+      <label class="drop" for="c2-files" tabindex="0">
+        <svg><use href="#i-up"/></svg>
+        <span>Glissez vos photos ici ou</span>
+        <span class="btn ghost">Choisir des photos</span>
+        <input id="c2-files" type="file" accept="image/*" multiple>
+      </label>
+      <label class="who">Votre nom (sous la photo) <input id="c2-who" name="who" placeholder="Nora"></label>
+      <div class="album-meta"><span><span class="count">4 photos</span> dans l’album</span><span>Validées par Léa et Marc</span></div>
+      <div class="album">
+        <figure class="slot"><img src="img/guest-2.jpg" alt="" onerror="this.remove()"><div class="tag">Nora</div><figcaption>Nora</figcaption></figure>
+        <figure class="slot"><img src="img/guest-3.jpg" alt="" onerror="this.remove()"><div class="tag">Oncle Sam</div><figcaption>Oncle Sam</figcaption></figure>
+        <figure class="slot"><img src="img/guest-1.jpg" alt="" onerror="this.remove()"><div class="tag">Julie</div><figcaption>Julie</figcaption></figure>
+        <figure class="slot"><img src="img/guest-4.jpg" alt="" onerror="this.remove()"><div class="tag">Les cousins</div><figcaption>Les cousins</figcaption></figure>
+      </div>
+      <p class="note">Maquette : les photos restent sur votre téléphone. Dans Marakaj, elles arrivent dans l’album du couple.</p>
+    </div>
+  </section>
+
+  <footer class="foot">L &amp; M · 18 · 09 · 2027 · Carte créée avec Marakaj</footer>
+</article>
+<script src="shared.js"></script>
+</body>
+</html>

@@ -43,6 +43,7 @@ export '../../features/admin/pro_console_screen.dart';
 export '../../features/admin/settlement_screen.dart';
 export '../../features/admin/featured_screen.dart';
 export '../../features/admin/showcase_screen.dart';
+export '../../features/events/events_screens.dart';
 export '../../features/courier/courier_screen.dart';
 export '../../features/courier/become_courier_screen.dart';
 export '../../features/courier/job_map_screen.dart';

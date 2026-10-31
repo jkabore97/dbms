@@ -122,6 +122,22 @@ async function serve(request, env) {
       return mapsLink(request);
     }
 
+    // An event's card (152): the card's page under /cartes with the
+    // event's words written into it. The preview link's token (« apercu »)
+    // opens it before it is published, and before the platform opens the
+    // module to everyone; the server (event_public) decides either way.
+    const event = url.pathname.match(/^\/e\/([a-z0-9-]+)\/?$/);
+    if (event && request.method === "GET") {
+      return eventPage(request, env, event[1], url.searchParams.get("apercu"));
+    }
+    // The cards' pages are not addresses of their own: only /e/<slug> is.
+    if (/^\/cartes\/[a-z]+\.html$/.test(url.pathname)) {
+      return new Response("Introuvable.", {
+        status: 404,
+        headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
+      });
+    }
+
     const shop = url.pathname.match(/^\/s\/([a-z0-9-]+)\/?$/);
     if (shop && request.method === "GET") {
       try {
@@ -280,6 +296,94 @@ async function rpc(env, fn, params) {
       Authorization: `Bearer ${env.SUPABASE_PUBLISHABLE_KEY}`,
     },
     cf: { cacheTtl: 300, cacheEverything: true },
+  });
+  if (!response.ok) return null;
+  return response.json();
+}
+
+// The twelve cards (app/web/cartes): the event names one, else the first.
+const EVENT_CARDS = new Set([
+  "come", "ravello", "sahel", "jardin", "minuit", "anniv",
+  "bapteme", "naissance", "diplome", "gala", "dot", "hommage",
+]);
+
+// /e/<slug> — the card page with the event in it (152). Never cached:
+// a preview link is private, and the organiser's change shows at once.
+export async function eventPage(request, env, slug, preview) {
+  const gone = () => new Response("Cette carte n'est pas ouverte.", {
+    status: 404,
+    headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
+  });
+  if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) return gone();
+  let data = null;
+  try {
+    data = await rpcFresh(env, "event_public", { p_slug: slug, p_preview: preview || "" });
+  } catch (_) {
+    data = null;
+  }
+  if (!data || typeof data !== "object" || !data.title) return gone();
+
+  const card = EVENT_CARDS.has(data.card) ? data.card : "come";
+  const page = await env.ASSETS.fetch(new Request(new URL(`/cartes/${card}.html`, request.url), request));
+  if (!page.ok) return gone();
+
+  const boot = {
+    slug: data.slug,
+    kind: data.kind,
+    card,
+    title: data.title,
+    starts_at: data.starts_at || null,
+    place: data.place || null,
+    content: data.content && typeof data.content === "object" ? data.content : {},
+    rsvp_on: data.rsvp_on !== false,
+    album_on: data.album_on !== false,
+    published: data.published === true,
+    org_name: data.org_name || "",
+    preview: preview || null,
+    api: { url: env.SUPABASE_URL, key: env.SUPABASE_PUBLISHABLE_KEY },
+  };
+  // Safe inside <script>: no « < » (so no « </script> »), no line separators.
+  const json = JSON.stringify(boot).replace(/</g, "\\u003c").replace(/[\u2028\u2029]/g, "");
+  const title = `${data.title} · Marakaj`;
+  const description = clip([
+    data.place,
+    data.org_name ? `Une invitation de ${data.org_name}` : "Une invitation sur Marakaj",
+  ].filter(Boolean).join(" · "), 160);
+
+  const rewritten = new HTMLRewriter()
+    .on("title", { element(e) { e.setInnerContent(title); } })
+    .on("head", {
+      element(e) {
+        // The page's stylesheet, script and pictures are relative to /cartes/.
+        e.prepend('<base href="/cartes/">', { html: true });
+        e.append(
+          `<meta property="og:title" content="${escapeHtml(data.title)}">` +
+          `<meta property="og:description" content="${escapeHtml(description)}">` +
+          `<meta property="og:url" content="${SITE}/e/${escapeHtml(slug)}">` +
+          `<meta property="og:type" content="website">` +
+          `<meta name="robots" content="noindex">` +
+          `<script>window.CARTE=${json}</script>`,
+          { html: true },
+        );
+      },
+    })
+    .transform(page);
+  const headers = new Headers(rewritten.headers);
+  headers.set("Cache-Control", "no-store");
+  headers.set("Content-Type", "text/html; charset=utf-8");
+  return new Response(rewritten.body, { status: 200, headers });
+}
+
+// Asked fresh every time (a card is private until published, and the
+// organiser expects a change to show at once), unlike the vitrines' rpc.
+async function rpcFresh(env, fn, params) {
+  const response = await fetch(rpcUrl(env, fn, params), {
+    method: "GET",
+    headers: {
+      apikey: env.SUPABASE_PUBLISHABLE_KEY,
+      Authorization: `Bearer ${env.SUPABASE_PUBLISHABLE_KEY}`,
+    },
+    cache: "no-store",
   });
   if (!response.ok) return null;
   return response.json();

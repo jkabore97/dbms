@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Faso Digital, 10 ans</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800;900&family=DM+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="shared.css">
+<style>
+/* Carte 10 « Dix ans » — a company evening: charcoal, electric blue and
+   white, a mono agenda, a wide photo, a registration instead of an RSVP. */
+:root{
+  --back:#0b0c10;--paper:#15171c;--ink:#f4f6fb;--blue:#2f6bff;--grey:#9aa3b5;--line:#2b2f3a;
+  --accent:#2f6bff;--on-accent:#f4f6fb;
+  --slot-a:#2f6bff;--slot-b:#15171c;--slot-c:#2b3650;--slot-ink:#f4f6fb;
+  --display:'Archivo','Helvetica Neue',Arial,sans-serif;--script:'DM Mono',monospace;--body:'Archivo','Helvetica Neue',Arial,sans-serif;
+}
+html{color-scheme:dark}
+.mono{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--grey)}
+.top{border-bottom:1px solid var(--line)}
+.top .logo{font-family:var(--display);font-weight:900;font-size:16px;letter-spacing:.06em}
+.top .logo span{color:var(--blue)}
+.hero{padding:36px 24px 0;position:relative}
+.hero .kicker{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue)}
+.hero .ten{font-family:var(--display);font-weight:900;font-size:clamp(120px,40vw,210px);line-height:.82;letter-spacing:-.06em;margin:8px 0 0;color:transparent;-webkit-text-stroke:2px var(--ink);text-stroke:2px var(--ink)}
+.hero h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,8vw,44px);line-height:1;margin:14px 0 0;letter-spacing:-.01em}
+.hero h1 em{display:block;font-style:normal;font-weight:400;font-size:.5em;color:var(--grey);margin-top:6px}
+.hero .photo{margin:26px -24px 0;aspect-ratio:16/10;position:relative}
+.hero .photo .slot{position:absolute;inset:0}
+.when{display:grid;grid-template-columns:1fr;border-bottom:1px solid var(--line)}
+@media (min-width:480px){.when{grid-template-columns:1fr 1fr 1fr}}
+.when div{padding:18px 24px;border-top:1px solid var(--line);display:grid;gap:4px}
+@media (min-width:480px){.when div+div{border-left:1px solid var(--line)}}
+.when .v{font-family:var(--display);font-weight:600;font-size:18px;line-height:1.2}
+.center{text-align:center;padding:26px 24px 8px}
+.word h2{font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:-.01em}
+.word p{margin-top:14px;font-size:15px;line-height:1.7;color:#d7dce6;max-width:34em}
+.word .sign{display:block;margin-top:16px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue)}
+.pics{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 24px 40px}
+.pics .slot{aspect-ratio:1}
+.agenda{list-style:none;margin:22px 0 0;padding:0;border-top:1px solid var(--line)}
+.agenda li{display:grid;grid-template-columns:70px 30px 1fr;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.agenda .t{font-family:'DM Mono',monospace;font-size:13px;color:var(--blue);font-variant-numeric:tabular-nums}
+.agenda svg{width:26px;height:26px;stroke:var(--ink);fill:none;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round}
+.agenda b{display:block;font-weight:600;font-size:15px}
+.agenda small{font-size:12px;color:var(--grey)}
+.infos svg{color:var(--blue)}
+.infos a{color:var(--blue)}
+.infos p{color:#d7dce6}
+.rsvp{background:var(--blue);color:#f4f6fb}
+.rsvp h2{font-family:var(--display);font-weight:800;font-size:28px;color:#f4f6fb}
+.rsvp .lead{margin:10px 0 22px;font-size:14px;opacity:.95}
+.rsvp label.f input,.rsvp label.f select,.rsvp label.f textarea{border-color:rgba(244,246,251,.55);background:rgba(0,0,0,.12)}
+.rsvp .btn{background:#15171c;border-color:#15171c;color:#f4f6fb}
+.rsvp .ok{border-color:rgba(244,246,251,.55)}
+.rsvp .choice input{accent-color:#15171c}
+.album-sec h2{font-family:var(--display);font-weight:800;font-size:28px}
+.album-sec .eyebrow{color:var(--blue);opacity:1}
+.album-sec .album{gap:4px}
+.foot{border-top:1px solid var(--line);color:var(--grey);opacity:1}
+</style>
+</head>
+<body>
+<div class="back"><a href="index.html" style="color:#f4f6fb">← Les douze cartes</a></div>
+<article class="card" data-card="gala" data-type="gala">
+  <header class="top">
+    <div class="logo" data-edit="logo">FASO<span>DIGITAL</span></div>
+    <nav class="mono"><a href="#programme">Programme</a><a href="#inscription">Inscription</a></nav>
+  </header>
+
+  <div class="hero">
+    <p class="kicker" data-role="kicker" data-edit="kicker">Soirée des 10 ans</p>
+    <div class="ten" data-edit="big">10</div>
+    <h1><span data-edit="names">Faso Digital</span><em data-role="sub" data-edit="sub">vous invite</em></h1>
+    <div class="photo"><div class="slot" data-pic="hero"><img src="img/gala-1.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div></div>
+  </div>
+
+  <div class="when">
+    <div><span class="mono">Date</span><span class="v" data-edit="date">Jeudi 11 mars 2027</span></div>
+    <div><span class="mono">Heure</span><span class="v" data-edit="time">18 h 30 – 1 h</span></div>
+    <div><span class="mono">Lieu</span><span class="v" data-edit="place">Hôtel Bravia, Ouagadougou</span></div>
+  </div>
+  <div class="center">
+    <a class="btn" href="https://calendar.google.com/calendar/render?action=TEMPLATE&amp;text=Les+10+ans+de+Faso+Digital&amp;dates=20270311T183000Z/20270312T010000Z&amp;location=H%C3%B4tel+Bravia%2C+Ouagadougou" target="_blank" rel="noopener">Ajouter à l’agenda</a>
+  </div>
+
+  <section class="word">
+    <p class="mono" style="margin-bottom:10px" data-edit="word-k">Le mot</p>
+    <h2 data-role="word-title" data-edit="word-title">Le mot de la direction</h2>
+    <p data-edit="w1">Dix ans, c’est 1 200 clients, 48 personnes dans l’équipe, et des nuits blanches qu’on ne compte plus. Nous voulons remercier celles et ceux qui ont fait ce chemin avec nous : clients, partenaires, anciens.</p>
+    <p data-edit="w2">Une soirée, pas de slides. Promis.</p>
+    <span class="sign" data-edit="sign">Issouf Kaboré · directeur général</span>
+  </section>
+
+  <div class="pics">
+    <div class="slot" data-pic="p1"><img src="img/gala-2.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div>
+    <div class="slot" data-pic="p2" style="--slot-a:#9aa3b5;--slot-b:#2f6bff"><img src="img/gala-3.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div>
+  </div>
+
+  <section id="programme" style="padding-top:0">
+    <p class="mono" style="margin-bottom:10px" data-edit="prog-k">Agenda</p>
+    <h2 style="font-family:var(--display);font-weight:800;font-size:28px" data-role="prog-title" data-edit="prog-title">Le programme</h2>
+    <p class="lead" style="margin-top:8px;font-size:14px;color:#d7dce6" data-role="prog-intro" data-edit="prog-intro">Accueil à partir de 18 h 30. Les allocutions durent dix minutes chacune.</p>
+    <ol class="agenda" data-prog>
+      <li><span class="t" data-t>18 h 30</span><svg><use href="#i-glass"/></svg><div><b data-b>Accueil</b><small data-s>Cocktail sur la terrasse</small></div></li>
+      <li><span class="t" data-t>19 h 30</span><svg><use href="#i-mic"/></svg><div><b data-b>Allocutions</b><small data-s>Dix ans en dix minutes, puis nos partenaires</small></div></li>
+      <li><span class="t" data-t>20 h 30</span><svg><use href="#i-dinner"/></svg><div><b data-b>Dîner</b><small data-s>Placé, salle Kilimandjaro</small></div></li>
+      <li><span class="t" data-t>22 h</span><svg><use href="#i-music"/></svg><div><b data-b>Concert</b><small data-s>Sur la terrasse</small></div></li>
+      <li><span class="t" data-t>23 h</span><svg><use href="#i-party"/></svg><div><b data-b>Soirée</b><small data-s>Jusqu’à 1 h</small></div></li>
+    </ol>
+  </section>
+
+  <section style="padding-top:0">
+    <p class="mono" style="margin-bottom:14px">Pratique</p>
+    <ul class="infos">
+      <li><svg><use href="#i-pin"/></svg><div><b>Le lieu</b><p>Hôtel Bravia, avenue de l’Indépendance. Voiturier à l’entrée, parking visiteurs derrière l’hôtel.</p><a href="https://maps.google.com/?q=H%C3%B4tel+Bravia+Ouagadougou" target="_blank" rel="noopener">Itinéraire</a></div></li>
+      <li><svg><use href="#i-dress"/></svg><div><b>Tenue</b><p>Cocktail. Une touche de bleu est la bienvenue.</p></div></li>
+      <li><svg><use href="#i-cal"/></svg><div><b>Contact</b><p>Événements : Aïcha Sanou, 70 00 00 00, evenements@fasodigital.bf</p><button class="btn ghost" type="button" data-copy="evenements@fasodigital.bf" style="margin-top:8px;padding:8px 12px">Copier l’adresse</button></div></li>
+    </ul>
+  </section>
+
+  <section class="rsvp" id="inscription">
+    <p class="mono" style="color:#f4f6fb;opacity:.85;margin-bottom:10px" data-edit="rsvp-k">Inscription</p>
+    <h2 data-role="rsvp-title" data-edit="rsvp-title">Confirmez votre participation</h2>
+    <p class="lead" data-role="rsvp-lead" data-edit="rsvp-lead">Avant le 25 février 2027. Les places sont nominatives.</p>
+    <form class="rsvp" data-key="gala">
+      <div class="row">
+        <div class="row two">
+          <label class="f">Nom <input id="c10-name" name="name" required autocomplete="name"></label>
+          <label class="f">Société <input id="c10-org" name="org" autocomplete="organization"></label>
+        </div>
+        <div class="row two">
+          <label class="f">E-mail <input id="c10-mail" name="mail" type="email" autocomplete="email"></label>
+          <label class="f">Personnes <select id="c10-n" name="n"><option>1</option><option>2</option></select></label>
+        </div>
+        <div class="choice">
+          <label><input type="radio" name="rep" value="oui" checked> Je participe</label>
+          <label><input type="radio" name="rep" value="non"> Je ne pourrai pas</label>
+        </div>
+        <div><button class="btn" type="submit">M’inscrire</button></div>
+      </div>
+      <div class="ok" role="status"></div>
+    </form>
+  </section>
+
+  <section class="album-sec">
+    <p class="eyebrow">Photos</p>
+    <h2 data-role="album-title" data-edit="album-title">Photos de la soirée</h2>
+    <p class="lead" style="margin:12px 0 22px;font-size:14px;color:#d7dce6" data-role="album-lead" data-edit="album-lead">Ajoutez vos photos : elles iront dans l’album de la soirée, partagé avec tous les invités.</p>
+    <div class="album-box">
+      <label class="drop" for="c10-files" tabindex="0">
+        <svg><use href="#i-up"/></svg>
+        <span>Glissez vos photos ici ou</span>
+        <span class="btn">Choisir des photos</span>
+        <input id="c10-files" type="file" accept="image/*" multiple>
+      </label>
+      <label class="who">Votre nom <input id="c10-who" name="who" placeholder="A. Sanou"></label>
+      <div class="album-meta"><span><span class="count">3 photos</span> dans l’album</span><span>Validées par l’équipe</span></div>
+      <div class="album">
+        <figure class="slot"><img src="img/guest-4.jpg" alt="" onerror="this.remove()"><div class="tag">L’équipe</div><figcaption>L’équipe</figcaption></figure>
+        <figure class="slot"><img src="img/guest-1.jpg" alt="" onerror="this.remove()"><div class="tag">A. Sanou</div><figcaption>A. Sanou</figcaption></figure>
+        <figure class="slot"><img src="img/guest-3.jpg" alt="" onerror="this.remove()"><div class="tag">Partenaires</div><figcaption>Partenaires</figcaption></figure>
+      </div>
+      <p class="note">Maquette : les photos restent sur votre téléphone. Dans Marakaj, elles arrivent dans l’album de la soirée.</p>
+    </div>
+  </section>
+
+  <footer class="foot">Faso Digital · 10 ans · 11 mars 2027 · Carte créée avec Marakaj</footer>
+</article>
+<script src="shared.js"></script>
+</body>
+</html>

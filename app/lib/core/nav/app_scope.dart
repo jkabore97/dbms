@@ -21,6 +21,7 @@ import '../sync/sync_service.dart';
 import '../tontine/tontine_repository.dart';
 import '../pay/wave_pay.dart';
 import '../../features/pro/store_watcher.dart' show StoreWatcher;
+import '../events/events_repository.dart';
 import '../security/security_repository.dart';
 import '../security/security_settings.dart';
 import 'session.dart';
@@ -64,6 +65,7 @@ class AppScope extends InheritedWidget {
     this.securityApi,
     this.wavePay,
     this.storeWatcher,
+    this.events,
     required super.child,
   });
 
@@ -99,6 +101,10 @@ class AppScope extends InheritedWidget {
   /// The store builds' purchase listener, started with the app (130,
   /// review S3). Null on the web, the GitHub APK and in tests.
   final StoreWatcher? storeWatcher;
+
+  /// Événementiel (152). Null in tests; the routes then build one on the
+  /// auth's client.
+  final EventsRepository? events;
 
   static AppScope of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<AppScope>();
