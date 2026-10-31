@@ -20,7 +20,11 @@
 --      may not see, taken with the token or once public, each check in
 --      French (the name, the answer, the people, the message), refused when
 --      the event closed its answers; the admin reads it, the seller cannot;
---   5. events_options tells the street the switch.
+--   5. events_options tells the street the switch;
+--   0. before all that: the file installs and mints with pgcrypto where
+--      Supabase keeps it — in `extensions`, out of every pinned search path.
+--      The first live run died on « function gen_random_bytes(integer) does
+--      not exist » while this test passed with pgcrypto in public.
 -- Names: « Boutique Mariages d'Awa », « Association des Anciens ». Wrapped
 -- in one transaction rolled back: runs twice the same.
 -- ============================================================
@@ -37,6 +41,29 @@ end $$;
 grant usage on schema public to anon, authenticated;
 -- As on Supabase, where auth.uid() is every role's to call.
 grant usage on schema auth to anon, authenticated;
+
+-- 0. pgcrypto where Supabase keeps it. Rolled back: the extension comes
+--    back to public for every test after this one.
+begin;
+drop extension if exists pgcrypto;
+create schema if not exists extensions;
+create extension pgcrypto schema extensions;
+\i database/migrations/152_events.sql
+insert into orgs (id, name, slug, profile, default_currency) values
+    ('15215215-1111-0000-0000-000000000009', 'Sans pgcrypto', 'sans-pgcrypto-152', 'retail', 'XOF');
+do $$
+declare r events;
+begin
+    assert not exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                       where p.proname = 'gen_random_bytes' and n.nspname = 'public'),
+        'pgcrypto is out of public, as on Supabase';
+    assert event_slug('Inès & Thomas') ~ '^ines-thomas-[0-9a-f]{4}$', 'the address minted without pgcrypto';
+    r := event_create('15215215-1111-0000-0000-000000000009', 'Inès & Thomas', 'mariage', 'come', null, null);
+    assert r.preview_token ~ '^[0-9a-f]{24}$', 'the preview token minted without pgcrypto: ' || r.preview_token;
+    raise notice 'PASS: 152 installs and mints with pgcrypto in `extensions`, as on Supabase';
+end $$;
+rollback;
+
 \i database/migrations/152_events.sql
 \i database/migrations/152_events.sql
 

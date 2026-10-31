@@ -69819,6 +69819,9 @@ notify pgrst, 'reload schema';
 --     (063) and stays so.
 --
 -- Shop, farm, association: the same tables, the same doors. Re-runnable.
+-- No pgcrypto: the random hex (an address's tail, a preview token) comes
+-- from gen_random_uuid(), core Postgres — on Supabase the extension sits in
+-- `extensions`, out of every pinned search path (023).
 -- ============================================================
 
 insert into platform_settings (key, value) values ('events_public', 'false')
@@ -69999,7 +70002,11 @@ as $$
     end;
 $$;
 
--- An address from a title: « Inès & Thomas » → « ines-thomas-k7f2 ».
+-- An address from a title: « Inès & Thomas » → « ines-thomas-k7f2 ». The four
+-- hex characters are gen_random_uuid()'s, core Postgres and CSPRNG-backed:
+-- pgcrypto's gen_random_bytes() lives in Supabase's `extensions` schema, out
+-- of every pinned search path (023 learnt it the hard way; the first live run
+-- of this file learnt it again).
 create or replace function event_slug(p_title text)
 returns text
 language sql
@@ -70011,7 +70018,7 @@ as $$
                           'àâäáãåçéèêëíìîïñóòôöõúùûüýÿœæ',
                           'aaaaaaceeeeiiiinooooouuuuyyoa')),
                 '[^a-z0-9]+', '-', 'g'), '^-+|-+$', '', 'g'), 60), ''), 'evenement')
-           || '-' || substr(encode(gen_random_bytes(3), 'hex'), 1, 4);
+           || '-' || left(replace(gen_random_uuid()::text, '-', ''), 4);
 $$;
 
 create or replace function event_create(
@@ -70027,6 +70034,7 @@ declare
     v_kind  text := coalesce(nullif(trim(p_kind), ''), 'mariage');
     v_card  text := coalesce(nullif(trim(p_card), ''), 'come');
     v_content jsonb;
+    v_hex text;
     v_row events;
     v_try int := 0;
 begin
@@ -70048,9 +70056,14 @@ begin
     end if;
     loop
         begin
+            -- The preview token: 24 of the 30 random hex characters of one
+            -- gen_random_uuid(), the version (13th) and variant (17th) nibbles
+            -- left out as 023 does — no pgcrypto, same on CI and on Supabase.
+            v_hex := replace(gen_random_uuid()::text, '-', '');
+            v_hex := substr(v_hex, 1, 12) || substr(v_hex, 14, 3) || substr(v_hex, 18, 15);
             insert into events (org_id, created_by, kind, card, slug, preview_token, title, starts_at, place, content)
             values (p_org, auth.uid(), v_kind, v_card, event_slug(v_title),
-                    encode(gen_random_bytes(12), 'hex'), v_title, p_starts_at, v_place, v_content)
+                    left(v_hex, 24), v_title, p_starts_at, v_place, v_content)
             returning * into v_row;
             return v_row;
         exception when unique_violation then
