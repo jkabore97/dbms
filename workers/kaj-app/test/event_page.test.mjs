@@ -12,11 +12,14 @@ const PAGE = "<!DOCTYPE html><html><head><title>Marakaj</title></head><body></bo
 const CARD = '<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Inès & Thomas</title>'
   + '<link rel="stylesheet" href="shared.css"></head><body><article class="card"><h1 data-edit="names">Inès</h1>'
   + '<a href="#rsvp">RSVP</a></article><script src="shared.js"></script></body></html>';
+const ANIME = '<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Marakaj Événements</title></head>'
+  + '<body><main id="site"></main><script>var S = {};</script></body></html>';
 const files = {
   "/index.html": [PAGE, "text/html; charset=utf-8"],
   "/cartes/come.html": [CARD, "text/html; charset=utf-8"],
   "/cartes/gala.html": [CARD.replaceAll("Inès", "Gala"), "text/html; charset=utf-8"],
   "/cartes/shared.css": ["body{}", "text/css"],
+  "/evenements/index.html": [ANIME, "text/html; charset=utf-8"],
 };
 const env = {
   SUPABASE_URL: "https://x.supabase.co",
@@ -118,11 +121,45 @@ test("nothing from the server: not found, not cached; no token means an empty p_
   assert.equal(new URL(asked[0]).searchParams.get("p_preview"), "");
 });
 
+test("an animated design (153): the page under /evenements, the layout, the day and hour on the organiser's clock", async () => {
+  answer = {
+    slug: "gala-x", kind: "gala", card: "anime_lotus_p", family: "anime", premium: true, title: "Gala des Anciens",
+    starts_at: "2026-12-12T23:00:00+00:00", tz: "-05:00", place: "Hôtel Bravia", content: { pal: 1 }, rsvp_on: true,
+  };
+  let r = await get("/e/gala-x?apercu=f00dbabe");
+  assert.equal(r.status, 200);
+  let html = await r.text();
+  assert.ok(html.includes("<title>Gala des Anciens · Marakaj</title>"));
+  assert.ok(html.includes('<base href="/evenements/">'), "the animated page's folder");
+  assert.ok(html.includes('<main id="site">'), "the animated page itself");
+  assert.ok(html.includes('"family":"anime"'));
+  assert.ok(html.includes('"premium":true'));
+  assert.ok(html.includes('"lay":"lotus_p"'), "the layout the page draws");
+  assert.ok(html.includes('"date":"2026-12-12"') && html.includes('"time":"18:00"'), "23 h UTC is 18 h at -05:00");
+  // A zone's name: the same hour in New York that December day.
+  answer = { ...answer, tz: "America/New_York" };
+  html = await (await get("/e/gala-x")).text();
+  assert.ok(html.includes('"time":"18:00"'), "America/New_York in December is -05:00");
+  // Ouagadougou by default, and when the zone is unknown.
+  answer = { ...answer, tz: "Mars/Olympus" };
+  html = await (await get("/e/gala-x")).text();
+  assert.ok(html.includes('"time":"23:00"'));
+  answer = { ...answer, tz: null, starts_at: null };
+  html = await (await get("/e/gala-x")).text();
+  assert.ok(html.includes('"date":null') && html.includes('"time":null'), "no day set: nothing composed");
+  // A family said animated with a key that is not one: the first layout.
+  answer = { ...answer, card: "../x", family: "anime" };
+  html = await (await get("/e/gala-x")).text();
+  assert.ok(html.includes('"lay":"lettre"'));
+});
+
 test("the cards' pages are not addresses of their own", async () => {
   const r = await get("/cartes/come.html");
   assert.equal(r.status, 404);
   const css = await get("/cartes/shared.css");
   assert.equal(css.status, 200, "their files are");
+  const anime = await get("/evenements/index.html");
+  assert.equal(anime.status, 404, "the animated page neither");
 });
 
 test("without the project's address, nothing", async () => {

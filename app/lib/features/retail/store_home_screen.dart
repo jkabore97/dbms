@@ -9,7 +9,6 @@ import '../help/help_button.dart';
 import '../home/vitrine_button.dart';
 import '../../core/format/money.dart';
 import '../../core/nav/app_scope.dart';
-import '../events/events_access.dart';
 import '../../core/notify/alert_tone.dart';
 import '../../core/orders/order_alert.dart';
 
@@ -941,16 +940,6 @@ class _StoreHomeScreenState extends State<StoreHomeScreen>
             route: 'administration',
             group: PlusGroup.team,
             onTap: () => _openThenReload('administration'),
-          ),
-        // Événementiel (152): the business's cards for its guests — for
-        // Marakaj's own admins until the platform opens it to everyone.
-        if (widget.org.isAdmin && eventsShownFor(context))
-          HomeDestination(
-            icon: Icons.celebration_outlined,
-            label: context.tr('Événements'),
-            route: 'evenements',
-            group: PlusGroup.vitrine,
-            onTap: () => context.push(Routes.inside(widget.org.id, 'evenements')),
           ),
         // MOI: the person's own, and the door out to the street — said in
         // words: going there is a choice, never something to fall into.

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/auth/models.dart';
+import '../../core/events/events_repository.dart';
 import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
 import '../../core/notify/notifications_repository.dart';
@@ -50,6 +51,7 @@ class BusinessShell extends StatelessWidget {
         retail: scope.retail,
         staff: scope.staff,
         capture: scope.capture,
+        events: scope.events ?? EventsRepository(scope.auth.client),
         // Same live-session rule as the reports: the history is paged by the
         // database, so it is offered only while there is a session to page
         // with.

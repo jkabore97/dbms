@@ -72,6 +72,10 @@ class OrgSummary {
   /// delivery, no cauris.
   bool get isAssociation => profile == 'association' || profile == 'church';
 
+  /// An Événementiel (153): the fourth kind — its cards for its guests,
+  /// their answers; no stock, no till, no vitrine.
+  bool get isEvents => profile == 'events';
+
   bool get isObserverOnly =>
       roles.isNotEmpty && roles.every((r) => r == 'observer');
 

@@ -205,6 +205,7 @@ class _BusinessRow extends StatelessWidget {
     'church': 'Association',
     'farm': 'Ferme',
     'retail': 'Commerce',
+    'events': 'Événementiel',
     'generic': 'Autre',
   };
 

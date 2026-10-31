@@ -37,7 +37,6 @@ import '../money/income_flow.dart';
 import 'record_transfer_sheet.dart';
 import '../../core/nav/router.dart';
 import '../../core/nav/app_scope.dart';
-import '../events/events_access.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
@@ -661,17 +660,6 @@ class _ChurchHomeScreenState extends State<ChurchHomeScreen>
               route: 'administration',
               group: PlusGroup.team,
               onTap: () => _open('administration'),
-            ),
-          // Événementiel (152): the association's cards (a gala, an
-          // assembly, a memorial) — Marakaj's own admins' until the
-          // platform opens it.
-          if (org.isAdmin && eventsShownFor(context))
-            HomeDestination(
-              icon: Icons.celebration_outlined,
-              label: context.tr('Événements'),
-              route: 'evenements',
-              group: PlusGroup.vitrine,
-              onTap: () => _open('evenements'),
             ),
           // MOI.
           HomeDestination(

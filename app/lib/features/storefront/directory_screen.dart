@@ -655,13 +655,14 @@ class _AccountCorner extends StatelessWidget {
             final home = session.orgById(open);
             final kinds = {
               for (final o in [if (home != null) home else ...session.orgs])
-                o.isAssociation ? 'association' : o.profile == 'farm' ? 'farm' : 'retail',
+                o.isAssociation ? 'association' : o.isEvents ? 'events' : o.profile == 'farm' ? 'farm' : 'retail',
             };
             final business = kinds.length > 1
                 ? context.tr('Mes activités')
                 : switch (kinds.firstOrNull) {
                     'farm' => context.tr('Ma ferme'),
                     'association' => context.tr('Mon association'),
+                    'events' => context.tr('Mon événementiel'),
                     _ => context.tr('Ma boutique'),
                   };
             final narrow = MediaQuery.sizeOf(context).width < 360;

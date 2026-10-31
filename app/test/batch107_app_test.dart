@@ -197,7 +197,8 @@ void main() {
       await settle(tester);
       expect(onboarding.savedForm, {
         'welcome': 'Bonjour',
-        'kinds': ['farm', 'retail'],
+        // Four kinds since 153 (the Événementiel): three of them kept as a list.
+        'kinds': ['farm', 'retail', 'events'],
         'questions': [
           {'label': 'Votre ville', 'required': true, 'type': 'text'},
         ],

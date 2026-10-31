@@ -339,6 +339,8 @@ KajPalette paletteFor(String? profile, {String? theme}) =>
     switch (profile) {
       'farm' => caramelPalette,
       'church' || 'association' => graphitePalette,
+      // An Événementiel (153): plum, the evening's colour.
+      'events' => prunePalette,
       _ => kajPalette,
     };
 

@@ -8739,4 +8739,58 @@ const enStrings = <String, String>{
       'Dowry',
   'Lieu':
       'Place',
+  'Événementiels':
+      'Event businesses',
+  'Mon événementiel':
+      'My events business',
+  'La couleur des événementiels':
+      'The colour of events businesses',
+  'Un mariage, une fête, un gala : la carte d’invitation en ligne, les réponses des invités.':
+      'A wedding, a party, a gala: the online invitation card, the guests’ answers.',
+  'Le nom de votre événementiel':
+      'The name of your events business',
+  'Ex. : Awa Événements, Les Noces d’Inès et Thomas, Les 30 ans de Rokia':
+      'E.g. Awa Events, Inès & Thomas’ Wedding, Rokia’s 30th',
+  'Quels événements ?':
+      'Which events?',
+  'Ex. : Mariages, baptêmes, anniversaires':
+      'E.g. Weddings, baptisms, birthdays',
+  'Où se trouve votre activité ?':
+      'Where is your business?',
+  'Le numéro de votre activité':
+      'Your business’s number',
+  'Vous en êtes le propriétaire tout de suite. Ensuite : votre première carte, envoyée à vos invités.':
+      'You own it right away. Then: your first card, sent to your guests.',
+  'Mon mariage, mes fiançailles':
+      'My wedding, my engagement',
+  'Une fête de famille':
+      'A family celebration',
+  'Organisateur d’événements':
+      'Event planner',
+  'Événements d’entreprise':
+      'Corporate events',
+  'Le modèle de « {title} »':
+      'The design for “{title}”',
+  'Classique':
+      'Classic',
+  'Animé':
+      'Animated',
+  'Modèles':
+      'Designs',
+  'Choisir le modèle':
+      'Choose the design',
+  'Premium':
+      'Premium',
+  'Modèle : {name}':
+      'Design: {name}',
+  'modèle':
+      'design',
+  'Cartes':
+      'Cards',
+  'Invités':
+      'Guests',
+  'Aucune réponse pour le moment':
+      'No answers yet',
+  'Les réponses de toutes vos cartes, les plus récentes d’abord.':
+      'The answers from all your cards, newest first.',
 };

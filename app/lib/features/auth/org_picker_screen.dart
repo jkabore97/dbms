@@ -248,7 +248,9 @@ class _OrgPickerScreenState extends State<OrgPickerScreen> {
     ];
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      // The last business clear of the phone's bar at the foot (the
+      // owner's screenshot: its line cut under the edge).
+      padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.viewPaddingOf(context).bottom),
       children: [
         ...header,
         if (shown.isEmpty)
@@ -409,21 +411,24 @@ String _fold(String text) {
   return out.toString();
 }
 
-/// The three kinds of business (100): 'church' is the association's older
-/// name; anything unknown is 'other'.
+/// The four kinds of business (100, 153): 'church' is the association's
+/// older name; anything unknown is 'other'.
 String kindOfProfile(String profile) => switch (profile) {
       'church' || 'association' => 'association',
       'farm' => 'farm',
       'retail' => 'retail',
+      'events' => 'events',
       _ => 'other',
     };
 
 /// Each kind's colour, from the brand palette: caramel for a shop, green for
-/// a farm, brown for an association, graphite for anything else.
+/// a farm, brown for an association, espresso for an Événementiel, graphite
+/// for anything else.
 Color kindColour(String kind) => switch (kindOfProfile(kind)) {
       'retail' => maraCaramel,
       'farm' => maraGreen,
       'association' => maraBrown,
+      'events' => maraEspresso,
       _ => maraDeep,
     };
 
@@ -432,12 +437,14 @@ Color kindInk(String kind) =>
     kindOfProfile(kind) == 'retail' ? maraBlack : maraPaper;
 
 /// A business's kind in one word, as the chips say it: Boutique, Ferme,
-/// Association (100) — on the picker's cards and in the console.
+/// Association, Événementiel (100, 153) — on the picker's cards and in the
+/// console.
 String kindSingular(BuildContext context, String profile) =>
     switch (kindOfProfile(profile)) {
       'retail' => context.tr('Boutique'),
       'farm' => context.tr('Ferme'),
       'association' => context.tr('Association'),
+      'events' => context.tr('Événementiel'),
       _ => context.tr('Entreprise'),
     };
 
@@ -447,6 +454,7 @@ String kindPlural(BuildContext context, String kind) =>
       'retail' => context.tr('Boutiques'),
       'farm' => context.tr('Fermes'),
       'association' => context.tr('Associations'),
+      'events' => context.tr('Événementiels'),
       _ => context.tr('Autres'),
     };
 
@@ -544,6 +552,8 @@ IconData iconForProfile(String profile) {
       return Icons.agriculture_outlined;
     case 'retail':
       return Icons.storefront_outlined;
+    case 'events':
+      return Icons.celebration_outlined;
     default:
       return Icons.business_outlined;
   }
@@ -561,6 +571,8 @@ String localizedProfile(BuildContext context, String profile) {
       return strings.farm;
     case 'retail':
       return strings.shop;
+    case 'events':
+      return context.tr('Événementiel');
     default:
       return strings.business;
   }
@@ -575,6 +587,8 @@ String labelForProfile(String profile) {
       return 'Ferme';
     case 'retail':
       return 'Commerce';
+    case 'events':
+      return 'Événementiel';
     default:
       return 'Activité';
   }
