@@ -34,7 +34,6 @@ import 'package:kaj_app/core/terms/terms.dart';
 import 'package:kaj_app/features/account/legal_screens.dart';
 import 'package:kaj_app/features/account/support.dart';
 import 'package:kaj_app/features/account/terms_gate.dart';
-import 'package:kaj_app/features/admin/create_business_screen.dart';
 import 'package:kaj_app/features/admin/platform_people_screen.dart';
 import 'package:kaj_app/features/admin/terms_admin_screen.dart';
 import 'package:kaj_app/features/courier/courier_words.dart';
@@ -717,25 +716,6 @@ void main() {
         expect(api.accepted, isEmpty);
       }
     });
-
-    testWidgets('the platform\'s « Nouvelle activité » (create_org) asks its owner too', (tester) async {
-      tall(tester);
-      final api = FakeTerms(serverState(gate: const [], accepted: const {'terms': 2, 'privacy': 2}));
-      final c = await tracked(tester, api);
-      final admin = _Admin(api);
-      await tester.pumpWidget(MaterialApp(home: CreateBusinessScreen(admin: admin, terms: c)));
-      await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextField).first, 'Ferme Horizon Vert');
-      await tester.pump();
-      final create = find.widgetWithText(FilledButton, 'Créer l\'activité');
-      await tester.scrollUntilVisible(create, 200, scrollable: find.byType(Scrollable).first);
-      expect(tester.widget<FilledButton>(create).onPressed, isNull);
-      await tester.tap(find.byKey(const Key('seller-accept')));
-      await tester.pump();
-      await tester.tap(create);
-      await tester.pumpAndSettle();
-      expect(admin.log, ['seller:1', 'create_org ferme-horizon-vert']);
-    });
   });
 
   group('the courier\'s charter, version 2', () {
@@ -1181,22 +1161,3 @@ class _Drafts implements DraftStore {
   Future<void> write(BusinessDraft? draft) async => kept = draft;
 }
 
-class _Admin extends AdminRepository {
-  _Admin(this.terms) : super(null);
-
-  final FakeTerms terms;
-  final log = <String>[];
-
-  @override
-  Future<String> createOrg({
-    required String name,
-    required String slug,
-    required String profile,
-    required String currency,
-  }) async {
-    log
-      ..addAll(terms.accepted)
-      ..add('create_org $slug');
-    return 'org-1';
-  }
-}

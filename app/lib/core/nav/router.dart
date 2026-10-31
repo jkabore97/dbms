@@ -791,7 +791,7 @@ GoRouter buildRouter(SessionController session) {
                   // The bootstrap case: the person who runs the platform,
                   // before any business exists.
                   onCreateBusiness: scope.session.isPlatformAdmin
-                      ? () => context.push(Routes.newBusiness)
+                      ? () => context.push(Routes.createBusiness)
                       : null,
                 );
               }
@@ -835,7 +835,7 @@ GoRouter buildRouter(SessionController session) {
               onSignOut: scope.session.signOut,
               onCreateBusiness:
                   scope.session.isPlatformAdmin && scope.auth.hasLiveSession
-                      ? () => context.push(Routes.newBusiness)
+                      ? () => context.push(Routes.createBusiness)
                       : null,
               // « + Nouvelle activité » (111): everybody else creates their own.
               onCreateMine:
@@ -860,14 +860,13 @@ GoRouter buildRouter(SessionController session) {
         ),
       ),
 
-      /// Creating a business, then opening it. The new org is opened directly
-      /// rather than left to the usual count-based routing: a platform admin's
-      /// list is every business there is, so making one would otherwise drop
-      /// them on the picker to hunt for what they just made.
+      /// The platform admin's old « Nouvelle activité » (its form retired in
+      /// 154b): the address leads to « Créer mon activité », the one way to
+      /// make a business — the server lets a platform admin through its
+      /// member checks, and the new business opens itself once made.
       GoRoute(
         path: Routes.newBusiness,
-        builder: (context, _) =>
-            biz.CreateBusinessScreen(admin: AppScope.of(context).admin),
+        redirect: (_, _) => Routes.createBusiness,
       ),
 
       /// Creating one's own business, at once (111): no request to approve.

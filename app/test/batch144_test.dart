@@ -42,7 +42,6 @@ import 'package:kaj_app/core/admin/admin_repository.dart';
 import 'package:kaj_app/core/courier/courier_repository.dart';
 import 'package:kaj_app/core/notify/notifications_repository.dart';
 import 'package:kaj_app/features/notify/notification_text.dart';
-import 'package:kaj_app/features/admin/create_business_screen.dart';
 import 'package:kaj_app/features/admin/vitrine_plus_card.dart';
 import 'package:kaj_app/features/courier/courier_screen.dart' show earningsByCurrency;
 import 'package:kaj_app/core/auth/auth_repository.dart';
@@ -80,22 +79,6 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 
 /// The platform admin's « Nouvelle entreprise » server: what it creates.
-class _CreateAdmin extends AdminRepository {
-  _CreateAdmin() : super(null);
-  String? currency;
-
-  @override
-  Future<String> createOrg({
-    required String name,
-    required String slug,
-    required String profile,
-    required String currency,
-  }) async {
-    this.currency = currency;
-    return 'o-new';
-  }
-}
-
 /// « Créer mon activité »'s server: what it is asked to create.
 class _Api implements BusinessCreation {
   Map<String, Object?>? sent;
@@ -912,28 +895,6 @@ void main() {
       }
     });
 
-    testWidgets('« Nouvelle entreprise »: the same picker, the country\'s money first, sent as chosen',
-        (tester) async {
-      await _size(tester, 390, 1400);
-      final admin = _CreateAdmin();
-      await tester.pumpWidget(_app(CreateBusinessScreen(admin: admin)));
-      await _settle(tester);
-      // No signed-in phone here: the device's region (the test's) decides.
-      final region = WidgetsBinding.instance.platformDispatcher.locale.countryCode;
-      final want = currencyOfCountry(townCountry(null));
-      expect(find.byKey(const Key('create-business-currency')), findsOneWidget);
-      expect(find.text('$want — ${currencyName(want, 'fr')}'), findsOneWidget, reason: 'region $region');
-      await tester.enterText(find.widgetWithText(TextField, 'Nom de l\'activité'), 'Le Comptoir Doré');
-      await tester.pump();
-      await tester.tap(find.byKey(const Key('create-business-currency')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('XAF — Franc CFA (CEMAC)').last);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Créer l\'activité'));
-      await tester.pumpAndSettle();
-      expect(admin.currency, 'XAF');
-    });
-
     testWidgets('the vitrine preview in the shop\'s money: « 12,50 EUR », not « 13 F »', (tester) async {
       await _size(tester, 420, 900);
       await tester.pumpWidget(_app(const Scaffold(
@@ -1075,17 +1036,6 @@ void main() {
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox());
 
-        // The platform admin's « Nouvelle entreprise », its picker open, and
-        // a vitrine preview in euros (the supervision's).
-        await tester.pumpWidget(_app(CreateBusinessScreen(key: UniqueKey(), admin: _CreateAdmin()), lang: lang));
-        await _settle(tester);
-        expect(tester.takeException(), isNull);
-        await tester.scrollUntilVisible(find.byKey(const Key('create-business-currency')), 120,
-            scrollable: find.byType(Scrollable).first);
-        await tester.tap(find.byKey(const Key('create-business-currency')));
-        await tester.pumpAndSettle();
-        expect(tester.takeException(), isNull, reason: 'the open list');
-        await tester.pumpWidget(const SizedBox());
         await tester.pumpWidget(_app(
             const Scaffold(
                 body: SingleChildScrollView(
@@ -1207,11 +1157,6 @@ void main() {
             await tester.pumpAndSettle();
           }
           await shoot(tester, '${p}06_rue_monnaies');
-
-          // The platform admin's « Nouvelle entreprise », its picker.
-          await tester.pumpWidget(_app(CreateBusinessScreen(key: UniqueKey(), admin: _CreateAdmin()), lang: lang));
-          await _settle(tester);
-          await shoot(tester, '${p}07_nouvelle_entreprise');
 
           // A Paris shop's vitrine preview, in euros.
           await tester.pumpWidget(_app(

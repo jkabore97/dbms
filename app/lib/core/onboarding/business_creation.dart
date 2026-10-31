@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../db/local_db.dart';
 import '../format/currencies.dart';
+import '../l10n/tr.dart' show translate, trCurrent;
 import '../phone/country_codes.dart';
 import 'application_form.dart';
 
@@ -381,4 +382,41 @@ _Region _regionOf(String iso) {
     return _Region.asia;
   }
   return _Region.africa;
+}
+
+// ------------------------------------------------------------------
+// The address (slug) of a business — once CreateBusinessScreen's, the
+// platform admin's old form, retired in batch 154b: everybody, the
+// platform admin too, creates a business through « Créer mon activité ».
+// ------------------------------------------------------------------
+
+/// Lowercases, strips accents, and hyphenates — the name as typed turned
+/// into something that can live in a hostname. Pure, so the rules are
+/// testable without a server: "Église d'Israël" has to survive the trip.
+String slugify(String name) {
+  const accents = 'àâäáãåçéèêëíìîïñóòôöõúùûüýÿ';
+  const plain = 'aaaaaaceeeeiiiinooooouuuuyy';
+  final buffer = StringBuffer();
+  for (final rune in name.toLowerCase().trim().runes) {
+    final ch = String.fromCharCode(rune);
+    final i = accents.indexOf(ch);
+    buffer.write(i >= 0 ? plain[i] : ch);
+  }
+  return buffer
+      .toString()
+      .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+      .replaceAll(RegExp(r'^-+|-+$'), '');
+}
+
+/// Null when the slug is usable, otherwise why it is not.
+String? slugProblem(String slug) {
+  if (slug.length < 3) return translate(trCurrent, 'Au moins 3 caractères.');
+  if (slug.length > 40) return translate(trCurrent, 'Au plus 40 caractères.');
+  if (!RegExp(r'^[a-z0-9-]+$').hasMatch(slug)) {
+    return translate(trCurrent, 'Lettres sans accent, chiffres et tirets uniquement.');
+  }
+  if (slug.startsWith('-') || slug.endsWith('-')) {
+    return translate(trCurrent, 'Ne peut pas commencer ni finir par un tiret.');
+  }
+  return null;
 }
