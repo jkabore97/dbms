@@ -41,6 +41,11 @@ html.server .rsvp-closed{text-align:center;font-size:15px;opacity:.85;max-width:
 /* The Lettre's frame lay over its RSVP buttons and took their taps (found
    by the browser check): decorative, it lets them through now. */
 .L-lettre .frame svg.fr{pointer-events:none}
+/* the organiser's editor (154) */
+.pill button.save{background:#1a140c;color:#fff}
+.pill button.save:disabled{opacity:.6}
+.ui.toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:70;max-width:calc(100% - 32px);padding:10px 16px;border-radius:999px;background:var(--ui-fg);color:var(--ui-bg);font:600 13px var(--f-ui);text-align:center;opacity:0;transition:opacity .3s;pointer-events:none}
+.ui.toast.on{opacity:1}
 
 /* ============ 1. LA LETTRE ============ */
 .L-lettre{font-family:"Cormorant Garamond",Georgia,serif}
@@ -788,7 +793,9 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
 <div class="ui pill">
   <button type="button" id="openTpl" class="acc">Modèles</button>
   <button type="button" id="openInfo">Mes infos</button>
+  <button type="button" id="saveBtn" class="save" hidden>Enregistrer</button>
 </div>
+<div class="ui toast" id="toast" role="status"></div>
 <div class="scrim" id="scrim"></div>
 <div class="ui sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
   <div class="sheethead">
@@ -868,7 +875,6 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
   // own, no editor, the answers sent to the server.
   var SERVER = (window.CARTE && typeof window.CARTE === 'object' && window.CARTE.slug) ? window.CARTE : null;
   if (SERVER) {
-    document.documentElement.classList.add('server');
     (function (c) {
       var kinds = {mariage: 'mariage', dot: 'dot', anniversaire: 'anniv', bapteme: 'bapteme', naissance: 'naissance',
                    diplome: 'diplome', gala: 'soiree', inauguration: 'entreprise', retraite: 'retraite', hommage: 'hommage'};
@@ -885,11 +891,23 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
       var ct = c.content && typeof c.content === 'object' ? c.content : {};
       S.pal = typeof ct.pal === 'number' ? ct.pal : 0;
       S.font = typeof ct.font === 'string' ? ct.font : '';
+      // The organiser's own words (154) win over the event's row.
+      ['type', 'custom', 'a', 'b'].forEach(function (k) { if (typeof ct[k] === 'string' && ct[k]) S[k] = ct[k]; });
     })(SERVER);
   } else {
     try { var sv = JSON.parse(localStorage.getItem('mk-evt2') || 'null'); if (sv) for (var k in sv) S[k] = sv[k]; } catch (e) {}
   }
-  function keep() { if (SERVER) return; try { localStorage.setItem('mk-evt2', JSON.stringify(S)); } catch (e) {} }
+  // The organiser (154): the server said « editor » for the token in the
+  // address. The editor shows (colours and writing of the chosen model,
+  // the words, the photos), the photos go to the uploads Worker, and
+  // « Enregistrer » sends the card to the server.
+  var ORG = SERVER && SERVER.editor === true && SERVER.edit ? SERVER : null, dirty = false;
+  if (SERVER) document.documentElement.classList.add(ORG ? 'organiser' : 'server');
+  function keep() {
+    if (ORG) { dirty = true; var sb = document.getElementById('saveBtn'); if (sb) { sb.textContent = 'Enregistrer'; sb.disabled = false; } return; }
+    if (SERVER) return;
+    try { localStorage.setItem('mk-evt2', JSON.stringify(S)); } catch (e) {}
+  }
 
   // bg, ink, accent, soft, deep, premium
   var LAYS = [
@@ -3349,7 +3367,16 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
 
   // ================= photos =================
   // Kept in this phone's memory only, for the prototype; the real version stores them with the event.
-  var PH = [], SL = {}, curSlot = null;
+  var PH = [], KEYS = [], SL = {}, curSlot = null;
+  // The card's pictures (154): content's p:<slot> = {key}, read by key.
+  if (SERVER && SERVER.uploads) (function (ct) {
+    Object.keys(ct).forEach(function (k) {
+      if (k.indexOf('p:') !== 0 || !ct[k] || typeof ct[k].key !== 'string') return;
+      var i = KEYS.indexOf(ct[k].key);
+      if (i < 0) { KEYS.push(ct[k].key); PH.push(SERVER.uploads + '/v1/public/objects/' + encodeURIComponent(ct[k].key)); i = KEYS.length - 1; }
+      SL[k.slice(2)] = i;
+    });
+  })(SERVER.content && typeof SERVER.content === 'object' ? SERVER.content : {});
   function slotIds() { return Array.prototype.map.call(document.querySelectorAll('#site [data-slot]'), function (el) { return el.dataset.slot; }); }
   function applySlots() {
     Array.prototype.forEach.call(document.querySelectorAll('#site [data-slot]'), function (el) {
@@ -3357,7 +3384,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
       el.classList.toggle('has', !!u);
       if (el.classList.contains('slot-bg')) el.style.setProperty('--ph', u ? 'url(' + u + ')' : 'none');
       else el.style.backgroundImage = u ? 'url(' + u + ')' : '';
-      if (SERVER) { el.onclick = null; el.onkeydown = null; el.removeAttribute('role'); el.removeAttribute('tabindex'); el.removeAttribute('aria-label'); return; }
+      if (SERVER && !ORG) { el.onclick = null; el.onkeydown = null; el.removeAttribute('role'); el.removeAttribute('tabindex'); el.removeAttribute('aria-label'); return; }
       el.onclick = function (e) { if (e.target.closest('a,input,select,form')) return; openSlot(el.dataset.slot); };
       el.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSlot(el.dataset.slot); } };
     });
@@ -3377,6 +3404,20 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
   document.getElementById('fUp').addEventListener('change', function (e) {
     var files = Array.prototype.slice.call(e.target.files || []);
     Promise.all(files.map(shrink)).then(function (urls) {
+      if (ORG) {
+        // The organiser's: each one goes to the uploads Worker, the card
+        // keeps the key the server minted for it.
+        if (!ORG.uploads) { e.target.value = ''; say('Les photos ne peuvent pas être envoyées d\'ici pour le moment.'); return; }
+        var first = PH.length;
+        say('Envoi…');
+        return Promise.all(urls.filter(Boolean).map(function (u) { return fetch(u).then(function (r) { return r.blob(); }).then(uploadPic); })).then(function (res) {
+          res.forEach(function (j) { KEYS.push(j.key); PH.push(ORG.uploads + '/v1/public/objects/' + encodeURIComponent(j.key)); });
+          e.target.value = '';
+          if (curSlot && res.length) SL[curSlot] = first;
+          autoAssign(); applySlots(); drawPh(); if (curSlot) { drawSlot(); }
+          keep(); say(res.length > 1 ? res.length + ' photos ajoutées. Touchez « Enregistrer » quand la carte vous plaît.' : 'Photo ajoutée. Touchez « Enregistrer » quand la carte vous plaît.');
+        }, function (err) { e.target.value = ''; say(err && err.message ? err.message : 'La photo n\'est pas passée. Réessayez.'); });
+      }
       urls.forEach(function (u) { if (u) PH.push(u); });
       e.target.value = '';
       if (curSlot && urls[0]) SL[curSlot] = PH.length - urls.filter(Boolean).length;
@@ -3387,7 +3428,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
   function drawPh() {
     document.getElementById('phList').innerHTML = PH.map(function (u, i) { return '<button type="button" style="background-image:url(' + u + ')" data-i="' + i + '" aria-label="Retirer cette photo"><span class="x">×</span></button>'; }).join('') + addTile();
     Array.prototype.forEach.call(document.querySelectorAll('#phList button'), function (b) {
-      b.onclick = function () { var i = +b.dataset.i; PH.splice(i, 1); Object.keys(SL).forEach(function (k) { if (SL[k] === i) delete SL[k]; else if (SL[k] > i) SL[k]--; }); applySlots(); drawPh(); };
+      b.onclick = function () { var i = +b.dataset.i; PH.splice(i, 1); KEYS.splice(i, 1); Object.keys(SL).forEach(function (k) { if (SL[k] === i) delete SL[k]; else if (SL[k] > i) SL[k]--; }); applySlots(); drawPh(); keep(); };
     });
   }
   function openSlot(id) { curSlot = id; drawSlot(); open('slot'); }
@@ -3396,7 +3437,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
     document.getElementById('slotList').innerHTML = '<button type="button" data-i="-1" aria-pressed="' + (cur == null) + '">Sans photo</button>' +
       PH.map(function (u, i) { return '<button type="button" style="background-image:url(' + u + ')" data-i="' + i + '" aria-pressed="' + (cur === i) + '" aria-label="Photo ' + (i + 1) + '"></button>'; }).join('') + addTile();
     Array.prototype.forEach.call(document.querySelectorAll('#slotList button'), function (b) {
-      b.onclick = function () { var i = +b.dataset.i; if (i < 0) delete SL[curSlot]; else SL[curSlot] = i; applySlots(); close(); };
+      b.onclick = function () { var i = +b.dataset.i; if (i < 0) delete SL[curSlot]; else SL[curSlot] = i; applySlots(); close(); keep(); };
     });
   }
   function fitAll() {
@@ -3411,7 +3452,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
 
   function drawPicker() {
     var L = lay();
-    document.getElementById('lays').innerHTML = LAYS.map(function (l) {
+    document.getElementById('lays').innerHTML = (ORG ? [L] : LAYS).map(function (l) {
       var on = l.id === S.lay, h = '<div class="lay" data-l="' + l.id + '" aria-pressed="' + on + '"><button type="button" class="lay-head" data-pick="' + l.id + '"><div class="mini ph" style="background-image:url(' + l.thumb + ')"></div><div class="meta"><b>' + l.name + (l.isPrem ? ' <span class="tag prem">Premium</span>' : l.isNew ? ' <span class="tag">Nouveau</span>' : '') + '</b><span>' + l.what + '</span>' + (on ? '<em>Choisi</em>' : '') + '</div></button>';
       if (on) {
         h += '<div class="lay-set"><div class="lab">Couleurs</div><div class="pals">' + l.pals.map(function (p, i) { return '<button type="button" class="pal" data-p="' + i + '" aria-pressed="' + (i === S.pal) + '"><i style="background:linear-gradient(135deg,' + p[1] + ' 50%,' + p[3] + ' 50%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)"></i>' + p[0] + '</button>'; }).join('') + '</div>' +
@@ -3424,10 +3465,64 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
     Array.prototype.forEach.call(document.querySelectorAll('.fo'), function (b) { b.onclick = function () { S.font = b.dataset.f; keep(); drawPicker(); render(); }; });
   }
 
+  // ================= the organiser (154) =================
+  function say(msg) {
+    var t = document.getElementById('toast'); if (!t) return;
+    t.textContent = msg; t.classList.add('on'); clearTimeout(say.t); say.t = setTimeout(function () { t.classList.remove('on'); }, 2800);
+  }
+  function uploadPic(blob) {
+    return fetch(ORG.uploads + '/v1/events/' + encodeURIComponent(ORG.slug) + '/pictures?modifier=' + encodeURIComponent(ORG.edit), {
+      method: 'POST', headers: {'Content-Type': 'image/jpeg'}, body: blob
+    }).then(function (r) {
+      return r.json().then(function (j) {
+        if (!r.ok || !j || !j.key) throw new Error(j && j.error ? j.error : 'La photo n\'est pas passée. Réessayez.');
+        return j;
+      }, function () { throw new Error('La photo n\'est pas passée. Réessayez.'); });
+    });
+  }
+  // What the card keeps on the server: the words, the colour, the writing,
+  // and which stored picture sits in which slot. The date, the hour and
+  // the place are the event's own, set in Marakaj.
+  function cardContent() {
+    var c = {type: String(S.type || 'autre'), custom: String(S.custom || ''), a: String(S.a || ''), b: String(S.b || ''), pal: +S.pal || 0, font: String(S.font || '')};
+    Object.keys(SL).forEach(function (id) { var k = KEYS[SL[id]]; if (k && /^[a-z0-9-]{1,40}$/.test(id)) c['p:' + id] = {key: k}; });
+    return c;
+  }
+  function saveCard() {
+    var sb = document.getElementById('saveBtn'), api = ORG.api || {};
+    if (!api.url || !api.key) { say('Impossible d\'enregistrer pour le moment.'); return; }
+    sb.disabled = true; sb.textContent = 'Envoi…';
+    fetch(api.url + '/rest/v1/rpc/event_content_save', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', apikey: api.key, Authorization: 'Bearer ' + api.key},
+      body: JSON.stringify({p_slug: ORG.slug, p_edit: ORG.edit, p_content: cardContent()})
+    }).then(function (r) {
+      if (r.ok) return null;
+      return r.json().then(function (j) { return (j && (j.message || j.hint)) || 'La carte n\'est pas enregistrée.'; }, function () { return 'La carte n\'est pas enregistrée.'; });
+    }).then(function (err) {
+      if (err) { sb.disabled = false; sb.textContent = 'Enregistrer'; say(String(err)); return; }
+      dirty = false; sb.textContent = 'Enregistré'; close(); say('Carte enregistrée. Vos invités la verront ainsi.');
+    }, function () { sb.disabled = false; sb.textContent = 'Enregistrer'; say('Pas de réseau : réessayez dans un instant.'); });
+  }
+  if (ORG) {
+    document.getElementById('openTpl').textContent = 'Couleurs';
+    document.getElementById('tabTpl').textContent = 'Couleurs';
+    document.getElementById('sheetTitle').textContent = 'Les couleurs et l\'écriture de votre carte';
+    document.querySelector('#paneTpl .sub').textContent = 'Le modèle est celui choisi dans Marakaj. Touchez une couleur ou une écriture : la carte change aussitôt.';
+    document.querySelector('#paneInfo h3').textContent = 'Les mots de la carte';
+    document.querySelector('#paneInfo .sub').textContent = 'Le type d\'événement et les prénoms. La date, l\'heure et le lieu se changent dans Marakaj.';
+    document.querySelector('.note2').textContent = 'Touchez « Enregistrer » quand la carte vous plaît : vos invités la verront ainsi.';
+    document.getElementById('fDate').closest('.row2').hidden = true;
+    document.getElementById('fPlace').closest('label').hidden = true;
+    var saveBtn = document.getElementById('saveBtn');
+    saveBtn.hidden = false; saveBtn.onclick = saveCard;
+    window.addEventListener('beforeunload', function (e) { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+  }
+
   var F = {fType: 'type', fCustom: 'custom', fA: 'a', fB: 'b', fDate: 'date', fTime: 'time', fPlace: 'place'};
   Object.keys(F).forEach(function (id) { var el = document.getElementById(id); if (!el) return; el.value = S[F[id]] || ''; el.addEventListener('change', function () { S[F[id]] = el.value; keep(); labB(); render(); }); });
   function labB() { document.getElementById('lCustom').hidden = S.type !== 'autre'; }
-  labB(); if (!SERVER) drawPicker(); render();
+  labB(); if (!SERVER || ORG) drawPicker(); render();
   window.addEventListener('load', function () { if (hasG) ScrollTrigger.refresh(); });
 })();
 </script>

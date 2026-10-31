@@ -153,6 +153,35 @@ test("an animated design (153): the page under /evenements, the layout, the day 
   assert.ok(html.includes('"lay":"lettre"'));
 });
 
+test("the organiser's editor (154): « modifier » is asked of the server, and the page told it is the editor", async () => {
+  answer = {
+    slug: "ines-thomas-ab12", kind: "mariage", card: "come", title: "Inès & Thomas", content: {},
+    rsvp_on: true, published: false, preview: false, editor: true,
+  };
+  asked.length = 0;
+  let html = await (await get("/e/ines-thomas-ab12?apercu=f00dbabe&modifier=ed17ed17ed17ed17ed17ed17")).text();
+  const u = new URL(asked[0]);
+  assert.equal(u.searchParams.get("p_edit"), "ed17ed17ed17ed17ed17ed17", "the edit token asked of event_public");
+  assert.equal(u.searchParams.get("p_preview"), "f00dbabe");
+  assert.ok(html.includes('"editor":true'), "the page is the editor");
+  assert.ok(html.includes('"edit":"ed17ed17ed17ed17ed17ed17"'), "with its token");
+  assert.ok(html.includes('"uploads":null'), "no uploads address in this test's env");
+  // The server alone says who is the editor: the token in the address is
+  // not enough when the server says no.
+  answer = { ...answer, editor: false };
+  html = await (await get("/e/ines-thomas-ab12?modifier=ed17ed17ed17ed17ed17ed17")).text();
+  assert.ok(html.includes('"editor":false') && html.includes('"edit":null'), "not the editor: no token kept");
+  // Without « modifier », p_edit is empty and nothing says editor.
+  asked.length = 0;
+  answer = { ...answer, editor: true };
+  html = await (await get("/e/ines-thomas-ab12?apercu=f00dbabe")).text();
+  assert.equal(new URL(asked[0]).searchParams.get("p_edit"), "");
+  assert.ok(html.includes('"editor":false'));
+  // The uploads address, when the env has one.
+  html = await (await site.fetch(new Request("https://marakaj.com/e/ines-thomas-ab12?modifier=x"), { ...env, UPLOADS_URL: "https://up.example/" })).text();
+  assert.ok(html.includes('"uploads":"https://up.example"'), "the uploads Worker's address, no trailing slash");
+});
+
 test("the cards' pages are not addresses of their own", async () => {
   const r = await get("/cartes/come.html");
   assert.equal(r.status, 404);

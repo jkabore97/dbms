@@ -132,6 +132,12 @@ begin
                              -- 152: the events' switch, a card and a guest's
                              -- answer — the street's, by design.
                              'events_options', 'event_public', 'event_rsvp',
+                             -- 154: the card's editor, a signed-out page with
+                             -- the edit token as its key: the draft saved, a
+                             -- picture's key minted and confirmed, a picture
+                             -- served to anyone who has its key.
+                             'event_content_save', 'event_picture_slot',
+                             'event_picture_done', 'event_picture_allowed',
                              -- 077's pre-request hook runs on every request,
                              -- the street's included; it reads nothing for anon.
                              'two_step_gate')

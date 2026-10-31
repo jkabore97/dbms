@@ -286,6 +286,7 @@ class EventSummary {
     required this.card,
     required this.slug,
     required this.previewToken,
+    this.editToken = '',
     required this.title,
     required this.startsAt,
     required this.place,
@@ -303,6 +304,7 @@ class EventSummary {
         card: (j['card'] as String?) ?? 'come',
         slug: j['slug'] as String,
         previewToken: (j['preview_token'] as String?) ?? '',
+        editToken: (j['edit_token'] as String?) ?? '',
         title: (j['title'] as String?) ?? '',
         startsAt: j['starts_at'] == null ? null : DateTime.tryParse(j['starts_at'] as String)?.toLocal(),
         place: j['place'] as String?,
@@ -319,6 +321,10 @@ class EventSummary {
   final String card;
   final String slug;
   final String previewToken;
+
+  /// The card's editor's key (154): the business's admins read it, the
+  /// page edits with it. Empty against a database before 154.
+  final String editToken;
   final String title;
   final DateTime? startsAt;
   final String? place;
@@ -334,6 +340,10 @@ class EventSummary {
   /// The same, with the preview token: opens before the card is published,
   /// and before the platform opens the module to everyone.
   String get previewPath => '/e/$slug?apercu=$previewToken';
+
+  /// The card's own editor (154): the words and pictures, edited on the
+  /// page itself and saved to the server. Null before 154.
+  String? get editPath => editToken.isEmpty ? null : '/e/$slug?apercu=$previewToken&modifier=$editToken';
 }
 
 class EventRsvp {
