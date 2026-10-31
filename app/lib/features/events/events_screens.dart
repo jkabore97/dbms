@@ -8,6 +8,7 @@ import '../../core/auth/auth_repository.dart' show AuthRepository;
 import '../../core/auth/models.dart' show OrgSummary;
 import '../../core/events/events_repository.dart';
 import '../../core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 import '../../core/theme/kaj_card.dart';
 
 /// Where the cards live: the site itself on the web (a preview deploy
@@ -83,7 +84,7 @@ class _EventsScreenState extends State<EventsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Événements'))),
+      appBar: AppBar(title: Text(context.tr('Événements')), actions: const [bellRoom]),
       floatingActionButton: FloatingActionButton.extended(
         key: const Key('event-new'),
         onPressed: _create,
@@ -515,6 +516,8 @@ class _EventScreenState extends State<EventScreen> {
               onPressed: _delete,
               icon: const Icon(Icons.delete_outline),
             ),
+          // The page's bell, last on every AppBar (115).
+          bellRoom,
         ],
       ),
       body: e == null
