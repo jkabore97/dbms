@@ -38,7 +38,9 @@ grant usage on schema auth to anon, authenticated;
 -- Earlier suites re-apply older migrations over these functions: 154 again,
 -- twice — installed twice, the same.
 \i database/migrations/154_events_editor.sql
+\i database/migrations/155_events_album.sql
 \i database/migrations/154_events_editor.sql
+\i database/migrations/155_events_album.sql
 
 begin;
 

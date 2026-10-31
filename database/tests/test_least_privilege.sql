@@ -137,7 +137,7 @@ begin
                              -- picture's key minted and confirmed, a picture
                              -- served to anyone who has its key.
                              'event_content_save', 'event_picture_slot',
-                             'event_picture_done', 'event_picture_allowed',
+                             'event_picture_done', 'event_picture_allowed', 'event_album_slot', 'event_album_done', 'event_album',
                              -- 077's pre-request hook runs on every request,
                              -- the street's included; it reads nothing for anon.
                              'two_step_gate')

@@ -19,7 +19,25 @@ class _Events extends EventsRepository {
   final calls = <String>[];
   final rows = <EventSummary>[];
   final answers = <String, List<EventRsvp>>{};
+  final pictures0 = <EventPicture>[];
   Object? failWith;
+
+  @override
+  Future<List<EventPicture>> pictures(String eventId) async => List.of(pictures0);
+
+  @override
+  String? pictureUrl(String key, {int width = 400}) => null;
+
+  @override
+  Future<void> removePicture(String key) async {
+    calls.add('remove:$key');
+    pictures0.removeWhere((p) => p.key == key);
+  }
+
+  @override
+  Future<void> setAlbumOn(String id, bool on) async {
+    calls.add('album:$id=$on');
+  }
 
   @override
   bool get isConfigured => true;
@@ -265,6 +283,7 @@ void main() {
       // The answers sit under the buttons and their hints: the list builds them on scroll.
       await tester.scrollUntilVisible(find.text('Réponses des invités · 2'), 200, scrollable: find.byType(Scrollable).first);
       expect(find.text('Réponses des invités · 2'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('Tanti Rose'), 200, scrollable: find.byType(Scrollable).first);
       expect(find.text('Tanti Rose'), findsOneWidget);
       expect(find.textContaining('Vient · 2'), findsOneWidget);
       expect(find.textContaining('diet : sans porc'), findsOneWidget);
@@ -298,6 +317,35 @@ void main() {
       expect(repo.calls.last, 'publish:${e.id}=true');
       expect(find.text('Le lien à envoyer aux invités : la carte est publiée.'), findsOneWidget);
       expect(find.text('Publiée'), findsOneWidget);
+    });
+
+    testWidgets('the guests\' album (155): the switch, the pictures with their names, one removed', (tester) async {
+      final repo = _Events();
+      final e = await repo.create(
+          orgId: 'o1', title: 'Inès & Thomas', kind: 'mariage', card: 'come',
+          startsAt: DateTime(2027, 6, 5, 15), place: 'Villa Serena');
+      repo.pictures0.addAll([
+        EventPicture(key: 'events/e1/aaaa.jpg', guest: 'Tanti Rose', bytes: 1000, doneAt: DateTime(2027, 6, 5, 16)),
+        EventPicture(key: 'events/e1/bbbb.jpg', guest: null, bytes: 1000, doneAt: DateTime(2027, 6, 5, 17)),
+      ]);
+      await _pump(tester, EventScreen(events: repo, org: _org, eventId: e.id, open: (u) async {}));
+      await tester.scrollUntilVisible(find.text('Album des invités · 2'), 200, scrollable: find.byType(Scrollable).first);
+      await tester.pumpAndSettle();
+      expect(find.text('Tanti Rose'), findsOneWidget);
+      expect(find.text('Un invité'), findsOneWidget);
+      await tester.ensureVisible(find.byKey(const Key('picture-remove-events/e1/aaaa.jpg')));
+      await tester.tap(find.byKey(const Key('picture-remove-events/e1/aaaa.jpg')));
+      await tester.pumpAndSettle();
+      expect(find.text('Retirer cette photo ?'), findsOneWidget);
+      await tester.tap(find.widgetWithText(FilledButton, 'Retirer'));
+      await tester.pumpAndSettle();
+      expect(repo.calls.last, 'remove:events/e1/aaaa.jpg');
+      expect(find.text('Album des invités · 1'), findsOneWidget);
+      expect(find.text('Tanti Rose'), findsNothing);
+      await tester.ensureVisible(find.byKey(const Key('event-album-on')));
+      await tester.tap(find.byKey(const Key('event-album-on')));
+      await tester.pumpAndSettle();
+      expect(repo.calls.last, 'album:${e.id}=false');
     });
 
     testWidgets('deleting asks, then leaves the page', (tester) async {

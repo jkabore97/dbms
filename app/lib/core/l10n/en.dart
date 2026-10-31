@@ -8799,4 +8799,18 @@ const enStrings = <String, String>{
       'On the card: touch a text to write it, a picture to replace it, drag it to reframe, then “Save”.',
   'Cartes d’invitation, réponses des invités':
       'Invitation cards, guests’ answers',
+  'Album des invités ouvert':
+      'Guests’ album open',
+  'Les invités déposent leurs photos sur la carte ; elles arrivent ici.':
+      'Guests drop their photos on the card; they arrive here.',
+  'Album des invités':
+      'Guests’ album',
+  'Aucune photo d’invité pour le moment.':
+      'No guest photo yet.',
+  'Elle disparaît de l’album et de la carte.':
+      'It disappears from the album and from the card.',
+  'Photo retirée':
+      'Photo removed',
+  'Un invité':
+      'A guest',
 };
