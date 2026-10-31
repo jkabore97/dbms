@@ -586,6 +586,20 @@ class AdminRepository {
     }
   }
 
+  /// Whether Événementiel is open to every business (152's switch,
+  /// events_options): false when it cannot be asked, and against a
+  /// database before 152. A platform admin has the module regardless.
+  Future<bool> eventsPublic() async {
+    final client = _client;
+    if (client == null) return false;
+    try {
+      final v = await client.rpc('events_options');
+      return v is Map && v['public'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Creates a business and returns its id.
   ///
   /// `create_org` is SECURITY DEFINER and checks the platform-admin flag

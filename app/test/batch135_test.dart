@@ -24,7 +24,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 /// Batch 135: the platform admin center folded — five places, each one
 /// question (Aujourd'hui, Clients, Argent, La rue, Réglages), on the bar
 /// and on the rail alike; « VOUS ATTEND » only what is not zero, the most
-/// urgent first, the zeros in one green line; Réglages in eight cards
+/// urgent first, the zeros in one green line; Réglages in nine cards
 /// with a search in French and English; every old address in its place.
 class _Center extends CommandCenterRepository {
   _Center() : super(null);
@@ -554,7 +554,7 @@ void main() {
       final known = [for (final d in platformSettingDefs) d.key];
       expect(onCards.toSet(), known.toSet(), reason: 'no setting lost, none invented');
       expect(onCards, hasLength(onCards.toSet().length), reason: 'each on one card only');
-      expect(settingCards, hasLength(8));
+      expect(settingCards, hasLength(9));
       for (final k in known) {
         expect(settingCardOf(k), isNotNull, reason: k);
       }

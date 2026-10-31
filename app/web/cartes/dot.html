@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Salimata & Boukary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Yeseva+One&family=Mulish:ital,wght@0,300;0,400;0,700;1,300&display=swap">
+<link rel="stylesheet" href="shared.css">
+<style>
+/* Carte 11 « Dot » — the traditional engagement: emerald, fuchsia and
+   gold, wax-print bands, the two families named, a long ceremony. */
+:root{
+  --back:#0f6b4f;--paper:#fbf5e8;--ink:#1f2a23;--green:#0f6b4f;--fuchsia:#c2185b;--gold:#e0b24a;--line:#e3d3b0;
+  --accent:#c2185b;--on-accent:#fbf5e8;
+  --slot-a:#e0b24a;--slot-b:#0f6b4f;--slot-c:#8a7a52;--slot-ink:#fbf5e8;
+  --display:'Yeseva One','Georgia',serif;--script:'Yeseva One','Georgia',serif;--body:'Mulish','Helvetica Neue',Arial,sans-serif;
+}
+body{font-weight:300}
+.wax{height:26px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='52' height='26'%3E%3Crect width='52' height='26' fill='%230f6b4f'/%3E%3Ccircle cx='13' cy='13' r='8' fill='none' stroke='%23e0b24a' stroke-width='2'/%3E%3Ccircle cx='13' cy='13' r='3' fill='%23c2185b'/%3E%3Cpath d='M30 4l9 9-9 9-9-9z' fill='none' stroke='%23fbf5e8' stroke-width='1.5'/%3E%3Ccircle cx='48' cy='13' r='2' fill='%23e0b24a'/%3E%3C/svg%3E") center/52px 26px repeat-x}
+.hero{padding:34px 24px 30px;text-align:center;position:relative;overflow:hidden}
+.hero .frame{position:relative;width:min(84%,330px);margin:0 auto;aspect-ratio:4/5;padding:10px;background:
+  repeating-linear-gradient(45deg,var(--gold) 0 6px,var(--green) 6px 12px,var(--fuchsia) 12px 18px,var(--paper) 18px 24px)}
+.hero .frame .slot{position:absolute;inset:10px}
+.hero .kicker{font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--fuchsia);margin-top:26px;font-weight:700}
+.hero h1{font-family:var(--display);font-weight:400;font-size:clamp(38px,11vw,60px);line-height:1;margin:8px 0 0;color:var(--green)}
+.hero h1 em{display:block;font-style:normal;font-family:var(--body);font-weight:300;font-size:.3em;letter-spacing:.2em;text-transform:uppercase;margin:10px 0 0;color:var(--ink)}
+.fam{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;padding:24px 24px 0;text-align:center}
+.fam .k{font-size:9px;letter-spacing:.24em;text-transform:uppercase;opacity:.7}
+.fam .v{font-family:var(--display);font-size:16px;margin-top:4px;color:var(--green)}
+.fam .and{font-family:var(--display);font-size:26px;color:var(--gold)}
+.when{text-align:center;padding:26px 24px 10px}
+.when .d{font-family:var(--display);font-size:26px;line-height:1.2;color:var(--fuchsia)}
+.when .p{font-size:14px;margin-top:8px}
+.center{text-align:center;padding:14px 24px 34px}
+.word{background:var(--green);color:var(--paper);text-align:center}
+.word h2{color:var(--gold)}
+.word p{max-width:30em;margin:14px auto 0;font-size:15px;line-height:1.75}
+.word .sign{display:block;margin-top:16px;font-family:var(--display);font-size:18px;color:var(--gold)}
+.pics{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px}
+.pics .slot{aspect-ratio:4/5;outline:3px solid var(--gold);outline-offset:-10px}
+.steps{list-style:none;margin:24px 0 0;padding:0;display:grid;gap:0;border-top:2px solid var(--gold)}
+.steps li{display:grid;grid-template-columns:64px 36px 1fr;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.steps .t{font-family:var(--display);font-size:16px;color:var(--fuchsia);font-variant-numeric:tabular-nums}
+.steps svg{width:32px;height:32px;stroke:var(--green);fill:none;stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round}
+.steps b{display:block;font-weight:700;font-size:15px}
+.steps small{font-size:12px;opacity:.75}
+.infos svg{color:var(--green)}
+.rsvp{background:var(--fuchsia);color:var(--paper)}
+.rsvp h2{color:var(--paper)}
+.rsvp .lead{margin:10px 0 22px;font-size:14px}
+.rsvp label.f input,.rsvp label.f select,.rsvp label.f textarea{border-color:rgba(251,245,232,.6)}
+.rsvp .btn{background:var(--green);border-color:var(--green)}
+.rsvp .ok{border-color:rgba(251,245,232,.6)}
+.rsvp .choice input{accent-color:var(--green)}
+.album-sec h2{color:var(--green)}
+.album-sec .eyebrow{color:var(--fuchsia);opacity:1}
+.album-sec .album figure{outline:3px solid var(--gold);outline-offset:-3px}
+.foot{background:var(--green);color:var(--paper);opacity:1}
+</style>
+</head>
+<body>
+<div class="back"><a href="index.html" style="color:#fbf5e8">← Les douze cartes</a></div>
+<article class="card" data-card="dot" data-type="dot">
+  <div class="wax" aria-hidden="true"></div>
+  <header class="hero">
+    <div class="frame"><div class="slot" data-pic="hero"><img src="img/dot-1.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div></div>
+    <p class="kicker" data-role="kicker" data-edit="kicker">Cérémonie de dot</p>
+    <h1><span data-edit="names">Salimata &amp; Boukary</span><em data-role="sub" data-edit="sub">unissent leurs familles</em></h1>
+  </header>
+
+  <div class="fam">
+    <div><div class="k">La famille de</div><div class="v" data-edit="fam1">Ouédraogo<br>de Tanghin</div></div>
+    <div class="and">&amp;</div>
+    <div><div class="k">La famille de</div><div class="v" data-edit="fam2">Sawadogo<br>de Kaya</div></div>
+  </div>
+  <div class="when">
+    <div class="d" data-edit="date">Samedi 17 avril 2027<br>dès 10 h</div>
+    <p class="p" data-edit="place">Cour familiale Ouédraogo, Tanghin, Ouagadougou</p>
+  </div>
+  <div class="center">
+    <a class="btn" href="https://calendar.google.com/calendar/render?action=TEMPLATE&amp;text=Dot+de+Salimata+et+Boukary&amp;dates=20270417T100000Z/20270417T190000Z&amp;location=Tanghin%2C+Ouagadougou" target="_blank" rel="noopener">Ajouter à l’agenda</a>
+  </div>
+
+  <section class="word">
+    <h2 data-role="word-title" data-edit="word-title">Un mot des deux familles</h2>
+    <p data-edit="w1">Les anciens ont parlé, les colas ont été acceptées. Le 17 avril, la famille Sawadogo vient à Tanghin demander la main de Salimata, comme le veut la tradition.</p>
+    <p data-edit="w2">Nous vous attendons pour témoigner, bénir, et manger ensemble.</p>
+    <span class="sign" data-edit="sign">Les familles Ouédraogo et Sawadogo</span>
+  </section>
+
+  <div class="pics">
+    <div class="slot" data-pic="p1"><img src="img/dot-2.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div>
+    <div class="slot" data-pic="p2" style="--slot-a:#c2185b;--slot-b:#e0b24a"><img src="img/wed-africa-2.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div>
+  </div>
+
+  <section>
+    <p class="eyebrow" style="color:var(--fuchsia);opacity:1" data-edit="prog-k">Le déroulement</p>
+    <h2 style="color:var(--green)" data-role="prog-title" data-edit="prog-title">La cérémonie, étape par étape</h2>
+    <p class="lead" style="margin-top:8px;font-size:14px" data-role="prog-intro" data-edit="prog-intro">Les familles sont accueillies dès 9 h 30. La parole est aux anciens.</p>
+    <ol class="steps" data-prog>
+      <li><span class="t" data-t>10 h</span><svg><use href="#i-pin"/></svg><div><b data-b>Accueil des familles</b><small data-s>Sous le hangar, dans la cour</small></div></li>
+      <li><span class="t" data-t>11 h</span><svg><use href="#i-gift"/></svg><div><b data-b>Présentation de la dot</b><small data-s>Colas, pagnes, bijoux, la valise</small></div></li>
+      <li><span class="t" data-t>12 h 30</span><svg><use href="#i-rings"/></svg><div><b data-b>Bénédictions</b><small data-s>Des anciens des deux familles</small></div></li>
+      <li><span class="t" data-t>13 h 30</span><svg><use href="#i-dinner"/></svg><div><b data-b>Repas</b><small data-s>Riz gras, poulet, tô et sauce gombo</small></div></li>
+      <li><span class="t" data-t>16 h</span><svg><use href="#i-party"/></svg><div><b data-b>Danses</b><small data-s>Warba et balafon jusqu’au soir</small></div></li>
+    </ol>
+  </section>
+
+  <section style="padding-top:0">
+    <p class="eyebrow">Bon à savoir</p>
+    <ul class="infos">
+      <li><svg><use href="#i-pin"/></svg><div><b>Le lieu</b><p>Cour familiale Ouédraogo, Tanghin, derrière le marché. Des jeunes de la famille vous guident depuis le goudron.</p><a href="https://maps.google.com/?q=Tanghin+Ouagadougou" target="_blank" rel="noopener">Itinéraire</a></div></li>
+      <li><svg><use href="#i-dress"/></svg><div><b>Tenue</b><p>Le pagne de la famille est le wax vert et or. Les invités : tenue traditionnelle bienvenue.</p></div></li>
+      <li><svg><use href="#i-gift"/></svg><div><b>Contribution</b><p>Pour celles et ceux qui le souhaitent : Orange Money au 70 00 00 00 (Salimata).</p><button class="btn ghost" type="button" data-copy="70 00 00 00" style="margin-top:8px;padding:8px 12px">Copier le numéro</button></div></li>
+    </ul>
+  </section>
+
+  <section class="rsvp">
+    <p class="eyebrow" data-edit="rsvp-k">Vous venez ?</p>
+    <h2 data-role="rsvp-title" data-edit="rsvp-title">Dites-nous avant le 5 avril</h2>
+    <p class="lead" data-role="rsvp-lead" data-edit="rsvp-lead">Les deux familles préparent le repas en fonction de vos réponses.</p>
+    <form class="rsvp" data-key="dot">
+      <div class="row">
+        <label class="f">Votre nom <input id="c11-name" name="name" required autocomplete="name"></label>
+        <div class="row two">
+          <label class="f">Vous serez <select id="c11-n" name="n"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+          <label class="f">Du côté de <select id="c11-side" name="side"><option>Salimata</option><option>Boukary</option><option>Les deux</option></select></label>
+        </div>
+        <div class="choice">
+          <label><input type="radio" name="rep" value="oui" checked> Je serai là</label>
+          <label><input type="radio" name="rep" value="non"> Je ne pourrai pas</label>
+        </div>
+        <label class="f">Un mot <textarea id="c11-msg" name="msg"></textarea></label>
+        <div><button class="btn" type="submit">Envoyer</button></div>
+      </div>
+      <div class="ok" role="status"></div>
+    </form>
+  </section>
+
+  <section class="album-sec">
+    <p class="eyebrow">Vos photos</p>
+    <h2 data-role="album-title" data-edit="album-title">Vos photos de la cérémonie</h2>
+    <p class="lead" style="margin:12px 0 22px;font-size:14px" data-role="album-lead" data-edit="album-lead">Ajoutez les photos que vous prenez : les deux familles les retrouveront dans l’album.</p>
+    <div class="album-box">
+      <label class="drop" for="c11-files" tabindex="0">
+        <svg><use href="#i-up"/></svg>
+        <span>Glissez vos photos ici ou</span>
+        <span class="btn">Choisir des photos</span>
+        <input id="c11-files" type="file" accept="image/*" multiple>
+      </label>
+      <label class="who">Votre prénom <input id="c11-who" name="who" placeholder="Tantie Mariam"></label>
+      <div class="album-meta"><span><span class="count">3 photos</span> dans l’album</span><span>Validées par les familles</span></div>
+      <div class="album">
+        <figure class="slot"><img src="img/guest-3.jpg" alt="" onerror="this.remove()"><div class="tag">Tantie Mariam</div><figcaption>Tantie Mariam</figcaption></figure>
+        <figure class="slot"><img src="img/guest-1.jpg" alt="" onerror="this.remove()"><div class="tag">Les frères</div><figcaption>Les frères</figcaption></figure>
+        <figure class="slot"><img src="img/guest-4.jpg" alt="" onerror="this.remove()"><div class="tag">Les amies</div><figcaption>Les amies</figcaption></figure>
+      </div>
+      <p class="note">Maquette : les photos restent sur votre téléphone. Dans Marakaj, elles arrivent dans l’album des familles.</p>
+    </div>
+  </section>
+
+  <footer class="foot">Salimata &amp; Boukary · 17 avril 2027 · Carte créée avec Marakaj</footer>
+  <div class="wax" aria-hidden="true"></div>
+</article>
+<script src="shared.js"></script>
+</body>
+</html>

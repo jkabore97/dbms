@@ -58,6 +58,7 @@ import 'core/terms/terms.dart';
 import 'features/account/terms_gate.dart';
 import 'features/auth/welcome_gate.dart';
 import 'core/site/app_download.dart' show AndroidInstallBar;
+import 'core/events/events_repository.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
 /// Supplied at build time so no credentials live in the source:
@@ -583,6 +584,8 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
       reports: widget.reports,
       accounting: widget.accounting,
       console: widget.console,
+      // Événementiel (152), on the same client as everything else.
+      events: EventsRepository(widget.auth.client),
       farm: widget.farm,
       invoicing: widget.invoicing,
       retail: widget.retail,

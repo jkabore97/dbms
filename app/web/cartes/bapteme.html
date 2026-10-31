@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Baptême de Noé</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;600&display=swap">
+<link rel="stylesheet" href="shared.css">
+<style>
+/* Carte 7 « Noé » — a christening: sky blue, white and sand, a round
+   photo with a drawn dove, the godparents named, a simple day. */
+:root{
+  --back:#2f4a6b;--paper:#f7f4ee;--ink:#243244;--sky:#dfe9f2;--blue:#2f4a6b;--blue-soft:#8aa4bf;--line:#cfd8e0;
+  --accent:#2f4a6b;--on-accent:#f7f4ee;
+  --slot-a:#dfe9f2;--slot-b:#8aa4bf;--slot-c:#a9bccd;--slot-ink:#243244;
+  --display:'Lora','Georgia',serif;--script:'Lora','Georgia',serif;--body:'Nunito','Helvetica Neue',Arial,sans-serif;
+}
+body{font-weight:300}
+.hero{position:relative;text-align:center;padding:48px 24px 36px;background:linear-gradient(180deg,#f7f4ee,var(--sky));overflow:hidden}
+.hero .ring{position:relative;width:min(64%,250px);aspect-ratio:1;margin:0 auto;border-radius:50%;padding:8px;background:#fff;box-shadow:0 18px 40px rgba(47,74,107,.18)}
+.hero .ring .slot{position:absolute;inset:8px;border-radius:50%}
+.hero svg.dove{position:absolute;width:90px;height:90px;right:8%;top:30px;stroke:var(--blue);fill:none;stroke-width:1;stroke-linecap:round;opacity:.8}
+.hero .kicker{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--blue);margin-top:26px;font-weight:600}
+.hero h1{font-family:var(--display);font-weight:400;font-size:clamp(50px,14vw,76px);line-height:1;margin:8px 0 0;color:var(--blue)}
+.hero h1 em{display:block;font-style:italic;font-size:.34em;margin-top:8px;color:var(--ink)}
+.lines{text-align:center;padding:30px 24px 10px;display:grid;gap:14px}
+.lines .d{font-family:var(--display);font-size:22px;line-height:1.3}
+.lines .d small{display:block;font-family:var(--body);font-size:11px;letter-spacing:.24em;text-transform:uppercase;opacity:.7;margin-bottom:4px}
+.god{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:10px 24px 30px}
+.god div{background:#fff;border:1px solid var(--line);padding:14px;text-align:center}
+.god .k{font-size:10px;letter-spacing:.22em;text-transform:uppercase;opacity:.7}
+.god .v{font-family:var(--display);font-size:18px;margin-top:4px}
+.center{text-align:center;padding:0 24px 34px}
+.word{background:var(--blue);color:var(--paper);text-align:center}
+.word h2{color:var(--paper);font-style:italic}
+.word p{max-width:30em;margin:14px auto 0;font-size:15px;line-height:1.75}
+.word .sign{display:block;margin-top:16px;font-family:var(--display);font-style:italic;font-size:20px}
+.pics{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px}
+.pics .slot{aspect-ratio:4/5;border-radius:140px 140px 10px 10px}
+.pics .slot:nth-child(2){border-radius:10px 10px 140px 140px}
+.steps{list-style:none;margin:24px 0 0;padding:0;display:grid;gap:0}
+.steps li{display:grid;grid-template-columns:62px 36px 1fr;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.steps .t{font-family:var(--display);font-size:17px;color:var(--blue);font-variant-numeric:tabular-nums}
+.steps svg{width:32px;height:32px;stroke:var(--blue);fill:none;stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round}
+.steps b{display:block;font-weight:600;font-size:15px}
+.steps small{font-size:12px;opacity:.75}
+.infos svg{color:var(--blue)}
+.rsvp{background:var(--sky)}
+.rsvp h2{color:var(--blue)}
+.rsvp .lead{margin:10px 0 22px;font-size:14px}
+.rsvp label.f input,.rsvp label.f select,.rsvp label.f textarea{background:#fff}
+.album-sec h2{color:var(--blue)}
+.album-sec .album figure{border-radius:50%}
+.album-sec .album figcaption{border-radius:0 0 50% 50%}
+.foot{color:var(--blue)}
+</style>
+</head>
+<body>
+<div class="back"><a href="index.html" style="color:#f7f4ee">← Les douze cartes</a></div>
+<article class="card" data-card="bapteme" data-type="bapteme">
+  <header class="hero">
+    <svg class="dove" viewBox="0 0 48 48" aria-hidden="true"><use href="#i-dove"/></svg>
+    <div class="ring"><div class="slot" data-pic="hero"><img src="img/baby-1.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div></div>
+    <p class="kicker" data-role="kicker" data-edit="kicker">Baptême</p>
+    <h1><span data-edit="names">Noé</span><em data-role="sub" data-edit="sub">est baptisé</em></h1>
+  </header>
+
+  <div class="lines">
+    <div class="d"><small>Le jour</small><span data-edit="date">Dimanche 7 mars 2027 · 10 h</span></div>
+    <div class="d"><small>Le lieu</small><span data-edit="place">Paroisse Saint-Camille, Ouagadougou</span></div>
+  </div>
+  <div class="god">
+    <div><div class="k">Parrain</div><div class="v" data-edit="god1">Tonton Pascal</div></div>
+    <div><div class="k">Marraine</div><div class="v" data-edit="god2">Tantie Edwige</div></div>
+  </div>
+  <div class="center">
+    <a class="btn" href="https://calendar.google.com/calendar/render?action=TEMPLATE&amp;text=Bapt%C3%AAme+de+No%C3%A9&amp;dates=20270307T100000Z/20270307T160000Z&amp;location=Paroisse+Saint-Camille%2C+Ouagadougou" target="_blank" rel="noopener">Ajouter à l’agenda</a>
+  </div>
+
+  <section class="word">
+    <h2 data-role="word-title" data-edit="word-title">Un mot des parents</h2>
+    <p data-edit="w1">Noé a un an, un sourire à toute épreuve et deux parents très fiers. Nous le présentons à Dieu et à vous, qui l’entourez depuis le premier jour.</p>
+    <p data-edit="w2">Venez partager ce dimanche avec nous, à l’église puis à la maison.</p>
+    <span class="sign" data-edit="sign">Aline &amp; Serge</span>
+  </section>
+
+  <div class="pics">
+    <div class="slot" data-pic="p1"><img src="img/baby-2.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div>
+    <div class="slot" data-pic="p2" style="--slot-a:#8aa4bf;--slot-b:#f7f4ee"><img src="img/family-1.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div>
+  </div>
+
+  <section>
+    <p class="eyebrow" data-edit="prog-k">Le programme</p>
+    <h2 data-role="prog-title" data-edit="prog-title">La journée</h2>
+    <p class="lead" style="margin-top:8px;font-size:14px" data-role="prog-intro" data-edit="prog-intro">La cérémonie commence à 10 h. Arrivez un peu avant pour les places.</p>
+    <ol class="steps" data-prog>
+      <li><span class="t" data-t>10 h</span><svg><use href="#i-dove"/></svg><div><b data-b>Cérémonie</b><small data-s>À l’église, chapelle de gauche</small></div></li>
+      <li><span class="t" data-t>11 h 30</span><svg><use href="#i-camera"/></svg><div><b data-b>Photos</b><small data-s>Sur le parvis, avec parrain et marraine</small></div></li>
+      <li><span class="t" data-t>12 h 30</span><svg><use href="#i-dinner"/></svg><div><b data-b>Déjeuner</b><small data-s>À la maison, à Dassasgho</small></div></li>
+      <li><span class="t" data-t>15 h</span><svg><use href="#i-cake"/></svg><div><b data-b>Gâteau</b><small data-s>Et les cadeaux de Noé</small></div></li>
+    </ol>
+  </section>
+
+  <section style="padding-top:0">
+    <p class="eyebrow">Bon à savoir</p>
+    <ul class="infos">
+      <li><svg><use href="#i-pin"/></svg><div><b>L’église</b><p>Paroisse Saint-Camille, avenue Bassawarga. Parking devant.</p><a href="https://maps.google.com/?q=Paroisse+Saint-Camille+Ouagadougou" target="_blank" rel="noopener">Itinéraire</a></div></li>
+      <li><svg><use href="#i-bed"/></svg><div><b>La maison</b><p>Dassasgho, secteur 28, portail bleu après la pharmacie. Appelez si vous ne trouvez pas : 70 00 00 00.</p><button class="btn ghost" type="button" data-copy="70 00 00 00" style="margin-top:8px;padding:8px 12px">Copier le numéro</button></div></li>
+      <li><svg><use href="#i-gift"/></svg><div><b>Cadeaux</b><p>Noé a tout ce qu’il faut. Un mot dans son livre suffit.</p></div></li>
+    </ul>
+  </section>
+
+  <section class="rsvp">
+    <p class="eyebrow" data-edit="rsvp-k">Vous venez ?</p>
+    <h2 data-role="rsvp-title" data-edit="rsvp-title">Dites-nous avant le 20 février</h2>
+    <p class="lead" data-role="rsvp-lead" data-edit="rsvp-lead">Pour le déjeuner, nous comptons les assiettes.</p>
+    <form class="rsvp" data-key="bapteme">
+      <div class="row">
+        <label class="f">Votre nom <input id="c7-name" name="name" required autocomplete="name"></label>
+        <div class="row two">
+          <label class="f">Adultes <select id="c7-n" name="n"><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
+          <label class="f">Enfants <select id="c7-k" name="k"><option>0</option><option>1</option><option>2</option><option>3</option></select></label>
+        </div>
+        <div class="choice">
+          <label><input type="radio" name="rep" value="oui" checked> Nous serons là</label>
+          <label><input type="radio" name="rep" value="non"> Nous ne pourrons pas</label>
+        </div>
+        <label class="f">Un mot pour Noé <textarea id="c7-msg" name="msg"></textarea></label>
+        <div><button class="btn" type="submit">Envoyer</button></div>
+      </div>
+      <div class="ok" role="status"></div>
+    </form>
+  </section>
+
+  <section class="album-sec">
+    <p class="eyebrow">Vos photos</p>
+    <h2 data-role="album-title" data-edit="album-title">Vos photos du jour</h2>
+    <p class="lead" style="margin:12px 0 22px;font-size:14px" data-role="album-lead" data-edit="album-lead">Ajoutez vos photos : elles iront dans l’album de Noé, qu’il regardera dans vingt ans.</p>
+    <div class="album-box">
+      <label class="drop" for="c7-files" tabindex="0">
+        <svg><use href="#i-up"/></svg>
+        <span>Glissez vos photos ici ou</span>
+        <span class="btn">Choisir des photos</span>
+        <input id="c7-files" type="file" accept="image/*" multiple>
+      </label>
+      <label class="who">Votre prénom <input id="c7-who" name="who" placeholder="Tantie Edwige"></label>
+      <div class="album-meta"><span><span class="count">3 photos</span> dans l’album</span><span>Validées par les parents</span></div>
+      <div class="album">
+        <figure class="slot"><img src="img/guest-2.jpg" alt="" onerror="this.remove()"><div class="tag">Tantie Edwige</div><figcaption>Tantie Edwige</figcaption></figure>
+        <figure class="slot"><img src="img/guest-3.jpg" alt="" onerror="this.remove()"><div class="tag">Papi</div><figcaption>Papi</figcaption></figure>
+        <figure class="slot"><img src="img/guest-1.jpg" alt="" onerror="this.remove()"><div class="tag">Les cousins</div><figcaption>Les cousins</figcaption></figure>
+      </div>
+      <p class="note">Maquette : les photos restent sur votre téléphone. Dans Marakaj, elles arrivent dans l’album de la famille.</p>
+    </div>
+  </section>
+
+  <footer class="foot">Noé · 7 mars 2027 · Carte créée avec Marakaj</footer>
+</article>
+<script src="shared.js"></script>
+</body>
+</html>

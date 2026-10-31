@@ -6,6 +6,8 @@ import '../cauris/cauris_repository.dart';
 import '../console/command_center.dart';
 import 'package:go_router/go_router.dart';
 import 'business_screens.dart' deferred as biz;
+import '../events/events_repository.dart';
+import '../../features/events/events_access.dart';
 import '../access/store_rules.dart' show sellsProThroughStore, storeBillingPlatform;
 
 import '../../core/courier/courier_repository.dart';
@@ -1157,6 +1159,35 @@ GoRouter buildRouter(SessionController session) {
                     );
                   },
                   feature: 'accounting',
+                ),
+              ),
+            ],
+          ),
+          // Événementiel (152): the business's cards, for its admins —
+          // Marakaj's own alone until the platform's switch opens it.
+          GoRoute(
+            path: 'evenements',
+            builder: (context, state) => _withOrg(
+              context,
+              state,
+              (scope, org) => biz.EventsScreen(
+                events: scope.events ?? EventsRepository(scope.auth.client),
+                org: org,
+              ),
+              allow: (org) => _admins(org) && eventsShownFor(context),
+            ),
+            routes: [
+              GoRoute(
+                path: ':eventId',
+                builder: (context, state) => _withOrg(
+                  context,
+                  state,
+                  (scope, org) => biz.EventScreen(
+                    events: scope.events ?? EventsRepository(scope.auth.client),
+                    org: org,
+                    eventId: state.pathParameters['eventId']!,
+                  ),
+                  allow: (org) => _admins(org) && eventsShownFor(context),
                 ),
               ),
             ],

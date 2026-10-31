@@ -471,6 +471,12 @@ class SessionController extends ChangeNotifier {
   bool _isPlatformAdmin = false;
   bool get isPlatformAdmin => _isPlatformAdmin;
 
+  /// Whether Événementiel is open to every business (152): the platform's
+  /// switch, asked with the admin flag on every resolve and refresh. A
+  /// platform admin has the module whatever this says.
+  bool _eventsPublic = false;
+  bool get eventsPublic => _eventsPublic;
+
   String? _notice;
   String? get notice => _notice;
 
@@ -886,6 +892,7 @@ class SessionController extends ChangeNotifier {
     _landOn = null;
     _notice = null;
     _isPlatformAdmin = false;
+    _eventsPublic = false;
     _adminDevice = false;
     _twoStepEnrolled = false;
     _phase = SessionPhase.signedOut;
@@ -949,6 +956,11 @@ class SessionController extends ChangeNotifier {
           .isPlatformAdmin()
           .timeout(resolveTimeout)
           .catchError((Object _) => false);
+      // 152's switch, asked beside it: closed when it cannot be asked.
+      final askedEvents = admin
+          .eventsPublic()
+          .timeout(resolveTimeout)
+          .catchError((Object _) => false);
       final claimed = admin
           .claimMyInvitations()
           .timeout(resolveTimeout)
@@ -972,6 +984,7 @@ class SessionController extends ChangeNotifier {
       }
       platformAdmin = await askedAdmin;
       await _rememberAdmin(platformAdmin);
+      _eventsPublic = await askedEvents;
       var got = await askedOrgs;
       if (await claimed > 0) got = await askOrgs();
 
@@ -1163,6 +1176,9 @@ class SessionController extends ChangeNotifier {
       } catch (_) {}
       await _rememberAdmin(platformAdmin);
       if (platformAdmin) _adminDevice = true;
+      try {
+        _eventsPublic = await admin.eventsPublic().timeout(resolveTimeout);
+      } catch (_) {}
       try {
         await admin.claimMyInvitations().timeout(resolveTimeout);
       } catch (_) {}
