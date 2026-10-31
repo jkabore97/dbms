@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kaj_app/core/access/plan_terms.dart';
-import 'package:kaj_app/core/admin/admin_repository.dart';
 import 'package:kaj_app/core/auth/models.dart';
 import 'package:kaj_app/core/console/fiche_repository.dart';
 import 'package:kaj_app/core/console/kind_models_repository.dart';
 import 'package:kaj_app/core/onboarding/application_form.dart';
 import 'package:kaj_app/core/onboarding/onboarding_repository.dart';
-import 'package:kaj_app/features/admin/create_business_screen.dart';
 import 'package:kaj_app/features/admin/kind_models_screen.dart';
 import 'package:kaj_app/features/admin/request_form_screen.dart';
 import 'package:kaj_app/features/setup/association_setup_screen.dart';
@@ -130,19 +128,6 @@ void main() {
   }
 
   group('P1 — with no form, today\'s pages', () {
-    testWidgets('the platform admin\'s own « Nouvelle entreprise » stays as it was', (tester) async {
-      tall(tester);
-      await tester.pumpWidget(MaterialApp(
-          home: CreateBusinessScreen(admin: AdminRepository(null))));
-      await settle(tester);
-      expect(find.text('Association'), findsOneWidget);
-      // Name, address; the currency a picker since 144 (every money by
-      // name, the country's first); the platform's create_org behind its
-      // button.
-      expect(find.byType(TextField), findsNWidgets(2));
-      expect(find.byKey(const Key('create-business-currency')), findsOneWidget);
-      expect(find.text('Créer l\'activité'), findsOneWidget);
-    });
 
     testWidgets('the walkthroughs keep every step when nothing is turned off', (tester) async {
       tall(tester);

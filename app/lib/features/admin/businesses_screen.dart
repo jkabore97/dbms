@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/admin/admin_repository.dart';
 import '../../core/format/currencies.dart';
-import 'create_business_screen.dart';
+import '../../core/onboarding/business_creation.dart' show slugProblem;
 import '../../core/errors.dart';
 import '../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
@@ -70,9 +70,11 @@ class _BusinessesScreenState extends State<BusinessesScreen> {
   }
 
   Future<void> _create() async {
-    // CreateBusinessScreen pops the new org's id, not a flag.
-    final createdId = await context.push<String>(Routes.newBusiness);
-    if (createdId != null) await _load();
+    // « Créer mon activité » (111), the platform admin's way too since
+    // 154b: created, it opens the new business itself; back here, the
+    // list is read again either way.
+    await context.push(Routes.createBusiness);
+    if (mounted) await _load();
   }
 
   Future<void> _edit(PlatformOrg org) async {
@@ -484,7 +486,7 @@ class _EditBusinessSheetState extends State<EditBusinessSheet> {
   String? get _slugProblem {
     final slug = _slug.text.trim();
     if (slug.isEmpty) return null;
-    return CreateBusinessScreen.slugProblem(slug);
+    return slugProblem(slug);
   }
 
   bool get _canSave =>

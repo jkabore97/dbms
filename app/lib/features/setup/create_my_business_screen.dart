@@ -16,7 +16,6 @@ import '../../core/terms/terms.dart';
 import '../account/terms_gate.dart' show SellerCommitmentsCard;
 import '../../core/format/currencies.dart';
 import '../../core/theme/mara_mark.dart';
-import '../admin/create_business_screen.dart' show CreateBusinessScreen;
 import '../auth/org_picker_screen.dart' show iconForProfile, kindColour, kindInk;
 import '../common/phone_field.dart';
 import '../events/events_access.dart';
@@ -320,7 +319,7 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
 
   void _onName(String _) {
     if (!_draft.slugTouched) {
-      _slug.text = CreateBusinessScreen.slugify(_name.text);
+      _slug.text = slugify(_name.text);
     }
     _changed();
     _checkAddress();
@@ -337,7 +336,7 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
   void _checkAddress({bool now = false}) {
     _checkSoon?.cancel();
     final slug = _slug.text.trim();
-    if (slug.isEmpty || CreateBusinessScreen.slugProblem(slug) != null || widget.preview) {
+    if (slug.isEmpty || slugProblem(slug) != null || widget.preview) {
       setState(() {
         _check = null;
         _checking = false;
@@ -372,7 +371,7 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
   bool get _ready => switch (_stepKey) {
         'kind' => _draft.profile != null,
         'name' => _name.text.trim().isNotEmpty &&
-            CreateBusinessScreen.slugProblem(_slug.text.trim()) == null &&
+            slugProblem(_slug.text.trim()) == null &&
             !_checking &&
             !(_check?.taken ?? false) &&
             _check?.problem == null,
@@ -883,7 +882,7 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
 
   List<Widget> _namePage(ThemeData theme) {
     final slug = _slug.text.trim();
-    final local = slug.isEmpty ? null : CreateBusinessScreen.slugProblem(slug);
+    final local = slug.isEmpty ? null : slugProblem(slug);
     final check = _check;
     final Widget status;
     if (slug.isEmpty) {

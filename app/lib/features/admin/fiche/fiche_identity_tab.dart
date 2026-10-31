@@ -6,7 +6,7 @@ import '../../../core/errors.dart';
 import '../../../core/format/currencies.dart';
 import '../../../core/l10n/tr.dart';
 import '../../../core/theme/mara_mark.dart';
-import '../create_business_screen.dart';
+import '../../../core/onboarding/business_creation.dart' show slugProblem;
 import 'fiche_widgets.dart';
 
 /// Identité: the business's name, kind, address (its vitrine's link),
@@ -71,7 +71,7 @@ class _FicheIdentityTabState extends State<FicheIdentityTab> {
   String? get _slugProblem {
     final s = _slug.text.trim();
     if (s == _o.slug) return null;
-    return CreateBusinessScreen.slugProblem(s);
+    return slugProblem(s);
   }
 
   bool get _dirty =>
