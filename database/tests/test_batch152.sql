@@ -53,6 +53,7 @@ create extension pgcrypto schema extensions;
 -- one function.
 \i database/migrations/152_events.sql
 \i database/migrations/153_events_kind.sql
+\i database/migrations/154_events_editor.sql
 insert into orgs (id, name, slug, profile, default_currency) values
     ('15215215-1111-0000-0000-000000000009', 'Sans pgcrypto', 'sans-pgcrypto-152', 'events', 'XOF');
 do $$
@@ -64,7 +65,7 @@ begin
     assert event_slug('Inès & Thomas') ~ '^ines-thomas-[0-9a-f]{4}$', 'the address minted without pgcrypto';
     r := event_create('15215215-1111-0000-0000-000000000009', 'Inès & Thomas', 'mariage', 'come', null, null);
     assert r.preview_token ~ '^[0-9a-f]{24}$', 'the preview token minted without pgcrypto: ' || r.preview_token;
-    raise notice 'PASS: 152 and 153 install and mint with pgcrypto in `extensions`, as on Supabase';
+    raise notice 'PASS: 152, 153 and 154 install and mint with pgcrypto in `extensions`, as on Supabase';
 end $$;
 rollback;
 
@@ -74,6 +75,8 @@ rollback;
 -- seventh argument: restored after 152's re-run, as the migrations run in
 -- order. The claims below hold with the businesses being Événementiels.
 \i database/migrations/153_events_kind.sql
+-- 154 (the edit token, event_public's third argument): restored too.
+\i database/migrations/154_events_editor.sql
 
 begin;
 
@@ -87,7 +90,7 @@ begin
     foreach f in array array['events', 'event_rsvps', 'event_guest_photos'] loop
         assert (select relrowsecurity from pg_class where relname = f), f || ' has row level security';
     end loop;
-    foreach f in array array['events_options()', 'event_public(text, text)',
+    foreach f in array array['events_options()', 'event_public(text, text, text)',
                              'event_rsvp(text, text, text, integer, text, text, jsonb)'] loop
         assert (select prosecdef from pg_proc where oid = to_regprocedure(f)), f || ' is SECURITY DEFINER';
         assert (select proconfig::text like '%search_path=public%' from pg_proc where oid = to_regprocedure(f)),

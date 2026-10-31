@@ -61,6 +61,7 @@ class _Events extends EventsRepository {
       card: card,
       slug: '${title.toLowerCase().replaceAll(RegExp('[^a-z0-9]+'), '-')}-ab12',
       previewToken: 'f00dbabef00dbabef00dbabe',
+      editToken: 'ed17ed17ed17ed17ed17ed17',
       title: title,
       startsAt: startsAt,
       place: place,
@@ -81,7 +82,7 @@ class _Events extends EventsRepository {
     final r = rows[i];
     rows[i] = EventSummary(
       id: r.id, orgId: r.orgId, kind: r.kind, card: r.card, slug: r.slug, previewToken: r.previewToken,
-      title: r.title, startsAt: r.startsAt, place: r.place, content: r.content, rsvpOn: r.rsvpOn,
+      editToken: r.editToken, title: r.title, startsAt: r.startsAt, place: r.place, content: r.content, rsvpOn: r.rsvpOn,
       albumOn: r.albumOn, published: on, createdAt: r.createdAt,
     );
   }
@@ -261,6 +262,8 @@ void main() {
       expect(find.text('Inès & Thomas'), findsOneWidget);
       expect(find.textContaining('samedi 5 juin 2027'), findsOneWidget);
       expect(find.text('Villa Serena'), findsOneWidget);
+      // The answers sit under the buttons and their hints: the list builds them on scroll.
+      await tester.scrollUntilVisible(find.text('Réponses des invités · 2'), 200, scrollable: find.byType(Scrollable).first);
       expect(find.text('Réponses des invités · 2'), findsOneWidget);
       expect(find.text('Tanti Rose'), findsOneWidget);
       expect(find.textContaining('Vient · 2'), findsOneWidget);
@@ -276,6 +279,16 @@ void main() {
       expect(opened, hasLength(1));
       expect(opened.single.path, '/e/${e.slug}');
       expect(opened.single.queryParameters['apercu'], 'f00dbabef00dbabef00dbabe');
+      expect(opened.single.queryParameters.containsKey('modifier'), isFalse, reason: 'a look is not an edit');
+
+      // « Modifier la carte » (154): the page's own editor, with the edit token.
+      await tester.tap(find.byKey(const Key('event-edit')));
+      await tester.pumpAndSettle();
+      expect(opened, hasLength(2));
+      expect(opened.last.path, '/e/${e.slug}');
+      expect(opened.last.queryParameters['apercu'], 'f00dbabef00dbabef00dbabe');
+      expect(opened.last.queryParameters['modifier'], 'ed17ed17ed17ed17ed17ed17');
+      expect(find.textContaining('touchez un texte pour l’écrire'), findsOneWidget);
 
       // A draft: the copied link is the preview's, and says so.
       expect(find.textContaining('Brouillon : le lien copié est celui de l’aperçu'), findsOneWidget);

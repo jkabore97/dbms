@@ -128,7 +128,7 @@ async function serve(request, env) {
     // module to everyone; the server (event_public) decides either way.
     const event = url.pathname.match(/^\/e\/([a-z0-9-]+)\/?$/);
     if (event && request.method === "GET") {
-      return eventPage(request, env, event[1], url.searchParams.get("apercu"));
+      return eventPage(request, env, event[1], url.searchParams.get("apercu"), url.searchParams.get("modifier"));
     }
     // The cards' pages — the twelve under /cartes, the animated one under
     // /evenements — are not addresses of their own: only /e/<slug> is.
@@ -347,7 +347,10 @@ function localParts(iso, tz) {
 
 // /e/<slug> — the card page with the event in it (152). Never cached:
 // a preview link is private, and the organiser's change shows at once.
-export async function eventPage(request, env, slug, preview) {
+// With « modifier » (the edit token, 154) the page is the organiser's
+// editor: the server says « editor », the page shows its bar, saves to
+// the server and uploads its pictures through the uploads Worker.
+export async function eventPage(request, env, slug, preview, edit) {
   const gone = () => new Response("Cette carte n'est pas ouverte.", {
     status: 404,
     headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
@@ -355,11 +358,12 @@ export async function eventPage(request, env, slug, preview) {
   if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) return gone();
   let data = null;
   try {
-    data = await rpcFresh(env, "event_public", { p_slug: slug, p_preview: preview || "" });
+    data = await rpcFresh(env, "event_public", { p_slug: slug, p_preview: preview || "", p_edit: edit || "" });
   } catch (_) {
     data = null;
   }
   if (!data || typeof data !== "object" || !data.title) return gone();
+  const editor = data.editor === true && !!edit;
 
   // Two families of design (153): the twelve cards under /cartes, each its
   // own page; the animated layouts, one page under /evenements that draws
@@ -394,6 +398,11 @@ export async function eventPage(request, env, slug, preview) {
     published: data.published === true,
     org_name: data.org_name || "",
     preview: preview || null,
+    // The organiser's editor (154): the token it saves with, and where its
+    // pictures go and come from.
+    editor,
+    edit: editor ? edit : null,
+    uploads: env.UPLOADS_URL ? env.UPLOADS_URL.replace(/\/$/, "") : null,
     api: { url: env.SUPABASE_URL, key: env.SUPABASE_PUBLISHABLE_KEY },
   };
   // Safe inside <script>: no « < » (so no « </script> »), no line separators.

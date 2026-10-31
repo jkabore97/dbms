@@ -99,6 +99,14 @@ export default {
         return withCors(await put(request, env, upload[1]), cors);
       }
 
+      // POST /v1/events/<slug>/pictures?modifier=<edit token> — a card's
+      // picture, from the card's own editor (154): signed out, the edit
+      // token is the key, and Postgres mints and confirms every key.
+      const picture = url.pathname.match(/^\/v1\/events\/([a-z0-9-]+)\/pictures$/);
+      if (picture && request.method === "POST") {
+        return withCors(await putEventPicture(request, env, picture[1], url.searchParams.get("modifier") || ""), cors);
+      }
+
       // GET /v1/public/objects/<key> — a vitrine photo, for anyone. No token:
       // the shop chose to show this article to the street. Postgres still
       // decides, per key, that the picture is of a published article on an
@@ -388,16 +396,23 @@ async function get(request, env, key) {
 // ------------------------------------------------------------
 
 async function getPublic(request, env, key) {
-  // The street's photos are org/ ones: a courier's dossier is never here.
-  if (!key.startsWith("org/") || !safeKey(key)) {
+  // The street's photos are org/ ones, and a card's are events/ ones (154):
+  // a courier's dossier is never here.
+  const isEvent = EVENT_KEY.test(key);
+  if (!(key.startsWith("org/") || isEvent) || !safeKey(key)) {
     return problem(404, "No such object.");
   }
 
   // Authorised by Postgres, as an anonymous caller — exactly what a shopper
-  // is. storefront_photo_allowed() (052) says yes only for a photo of a
-  // published article on an open vitrine of a live business. Anything else
+  // or a guest is. storefront_photo_allowed() (052) says yes only for a
+  // photo of a published article on an open vitrine of a live business;
+  // event_picture_allowed() (154) only for a card's picture whose bytes
+  // are in — the key is as unguessable as the card's links. Anything else
   // is a 404, never a 403: a 403 would confirm which keys exist.
-  if (!(await rpcAnon(env, "storefront_photo_allowed", { p_key: key }))) {
+  const allowed = isEvent
+    ? await rpcAnon(env, "event_picture_allowed", { p_key: key })
+    : await rpcAnon(env, "storefront_photo_allowed", { p_key: key });
+  if (!allowed) {
     return problem(404, "No such object.");
   }
 
@@ -512,6 +527,80 @@ async function rpcAnon(env, fn, params) {
 // org routes; what Postgres hands back is checked against the shape of a
 // courier key before the bucket is touched.
 // ------------------------------------------------------------
+
+// ------------------------------------------------------------
+// A card's pictures (154)
+//
+// The organiser edits the card on its own page, signed out, with the
+// card's edit token in the address. As for the courier's dossier, every
+// question is Postgres's: which key a picture goes to (event_picture_slot,
+// with the token), that it landed (event_picture_done), and who may see
+// it (event_picture_allowed: anyone who has the key, once the bytes are
+// in). The Worker never builds a key itself.
+// ------------------------------------------------------------
+
+const EVENT_KEY = /^events\/[0-9a-f-]{36}\/[0-9a-f]{32}\.(jpg|png|webp)$/;
+const EVENT_MAX_BYTES = 8 * 1024 * 1024;
+const EVENT_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+async function putEventPicture(request, env, slug, edit) {
+  if (!/^[0-9a-f]{24}$/.test(edit)) {
+    return refusal(403, "Cette carte ne peut pas être modifiée d'ici.");
+  }
+  const contentType = (request.headers.get("Content-Type") || "")
+    .split(";")[0]
+    .trim()
+    .toLowerCase();
+  if (!EVENT_TYPES.has(contentType)) {
+    return refusal(415, "Photos uniquement (JPEG, PNG ou WebP).");
+  }
+  const declared = Number(request.headers.get("Content-Length") || 0);
+  if (declared > EVENT_MAX_BYTES) {
+    return refusal(413, "Cette image est trop lourde (8 Mo au plus).");
+  }
+
+  const slot = await rpcAnonAsked(env, "event_picture_slot", {
+    p_slug: slug,
+    p_edit: edit,
+    p_ext: EXTENSIONS[contentType],
+  });
+  if (!slot.ok) {
+    return refused(slot);
+  }
+  if (typeof slot.value !== "string" || !EVENT_KEY.test(slot.value)) {
+    return problem(500, "Unexpected key.");
+  }
+
+  const body = await request.arrayBuffer();
+  if (body.byteLength === 0) {
+    return problem(400, "There was nothing in the upload.");
+  }
+  if (body.byteLength > EVENT_MAX_BYTES) {
+    return refusal(413, "Cette image est trop lourde (8 Mo au plus).");
+  }
+
+  await env.UPLOADS.put(slot.value, body, {
+    httpMetadata: { contentType },
+    customMetadata: { event: slug },
+  });
+  const done = await rpcAnonAsked(env, "event_picture_done", {
+    p_key: slot.value,
+    p_edit: edit,
+    p_bytes: body.byteLength,
+  });
+  if (!done.ok) {
+    // Never left behind unreferenced: this is the key just written.
+    await env.UPLOADS.delete(slot.value);
+    return refused(done);
+  }
+  return json({ key: slot.value, bytes: body.byteLength, url: `/v1/public/objects/${encodeURIComponent(slot.value)}` }, 201);
+}
+
+/// An RPC as the anonymous role, with the answer or the refusal's words:
+/// the card's editor is signed out, its token is in the parameters.
+function rpcAnonAsked(env, fn, params) {
+  return rpcAs(env, env.SUPABASE_PUBLISHABLE_KEY, fn, params);
+}
 
 const COURIER_PARTS = new Set(["selfie", "id_front", "id_back", "licence"]);
 

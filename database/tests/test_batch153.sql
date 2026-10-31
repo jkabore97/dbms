@@ -45,6 +45,9 @@ grant usage on schema auth to anon, authenticated;
 -- twice, the same.
 \i database/migrations/153_events_kind.sql
 \i database/migrations/153_events_kind.sql
+-- 154 (the edit token, event_public's third argument): restored after
+-- 153's re-run, as the migrations run in order.
+\i database/migrations/154_events_editor.sql
 
 begin;
 
@@ -92,7 +95,7 @@ begin
         'the street may not';
     assert not has_function_privilege('public', 'event_create(uuid, text, text, text, timestamptz, text, text)', 'execute'),
         'nor PUBLIC';
-    assert has_function_privilege('anon', 'event_public(text, text)', 'execute'), 'the street still opens a card';
+    assert has_function_privilege('anon', 'event_public(text, text, text)', 'execute'), 'the street still opens a card';
     assert event_date_fr('2026-12-12 23:00+00', 'America/New_York') = 'Samedi 12 décembre 2026 · 18 h',
         'the hour on the organiser''s clock: ' || event_date_fr('2026-12-12 23:00+00', 'America/New_York');
     assert event_date_fr('2026-12-12 23:00+00') = 'Samedi 12 décembre 2026 · 23 h', 'Ouagadougou by default';
@@ -259,6 +262,7 @@ end $$;
 insert into events (org_id, kind, card, slug, preview_token, title)
 values ('15315315-1111-0000-0000-000000000001', 'mariage', 'come', 'vieille-carte-153', repeat('a', 24), 'Vieille carte');
 \i database/migrations/153_events_kind.sql
+\i database/migrations/154_events_editor.sql
 do $$
 begin
     assert not exists (select 1 from events where slug = 'vieille-carte-153'), 'the shop''s old card is gone';

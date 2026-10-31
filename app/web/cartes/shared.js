@@ -55,6 +55,14 @@
   // the server. Opened on its own (the proposals' page), everything lives
   // in this browser.
   var SERVER = window.CARTE && typeof window.CARTE === 'object' ? window.CARTE : null;
+  // The organiser (154): the server said « editor » for the token in the
+  // address. The editor bar shows, the draft is saved to the server with
+  // that token, and a replaced picture goes to the uploads Worker, which
+  // answers with the key the server minted for it.
+  var ORGANISER = SERVER && SERVER.editor === true && SERVER.edit ? SERVER : null;
+  function picUrl(key) {
+    return SERVER && SERVER.uploads && key ? SERVER.uploads + '/v1/public/objects/' + encodeURIComponent(key) : null;
+  }
   var OK_TAGS = { B: 1, I: 1, EM: 1, STRONG: 1, SPAN: 1, SUP: 1, SUB: 1, BR: 1, SMALL: 1 };
   // What a text may carry: a few inline tags and their class, nothing else —
   // the words are written into the page as HTML, and they come from people.
@@ -95,8 +103,9 @@
   } else {
     try { draft = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { draft = {}; }
   }
-  var memoryOnly = false;
+  var memoryOnly = false, dirty = false, markDirty = function () {};
   function save() {
+    if (ORGANISER) { dirty = true; markDirty(); return; }
     if (SERVER) return;
     try { localStorage.setItem(KEY, JSON.stringify(draft)); }
     catch (e) { if (!memoryOnly) { memoryOnly = true; toast('Trop de photos pour les garder : elles restent pour cette visite'); } }
@@ -180,9 +189,11 @@
     var img = slot.querySelector('img');
     var key = slot.getAttribute('data-pic');
     var d = key ? draft['p:' + key] : null;
-    if (d && d.src) {
+    // A stored picture (154) is named by its key; the demo's by its data URL.
+    var src = d ? (d.key ? picUrl(d.key) : d.src) : null;
+    if (src) {
       if (!img) { img = new Image(); img.alt = ''; slot.insertBefore(img, slot.firstChild); }
-      img.src = d.src;
+      img.src = src;
     }
     if (d && d.pos) slot.style.setProperty('--pos', d.pos);
     if (img) {
@@ -202,18 +213,46 @@
     var file = picker.files[0];
     picker.value = '';
     if (!file || !target) return;
-    shrink(file, 1400, function (src) {
+    shrink(file, 1400, function (src, canvas) {
       var slot = target, key = slot.getAttribute('data-pic');
       var img = slot.querySelector('img');
       if (!img) { img = new Image(); img.alt = ''; slot.insertBefore(img, slot.firstChild); img.addEventListener('load', function () { slot.classList.add('has'); }); }
       img.src = src;
       slot.classList.add('has');
       slot.style.setProperty('--pos', '50% 50%');
-      draft['p:' + key] = { src: src, pos: '50% 50%' };
-      save();
-      toast('Photo remplacée. Glissez-la pour la recadrer.');
+      if (!ORGANISER) {
+        draft['p:' + key] = { src: src, pos: '50% 50%' };
+        save();
+        toast('Photo remplacée. Glissez-la pour la recadrer.');
+        return;
+      }
+      // The organiser's: the bytes go to the uploads Worker, the card keeps
+      // the key the server minted. Until it answers, the slot shows the
+      // picture from this phone.
+      if (!ORGANISER.uploads) { toast('Les photos ne peuvent pas être envoyées d’ici pour le moment.'); return; }
+      toast('Envoi de la photo…');
+      canvas.toBlob(function (blob) {
+        upload(blob).then(function (j) {
+          draft['p:' + key] = { key: j.key, pos: '50% 50%' };
+          save();
+          toast('Photo remplacée. Glissez-la pour la recadrer, puis « Enregistrer ».');
+        }, function (err) {
+          wirePic(slot);
+          toast(err && err.message ? err.message : 'La photo n’est pas passée. Réessayez.');
+        });
+      }, 'image/jpeg', 0.82);
     });
   });
+  function upload(blob) {
+    return fetch(ORGANISER.uploads + '/v1/events/' + encodeURIComponent(ORGANISER.slug) + '/pictures?modifier=' + encodeURIComponent(ORGANISER.edit), {
+      method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob
+    }).then(function (r) {
+      return r.json().then(function (j) {
+        if (!r.ok || !j || !j.key) throw new Error(j && j.error ? j.error : 'La photo n’est pas passée. Réessayez.');
+        return j;
+      }, function () { throw new Error('La photo n’est pas passée. Réessayez.'); });
+    });
+  }
   function shrink(file, max, done) {
     var url = URL.createObjectURL(file), im = new Image();
     im.onload = function () {
@@ -222,7 +261,7 @@
       c.width = Math.round(im.width * s); c.height = Math.round(im.height * s);
       c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
       URL.revokeObjectURL(url);
-      done(c.toDataURL('image/jpeg', 0.82));
+      done(c.toDataURL('image/jpeg', 0.82), c);
     };
     im.onerror = function () { URL.revokeObjectURL(url); toast('Cette image ne peut pas être lue'); };
     im.src = url;
@@ -273,7 +312,7 @@
 
   // ------------------------------------------------------------- editor
   var editable = document.querySelectorAll('[data-edit]');
-  if (card && !SERVER) {
+  if (card && (!SERVER || ORGANISER)) {
     var bar = document.createElement('div');
     bar.className = 'edbar';
     var opts = Object.keys(PRESETS).map(function (k) { return '<option value="' + k + '">' + PRESETS[k].label + '</option>'; }).join('');
@@ -282,8 +321,10 @@
       '<div class="ed-tools" hidden>' +
       '<label class="ed-type">Événement <select>' + opts + '</select></label>' +
       '<p class="ed-hint">Touchez un texte pour l’écrire, une photo pour la remplacer, glissez-la pour la recadrer.</p>' +
-      '<div class="ed-row"><button type="button" class="ed-reset">Réinitialiser</button><button type="button" class="ed-done">Terminé</button></div>' +
-      '</div>';
+      '<div class="ed-row">' +
+      (ORGANISER ? '<button type="button" class="ed-done ed-save">Enregistrer</button>'
+        : '<button type="button" class="ed-reset">Réinitialiser</button><button type="button" class="ed-done">Terminé</button>') +
+      '</div></div>';
     document.body.appendChild(bar);
     document.body.classList.add('has-edbar');
     var sel = bar.querySelector('select');
@@ -297,15 +338,40 @@
       Array.prototype.forEach.call(editable, function (el) {
         if (on) el.setAttribute('contenteditable', 'true'); else el.removeAttribute('contenteditable');
       });
-      if (on) toast('Mode édition'); else toast('Carte enregistrée sur ce téléphone');
+      if (on) toast('Mode édition'); else if (!ORGANISER) toast('Carte enregistrée sur ce téléphone');
     }
     bar.querySelector('.ed-toggle').addEventListener('click', function () { setEditing(true); });
-    bar.querySelector('.ed-done').addEventListener('click', function () { setEditing(false); });
-    bar.querySelector('.ed-reset').addEventListener('click', function () {
-      draft = {};
-      try { localStorage.removeItem(KEY); } catch (e) {}
-      location.reload();
-    });
+    if (ORGANISER) {
+      // The organiser's « Enregistrer »: the draft goes to the server
+      // (event_content_save, 154) with the edit token; the guests see it
+      // at their next visit.
+      var saveBtn = bar.querySelector('.ed-save');
+      markDirty = function () { saveBtn.textContent = 'Enregistrer'; saveBtn.disabled = false; };
+      saveBtn.addEventListener('click', function () {
+        Array.prototype.forEach.call(editable, function (el) { el.blur(); });
+        saveBtn.disabled = true; saveBtn.textContent = 'Envoi…';
+        fetch(SERVER.api.url.replace(/\/+$/, '') + '/rest/v1/rpc/event_content_save', {
+          method: 'POST',
+          headers: { apikey: SERVER.api.key, Authorization: 'Bearer ' + SERVER.api.key, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ p_slug: SERVER.slug, p_edit: ORGANISER.edit, p_content: draft })
+        }).then(function (r) {
+          if (r.ok) { dirty = false; saveBtn.textContent = 'Enregistré'; toast('Carte enregistrée. Vos invités la verront ainsi.'); setEditing(false); return; }
+          return r.json().then(function (j) { throw new Error(j && (j.message || j.hint) || 'La carte n’est pas enregistrée.'); });
+        }).catch(function (err) {
+          markDirty();
+          toast(err && err.message ? err.message : 'La carte n’est pas enregistrée. Réessayez.');
+        });
+      });
+      window.addEventListener('beforeunload', function (e) { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+      setEditing(true);
+    } else {
+      bar.querySelector('.ed-done').addEventListener('click', function () { setEditing(false); });
+      bar.querySelector('.ed-reset').addEventListener('click', function () {
+        draft = {};
+        try { localStorage.removeItem(KEY); } catch (e) {}
+        location.reload();
+      });
+    }
     var t;
     Array.prototype.forEach.call(editable, function (el) {
       el.addEventListener('input', function () {

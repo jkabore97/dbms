@@ -615,7 +615,16 @@ class _EventScreenState extends State<EventScreen> {
                         if (e.place != null && e.place!.isNotEmpty) Text(e.place!, style: theme.textTheme.bodyMedium),
                         const SizedBox(height: 14),
                         Wrap(spacing: 8, runSpacing: 8, children: [
-                          FilledButton.icon(
+                          // The card's own editor (154): the words and the
+                          // pictures, touched on the page, saved to the server.
+                          if (e.editPath != null)
+                            FilledButton.icon(
+                              key: const Key('event-edit'),
+                              onPressed: () => _open(e.editPath!),
+                              icon: const Icon(Icons.edit_outlined),
+                              label: Text(context.tr('Modifier la carte')),
+                            ),
+                          (e.editPath == null ? FilledButton.icon : OutlinedButton.icon)(
                             key: const Key('event-preview'),
                             onPressed: () => _open(e.previewPath),
                             icon: const Icon(Icons.visibility_outlined),
@@ -629,6 +638,15 @@ class _EventScreenState extends State<EventScreen> {
                           ),
                         ]),
                         const SizedBox(height: 6),
+                        if (e.editPath != null)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            child: Text(
+                              context.tr(
+                                  'Sur la carte : touchez un texte pour l’écrire, une photo pour la remplacer, glissez-la pour la recadrer, puis « Enregistrer ».'),
+                              style: theme.textTheme.bodySmall,
+                            ),
+                          ),
                         Text(
                           e.published
                               ? context.tr('Le lien à envoyer aux invités : la carte est publiée.')
