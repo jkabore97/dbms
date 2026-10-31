@@ -8797,4 +8797,6 @@ const enStrings = <String, String>{
       'Edit the card',
   'Sur la carte : touchez un texte pour l’écrire, une photo pour la remplacer, glissez-la pour la recadrer, puis « Enregistrer ».':
       'On the card: touch a text to write it, a picture to replace it, drag it to reframe, then “Save”.',
+  'Cartes d’invitation, réponses des invités':
+      'Invitation cards, guests’ answers',
 };

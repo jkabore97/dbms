@@ -101,6 +101,14 @@ const _profiles =
     detail: 'Ventes et dépenses',
     icon: Icons.storefront_outlined,
   ),
+  // The fourth kind (153): the platform admin makes one here whatever the
+  // public switch says — the owner found this screen still at three.
+  (
+    value: 'events',
+    label: 'Événementiel',
+    detail: 'Cartes d’invitation, réponses des invités',
+    icon: Icons.celebration_outlined,
+  ),
 ];
 
 class _CreateBusinessScreenState extends State<CreateBusinessScreen> {

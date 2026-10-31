@@ -136,6 +136,8 @@ void main() {
           home: CreateBusinessScreen(admin: AdminRepository(null))));
       await settle(tester);
       expect(find.text('Association'), findsOneWidget);
+      // The fourth kind (153) is offered here too, whatever the public switch says.
+      expect(find.text('Événementiel'), findsOneWidget);
       // Name, address; the currency a picker since 144 (every money by
       // name, the country's first); the platform's create_org behind its
       // button.
