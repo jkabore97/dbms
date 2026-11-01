@@ -46,6 +46,27 @@ html.server .rsvp-closed{text-align:center;font-size:15px;opacity:.85;max-width:
 .pill button.save:disabled{opacity:.6}
 .ui.toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:70;max-width:calc(100% - 32px);padding:10px 16px;border-radius:999px;background:var(--ui-fg);color:var(--ui-bg);font:600 13px var(--f-ui);text-align:center;opacity:0;transition:opacity .3s;pointer-events:none}
 .ui.toast.on{opacity:1}
+/* the organiser's editor (157): the texts written in place, the pictures
+   touched, the colours and the writing in a bar — the page's own editor
+   (models, infos, photos) is Marakaj's business now */
+.ui[hidden]{display:none!important}
+html.organiser .pill,html.organiser .sheet,html.organiser .scrim{display:none!important}
+html.organiser body{padding-bottom:calc(72px + env(safe-area-inset-bottom,0px))}
+html.organiser #site [data-t]{outline:1px dashed rgba(255,140,40,.9);outline-offset:3px;cursor:text;min-width:1ch;border-radius:2px}
+html.organiser #site [data-t]:focus{outline:2px solid #ff8c28;background:rgba(255,140,40,.14)}
+/* the models' ornaments (rings, seals, flourishes drawn as ::before/::after) lie over the words: for the organiser they let the taps through */
+html.organiser #site *::before,html.organiser #site *::after,html.organiser .seal{pointer-events:none}
+.reframing{touch-action:none;cursor:grab;outline:3px solid #ff8c28;outline-offset:-3px}
+.ui.bar{position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;align-items:center;gap:8px;padding:10px max(12px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));background:var(--ui-bg);color:var(--ui-fg);box-shadow:0 -10px 30px -12px rgba(0,0,0,.5)}
+.bar .dots{display:flex;gap:6px;flex:0 0 auto}
+.bar .dots button{width:30px;height:30px;border-radius:50%;border:2px solid transparent;padding:0;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+.bar .dots button[aria-pressed="true"]{border-color:var(--ui-fg)}
+.bar select{flex:1 1 auto;min-width:0;min-height:40px;border:1px solid rgba(128,128,128,.4);border-radius:10px;background:transparent;color:var(--ui-fg);font:500 13px var(--f-ui);padding:0 8px}
+.bar .save{flex:0 0 auto;min-height:44px;padding:0 18px;border:0;border-radius:999px;background:var(--ui-acc);color:#1a140c;font:700 13px var(--f-ui);cursor:pointer}
+.bar .save:disabled{opacity:.6}
+.ui.menu{position:fixed;left:12px;right:12px;bottom:calc(80px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;border-radius:16px;background:var(--ui-bg);color:var(--ui-fg);box-shadow:0 10px 30px -8px rgba(0,0,0,.5);font:500 13px var(--f-ui)}
+.menu button{min-height:40px;padding:0 14px;border:0;border-radius:999px;background:rgba(128,128,128,.18);color:inherit;font:600 13px var(--f-ui);cursor:pointer}
+.menu button.acc{background:var(--ui-acc);color:#1a140c}
 
 /* ============ 1. LA LETTRE ============ */
 .L-lettre{font-family:"Cormorant Garamond",Georgia,serif}
@@ -299,7 +320,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
 .star{position:absolute!important;right:-6%;top:24%;width:min(78vw,520px);aspect-ratio:1;border-radius:50%;background:color-mix(in srgb,var(--soft) 60%,transparent);z-index:-1!important}
 .star .def{position:absolute;inset:0}
 .slot.has.duo{filter:saturate(.85) contrast(1.05)}
-.arch.has{background-image:linear-gradient(color-mix(in srgb,var(--bg) 55%,transparent),color-mix(in srgb,var(--bg) 82%,transparent)),var(--ph)!important;background-size:cover;background-position:center 30%}
+.arch.has{background-image:linear-gradient(color-mix(in srgb,var(--bg) 55%,transparent),color-mix(in srgb,var(--bg) 82%,transparent)),var(--ph)!important;background-size:cover;background-position:var(--php,center 30%)}
 .pol .ph.slot.has b{visibility:hidden}
 
 /* ============ the new landscape layouts: archetypes ============ */
@@ -793,8 +814,9 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
 <div class="ui pill">
   <button type="button" id="openTpl" class="acc">Modèles</button>
   <button type="button" id="openInfo">Mes infos</button>
-  <button type="button" id="saveBtn" class="save" hidden>Enregistrer</button>
 </div>
+<div class="ui menu" id="menu" hidden></div>
+<div class="ui bar" id="bar" hidden><div class="dots" id="dots"></div><select id="fontSel" aria-label="Écriture"></select><button type="button" id="saveBtn" class="save">Enregistrer</button></div>
 <div class="ui toast" id="toast" role="status"></div>
 <div class="scrim" id="scrim"></div>
 <div class="ui sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
@@ -874,6 +896,11 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
   // event_public tells it — and this page is that card: no memory of its
   // own, no editor, the answers sent to the server.
   var SERVER = (window.CARTE && typeof window.CARTE === 'object' && window.CARTE.slug) ? window.CARTE : null;
+  // The organiser's own words and framings (157): t:<field> and the
+  // pos of p:<slot> in the card's content. Everything else the page
+  // shows — the title, the kind, the date, the hour, the place — is the
+  // event's own, set in Marakaj.
+  var TX = {}, POS = {};
   if (SERVER) {
     (function (c) {
       var kinds = {mariage: 'mariage', dot: 'dot', anniversaire: 'anniv', bapteme: 'bapteme', naissance: 'naissance',
@@ -891,8 +918,11 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
       var ct = c.content && typeof c.content === 'object' ? c.content : {};
       S.pal = typeof ct.pal === 'number' ? ct.pal : 0;
       S.font = typeof ct.font === 'string' ? ct.font : '';
-      // The organiser's own words (154) win over the event's row.
-      ['type', 'custom', 'a', 'b'].forEach(function (k) { if (typeof ct[k] === 'string' && ct[k]) S[k] = ct[k]; });
+      Object.keys(ct).forEach(function (k) {
+        if (k.indexOf('t:') === 0 && typeof ct[k] === 'string' && (ct[k] || k === 't:b')) TX[k.slice(2)] = ct[k];
+        var m = k.indexOf('p:') === 0 && ct[k] && typeof ct[k].pos === 'string' && /^(\d{1,3}(?:\.\d)?)% (\d{1,3}(?:\.\d)?)%$/.exec(ct[k].pos);
+        if (m) POS[k.slice(2)] = [+m[1], +m[2]];
+      });
     })(SERVER);
   } else {
     try { var sv = JSON.parse(localStorage.getItem('mk-evt2') || 'null'); if (sv) for (var k in sv) S[k] = sv[k]; } catch (e) {}
@@ -968,11 +998,18 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
         prog: [[hh(S.time, '15 h'), 'Accueil', 'Bienvenue à tous.'], ['17 h', 'Le temps fort', 'Le cœur de l\'événement.'], ['19 h', 'Partage', 'Repas et musique.']]}
     }[S.type] || null;
     if (!t) { S.type = 'mariage'; return W(); }
-    t.A = A; t.B = two ? B : ''; t.two = two;
-    t.plain = two ? A + ' & ' + B : A;
-    t.ini = (S.a || 'A').trim().charAt(0).toUpperCase() + (two ? (S.b || '').trim().charAt(0).toUpperCase() : '');
-    t.place = esc(S.place || 'Ouagadougou');
-    t.map = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(S.place || 'Ouagadougou');
+    var rawA = TX.a || S.a || 'Prénom', rawB = TX.b != null ? TX.b : (S.b || ''), rawPlace = TX.place || S.place || 'Ouagadougou';
+    // Some models write the names whole (plain): written there, they are
+    // split the way the title is.
+    if (TX.plain) { var pp = TX.plain.split(/\s*(?:&|\bet\b)\s*/); rawA = pp[0] || rawA; rawB = pp.length > 1 ? pp.slice(1).join(' & ') : ''; }
+    A = esc(rawA); B = esc(rawB.trim()); two = !!B;
+    t.A = ed('a', A); t.B = two ? ed('b', B) : ''; t.two = two;
+    t.plain = ed('plain', two ? A + ' & ' + B : A);
+    t.ini = rawA.trim().charAt(0).toUpperCase() + (two ? rawB.trim().charAt(0).toUpperCase() : '');
+    t.eye = ed('eye', tx('eye', t.eye)); t.hero = ed('hero', tx('hero', t.hero)); t.intro = ed('intro', tx('intro', t.intro)); t.kind = ed('kind', tx('kind', t.kind));
+    t.prog = t.prog.map(function (p, i) { var k = 'prog-' + i + '-'; return [TX[k + '0'] || p[0], ed(k + '1', tx(k + '1', p[1])), ed(k + '2', tx(k + '2', p[2]))]; });
+    t.place = ed('place', esc(rawPlace));
+    t.map = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(rawPlace);
     return t;
   }
   // the shared pieces every layout styles its own way
@@ -3346,6 +3383,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
     var w = W(), d = D();
     document.getElementById('site').innerHTML = (L.isPrem ? premiumHTML(w, d, L) : L.arch ? ARCH[L.arch](w, d, L) : R[L.id](w, d)) + '<footer class="f">' + w.plain + ' · ' + d.dd + '.' + d.mm + '.' + d.yyyy + '<br><br>Créé avec Marakaj</footer>';
     qr('Invité'); wire(); tick(); animate(); attachScenes(); applySlots(); if (L.isPrem) startCinema(L);
+    if (ORG) wireEdit();
   }
 
   // ================= the editor =================
@@ -3384,6 +3422,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
       el.classList.toggle('has', !!u);
       if (el.classList.contains('slot-bg')) el.style.setProperty('--ph', u ? 'url(' + u + ')' : 'none');
       else el.style.backgroundImage = u ? 'url(' + u + ')' : '';
+      setPos(el, POS[el.dataset.slot]);
       if (SERVER && !ORG) { el.onclick = null; el.onkeydown = null; el.removeAttribute('role'); el.removeAttribute('tabindex'); el.removeAttribute('aria-label'); return; }
       el.onclick = function (e) { if (e.target.closest('a,input,select,form')) return; openSlot(el.dataset.slot); };
       el.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSlot(el.dataset.slot); } };
@@ -3413,8 +3452,8 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
         return Promise.all(urls.filter(Boolean).map(function (u) { return fetch(u).then(function (r) { return r.blob(); }).then(uploadPic); })).then(function (res) {
           res.forEach(function (j) { KEYS.push(j.key); PH.push(ORG.uploads + '/v1/public/objects/' + encodeURIComponent(j.key)); });
           e.target.value = '';
-          if (curSlot && res.length) SL[curSlot] = first;
-          autoAssign(); applySlots(); drawPh(); if (curSlot) { drawSlot(); }
+          if (curSlot && res.length) { SL[curSlot] = first; delete POS[curSlot]; }
+          autoAssign(); applySlots(); menu(null); curSlot = null;
           keep(); say(res.length > 1 ? res.length + ' photos ajoutées. Touchez « Enregistrer » quand la carte vous plaît.' : 'Photo ajoutée. Touchez « Enregistrer » quand la carte vous plaît.');
         }, function (err) { e.target.value = ''; say(err && err.message ? err.message : 'La photo n\'est pas passée. Réessayez.'); });
       }
@@ -3431,7 +3470,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
       b.onclick = function () { var i = +b.dataset.i; PH.splice(i, 1); KEYS.splice(i, 1); Object.keys(SL).forEach(function (k) { if (SL[k] === i) delete SL[k]; else if (SL[k] > i) SL[k]--; }); applySlots(); drawPh(); keep(); };
     });
   }
-  function openSlot(id) { curSlot = id; drawSlot(); open('slot'); }
+  function openSlot(id) { if (ORG) { slotTap(id); return; } curSlot = id; drawSlot(); open('slot'); }
   function drawSlot() {
     var cur = SL[curSlot];
     document.getElementById('slotList').innerHTML = '<button type="button" data-i="-1" aria-pressed="' + (cur == null) + '">Sans photo</button>' +
@@ -3452,7 +3491,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
 
   function drawPicker() {
     var L = lay();
-    document.getElementById('lays').innerHTML = (ORG ? [L] : LAYS).map(function (l) {
+    document.getElementById('lays').innerHTML = LAYS.map(function (l) {
       var on = l.id === S.lay, h = '<div class="lay" data-l="' + l.id + '" aria-pressed="' + on + '"><button type="button" class="lay-head" data-pick="' + l.id + '"><div class="mini ph" style="background-image:url(' + l.thumb + ')"></div><div class="meta"><b>' + l.name + (l.isPrem ? ' <span class="tag prem">Premium</span>' : l.isNew ? ' <span class="tag">Nouveau</span>' : '') + '</b><span>' + l.what + '</span>' + (on ? '<em>Choisi</em>' : '') + '</div></button>';
       if (on) {
         h += '<div class="lay-set"><div class="lab">Couleurs</div><div class="pals">' + l.pals.map(function (p, i) { return '<button type="button" class="pal" data-p="' + i + '" aria-pressed="' + (i === S.pal) + '"><i style="background:linear-gradient(135deg,' + p[1] + ' 50%,' + p[3] + ' 50%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)"></i>' + p[0] + '</button>'; }).join('') + '</div>' +
@@ -3480,13 +3519,93 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
       }, function () { throw new Error('La photo n\'est pas passée. Réessayez.'); });
     });
   }
-  // What the card keeps on the server: the words, the colour, the writing,
-  // and which stored picture sits in which slot. The date, the hour and
+  // What the card keeps on the server: the colour, the writing, the
+  // organiser's own words (t:<field>), and which stored picture sits in
+  // which slot, framed how. The title, the kind, the date, the hour and
   // the place are the event's own, set in Marakaj.
   function cardContent() {
-    var c = {type: String(S.type || 'autre'), custom: String(S.custom || ''), a: String(S.a || ''), b: String(S.b || ''), pal: +S.pal || 0, font: String(S.font || '')};
-    Object.keys(SL).forEach(function (id) { var k = KEYS[SL[id]]; if (k && /^[a-z0-9-]{1,40}$/.test(id)) c['p:' + id] = {key: k}; });
+    var c = {pal: +S.pal || 0, font: String(S.font || '')};
+    Object.keys(TX).forEach(function (k) { if ((TX[k] || k === 'b') && /^[a-z0-9-]{1,40}$/.test(k)) c['t:' + k] = String(TX[k]).slice(0, 4000); });
+    Object.keys(SL).forEach(function (id) {
+      var k = KEYS[SL[id]]; if (!k || !/^[a-z0-9-]{1,40}$/.test(id)) return;
+      c['p:' + id] = {key: k};
+      if (POS[id]) c['p:' + id].pos = POS[id][0] + '% ' + POS[id][1] + '%';
+    });
     return c;
+  }
+  // The words: tx() reads the organiser's, ed() marks one to write in place.
+  function tx(k, dflt) { return TX[k] ? esc(TX[k]) : dflt; }
+  function ed(k, s) { return ORG ? '<span data-t="' + k + '">' + s + '</span>' : s; }
+  function setPos(el, p) {
+    var v = p ? p[0] + '% ' + p[1] + '%' : '';
+    if (el.classList.contains('slot-bg')) { if (v) el.style.setProperty('--php', v); else el.style.removeProperty('--php'); }
+    else el.style.backgroundPosition = v;
+  }
+  // After each render, for the organiser: every marked word is written in
+  // place (Enter or a tap away ends it, the same word elsewhere on the
+  // page follows), and the programme's hours, which the models write as
+  // a <b> beside each line, are marked from the line's name.
+  function wireEdit() {
+    var site = document.getElementById('site'), w = W();
+    RF = null; curSlot = null; menu(null);
+    Array.prototype.forEach.call(site.querySelectorAll('[data-t]'), function (el) {
+      var k = el.getAttribute('data-t').toLowerCase(); el.setAttribute('data-t', k);
+      // A word inside a picture's slot (its empty-state caption) is the picture's, not written.
+      if (el.closest('[data-slot]')) { el.removeAttribute('data-t'); return; }
+      var m = /^prog-(\d+)-1$/.exec(k);
+      if (!m) return;
+      var want = String((w.prog[+m[1]] || [])[0] || '').trim().toLowerCase(), host = el.parentElement;
+      for (var n = 0; host && host !== site && n < 4; n++, host = host.parentElement) {
+        var b = Array.prototype.filter.call(host.querySelectorAll('b'), function (x) { return !x.hasAttribute('data-t') && x.textContent.trim().toLowerCase() === want; })[0];
+        if (b) { b.setAttribute('data-t', 'prog-' + m[1] + '-0'); break; }
+      }
+    });
+    Array.prototype.forEach.call(site.querySelectorAll('[data-t]'), function (el) {
+      var k = el.getAttribute('data-t'), a = el.closest('a');
+      el.setAttribute('contenteditable', 'true'); el.setAttribute('spellcheck', 'false');
+      if (a) a.onclick = function (e) { e.preventDefault(); };
+      el.addEventListener('focus', function () { if (el.querySelector('.word, .char')) el.textContent = el.textContent; });
+      el.addEventListener('input', function () {
+        var v = el.textContent.replace(/\s+/g, ' ').trim().slice(0, 4000);
+        if (v || k === 'b') TX[k] = v; else delete TX[k];
+        if (k === 'plain') { delete TX.a; delete TX.b; } else if (k === 'a' || k === 'b') delete TX.plain;
+        Array.prototype.forEach.call(site.querySelectorAll('[data-t="' + k + '"]'), function (o) { if (o !== el) o.textContent = v; });
+        if (el.closest('[data-fit]')) fitAll();
+        keep();
+      });
+      el.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); el.blur(); } });
+      el.addEventListener('paste', function (e) {
+        e.preventDefault(); var s = ((e.clipboardData || window.clipboardData).getData('text') || '').replace(/\s+/g, ' ');
+        document.execCommand('insertText', false, s);
+      });
+    });
+  }
+  // The pictures: a touch on an empty slot opens the phone's pictures; on
+  // a filled one, a menu — change, reframe (drag), remove.
+  var RF = null;
+  function slotEl(id) { return document.querySelector('#site [data-slot="' + id + '"]'); }
+  function menu(h) { var m = document.getElementById('menu'); if (!m) return; m.hidden = !h; m.innerHTML = h || ''; }
+  function pick(id) { curSlot = id; menu(null); document.getElementById('fUp').click(); }
+  function slotTap(id) {
+    if (RF) return;
+    if (SL[id] == null) { pick(id); return; }
+    curSlot = id;
+    menu('<span>Cette photo :</span><button type="button" data-act="change" class="acc">Changer</button><button type="button" data-act="reframe">Recadrer</button><button type="button" data-act="remove">Retirer</button><button type="button" data-act="cancel">Annuler</button>');
+  }
+  function reframe(id) {
+    var el = slotEl(id); if (!el) return;
+    RF = id; el.classList.add('reframing');
+    menu('<span>Glissez la photo pour la cadrer.</span><button type="button" data-act="done" class="acc">Terminé</button>');
+    var pos = POS[id] || [50, 30], start = null;
+    function clamp(v) { return Math.max(0, Math.min(100, v)); }
+    el.onpointerdown = function (e) { if (e.button) return; start = {x: e.clientX, y: e.clientY, px: pos[0], py: pos[1], w: el.clientWidth || 1, h: el.clientHeight || 1}; try { el.setPointerCapture(e.pointerId); } catch (x) {} e.preventDefault(); };
+    el.onpointermove = function (e) { if (!start) return; pos = [clamp(start.px - (e.clientX - start.x) / start.w * 100), clamp(start.py - (e.clientY - start.y) / start.h * 100)]; setPos(el, pos); };
+    el.onpointerup = el.onpointercancel = function () { if (!start) return; start = null; POS[id] = [Math.round(pos[0] * 10) / 10, Math.round(pos[1] * 10) / 10]; keep(); };
+  }
+  function endReframe() {
+    var el = RF && slotEl(RF);
+    if (el) { el.classList.remove('reframing'); el.onpointerdown = el.onpointermove = el.onpointerup = el.onpointercancel = null; }
+    RF = null; curSlot = null; menu(null);
   }
   function saveCard() {
     var sb = document.getElementById('saveBtn'), api = ORG.api || {};
@@ -3504,25 +3623,48 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
       dirty = false; sb.textContent = 'Enregistré'; close(); say('Carte enregistrée. Vos invités la verront ainsi.');
     }, function () { sb.disabled = false; sb.textContent = 'Enregistrer'; say('Pas de réseau : réessayez dans un instant.'); });
   }
+  // The bar: the model's colours as dots, its writing, « Enregistrer ».
+  function drawBar() {
+    var L = lay(), sel = document.getElementById('fontSel');
+    document.getElementById('dots').innerHTML = L.pals.map(function (p, i) {
+      return '<button type="button" data-p="' + i + '" aria-pressed="' + (i === S.pal) + '" aria-label="' + esc(p[0]) + '" title="' + esc(p[0]) + '" style="background:linear-gradient(135deg,' + p[1] + ' 50%,' + p[3] + ' 50%)"></button>';
+    }).join('');
+    Array.prototype.forEach.call(document.querySelectorAll('#dots button'), function (b) { b.onclick = function () { S.pal = +b.dataset.p; keep(); drawBar(); render(); }; });
+    if (!sel.options.length) {
+      sel.innerHTML = FONTS.map(function (f) { return '<option value="' + f.id + '">' + 'Aa · ' + (f.id ? f.name : 'Du modèle') + '</option>'; }).join('');
+      sel.onchange = function () { S.font = sel.value; keep(); render(); };
+    }
+    sel.value = S.font || '';
+  }
   if (ORG) {
-    document.getElementById('openTpl').textContent = 'Couleurs';
-    document.getElementById('tabTpl').textContent = 'Couleurs';
-    document.getElementById('sheetTitle').textContent = 'Les couleurs et l\'écriture de votre carte';
-    document.querySelector('#paneTpl .sub').textContent = 'Le modèle est celui choisi dans Marakaj. Touchez une couleur ou une écriture : la carte change aussitôt.';
-    document.querySelector('#paneInfo h3').textContent = 'Les mots de la carte';
-    document.querySelector('#paneInfo .sub').textContent = 'Le type d\'événement et les prénoms. La date, l\'heure et le lieu se changent dans Marakaj.';
-    document.querySelector('.note2').textContent = 'Touchez « Enregistrer » quand la carte vous plaît : vos invités la verront ainsi.';
-    document.getElementById('fDate').closest('.row2').hidden = true;
-    document.getElementById('fPlace').closest('label').hidden = true;
+    document.getElementById('bar').hidden = false;
+    document.getElementById('fUp').removeAttribute('multiple');
+    drawBar();
     var saveBtn = document.getElementById('saveBtn');
-    saveBtn.hidden = false; saveBtn.onclick = saveCard;
+    saveBtn.disabled = true; saveBtn.onclick = function () { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); saveCard(); };
+    document.getElementById('menu').onclick = function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      var act = b.dataset.act, id = curSlot;
+      if (act === 'change') pick(id);
+      else if (act === 'reframe') reframe(id);
+      else if (act === 'done') endReframe();
+      else if (act === 'remove') {
+        var i = SL[id]; delete SL[id]; delete POS[id];
+        if (i != null && Object.keys(SL).every(function (k) { return SL[k] !== i; })) {
+          PH.splice(i, 1); KEYS.splice(i, 1); Object.keys(SL).forEach(function (k) { if (SL[k] > i) SL[k]--; });
+        }
+        applySlots(); keep(); menu(null); curSlot = null;
+      }
+      else { menu(null); curSlot = null; }
+    };
+    setTimeout(function () { say('Touchez un texte pour l\'écrire, une photo pour la changer.'); }, 900);
     window.addEventListener('beforeunload', function (e) { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
   }
 
   var F = {fType: 'type', fCustom: 'custom', fA: 'a', fB: 'b', fDate: 'date', fTime: 'time', fPlace: 'place'};
   Object.keys(F).forEach(function (id) { var el = document.getElementById(id); if (!el) return; el.value = S[F[id]] || ''; el.addEventListener('change', function () { S[F[id]] = el.value; keep(); labB(); render(); }); });
   function labB() { document.getElementById('lCustom').hidden = S.type !== 'autre'; }
-  labB(); if (!SERVER || ORG) drawPicker(); render();
+  labB(); if (!SERVER) drawPicker(); render();
   window.addEventListener('load', function () { if (hasG) ScrollTrigger.refresh(); });
 })();
 </script>
