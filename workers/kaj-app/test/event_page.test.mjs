@@ -257,6 +257,34 @@ test("the real pages take the card's data: each has the <head> the Worker writes
   }
 });
 
+test("a guest's pass (158): /e/<slug>/invite/<id> reads event_pass, never cached; nothing for a wrong id", async () => {
+  const id = "0f0f0f0f-0f0f-4f0f-8f0f-0f0f0f0f0f0f";
+  answer = { id, name: "Tanti Rose", people: 2, answer: "oui", arrived_at: null, title: "Inès & Thomas", date_fr: "samedi 5 juin 2027 à 15 h",
+    place: "Villa Serena", org_name: "Mariages d'Awa", tz: "Africa/Ouagadougou" };
+  asked.length = 0;
+  let r = await get(`/e/ines-thomas-ab12/invite/${id}`);
+  assert.equal(r.status, 200);
+  let html = await r.text();
+  assert.ok(html.includes("Tanti Rose") && html.includes("Vient · 2 personnes") && html.includes("Inès &amp; Thomas") && html.includes("Villa Serena") && html.includes("Mariages d'Awa"), html.slice(0, 200));
+  assert.ok(!/Arrivé/.test(html), "not arrived yet");
+  assert.equal(r.headers.get("Cache-Control"), "no-store");
+  const u = new URL(asked[0]);
+  assert.equal(u.pathname, "/rest/v1/rpc/event_pass");
+  assert.equal(u.searchParams.get("p_slug"), "ines-thomas-ab12");
+  assert.equal(u.searchParams.get("p_id"), id);
+  answer = { ...answer, people: 1, arrived_at: "2027-06-05T18:05:00+00:00" };
+  html = await (await get(`/e/ines-thomas-ab12/invite/${id}`)).text();
+  assert.ok(/Arrivé·e à 18:05/.test(html) && html.includes(">Vient<"), "arrived, at Ouagadougou's hour");
+  answer = { ...answer, answer: "non" };
+  html = await (await get(`/e/ines-thomas-ab12/invite/${id}`)).text();
+  assert.ok(html.includes("Ne vient pas"));
+  answer = null;
+  assert.equal((await get(`/e/ines-thomas-ab12/invite/${id}`)).status, 404, "an unknown pass");
+  asked.length = 0;
+  assert.equal((await get("/e/ines-thomas-ab12/invite/not-an-id")).status, 404);
+  assert.equal(asked.length, 0, "a malformed id never asks the server");
+});
+
 test("without the project's address, nothing", async () => {
   const r = await site.fetch(new Request("https://marakaj.com/e/x"), { ASSETS: env.ASSETS });
   assert.equal(r.status, 404);

@@ -10,6 +10,7 @@ import '../../core/events/events_repository.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import '../../core/theme/kaj_card.dart';
+import '../capture/barcode_sheet.dart';
 import 'templates_gallery_screen.dart';
 
 /// Where the cards live: the site itself on the web (a preview deploy
@@ -580,6 +581,17 @@ class _EventScreenState extends State<EventScreen> {
 
   /// « Changer de modèle » (155b): the gallery for this card; back with
   /// true, the page reads the card again.
+  /// The guest's arrival (158), marked from the list; the list re-read.
+  Future<void> _arrived(EventRsvp r, bool on) async {
+    try {
+      await widget.events.setArrived(r.id, on);
+    } catch (err) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AuthRepository.describeError(err))));
+      return;
+    }
+    await _load();
+  }
+
   Future<void> _editInfo(EventSummary e) async {
     final draft = await showModalBottomSheet<EventDraft>(
       context: context,
@@ -811,7 +823,7 @@ class _EventScreenState extends State<EventScreen> {
                   if (_rsvps.isEmpty)
                     Text(context.tr('Personne n’a encore répondu.'), style: theme.textTheme.bodyMedium)
                   else
-                    for (final r in _rsvps) RsvpTile(rsvp: r),
+                    for (final r in _rsvps) RsvpTile(rsvp: r, onArrived: (on) => _arrived(r, on)),
                   const SizedBox(height: 18),
                   Text(
                     '${context.tr('Album des invités')} · ${_pictures.length}',
@@ -909,9 +921,12 @@ class _PictureTile extends StatelessWidget {
 
 /// A guest's answer: who, came or not or a word, what they added.
 class RsvpTile extends StatelessWidget {
-  const RsvpTile({super.key, required this.rsvp, this.cardTitle});
+  const RsvpTile({super.key, required this.rsvp, this.cardTitle, this.onArrived});
 
   final EventRsvp rsvp;
+
+  /// The organiser's mark (158): the guest arrived, or not after all.
+  final Future<void> Function(bool on)? onArrived;
 
   /// The card answered, when the list spans several (« Invités »).
   final String? cardTitle;
@@ -929,7 +944,9 @@ class RsvpTile extends StatelessWidget {
       if (r.message != null && r.message!.isNotEmpty) r.message!,
       for (final x in r.extra.entries)
         if ('${x.value}'.isNotEmpty) '${x.key} : ${x.value}',
+      if (r.arrivedAt != null) context.tr('Arrivé à {time}', {'time': DateFormat('HH:mm').format(r.arrivedAt!)}),
     ];
+    final arrival = r.answer == 'oui' && onArrived != null;
     return KajCard(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
@@ -941,6 +958,14 @@ class RsvpTile extends StatelessWidget {
         title: Text(r.name),
         subtitle: Text(lines.join('\n')),
         isThreeLine: lines.length > 1,
+        trailing: arrival
+            ? FilterChip(
+                key: Key('rsvp-arrived-${r.id}'),
+                label: Text(r.arrivedAt == null ? context.tr('Présent') : context.tr('Arrivé')),
+                selected: r.arrivedAt != null,
+                onSelected: (v) => onArrived!(v),
+              )
+            : null,
       ),
     );
   }
@@ -993,6 +1018,41 @@ class _GuestsScreenState extends State<GuestsScreen> {
     }
   }
 
+  Future<void> _arrived(EventRsvp r, bool on) async {
+    try {
+      await widget.events.setArrived(r.id, on);
+    } catch (err) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AuthRepository.describeError(err))));
+      return;
+    }
+    await _load();
+  }
+
+  /// At the door (158): the guest's QR scanned with the phone, the answer
+  /// it names found among the business's, the arrival marked.
+  Future<void> _scan() async {
+    final text = await BarcodeSheet.scan(context, title: context.tr('La carte d’invité'));
+    if (!mounted || text == null) return;
+    await _arrivedFromPass(text);
+  }
+
+  Future<void> _arrivedFromPass(String text) async {
+    final id = EventsRepository.passIdFrom(text);
+    final messenger = ScaffoldMessenger.of(context);
+    if (id == null) {
+      messenger.showSnackBar(SnackBar(content: Text(context.tr('Ce code n’est pas une carte d’invité.'))));
+      return;
+    }
+    final r = _rsvps.where((x) => x.id == id).firstOrNull;
+    if (r == null) {
+      messenger.showSnackBar(SnackBar(content: Text(context.tr('Carte d’invité inconnue : pas une réponse de vos cartes.'))));
+      return;
+    }
+    await _arrived(r, true);
+    if (!mounted) return;
+    messenger.showSnackBar(SnackBar(content: Text(context.tr('{name} : arrivé·e.', {'name': r.name}))));
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -1032,12 +1092,20 @@ class _GuestsScreenState extends State<GuestsScreen> {
                     child: ListView(
                       padding: EdgeInsets.fromLTRB(12, 12, 12, 24 + MediaQuery.viewPaddingOf(context).bottom),
                       children: [
+                        // The door (158): a guest's QR scanned, their arrival marked.
+                        OutlinedButton.icon(
+                          key: const Key('guests-scan'),
+                          onPressed: _scan,
+                          icon: const Icon(Icons.qr_code_scanner),
+                          label: Text(context.tr('Scanner une carte d’invité')),
+                        ),
+                        const SizedBox(height: 10),
                         Padding(
                           padding: const EdgeInsets.fromLTRB(4, 0, 4, 10),
                           child: Text('${context.tr('Réponses des invités')} · ${_rsvps.length}',
                               style: theme.textTheme.titleMedium),
                         ),
-                        for (final r in _rsvps) RsvpTile(rsvp: r, cardTitle: r.eventTitle),
+                        for (final r in _rsvps) RsvpTile(rsvp: r, cardTitle: r.eventTitle, onArrived: (on) => _arrived(r, on)),
                       ],
                     ),
                   );

@@ -192,6 +192,9 @@ begin
 end $$;
 
 -- 3. the cards are the Événementiel's
+-- 157 holds the Premium door: Awa's Événementiel is Pro for the card below.
+update orgs set plan = 'pro' where id = (select v from t153 where k = 'awa_org')::uuid;
+
 do $$
 declare
     v_awa uuid := (select v from t153 where k = 'awa_org')::uuid;

@@ -130,6 +130,12 @@ async function serve(request, env) {
     if (event && request.method === "GET") {
       return eventPage(request, env, event[1], url.searchParams.get("apercu"), url.searchParams.get("modifier"));
     }
+    // /e/<slug>/invite/<id> — a guest's pass (158): what the QR on their
+    // answer opens. The id is the key; the server (event_pass) decides.
+    const pass = url.pathname.match(/^\/e\/([a-z0-9-]+)\/invite\/([^/]*)\/?$/);
+    if (pass && request.method === "GET") {
+      return passPage(env, pass[1], pass[2]);
+    }
     // /modele/<key> — a design shown as a card, with sample words (155c):
     // what the app's gallery opens on « Voir le modèle en vrai ».
     const demo = url.pathname.match(/^\/modele\/([a-z0-9_]+)\/?$/);
@@ -371,6 +377,55 @@ export async function eventPage(request, env, slug, preview, edit) {
   if (!data || typeof data !== "object" || !data.title) return gone();
   const editor = data.editor === true && !!edit;
   return cardPage(request, env, { slug, data, preview, edit: editor ? edit : null, editor, demo: false });
+}
+
+// /e/<slug>/invite/<id> — a guest's pass (158): their name, how many they
+// come with, the event, the day, the place, and whether they have
+// arrived — read by event_pass with the answer's id as the key. Shown to
+// whoever holds the QR: the guest at the door, the organiser who scans
+// it. Never cached.
+export async function passPage(env, slug, id) {
+  const gone = (text) => new Response(text, {
+    status: 404,
+    headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
+  });
+  // The id is an answer's uuid; anything else is no pass, asked of nobody.
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(id)) return gone("Cette carte d'invité n'existe pas.");
+  if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) return gone("Cette carte d'invité n'est pas disponible.");
+  let p = null;
+  try {
+    p = await rpcFresh(env, "event_pass", { p_slug: slug, p_id: id });
+  } catch (_) {
+    p = null;
+  }
+  if (!p || typeof p !== "object" || !p.name) return gone("Cette carte d'invité n'existe pas.");
+  const tz = typeof p.tz === "string" && p.tz.includes("/") ? p.tz : "Africa/Ouagadougou";
+  let arrived = "";
+  if (p.arrived_at) {
+    try {
+      arrived = `Arrivé·e à ${new Date(p.arrived_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: tz })}`;
+    } catch (_) {
+      arrived = "Arrivé·e";
+    }
+  }
+  const people = Number(p.people) || 1;
+  const status = p.answer === "non" ? "Ne vient pas" : p.answer === "mot" ? "A laissé un mot" : people > 1 ? `Vient · ${people} personnes` : "Vient";
+  const line = (s) => (s ? `<p>${escapeHtml(String(s))}</p>` : "");
+  const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8">` +
+    `<meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">` +
+    `<title>Carte d'invité · ${escapeHtml(String(p.title || ""))}</title>` +
+    `<style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f4efe6;color:#1a140c;font-family:Georgia,"Times New Roman",serif}` +
+    `main{max-width:420px;margin:24px;padding:28px 24px;background:#fff;border-radius:20px;box-shadow:0 20px 60px -30px rgba(0,0,0,.4);text-align:center}` +
+    `.eye{font:600 11px system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#8a6d3b}h1{font-size:30px;margin:10px 0 4px;font-weight:500}` +
+    `.st{display:inline-block;margin:8px 0 18px;padding:6px 14px;border-radius:999px;background:${p.answer === "non" ? "#efe4e4" : "#e6f1e8"};font:600 13px system-ui,sans-serif}` +
+    `p{margin:4px 0;font-size:16px}.ev{margin-top:16px;padding-top:16px;border-top:1px solid #eee}.ev b{display:block;font-size:20px;font-weight:500}` +
+    `.ar{margin-top:16px;padding:10px;border-radius:12px;background:#e6f1e8;font:600 14px system-ui,sans-serif}` +
+    `footer{margin-top:18px;font:12px system-ui,sans-serif;color:#8a7d6b}</style></head><body><main>` +
+    `<div class="eye">Carte d'invité</div><h1>${escapeHtml(String(p.name))}</h1><div class="st">${escapeHtml(status)}</div>` +
+    `<div class="ev"><b>${escapeHtml(String(p.title || ""))}</b>${line(p.date_fr)}${line(p.place)}${p.org_name ? line(`Une invitation de ${p.org_name}`) : ""}</div>` +
+    (arrived ? `<div class="ar">${escapeHtml(arrived)}</div>` : "") +
+    `<footer>Marakaj</footer></main></body></html>`;
+  return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" } });
 }
 
 // The sample words of a design shown as a card (155c), by the kind of

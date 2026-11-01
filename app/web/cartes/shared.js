@@ -393,8 +393,31 @@
         ? 'Merci ' + name + ', nous penserons à vous ce jour-là.'
         : d.rep === 'mot'
           ? 'Merci ' + name + '. Votre mot est transmis à la famille.'
-          : 'Merci ' + name + ' ! Votre présence est notée' + (n > 1 ? ' pour ' + n + ' personnes' : '') + '. Un rappel vous sera envoyé la veille.';
+          : 'Merci ' + name + ' ! Votre présence est notée' + (n > 1 ? ' pour ' + n + ' personnes' : '') + '.';
       ok.classList.add('on');
+      drawPass(d);
+    }
+    // The guest's pass (158): the answer's id, given by the server, drawn as
+    // a QR that opens /e/<slug>/invite/<id> — their name, how many, the
+    // event — for the door. Nothing on a sample or an answer kept before.
+    function drawPass(d) {
+      var old = f.querySelector('.pass'); if (old) old.parentNode.removeChild(old);
+      if (!d.pass || !SERVER || SERVER.demo || d.rep === 'non') return;
+      var box = document.createElement('div'); box.className = 'pass';
+      box.innerHTML = '<div class="pass-qr" role="img" aria-label="QR code de votre carte d’invité"></div><div><b></b><br><small>Carte d’invité · à présenter à l’entrée</small></div>';
+      box.querySelector('b').textContent = d.name || 'Invité';
+      ok.parentNode.insertBefore(box, ok.nextSibling);
+      var draw = function () {
+        try {
+          var q = qrcode(0, 'M');
+          q.addData(location.origin + '/e/' + encodeURIComponent(SERVER.slug) + '/invite/' + d.pass); q.make();
+          box.querySelector('.pass-qr').innerHTML = q.createSvgTag({ cellSize: 3, margin: 0, scalable: true });
+        } catch (e) { box.querySelector('.pass-qr').textContent = 'QR'; }
+      };
+      if (window.qrcode) { draw(); return; }
+      var s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'; s.onload = draw;
+      document.head.appendChild(s);
     }
     try { var saved = JSON.parse(localStorage.getItem(key) || 'null'); if (saved) show(saved); } catch (e) {}
     if (SERVER && SERVER.rsvp_on === false) {
@@ -426,7 +449,12 @@
           p_message: d.msg || null, p_extra: extra
         })
       }).then(function (r) {
-        if (r.ok) { show(d); try { localStorage.setItem(key, JSON.stringify(d)); } catch (e2) {} toast('Réponse envoyée'); return; }
+        if (r.ok) {
+          // The answer's id: the guest's pass (158).
+          return r.json().then(function (id) { if (typeof id === 'string') d.pass = id; }, function () {}).then(function () {
+            show(d); try { localStorage.setItem(key, JSON.stringify(d)); } catch (e2) {} toast('Réponse envoyée');
+          });
+        }
         return r.json().then(function (j) { throw new Error(j && (j.message || j.hint) || 'La réponse n’est pas passée.'); });
       }).catch(function (err) {
         ok.textContent = err && err.message ? err.message : 'La réponse n’est pas passée. Réessayez.';

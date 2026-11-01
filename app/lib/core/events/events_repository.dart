@@ -202,6 +202,24 @@ class EventsRepository {
     await _require().from('events').delete().eq('id', id);
   }
 
+  /// The guest's arrival (158), marked or taken back by the business's
+  /// admins — the one column of an answer they may write.
+  Future<void> setArrived(String id, bool on) async {
+    await _require()
+        .from('event_rsvps')
+        .update({'arrived_at': on ? DateTime.now().toUtc().toIso8601String() : null})
+        .eq('id', id);
+  }
+
+  /// The answer's id inside a guest's pass address (158):
+  /// `https://marakaj.com/e/<slug>/invite/<id>`, or the id alone as a
+  /// scanner may hand it. Null for anything else.
+  static String? passIdFrom(String text) {
+    final m = RegExp(r'(?:^|/invite/)([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/?\s*$', caseSensitive: false)
+        .firstMatch(text.trim());
+    return m?.group(1)?.toLowerCase();
+  }
+
   Future<List<EventRsvp>> rsvps(String eventId) async {
     final rows = await _require()
         .from('event_rsvps')
@@ -436,6 +454,7 @@ class EventRsvp {
     required this.createdAt,
     this.eventId,
     this.eventTitle,
+    this.arrivedAt,
   });
 
   factory EventRsvp.fromJson(Map<String, dynamic> j) => EventRsvp(
@@ -448,11 +467,15 @@ class EventRsvp {
         createdAt: DateTime.tryParse('${j['created_at']}')?.toLocal() ?? DateTime.now(),
         eventId: j['events'] is Map ? (j['events'] as Map)['id'] as String? : j['event_id'] as String?,
         eventTitle: j['events'] is Map ? (j['events'] as Map)['title'] as String? : null,
+        arrivedAt: j['arrived_at'] == null ? null : DateTime.tryParse('${j['arrived_at']}')?.toLocal(),
       );
 
   final String id;
   final String name;
   final int people;
+
+  /// When the organiser marked the guest arrived (158); null until then.
+  final DateTime? arrivedAt;
 
   /// The card answered, when the list spans the business's cards (153).
   final String? eventId;

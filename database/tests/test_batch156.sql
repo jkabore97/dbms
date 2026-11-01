@@ -36,8 +36,9 @@ update platform_settings set value = 'false' where key = 'events_public';
 
 insert into auth.users (id, phone, email, raw_user_meta_data, created_at) values
     ('15615615-0000-0000-0000-000000000001', '+22615610001', 'awa156@example.com', '{"full_name": "Awa Planner"}', now());
-insert into orgs (id, name, slug, profile, default_currency) values
-    ('15615615-1111-0000-0000-000000000001', 'Awa Événements 156', 'awa-evenements-156', 'events', 'XOF');
+-- Pro: its card is made with a Premium design (157 holds that door).
+insert into orgs (id, name, slug, profile, default_currency, plan) values
+    ('15615615-1111-0000-0000-000000000001', 'Awa Événements 156', 'awa-evenements-156', 'events', 'XOF', 'pro');
 insert into memberships (user_id, org_id, role, scope_kind, scope_id, visibility) values
     ('15615615-0000-0000-0000-000000000001', '15615615-1111-0000-0000-000000000001', 'owner', 'org', '15615615-1111-0000-0000-000000000001', 'full');
 -- The card, made by the owner as a platform admin would (the switch off

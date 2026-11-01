@@ -40,6 +40,20 @@ class _Events extends EventsRepository {
   }
 
   @override
+  Future<void> setArrived(String id, bool on) async {
+    calls.add('arrived:$id=$on');
+    for (final k in answers.keys) {
+      answers[k] = [
+        for (final r in answers[k]!)
+          r.id == id
+              ? EventRsvp(id: r.id, name: r.name, people: r.people, answer: r.answer, message: r.message, extra: r.extra,
+                  createdAt: r.createdAt, eventId: r.eventId, eventTitle: r.eventTitle, arrivedAt: on ? DateTime(2027, 6, 5, 18, 5) : null)
+              : r,
+      ];
+    }
+  }
+
+  @override
   Future<void> setCard(String id, String card) async {
     calls.add('card:$id=$card');
     final i = rows.indexWhere((r) => r.id == id);
@@ -161,6 +175,9 @@ class _Events extends EventsRepository {
 
 const _org = OrgSummary(id: 'o1', name: 'Awa Événements', slug: 'awa-evenements', profile: 'events', roles: ['owner']);
 
+/// A Pro business (157): the Premium designs are its to use.
+const _proOrg = OrgSummary(id: 'o2', name: 'Béa Événements', slug: 'bea-evenements', profile: 'events', roles: ['owner'], plan: 'pro');
+
 Future<void> _pump(WidgetTester tester, Widget home) async {
   tester.view.physicalSize = const Size(400, 860);
   tester.view.devicePixelRatio = 1.0;
@@ -231,8 +248,9 @@ void main() {
 
     testWidgets('the animated family is the gallery\'s second tab, the Premium films marked', (tester) async {
       final repo = _Events();
+      // A Pro business: the Premium film is its to use (157).
       await _pump(tester, TemplatesGalleryScreen(
-          events: repo, org: _org, draft: const EventDraft(title: 'Gala', kind: 'gala')));
+          events: repo, org: _proOrg, draft: const EventDraft(title: 'Gala', kind: 'gala')));
       expect(find.byKey(const Key('template-come')), findsOneWidget);
       expect(find.byKey(const Key('template-anime_lotus_p')), findsNothing);
       await tester.tap(find.byKey(const Key('family-anime')));
@@ -313,6 +331,51 @@ void main() {
       expect(find.byKey(const Key('event-preview')), findsOneWidget);
       expect(find.textContaining('modèle Ravello'), findsOneWidget);
       expect(find.text('Villa Serena'), findsOneWidget);
+    });
+
+    testWidgets('a Premium design is Marakaj Pro\'s (157): a free business is shown the way to Pro, a Pro one the design', (tester) async {
+      final repo = _Events();
+      final lotus = knownTemplates.firstWhere((t) => t.key == 'anime_lotus_p');
+      await _pump(tester, TemplatePreviewScreen(events: repo, org: _org, template: lotus, open: (u) async {}));
+      expect(find.text('Modèle Premium : passer à Marakaj Pro'), findsOneWidget);
+      await tester.scrollUntilVisible(find.byKey(const Key('template-premium-note')), 300, scrollable: find.byType(Scrollable).first);
+      expect(find.byKey(const Key('template-premium-note')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('template-use')));
+      await tester.pumpAndSettle();
+      expect(repo.calls, isEmpty, reason: 'nothing made');
+      expect(find.text('Ce modèle fait partie de Marakaj Pro. Ouvrez Compte › Marakaj Pro.'), findsOneWidget);
+      // A Pro business: the design to use, as any other.
+      await _pump(tester, TemplatePreviewScreen(events: repo, org: _proOrg, template: lotus, open: (u) async {}));
+      expect(find.text('Utiliser ce modèle'), findsOneWidget);
+      expect(find.byKey(const Key('template-premium-note')), findsNothing);
+    });
+
+    testWidgets('the guest pass (158): a guest marked present from the card, and the pass address read', (tester) async {
+      final repo = _Events();
+      final e = await repo.create(orgId: 'o1', title: 'Inès & Thomas', kind: 'mariage', card: 'come');
+      repo.answers[e.id] = [
+        EventRsvp(id: '0f0f0f0f-0f0f-4f0f-8f0f-0f0f0f0f0f0f', name: 'Tanti Rose', people: 2, answer: 'oui', message: null,
+            extra: const {}, createdAt: DateTime(2027, 5, 1)),
+        EventRsvp(id: '1f1f1f1f-1f1f-4f1f-8f1f-1f1f1f1f1f1f', name: 'Oncle Sam', people: 1, answer: 'non', message: null,
+            extra: const {}, createdAt: DateTime(2027, 5, 2)),
+      ];
+      await _pump(tester, EventScreen(events: repo, org: _org, eventId: e.id, open: (u) async {}));
+      await tester.scrollUntilVisible(find.byKey(const Key('rsvp-arrived-0f0f0f0f-0f0f-4f0f-8f0f-0f0f0f0f0f0f')), 300,
+          scrollable: find.byType(Scrollable).first);
+      expect(find.text('Présent'), findsOneWidget, reason: 'the one who comes may be marked');
+      expect(find.byKey(const Key('rsvp-arrived-1f1f1f1f-1f1f-4f1f-8f1f-1f1f1f1f1f1f')), findsNothing, reason: 'not the one who does not');
+      await tester.ensureVisible(find.byKey(const Key('rsvp-arrived-0f0f0f0f-0f0f-4f0f-8f0f-0f0f0f0f0f0f')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('rsvp-arrived-0f0f0f0f-0f0f-4f0f-8f0f-0f0f0f0f0f0f')));
+      await tester.pumpAndSettle();
+      expect(repo.calls.last, 'arrived:0f0f0f0f-0f0f-4f0f-8f0f-0f0f0f0f0f0f=true');
+      expect(find.text('Arrivé'), findsOneWidget);
+      expect(find.textContaining('Arrivé à 18:05'), findsOneWidget, reason: 'the list re-read says when');
+      expect(EventsRepository.passIdFrom('https://marakaj.com/e/ines-thomas-ab12/invite/0F0F0F0F-0f0f-4f0f-8f0f-0f0f0f0f0f0f'),
+          '0f0f0f0f-0f0f-4f0f-8f0f-0f0f0f0f0f0f');
+      expect(EventsRepository.passIdFrom('0f0f0f0f-0f0f-4f0f-8f0f-0f0f0f0f0f0f'), '0f0f0f0f-0f0f-4f0f-8f0f-0f0f0f0f0f0f');
+      expect(EventsRepository.passIdFrom('MARAKAJ-EVENT|demo|Tanti Rose'), isNull);
+      expect(EventsRepository.passIdFrom('https://marakaj.com/e/ines-thomas-ab12'), isNull);
     });
 
     testWidgets('« Modifier les infos » on a card: its title, kind, day and place changed from the app', (tester) async {
@@ -447,6 +510,9 @@ void main() {
       await tester.tap(find.byKey(const Key('event-published')));
       await tester.pumpAndSettle();
       expect(repo.calls.last, 'publish:${e.id}=true');
+      // The note sits above the switches the test scrolled to: back up to it.
+      await tester.scrollUntilVisible(find.text('Le lien à envoyer aux invités : la carte est publiée.'), -300,
+          scrollable: find.byType(Scrollable).first);
       expect(find.text('Le lien à envoyer aux invités : la carte est publiée.'), findsOneWidget);
       expect(find.text('Publiée'), findsOneWidget);
     });
