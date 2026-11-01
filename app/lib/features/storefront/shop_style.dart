@@ -50,7 +50,7 @@ class ShopStyle {
 
   /// The page never grows wider than this on a desktop screen: a grid of
   /// eight tiny photos across a monitor sells nothing.
-  static const maxWidth = 1120.0;
+  static const maxWidth = 1440.0;
 
   /// Wide enough to be a desk: a pointer to hover with, room for a drawer.
   static const deskWidth = 900.0;
@@ -58,8 +58,15 @@ class ShopStyle {
   /// How many tiles across, for the width there is. Two on a phone is the
   /// widest a thumb can still read a name under; four is the most a photo
   /// stays a photo at.
-  static int columnsFor(double width) =>
-      width < 560 ? 2 : (width < 900 ? 3 : 4);
+  static int columnsFor(double width) => width < 560
+      ? 2
+      : width < 900
+          ? 3
+          : width < 1200
+              ? 4
+              : width < 1500
+                  ? 5
+                  : 6;
 
   /// The one colour a Kaj Pro shop may choose (068): its buttons. Dark
   /// text on a light accent, light text on a dark one, decided by the
@@ -434,12 +441,18 @@ class ShopWidth extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The block takes the whole reading width, not its content's: a column
+    // of text centred on its own width sat to the right of the grid under
+    // it (the owner's photo of the street on a monitor).
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: ShopStyle.maxWidth),
-        child: Padding(
-          padding: padding ?? const EdgeInsets.symmetric(horizontal: 20),
-          child: child,
+        child: SizedBox(
+          width: double.infinity,
+          child: Padding(
+            padding: padding ?? const EdgeInsets.symmetric(horizontal: 20),
+            child: child,
+          ),
         ),
       ),
     );
