@@ -628,21 +628,14 @@ class KajBackground extends StatelessWidget {
   final KajPalette palette;
   final Widget child;
 
-  /// A page never grows wider than this on a monitor. A shop page spread
-  /// across 1920 pixels is a form nobody can read in one glance; a centred
-  /// column with paper either side is what every goods site does.
-  static const maxWidth = 1120.0;
-
+  /// The whole window, on a monitor too (the owner: « make the desktop view
+  /// a real desktop view »). The app was held to a 1120-pixel column, its
+  /// bars and headers with it, paper either side — a phone page on a big
+  /// screen. Each surface now keeps its own reading width inside the
+  /// window: the street's blocks ([ShopWidth]), a business's pages beside
+  /// its rail (BusinessPage), the console's own panes.
   @override
-  Widget build(BuildContext context) => ColoredBox(
-        color: kPaper,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: maxWidth),
-            child: child,
-          ),
-        ),
-      );
+  Widget build(BuildContext context) => ColoredBox(color: kPaper, child: child);
 }
 
 /// The band behind a home screen's figure: the palette's pale wash, flat.

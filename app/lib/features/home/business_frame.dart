@@ -403,10 +403,24 @@ class BusinessPage extends StatelessWidget {
               ),
         // « The list continues » (122) on every page of a business — its
         // lists, its forms, the settings, Compte — above the bar.
-        child: ScrollHint(child: child),
+        // On a monitor a page stands at a reading width beside the rail
+        // (the whole window is the app's now): a form across 1800 pixels
+        // is read with the head, not the eyes.
+        child: ScrollHint(
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: BusinessPage.maxWidth),
+              child: child,
+            ),
+          ),
+        ),
       ),
     );
   }
+
+  /// The widest a business's page stands on a monitor.
+  static const maxWidth = 1280.0;
 }
 
 /// Input on a page of a business not saved yet (108, A4): while [isDirty]
