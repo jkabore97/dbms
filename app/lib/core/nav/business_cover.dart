@@ -16,7 +16,16 @@ import 'package:flutter/widgets.dart';
 class BusinessCover extends NavigatorObserver with ChangeNotifier {
   final List<Route<dynamic>> _over = [];
 
-  bool get covered => _over.isNotEmpty;
+  /// Only what a navigator still holds (160c): a sheet still leaving when
+  /// its navigator went away — the business's pages rebuilt, the business
+  /// left — never finished its exit, and stayed here as covering; the bar
+  /// stayed behind the pages, under their full-size layers, and took no
+  /// tap until the app restarted (the owner: « the bottom bar freezes »).
+  /// A disposed route has no navigator.
+  bool get covered {
+    _over.removeWhere((r) => r.navigator == null);
+    return _over.isNotEmpty;
+  }
 
   static bool _isPage(Route<dynamic> route) => route.settings is Page;
 
@@ -24,7 +33,13 @@ class BusinessCover extends NavigatorObserver with ChangeNotifier {
 
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    if (_isPage(route)) return;
+    // A navigator's first page: whatever an earlier navigator left here is
+    // gone with it.
+    if (previousRoute == null) _over.removeWhere((r) => r.navigator != route.navigator);
+    if (_isPage(route)) {
+      _tell();
+      return;
+    }
     _over.add(route);
     _tell();
   }

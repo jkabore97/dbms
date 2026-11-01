@@ -18,6 +18,7 @@ import 'package:kaj_app/core/storefront/storefront_repository.dart';
 import 'package:kaj_app/core/theme/kaj_theme.dart';
 import 'package:kaj_app/features/storefront/directory_screen.dart';
 import 'package:kaj_app/features/storefront/shop_style.dart';
+import 'package:kaj_app/features/storefront/storefront_screen.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class _Shops extends StorefrontRepository {
@@ -30,6 +31,13 @@ class _Shops extends StorefrontRepository {
   Future<List<DirectoryEntry>> directory({double? lat, double? lng}) async => [
         for (var i = 0; i < names.length; i++)
           DirectoryEntry(orgId: 'o$i', name: names[i], slug: 's$i', profile: 'retail'),
+      ];
+  @override
+  Future<PublicShop?> shop(String slug) async => const PublicShop(orgId: 'o1', name: 'Boutique Awa', slug: 'boutique-awa', profile: 'retail', phone: '+22670000000',
+      style: StorefrontStyle(coverKey: 'orgs/o1/cover.jpg'));
+  @override
+  Future<List<PublicItem>> items(String slug) async => [
+        for (var i = 0; i < 14; i++) PublicItem(id: 'p$i', name: 'Article $i', price: 1000 + i * 250, inStock: true),
       ];
   @override
   Future<List<FeaturedItem>> featured({double? lat, double? lng}) async => const [];
@@ -48,7 +56,7 @@ void main() {
   setUp(() async => db = await LocalDb.open(path: inMemoryDatabasePath));
   tearDown(() => db.close());
 
-  Future<void> pump(WidgetTester tester, Size size) async {
+  Future<void> pump(WidgetTester tester, Size size, {bool vitrine = false}) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -56,11 +64,18 @@ void main() {
       builder: (context, child) => KajBackground(palette: kajPalette, child: child!),
       home: RepaintBoundary(
         key: const Key('screen'),
-        child: DirectoryScreen(
-          storefront: _Shops(),
-          capture: CaptureRepository(null, db: db),
-          session: SessionController(db: db, auth: AuthRepository(null), admin: AdminRepository(null), accounting: AccountingRepository(null)),
-        ),
+        child: vitrine
+            ? StorefrontScreen(
+                slug: 'boutique-awa',
+                storefront: _Shops(),
+                capture: CaptureRepository(null, db: db),
+                session: SessionController(db: db, auth: AuthRepository(null), admin: AdminRepository(null), accounting: AccountingRepository(null)),
+              )
+            : DirectoryScreen(
+                storefront: _Shops(),
+                capture: CaptureRepository(null, db: db),
+                session: SessionController(db: db, auth: AuthRepository(null), admin: AdminRepository(null), accounting: AccountingRepository(null)),
+              ),
       ),
     ));
     await tester.pump();
@@ -91,6 +106,26 @@ void main() {
           final img = await ro.toImage(pixelRatio: 1);
           final data = await img.toByteData(format: ImageByteFormat.png);
           File('$shots/street_${size.width.toInt()}.png').writeAsBytesSync(data!.buffer.asUint8List());
+        });
+      }
+    });
+  }
+
+  for (final size in const [Size(1920, 1080), Size(390, 844)]) {
+    testWidgets('a vitrine at ${size.width.toInt()} px: the whole window', (tester) async {
+      await pump(tester, size, vitrine: true);
+      expect(tester.takeException(), isNull);
+      expect(tester.getSize(find.byType(StorefrontScreen)).width, size.width);
+      expect(find.byKey(const Key('shop-cover-side')), size.width >= 1100 ? findsOneWidget : findsNothing,
+          reason: 'on a monitor the cover stands beside the band, on a phone above it');
+      final shots = Platform.environment['DESKTOP_SHOTS'];
+      if (shots != null) {
+        Directory(shots).createSync(recursive: true);
+        await tester.runAsync(() async {
+          final ro = tester.renderObject<RenderRepaintBoundary>(find.byKey(const Key('screen')));
+          final img = await ro.toImage(pixelRatio: 1);
+          final data = await img.toByteData(format: ImageByteFormat.png);
+          File('$shots/vitrine_${size.width.toInt()}.png').writeAsBytesSync(data!.buffer.asUint8List());
         });
       }
     });

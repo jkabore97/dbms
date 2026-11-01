@@ -2453,6 +2453,8 @@ class _Window extends StatelessWidget {
         ? (columns ~/ 2).clamp(1, 3)
         : columns;
     final wide = width >= 560;
+    // A monitor (160d): the cover beside the band.
+    final deskCover = style.coverKey != null && width >= 1100;
     // The goods and the services (098), each in its own section.
     final goods = [
       for (final i in items)
@@ -2528,7 +2530,7 @@ class _Window extends StatelessWidget {
       children: [
         // A Pro shop's cover (068): one of its own photographs, wide and
         // quiet, over the band. The band itself does not change.
-        if (style.coverKey != null)
+        if (style.coverKey != null && !deskCover)
           AspectRatio(
             aspectRatio: wide ? 3.2 : 1.9,
             child: ColoredBox(
@@ -2550,7 +2552,346 @@ class _Window extends StatelessWidget {
                 horizontal: 20,
                 vertical: wide ? 40 : 24,
               ),
-              child: Column(
+              // On a monitor the shop's cover stands beside the band, not
+              // above it at 600 pixels tall (the owner: « the vitrine pages
+              // a real desktop view »).
+              child: deskCover
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // The shop's logo (080) beside its name, for every plan.
+                  Row(
+                    children: [
+                      if (style.logoKey != null) ...[
+                        Container(
+                          key: const Key('shop-logo'),
+                          width: wide ? 72 : 56,
+                          height: wide ? 72 : 56,
+                          clipBehavior: Clip.antiAlias,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: const Color(0x14000000)),
+                          ),
+                          child: _Photo(
+                            photoKey: style.logoKey,
+                            capture: capture,
+                            label: context.tr('Logo de {name}', {
+                              'name': shop.name,
+                            }),
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                        SizedBox(width: wide ? 18 : 14),
+                      ],
+                      Expanded(
+                        // Never a word cut in the middle (UI audit SH-2:
+                        // « Boutiqu / e Awa » on an iPhone SE at 1.3): the
+                        // size comes down until the longest word fits.
+                        child: LayoutBuilder(builder: (context, box) {
+                          final base = wide ? 40.0 : 30.0;
+                          TextStyle at(double size) => TextStyle(
+                                fontSize: size,
+                                height: 1.1,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.6,
+                                color: ShopStyle.ink,
+                              );
+                          final scaler = MediaQuery.textScalerOf(context);
+                          final words = shop.name.split(RegExp(r'\s+'));
+                          var size = base;
+                          while (size > 16) {
+                            var widest = 0.0;
+                            for (final w in words) {
+                              final painter = TextPainter(
+                                text: TextSpan(text: w, style: at(size)),
+                                textDirection: Directionality.of(context),
+                                textScaler: scaler,
+                                maxLines: 1,
+                              )..layout();
+                              widest = math.max(widest, painter.width);
+                              painter.dispose();
+                            }
+                            if (widest <= box.maxWidth) break;
+                            size -= 2;
+                          }
+                          return Text(
+                            shop.name,
+                            key: const Key('shop-title'),
+                            style: at(size),
+                          );
+                        }),
+                      ),
+                      ?heart,
+                    ],
+                  ),
+                  // How many people have looked (123), for everyone, in
+                  // the vitrine's own colour.
+                  if ((visitors ?? 0) > 0) ...[
+                    const SizedBox(height: 10),
+                    VisitorsBadge(
+                      key: const Key('shop-visitors'),
+                      count: visitors!,
+                      colour: shop.accent ?? ShopStyle.ink,
+                    ),
+                  ],
+                  // The tagline (068): one line, in the shop's colour when
+                  // it chose one.
+                  if (style.tagline != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      style.tagline!,
+                      style: TextStyle(
+                        fontSize: wide ? 20 : 17,
+                        height: 1.3,
+                        fontWeight: FontWeight.w600,
+                        color: shop.accent ?? ShopStyle.ink,
+                      ),
+                    ),
+                  ],
+                  if (blurb.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 560),
+                      child: Text(
+                        blurb,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          height: 1.45,
+                          color: ShopStyle.ink,
+                        ),
+                      ),
+                    ),
+                  ],
+                  // The facts a shopper looks for first, on one quiet line:
+                  // what kind of place, where, and how the goods reach them.
+                  // A fact the shop has not given is left out, never shown
+                  // empty (070).
+                  const SizedBox(height: 10),
+                  // Last week's podium (086): a shop customers can trust.
+                  if (style.topWeekRank != null) ...[
+                    Container(
+                      key: const Key('top-week-badge'),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFC49A6C),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        style.topWeekRank == 1
+                            ? context.tr('🏆 1er de la semaine')
+                            : context.tr('🏆 Top 3 de la semaine'),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF0E0D0C),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  Text(
+                    [
+                      context.tr(_kindOf(shop.profile)),
+                      if (address.isNotEmpty) address,
+                      // A window of services alone (098): booked, not
+                      // collected.
+                      serviceCount > 0 && serviceCount == totalCount
+                          ? context.tr('Sur rendez-vous')
+                          : shop.delivers
+                          ? context.tr('Retrait ou livraison')
+                          : shop.profile == 'farm'
+                          ? context.tr('Retrait à la ferme')
+                          : shop.profile == 'association' ||
+                                shop.profile == 'church'
+                          ? context.tr('Retrait sur place')
+                          : context.tr('Retrait en boutique'),
+                    ].join(' · '),
+                    style: const TextStyle(fontSize: 14, color: ShopStyle.mist),
+                  ),
+                  // Opening hours (068; days and times since 093), the
+                  // question every caller asks — in the reader's language.
+                  if (style.schedule != null || style.hours != null) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.schedule_outlined,
+                          size: 15,
+                          color: ShopStyle.mist,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            style.schedule?.label(context.trLanguage) ??
+                                style.hours!,
+                            key: const Key('shop-hours'),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: ShopStyle.mist,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  // The number itself (100): tapped, it opens the business's
+                  // WhatsApp chat — wa.me reaches regular and Business
+                  // WhatsApp alike. « Appeler » below still dials it.
+                  if (whatsapp != null && phone.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    InkWell(
+                      key: const Key('shop-phone'),
+                      onTap: () => onOpen(whatsapp),
+                      borderRadius: BorderRadius.circular(6),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.chat_outlined,
+                              size: 16,
+                              color: maraGreen,
+                            ),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                phone,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: ShopStyle.ink,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                            const Text(
+                              ' · WhatsApp',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: ShopStyle.mist,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                  // A vitrine d'exemple (094): far from everyone, said plainly.
+                  if (showcase) ...[
+                    const SizedBox(height: 10),
+                    const FarBadge(key: Key('shop-far'), large: true),
+                  ],
+                  // « Commandes en ligne » hidden by Mara (110): a showcase —
+                  // look, call, write; no basket.
+                  if (style.ordersClosed) ...[
+                    const SizedBox(height: 10),
+                    const _ClosedBadge(key: Key('orders-closed')),
+                  ],
+                  // « Ouvert maintenant » / « Fermé » (093, Pro): the server
+                  // reads the schedule against Ouagadougou's clock.
+                  if (style.openNow != null) ...[
+                    const SizedBox(height: 10),
+                    OpenBadge(
+                      key: const Key('shop-open'),
+                      open: style.openNow!,
+                      large: true,
+                    ),
+                  ],
+                  // Always shown: even a shop with no phone and no pin can be
+                  // passed along, and Partager is how that happens.
+                  ...[
+                    const SizedBox(height: 22),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 10,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        if (whatsapp != null)
+                          FilledButton(
+                            onPressed: () => onOpen(whatsapp),
+                            child: Text(context.tr('Écrire sur WhatsApp')),
+                          ),
+                        if (phone.isNotEmpty)
+                          OutlinedButton(
+                            onPressed: () => onOpen('tel:$phone'),
+                            child: Text(context.tr('Appeler')),
+                          ),
+                        // The way there, in the maps app the phone already
+                        // has: turn-by-turn, no key, no bill (054).
+                        if (shop.hasLocation)
+                          OutlinedButton.icon(
+                            onPressed: () =>
+                                onOpen(directionsUrl(shop.lat!, shop.lng!)),
+                            icon: const Icon(
+                              Icons.directions_outlined,
+                              size: 18,
+                            ),
+                            label: Text(context.tr('Itinéraire')),
+                          ),
+                        // A vitrine travels the way news does here: sent on
+                        // WhatsApp from one phone to the next. The shop's
+                        // customers are its advertisers.
+                        OutlinedButton.icon(
+                          key: const Key('shop-share'),
+                          onPressed: () => ShareVitrine.open(
+                            context,
+                            shop: shop,
+                            items: shelf.isEmpty ? items : shelf,
+                            capture: capture,
+                            mine: mine,
+                          ),
+                          icon: const Icon(Icons.share_outlined, size: 18),
+                          label: Text(context.tr('Partager')),
+                        ),
+                      ],
+                    ),
+                  ],
+                  // « Ne payez jamais d'avance » (batch 151), where a
+                  // visitor is about to call or write: never on the
+                  // business's own vitrine.
+                  if (!mine) ...[
+                    const SizedBox(height: 16),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 560),
+                      child: PaySafetyLine(
+                        alsoWave: shop.waveMerchant != null,
+                        at: shop.delivers ? PayAt.either : PayAt.pickup,
+                        onReport: onReport,
+                      ),
+                    ),
+                  ],
+                ],
+              )),
+                        const SizedBox(width: 48),
+                        SizedBox(
+                          width: math.min(560.0, width * 0.36),
+                          child: AspectRatio(
+                            aspectRatio: 4 / 3,
+                            child: ClipRRect(
+                              key: const Key('shop-cover-side'),
+                              borderRadius: BorderRadius.circular(16),
+                              child: ColoredBox(
+                                color: ShopStyle.paper,
+                                child: _Photo(
+                                  photoKey: style.coverKey,
+                                  capture: capture,
+                                  label: context.tr('Photo de {name}', {'name': shop.name}),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // The shop's logo (080) beside its name, for every plan.
