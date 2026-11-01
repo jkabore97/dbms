@@ -127,6 +127,10 @@ String notificationLine(BuildContext context, NotificationRow n) {
       // The shop's own words on a refusal (115), as it typed them.
       return s('reason').isEmpty ? line : '$line — ${s('reason')}';
     // 125: a booking's answers, each way.
+    // 159: the day before a card's event, its admins.
+    case 'event_tomorrow':
+      return context.tr('Demain : « {title} » — {yes} invités ont dit oui ({people} personnes). Rappelez-les depuis Invités.',
+          {'title': s('title'), 'yes': s('yes'), 'people': s('people')});
     case 'booking_confirmed':
       return context.tr('Votre rendez-vous chez {shop} est confirmé : {when}',
           {'shop': s('shop'), 'when': when('at')});
@@ -554,6 +558,9 @@ String? notificationTarget(
   switch (n.kind) {
     case 'new_order' || 'order_withdrawn' || 'delivery_taken':
       return inside('commandes');
+    // 159: the reminder opens « Invités », where each guest with a number has WhatsApp.
+    case 'event_tomorrow':
+      return inside('evenements/invites');
     case 'low_stock':
       if (profileOf?.call(org) == 'farm') return inside('a-vendre');
       final name = p['name'] as String?;

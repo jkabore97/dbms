@@ -87,6 +87,31 @@ Future<EventSummary?> startNewCard(
   }
 }
 
+/// A guest's WhatsApp as they typed it with their answer (159), as wa.me
+/// wants it: digits only, a Burkina number of eight given its code. Null
+/// when it is no number.
+String? whatsappDigits(Object? raw) {
+  if (raw is! String) return null;
+  var d = raw.replaceAll(RegExp(r'\D'), '');
+  if (d.startsWith('00')) d = d.substring(2);
+  if (d.length == 8) d = '226$d';
+  return RegExp(r'^\d{10,15}$').hasMatch(d) ? d : null;
+}
+
+/// The reminder written for one guest (159): the organiser sends it on
+/// WhatsApp the day before, or whenever they like.
+String reminderText(BuildContext context, EventSummary e, String guest) {
+  final when = e.startsAt == null
+      ? ''
+      : ' ${DateFormat('EEEE d MMMM', context.trLocale).format(e.startsAt!)} ${context.tr('à')} ${DateFormat('HH:mm').format(e.startsAt!)}';
+  final place = e.place == null || e.place!.isEmpty ? '' : ', ${e.place}';
+  return context.tr('Bonjour {name}, petit rappel : « {title} », c’est{when}{place}. À très vite !',
+      {'name': guest, 'title': e.title, 'when': when, 'place': place});
+}
+
+/// Opens an address in the app it belongs to (WhatsApp for wa.me).
+Future<void> openOutside(Uri uri) => launchUrl(uri, mode: LaunchMode.externalApplication);
+
 /// Événementiel (152, 153): the business's events — each a card with an
 /// address for its guests — created here, previewed on the site,
 /// published or kept as a draft, and the guests' answers read. The card's
@@ -823,7 +848,12 @@ class _EventScreenState extends State<EventScreen> {
                   if (_rsvps.isEmpty)
                     Text(context.tr('Personne n’a encore répondu.'), style: theme.textTheme.bodyMedium)
                   else
-                    for (final r in _rsvps) RsvpTile(rsvp: r, onArrived: (on) => _arrived(r, on)),
+                    for (final r in _rsvps)
+                      RsvpTile(
+                        rsvp: r,
+                        onArrived: (on) => _arrived(r, on),
+                        remind: (text: () => reminderText(context, e, r.name), open: widget.open ?? openOutside),
+                      ),
                   const SizedBox(height: 18),
                   Text(
                     '${context.tr('Album des invités')} · ${_pictures.length}',
@@ -921,12 +951,16 @@ class _PictureTile extends StatelessWidget {
 
 /// A guest's answer: who, came or not or a word, what they added.
 class RsvpTile extends StatelessWidget {
-  const RsvpTile({super.key, required this.rsvp, this.cardTitle, this.onArrived});
+  const RsvpTile({super.key, required this.rsvp, this.cardTitle, this.onArrived, this.remind});
 
   final EventRsvp rsvp;
 
   /// The organiser's mark (158): the guest arrived, or not after all.
   final Future<void> Function(bool on)? onArrived;
+
+  /// The reminder (159): the words to send this guest, and how to open
+  /// WhatsApp with them — when the guest left a number.
+  final ({String Function() text, Future<void> Function(Uri uri) open})? remind;
 
   /// The card answered, when the list spans several (« Invités »).
   final String? cardTitle;
@@ -943,10 +977,11 @@ class RsvpTile extends StatelessWidget {
       },
       if (r.message != null && r.message!.isNotEmpty) r.message!,
       for (final x in r.extra.entries)
-        if ('${x.value}'.isNotEmpty) '${x.key} : ${x.value}',
+        if ('${x.value}'.isNotEmpty) '${x.key == 'whatsapp' ? 'WhatsApp' : x.key} : ${x.value}',
       if (r.arrivedAt != null) context.tr('Arrivé à {time}', {'time': DateFormat('HH:mm').format(r.arrivedAt!)}),
     ];
     final arrival = r.answer == 'oui' && onArrived != null;
+    final wa = remind == null ? null : whatsappDigits(r.extra['whatsapp']);
     return KajCard(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
@@ -958,14 +993,25 @@ class RsvpTile extends StatelessWidget {
         title: Text(r.name),
         subtitle: Text(lines.join('\n')),
         isThreeLine: lines.length > 1,
-        trailing: arrival
-            ? FilterChip(
-                key: Key('rsvp-arrived-${r.id}'),
-                label: Text(r.arrivedAt == null ? context.tr('Présent') : context.tr('Arrivé')),
-                selected: r.arrivedAt != null,
-                onSelected: (v) => onArrived!(v),
-              )
-            : null,
+        trailing: !arrival && wa == null
+            ? null
+            : Row(mainAxisSize: MainAxisSize.min, children: [
+                if (wa != null)
+                  IconButton(
+                    key: Key('rsvp-whatsapp-${r.id}'),
+                    tooltip: context.tr('Rappeler sur WhatsApp'),
+                    icon: const Icon(Icons.chat_outlined),
+                    onPressed: () => remind!.open(
+                        Uri.parse('https://wa.me/$wa?text=${Uri.encodeComponent(remind!.text())}')),
+                  ),
+                if (arrival)
+                  FilterChip(
+                    key: Key('rsvp-arrived-${r.id}'),
+                    label: Text(r.arrivedAt == null ? context.tr('Présent') : context.tr('Arrivé')),
+                    selected: r.arrivedAt != null,
+                    onSelected: (v) => onArrived!(v),
+                  ),
+              ]),
       ),
     );
   }
@@ -988,6 +1034,9 @@ class GuestsScreen extends StatefulWidget {
 
 class _GuestsScreenState extends State<GuestsScreen> {
   List<EventRsvp> _rsvps = const [];
+
+  /// The business's cards by id (159): the reminder names the day and the place.
+  Map<String, EventSummary> _cards = const {};
   bool _loading = true;
   String? _error;
 
@@ -1004,9 +1053,11 @@ class _GuestsScreenState extends State<GuestsScreen> {
     });
     try {
       final list = await widget.events.allRsvps(widget.org.id);
+      final cards = await widget.events.list(widget.org.id);
       if (!mounted) return;
       setState(() {
         _rsvps = list;
+        _cards = {for (final c in cards) c.id: c};
         _loading = false;
       });
     } catch (e) {
@@ -1105,7 +1156,15 @@ class _GuestsScreenState extends State<GuestsScreen> {
                           child: Text('${context.tr('Réponses des invités')} · ${_rsvps.length}',
                               style: theme.textTheme.titleMedium),
                         ),
-                        for (final r in _rsvps) RsvpTile(rsvp: r, cardTitle: r.eventTitle, onArrived: (on) => _arrived(r, on)),
+                        for (final r in _rsvps)
+                          RsvpTile(
+                            rsvp: r,
+                            cardTitle: r.eventTitle,
+                            onArrived: (on) => _arrived(r, on),
+                            remind: _cards[r.eventId] == null
+                                ? null
+                                : (text: () => reminderText(context, _cards[r.eventId]!, r.name), open: openOutside),
+                          ),
                       ],
                     ),
                   );

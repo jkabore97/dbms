@@ -378,6 +378,34 @@ void main() {
       expect(EventsRepository.passIdFrom('https://marakaj.com/e/ines-thomas-ab12'), isNull);
     });
 
+    testWidgets('the reminder (159): a guest who left a WhatsApp has the button, with the words written for them', (tester) async {
+      final repo = _Events();
+      final e = await repo.create(orgId: 'o1', title: 'Inès & Thomas', kind: 'mariage', card: 'come',
+          startsAt: DateTime(2027, 6, 5, 15), place: 'Villa Serena');
+      repo.answers[e.id] = [
+        EventRsvp(id: '0f0f0f0f-0f0f-4f0f-8f0f-0f0f0f0f0f0f', name: 'Tanti Rose', people: 2, answer: 'oui', message: null,
+            extra: const {'whatsapp': '70 12 34 56'}, createdAt: DateTime(2027, 5, 1)),
+        EventRsvp(id: '1f1f1f1f-1f1f-4f1f-8f1f-1f1f1f1f1f1f', name: 'Oncle Sam', people: 1, answer: 'oui', message: null,
+            extra: const {}, createdAt: DateTime(2027, 5, 2)),
+      ];
+      final opened = <Uri>[];
+      await _pump(tester, EventScreen(events: repo, org: _org, eventId: e.id, open: (u) async => opened.add(u)));
+      await tester.scrollUntilVisible(find.byKey(const Key('rsvp-whatsapp-0f0f0f0f-0f0f-4f0f-8f0f-0f0f0f0f0f0f')), 300,
+          scrollable: find.byType(Scrollable).first);
+      expect(find.byKey(const Key('rsvp-whatsapp-1f1f1f1f-1f1f-4f1f-8f1f-1f1f1f1f1f1f')), findsNothing, reason: 'no number, no button');
+      expect(find.textContaining('WhatsApp : 70 12 34 56'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('rsvp-whatsapp-0f0f0f0f-0f0f-4f0f-8f0f-0f0f0f0f0f0f')));
+      await tester.pumpAndSettle();
+      expect(opened, hasLength(1));
+      expect(opened.single.host, 'wa.me');
+      expect(opened.single.path, '/22670123456', reason: 'a Burkina number of eight given its code');
+      expect(opened.single.queryParameters['text'],
+          'Bonjour Tanti Rose, petit rappel : « Inès & Thomas », c’est samedi 5 juin à 15:00, Villa Serena. À très vite !');
+      expect(whatsappDigits('+226 70 12 34 56'), '22670123456');
+      expect(whatsappDigits('0033 6 12 34 56 78'), '33612345678');
+      expect(whatsappDigits('bonjour'), isNull);
+    });
+
     testWidgets('« Modifier les infos » on a card: its title, kind, day and place changed from the app', (tester) async {
       final repo = _Events();
       final e = await repo.create(

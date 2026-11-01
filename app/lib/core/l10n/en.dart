@@ -8797,6 +8797,8 @@ const enStrings = <String, String>{
       'Edit the card',
   'Modifier les infos':
       'Edit the details',
+  'à':
+      'at',
   'Présent':
       'Present',
   'Arrivé':
@@ -8813,6 +8815,10 @@ const enStrings = <String, String>{
       'Unknown guest pass: not an answer to one of your cards.',
   '{name} : arrivé·e.':
       '{name}: arrived.',
+  'Bonjour {name}, petit rappel : « {title} », c’est{when}{place}. À très vite !':
+      'Hello {name}, a little reminder: “{title}” is{when}{place}. See you very soon!',
+  'Demain : « {title} » — {yes} invités ont dit oui ({people} personnes). Rappelez-les depuis Invités.':
+      'Tomorrow: “{title}” — {yes} guests said yes ({people} people). Remind them from Guests.',
   'Modèle Premium : passer à Marakaj Pro':
       'Premium design: go Marakaj Pro',
   'Ce modèle fait partie de Marakaj Pro. Ouvrez Compte › Marakaj Pro.':

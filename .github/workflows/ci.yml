@@ -295,6 +295,13 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch158.sql
 
+      # 159: the day before, a published card's admins are told once how
+      # many said yes, on the event's own clock.
+      - name: Prove the reminder the day before (159)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch159.sql
+
       # The bell: the right people hear the right events and nobody else,
       # a threshold rings on the crossing rather than on every sale below
       # it, and the neighbour hears nothing at all.

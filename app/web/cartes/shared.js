@@ -419,6 +419,14 @@
       s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'; s.onload = draw;
       document.head.appendChild(s);
     }
+    // The guest's WhatsApp, if they wish (159): the organiser's reminder
+    // the day before goes through it. Collected with the answer (extra).
+    if (SERVER && !SERVER.demo && !f.querySelector('[name=whatsapp]')) {
+      var submit = f.querySelector('button[type=submit]'), wa = document.createElement('label');
+      wa.className = 'f';
+      wa.innerHTML = 'WhatsApp, si vous voulez un rappel la veille <input name="whatsapp" inputmode="tel" autocomplete="tel" placeholder="+226 70 00 00 00" maxlength="24">';
+      if (submit) submit.parentNode.insertBefore(wa, submit); else f.appendChild(wa);
+    }
     try { var saved = JSON.parse(localStorage.getItem(key) || 'null'); if (saved) show(saved); } catch (e) {}
     if (SERVER && SERVER.rsvp_on === false) {
       Array.prototype.forEach.call(f.querySelectorAll('input, select, textarea, button'), function (c) { c.disabled = true; });

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Regenerates database/apply_006_to_158.sql — one file to paste into the
+# Regenerates database/apply_006_to_159.sql — one file to paste into the
 # Supabase SQL editor to bring an older database up to the current schema.
 #
 # Why a bundle at all: migrations are applied to Supabase by hand, so the
@@ -17,7 +17,7 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
 first="${1:-006}"
-last="${2:-158}"
+last="${2:-159}"
 out="database/apply_${first}_to_${last}.sql"
 
 files=()
