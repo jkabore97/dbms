@@ -72135,7 +72135,7 @@ begin
             'event_tomorrow',
             'Demain : « ' || e.title || ' » — ' || v_yes || ' invité' || case when v_yes = 1 then '' else 's' end
                 || ' ont dit oui (' || v_people || ' personne' || case when v_people = 1 then '' else 's' end || '). Rappelez-les depuis Invités.',
-            jsonb_build_object('event_id', e.id, 'slug', e.slug, 'title', e.title, 'yes', v_yes, 'people', v_people, 'whatsapp', v_wa),
+            jsonb_build_object('to', 'shop', 'event_id', e.id, 'slug', e.slug, 'title', e.title, 'yes', v_yes, 'people', v_people, 'whatsapp', v_wa),
             null);
         update events set reminded_at = now() where id = e.id;
         v_n := v_n + 1;
