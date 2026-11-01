@@ -318,6 +318,7 @@ async function rpc(env, fn, params) {
 const EVENT_CARDS = new Set([
   "come", "ravello", "sahel", "jardin", "minuit", "anniv",
   "bapteme", "naissance", "diplome", "gala", "dot", "hommage",
+  "cimbrone", "bouquet", "rivage",
 ]);
 // An animated design's key (event_templates, 153): anime_<layout>, the
 // Premium ones anime_<layout>_p.

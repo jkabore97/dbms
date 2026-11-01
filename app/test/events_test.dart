@@ -628,12 +628,13 @@ void main() {
       expect(EventsRepository.offsetOf(utc), '+00:00');
     });
 
-    test('the forty-seven templates the app knows: twelve cards, twenty-one layouts, fourteen Premium', () {
-      expect(knownTemplates, hasLength(47));
-      expect(knownTemplates.where((t) => !t.isAnimated), hasLength(12));
+    test('the fifty templates the app knows: fifteen cards, twenty-one layouts, fourteen Premium', () {
+      expect(knownTemplates, hasLength(50));
+      expect(knownTemplates.where((t) => !t.isAnimated), hasLength(15));
       expect(knownTemplates.where((t) => t.isAnimated && !t.premium), hasLength(21));
       expect(knownTemplates.where((t) => t.premium), hasLength(14));
-      expect({for (final t in knownTemplates) t.key}, hasLength(47), reason: 'keys unique');
+      expect({for (final t in knownTemplates) t.key}, hasLength(50), reason: 'keys unique');
+      expect(eventCardName('rivage'), 'Rivage', reason: 'the three after the owner\'s pictures (160)');
       expect(eventCardName('anime_lotus_p'), 'Étang de lotus');
       expect(eventCardName('anniv'), 'Trente');
       expect(EventTemplate.fromJson(const {'key': 'x', 'family': 'anime', 'name': 'X', 'premium': true}).previewPath(),
@@ -655,7 +656,7 @@ void main() {
       for (final c in eventCards) {
         expect(kinds, contains(c.$3), reason: c.$1);
       }
-      expect(eventCards, hasLength(12));
+      expect(eventCards, hasLength(15), reason: "the twelve and the three after the owner's pictures (160)");
       expect(eventKinds, hasLength(10));
     });
   });

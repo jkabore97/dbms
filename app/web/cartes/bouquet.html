@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Clara & Yacouba</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400;500&family=Pinyon+Script&display=swap">
+<link rel="stylesheet" href="shared.css">
+<style>
+/* Carte « Bouquet » — after the owner's picture: a soft, flowered page — a
+   header with a button, a photo hero with its words over it, four small
+   promises with fine icons, three photo cards for the day's moments, a
+   blush band with a strip of photos, a family's word, a last call, and an
+   olive foot. */
+:root{
+  --back:#56603f;--paper:#fbfaf7;--ink:#3a3a33;--line:#e3ddd2;--olive:#5f6a45;--blush:#f7ecea;
+  --accent:#5f6a45;--on-accent:#fbfaf7;
+  --slot-a:#d9cbb9;--slot-b:#b9b49a;--slot-c:#c9b3a5;--slot-ink:#fbfaf7;
+  --display:'Cormorant Garamond','Times New Roman',serif;--script:'Pinyon Script','Snell Roundhand',cursive;--body:'Jost','Helvetica Neue',Arial,sans-serif;
+}
+body{font-weight:300;font-size:14px}
+.bar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line)}
+.bar .logo{font-family:var(--display);font-size:18px;letter-spacing:.14em;text-transform:uppercase;line-height:1}
+.bar .logo small{display:block;font-family:var(--body);font-size:7px;letter-spacing:.3em;margin-top:3px;opacity:.7}
+.bar .go{font-size:9px;letter-spacing:.2em;text-transform:uppercase;padding:10px 14px;background:var(--accent);color:var(--on-accent);text-decoration:none}
+.hero{position:relative;min-height:460px;display:flex;align-items:center;color:#fff}
+.hero > .slot{position:absolute;inset:0}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(40,36,30,.62),rgba(40,36,30,.15) 70%);pointer-events:none}
+.hero .text{position:relative;z-index:2;padding:36px 24px;max-width:360px}
+.hero h1{font-family:var(--display);font-weight:400;font-size:clamp(38px,10vw,54px);line-height:1.08;margin:0 0 14px}
+.hero .lead{font-size:13px;line-height:1.7;margin:0 0 20px;opacity:.95}
+.hero .go{display:inline-block;font-size:9px;letter-spacing:.2em;text-transform:uppercase;padding:11px 16px;background:var(--accent);color:var(--on-accent);text-decoration:none}
+.center{text-align:center}
+.center h2{font-size:clamp(22px,5vw,28px);font-weight:500;letter-spacing:.08em;text-transform:uppercase}
+.orn{display:block;margin:10px auto 14px;width:70px;height:10px;color:var(--olive)}
+.center .lead{font-size:13px;line-height:1.8;max-width:440px;margin:0 auto}
+.promises{display:grid;grid-template-columns:repeat(2,1fr);gap:26px 14px;margin:30px 0 0;padding:0;list-style:none}
+@media (min-width:560px){.promises{grid-template-columns:repeat(4,1fr)}}
+.promises li{text-align:center}
+.promises svg{width:34px;height:34px;color:#b48a6e;stroke-width:1.1}
+.promises b{display:block;font-size:10px;letter-spacing:.16em;font-weight:500;text-transform:uppercase;margin:12px 0 6px;line-height:1.5}
+.promises p{font-size:11px;line-height:1.6;margin:0;opacity:.8}
+.moments{display:grid;grid-template-columns:1fr;gap:10px;margin-top:24px}
+@media (min-width:560px){.moments{grid-template-columns:repeat(3,1fr)}}
+.moment{position:relative;min-height:230px;color:#fff;display:flex;align-items:flex-end;justify-content:center;text-align:center}
+.moment > .slot{position:absolute;inset:0}
+.moment::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(30,28,24,.72),rgba(30,28,24,.1) 70%);pointer-events:none}
+.moment .in{position:relative;z-index:2;padding:22px 16px}
+.moment svg{width:26px;height:26px;color:#fff}
+.moment b{display:block;font-size:11px;letter-spacing:.18em;font-weight:500;text-transform:uppercase;margin:10px 0 6px}
+.moment p{font-size:11px;line-height:1.6;margin:0;opacity:.9}
+.story{background:var(--blush);display:grid;grid-template-columns:1fr;gap:22px}
+@media (min-width:560px){.story{grid-template-columns:.9fr 1.6fr;align-items:center}}
+.story h2{font-size:32px;font-weight:400;line-height:1.1}
+.story .lead{font-size:12px;line-height:1.7;margin:12px 0 0}
+.strip{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.strip .slot{aspect-ratio:3/4}
+.word{text-align:center;max-width:460px;margin:0 auto}
+.word blockquote{margin:0;font-family:var(--display);font-size:19px;line-height:1.6;font-style:italic}
+.word cite{display:block;font-style:normal;font-size:10px;letter-spacing:.2em;text-transform:uppercase;margin-top:14px}
+.call{position:relative;display:grid;grid-template-columns:1fr;background:#f4f1ec;padding:0}
+@media (min-width:560px){.call{grid-template-columns:1fr 1fr}}
+.call .text{padding:38px 24px;position:relative;z-index:2}
+.call h2{font-size:32px;font-weight:400;line-height:1.1}
+.call .lead{font-size:12px;margin:12px 0 18px}
+.call .go{display:inline-block;font-size:9px;letter-spacing:.2em;text-transform:uppercase;padding:11px 16px;background:var(--accent);color:var(--on-accent);text-decoration:none}
+.call > .slot{min-height:240px}
+.answer label.f input,.answer label.f select,.answer label.f textarea{border-width:0 0 1px;padding-left:0;padding-right:0}
+.answer .choice{flex-direction:row;flex-wrap:wrap;gap:18px}
+.album-sec{background:var(--blush)}
+.olive{background:var(--olive);color:#f4f1ea;display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:32px 24px}
+@media (min-width:560px){.olive{grid-template-columns:1.3fr 1fr 1fr}}
+.olive .logo{font-family:var(--display);font-size:20px;letter-spacing:.14em;text-transform:uppercase;grid-column:1/-1}
+@media (min-width:560px){.olive .logo{grid-column:auto}}
+.olive b{display:block;font-size:10px;letter-spacing:.2em;font-weight:500;text-transform:uppercase;margin-bottom:8px}
+.olive p{font-size:12px;line-height:1.7;margin:0;opacity:.9}
+.foot{background:var(--olive);color:#f4f1ea;border-top:1px solid rgba(255,255,255,.2)}
+.promises svg,.moment svg{fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
+</style>
+</head>
+<body>
+<div class="back"><a href="index.html">← Les cartes</a></div>
+<article class="card" data-card="bouquet" data-type="mariage">
+  <header class="bar">
+    <div class="logo" data-edit="logo">Clara &amp; Yacouba<small>24 · 04 · 2027</small></div>
+    <a class="go" href="#rsvp">Répondre</a>
+  </header>
+
+  <div class="hero">
+    <div class="slot" data-pic="hero"><img src="img/garden-1.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div>
+    <div class="text">
+      <h1 data-edit="names">Clara et Yacouba se disent oui</h1>
+      <p class="lead" data-role="sub" data-edit="sub">Samedi 24 avril 2027, au Domaine des Manguiers. Une journée simple et belle, avec ceux que nous aimons.</p>
+      <a class="go" href="#rsvp">Je réponds</a>
+    </div>
+  </div>
+
+  <section class="center">
+    <h2 data-role="kicker" data-edit="kicker">Nous nous marions</h2>
+    <svg class="orn" viewBox="0 0 70 10" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><path d="M0 5h28M42 5h28"/><path d="M35 1l4 4-4 4-4-4z"/></svg>
+    <p class="lead" data-edit="intro">Des mois que nous attendions ce jour. Nous l’avons voulu à notre image : des fleurs, une longue table et vous tous autour.</p>
+    <ul class="promises">
+      <li><svg><use href="#i-rings"/></svg><b>La cérémonie</b><p>Sous l’arche fleurie, à 15 h.</p></li>
+      <li><svg><use href="#i-glass"/></svg><b>Le cocktail</b><p>Au jardin, à l’ombre des manguiers.</p></li>
+      <li><svg><use href="#i-dinner"/></svg><b>Le dîner</b><p>Une longue table, des lanternes.</p></li>
+      <li><svg><use href="#i-music"/></svg><b>La soirée</b><p>On danse jusqu’au bout de la nuit.</p></li>
+    </ul>
+  </section>
+
+  <section id="programme" style="padding-top:0">
+    <p class="eyebrow center" data-role="prog-intro" data-edit="prog-k">Le programme</p>
+    <div class="moments">
+      <div class="moment">
+        <div class="slot" data-pic="p2"><img src="img/wed-table.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div>
+        <div class="in"><svg><use href="#i-rings"/></svg><b>15 h · Cérémonie</b><p>Sous l’arche, au fond du jardin.</p></div>
+      </div>
+      <div class="moment">
+        <div class="slot" data-pic="p3"><img src="img/garden-2.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div>
+        <div class="in"><svg><use href="#i-pin"/></svg><b>17 h · Cocktail</b><p>Jus frais et petites bouchées.</p></div>
+      </div>
+      <div class="moment">
+        <div class="slot" data-pic="p4"><img src="img/wed-couple-2.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div>
+        <div class="in"><svg><use href="#i-cake"/></svg><b>19 h 30 · Dîner</b><p>Puis le gâteau et la première danse.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="story">
+    <div>
+      <p class="eyebrow" data-edit="story-k">Notre histoire</p>
+      <h2 data-edit="story-title">Sept ans, et toujours la même joie.</h2>
+      <p class="lead" data-edit="story-lead">Rencontrés à Bobo un soir de festival, nous ne nous sommes plus quittés. Voici quelques images de notre chemin.</p>
+    </div>
+    <div class="strip">
+      <div class="slot" data-pic="p5"><img src="img/wed-couple-1.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Photo</div></div>
+      <div class="slot" data-pic="p6"><img src="img/garden-3.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Photo</div></div>
+      <div class="slot" data-pic="p7"><img src="img/wed-lake.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Photo</div></div>
+    </div>
+  </section>
+
+  <section class="word">
+    <p class="eyebrow">Un mot de nos parents</p>
+    <blockquote data-edit="quote">« Les voir si heureux est notre plus beau cadeau. Venez partager ce bonheur avec nous. »</blockquote>
+    <cite data-edit="quote-by">Les familles Traoré et Sanou</cite>
+  </section>
+
+  <section>
+    <p class="eyebrow">Bon à savoir</p>
+    <ul class="infos">
+      <li><svg><use href="#i-dress"/></svg><div><b>Tenue</b><p>Couleurs douces : sable, sauge, rose poudré.</p></div></li>
+      <li><svg><use href="#i-car"/></svg><div><b>Le lieu</b><p>Domaine des Manguiers, route de Banfora, à dix minutes de Bobo-Dioulasso.</p></div></li>
+      <li><svg><use href="#i-gift"/></svg><div><b>Cadeaux</b><p>Votre présence nous suffit. Une urne sera là pour ceux qui le souhaitent.</p></div></li>
+    </ul>
+  </section>
+
+  <section class="call">
+    <div class="text">
+      <h2 data-role="rsvp-title" data-edit="rsvp-title">Serez-vous des nôtres ?</h2>
+      <p class="lead" data-role="rsvp-lead" data-edit="rsvp-lead">Dites-nous avant le 1<sup>er</sup> avril si vous venez, et avec combien de personnes.</p>
+      <a class="go" href="#rsvp">Répondre</a>
+    </div>
+    <div class="slot" data-pic="p8"><img src="img/wed-couple-2.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div>
+  </section>
+
+  <section class="answer" id="rsvp">
+    <p class="eyebrow">RSVP</p>
+    <form class="rsvp" data-key="bouquet">
+      <div class="row">
+        <label class="f">Nom(s) <input id="c14-name" name="name" required autocomplete="name"></label>
+        <label class="f">Nombre de personnes <select id="c14-n" name="n"><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
+        <div class="choice">
+          <label><input type="radio" name="rep" value="oui" checked> Avec joie</label>
+          <label><input type="radio" name="rep" value="non"> Avec regret</label>
+        </div>
+        <label class="f">Un mot pour les mariés <textarea id="c14-msg" name="msg"></textarea></label>
+        <div><button class="btn" type="submit">Envoyer ma réponse</button></div>
+      </div>
+      <div class="ok" role="status"></div>
+    </form>
+  </section>
+
+  <section class="album-sec">
+    <p class="eyebrow">Vos photos</p>
+    <h2 data-role="album-title" data-edit="album-title">La journée par vos yeux</h2>
+    <p class="lead" style="margin:12px 0 22px;font-size:13px" data-role="album-lead" data-edit="album-lead">Ajoutez vos photos de la journée : elles rejoignent l’album des mariés.</p>
+    <div class="album-box">
+      <label class="drop" for="c14-files" tabindex="0">
+        <svg><use href="#i-up"/></svg>
+        <span>Glissez vos photos ici ou</span>
+        <span class="btn ghost">Choisir des photos</span>
+        <input id="c14-files" type="file" accept="image/*" multiple>
+      </label>
+      <label class="who">Votre nom (sous la photo) <input id="c14-who" name="who" placeholder="Awa"></label>
+      <div class="album-meta"><span><span class="count">3 photos</span> dans l’album</span><span>Validées par Clara et Yacouba</span></div>
+      <div class="album">
+        <figure class="slot"><img src="img/guest-2.jpg" alt="" onerror="this.remove()"><div class="tag">Awa</div><figcaption>Awa</figcaption></figure>
+        <figure class="slot"><img src="img/guest-4.jpg" alt="" onerror="this.remove()"><div class="tag">Les cousins</div><figcaption>Les cousins</figcaption></figure>
+        <figure class="slot"><img src="img/guest-1.jpg" alt="" onerror="this.remove()"><div class="tag">Julie</div><figcaption>Julie</figcaption></figure>
+      </div>
+      <p class="note">Maquette : les photos restent sur votre téléphone. Dans Marakaj, elles arrivent dans l’album des mariés.</p>
+    </div>
+  </section>
+
+  <div class="olive">
+    <div class="logo">C &amp; Y</div>
+    <div><b>Le jour</b><p>Samedi 24 avril 2027<br>À partir de 15 h</p></div>
+    <div><b>Le lieu</b><p>Domaine des Manguiers<br>Bobo-Dioulasso</p></div>
+  </div>
+  <footer class="foot">Clara &amp; Yacouba · 24 avril 2027 · Carte créée avec Marakaj</footer>
+</article>
+<script src="shared.js"></script>
+</body>
+</html>
