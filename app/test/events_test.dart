@@ -40,6 +40,19 @@ class _Events extends EventsRepository {
   }
 
   @override
+  Future<void> setCard(String id, String card) async {
+    calls.add('card:$id=$card');
+    final i = rows.indexWhere((r) => r.id == id);
+    if (i < 0) return;
+    final r = rows[i];
+    rows[i] = EventSummary(
+      id: r.id, orgId: r.orgId, kind: r.kind, card: card, slug: r.slug, previewToken: r.previewToken,
+      editToken: r.editToken, title: r.title, startsAt: r.startsAt, place: r.place, content: r.content, rsvpOn: r.rsvpOn,
+      albumOn: r.albumOn, published: r.published, createdAt: r.createdAt,
+    );
+  }
+
+  @override
   bool get isConfigured => true;
 
   @override
@@ -184,7 +197,12 @@ void main() {
       expect(find.byKey(const Key('gallery-tabs')), findsOneWidget);
       expect(find.byKey(const Key('template-anniv')), findsOneWidget);
       expect(repo.calls, isEmpty, reason: 'nothing created before a design is chosen');
+      // A tap shows the design large (155b); the button creates the card.
       await tester.tap(find.byKey(const Key('template-anniv')));
+      await tester.pumpAndSettle();
+      expect(find.text('Créer la carte avec ce modèle'), findsOneWidget);
+      expect(repo.calls, isEmpty, reason: 'nothing created before the button');
+      await tester.tap(find.byKey(const Key('template-use')));
       await tester.pumpAndSettle();
       expect(repo.calls, ['create:Inès & Thomas/anniversaire/anniv/-/Villa Serena']);
       // Opened on the new card's page.
@@ -216,6 +234,9 @@ void main() {
       expect(find.text('Premium'), findsWidgets);
       await tester.tap(find.byKey(const Key('template-anime_lotus_p')));
       await tester.pumpAndSettle();
+      expect(find.text('Étang de lotus'), findsWidgets);
+      await tester.tap(find.byKey(const Key('template-use')));
+      await tester.pumpAndSettle();
       expect(repo.calls, ['create:Gala/gala/anime_lotus_p/-/-']);
     });
 
@@ -225,6 +246,15 @@ void main() {
       expect(find.text('Modèles'), findsOneWidget);
       await tester.tap(find.byKey(const Key('template-come')));
       await tester.pumpAndSettle();
+      expect(find.text('Utiliser ce modèle'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('template-use')));
+      await tester.pumpAndSettle();
+      // No card yet: « Pour quelle carte ? » offers a new one only.
+      expect(find.text('Pour quelle carte ?'), findsOneWidget);
+      expect(find.byKey(const Key('use-new-card')), findsOneWidget);
+      expect(find.byKey(const Key('use-card-e1')), findsNothing);
+      await tester.tap(find.byKey(const Key('use-new-card')));
+      await tester.pumpAndSettle();
       expect(find.byKey(const Key('event-card-chosen')), findsOneWidget);
       expect(find.text('Modèle : Côme'), findsOneWidget);
       expect(find.text('Créer la carte'), findsOneWidget);
@@ -233,6 +263,58 @@ void main() {
       await tester.pumpAndSettle();
       expect(repo.calls, ['create:Inès & Thomas/mariage/come/-/-']);
       expect(find.byKey(const Key('event-preview')), findsOneWidget);
+    });
+
+    testWidgets('browsing with a card already made: « Pour quelle carte ? » gives it the design, its words kept',
+        (tester) async {
+      final repo = _Events();
+      final e = await repo.create(
+          orgId: 'o1', title: 'Inès & Thomas', kind: 'mariage', card: 'come',
+          startsAt: DateTime(2027, 6, 5, 15), place: 'Villa Serena');
+      await _pump(tester, TemplatesGalleryScreen(events: repo, org: _org, now: () => DateTime(2026, 10, 31)));
+      await tester.tap(find.byKey(const Key('template-ravello')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('template-use')));
+      await tester.pumpAndSettle();
+      expect(find.text('Pour quelle carte ?'), findsOneWidget);
+      expect(find.byKey(Key('use-card-${e.id}')), findsOneWidget);
+      expect(find.text('Inès & Thomas'), findsOneWidget);
+      await tester.tap(find.byKey(Key('use-card-${e.id}')));
+      await tester.pumpAndSettle();
+      expect(repo.calls.last, 'card:${e.id}=ravello');
+      // On the card's page, with its new design and its own words.
+      expect(find.byKey(const Key('event-preview')), findsOneWidget);
+      expect(find.textContaining('modèle Ravello'), findsOneWidget);
+      expect(find.text('Villa Serena'), findsOneWidget);
+    });
+
+    testWidgets('« Changer de modèle » on a card: the gallery for it, the current design marked, another chosen',
+        (tester) async {
+      final repo = _Events();
+      final e = await repo.create(
+          orgId: 'o1', title: 'Inès & Thomas', kind: 'mariage', card: 'come',
+          startsAt: DateTime(2027, 6, 5, 15), place: 'Villa Serena');
+      await _pump(tester, EventScreen(events: repo, org: _org, eventId: e.id, open: (u) async {}));
+      expect(find.textContaining('modèle Côme'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('event-card-change')));
+      await tester.pumpAndSettle();
+      expect(find.text('Changer de modèle'), findsWidgets);
+      expect(find.text('Le modèle de « Inès & Thomas »'), findsOneWidget);
+      expect(find.text('Actuel'), findsOneWidget, reason: 'the card\'s design today, marked');
+      // The current design cannot be chosen again.
+      await tester.tap(find.byKey(const Key('template-come')));
+      await tester.pumpAndSettle();
+      expect(find.text('Le modèle actuel de cette carte'), findsOneWidget);
+      expect(tester.widget<FilledButton>(find.byKey(const Key('template-use'))).onPressed, isNull);
+      Navigator.of(tester.element(find.byKey(const Key('template-use')))).pop();
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('template-ravello')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('template-use')));
+      await tester.pumpAndSettle();
+      expect(repo.calls.last, 'card:e1=ravello');
+      expect(find.text('Modèle changé'), findsOneWidget);
+      expect(find.textContaining('modèle Ravello'), findsOneWidget);
     });
 
     testWidgets('the server refuses: the word, and « Réessayer »', (tester) async {

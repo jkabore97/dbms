@@ -8813,4 +8813,26 @@ const enStrings = <String, String>{
       'Photo removed',
   'Un invité':
       'A guest',
+  'Actuel':
+      'Current',
+  'Changer de modèle':
+      'Change the design',
+  'Modèle changé':
+      'Design changed',
+  'Utiliser ce modèle':
+      'Use this design',
+  'Créer la carte avec ce modèle':
+      'Create the card with this design',
+  'Le modèle actuel de cette carte':
+      'This card’s current design',
+  'Animé : une page qui bouge, ses couleurs et son écriture au choix.':
+      'Animated: a page that moves, its colours and writing to choose.',
+  'Classique : une carte à faire défiler, ses textes et ses photos au choix.':
+      'Classic: a card to scroll, its texts and pictures to choose.',
+  'Pour « {title} » : ses mots, sa date et son lieu restent les siens.':
+      'For “{title}”: its words, date and place stay its own.',
+  'Pour quelle carte ?':
+      'For which card?',
+  'Ses mots, sa date et son lieu, puis la carte.':
+      'Its words, date and place, then the card.',
 };

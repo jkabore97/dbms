@@ -55,3 +55,24 @@ test('/sb/ reads go to the network untouched; the app\'s own files do not', () =
   onFetch(page);
   assert.equal(page.answered, true);
 });
+
+test('a card\'s page and the cards\' files go to the network untouched (152): never the app\'s shell', () => {
+  const onFetch = worker();
+  for (const url of [
+    'https://marakaj.com/e/ines-thomas-ab12',
+    'https://marakaj.com/e/ines-thomas-ab12?apercu=f00dbabe&modifier=ed17',
+    'https://marakaj.com/cartes/shared.js',
+    'https://marakaj.com/cartes/apercu/come.jpg',
+    'https://marakaj.com/evenements/index.html',
+  ]) {
+    const e = event(url);
+    onFetch(e);
+    assert.equal(e.answered, false, url);
+  }
+  // The app's own addresses still are the shell's.
+  for (const url of ['https://marakaj.com/', 'https://marakaj.com/o/abc/evenements', 'https://marakaj.com/s/cafe-lumiere']) {
+    const e = event(url);
+    onFetch(e);
+    assert.equal(e.answered, true, url);
+  }
+});
