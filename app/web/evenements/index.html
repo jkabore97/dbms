@@ -3303,7 +3303,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
       if (!nm) { out.textContent = 'Écrivez votre nom, pour que nous sachions qui répond.'; return; }
       if (!ans) { out.textContent = 'Dites-nous si vous venez : « Je viens » ou « Je ne peux pas ».'; return; }
       var thanks = ans === 'yes' ? 'Merci ' + nm + ' ! Votre carte d\'invité est prête, juste en dessous.' : 'Merci ' + nm + ', nous penserons à vous.';
-      if (!SERVER) {
+      if (!SERVER || SERVER.demo) {
         out.textContent = thanks;
         if (ans === 'yes') { document.getElementById('passName').textContent = nm; qr(nm); }
         return;

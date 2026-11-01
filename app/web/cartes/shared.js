@@ -406,7 +406,8 @@
       e.preventDefault();
       var fd = new FormData(f), d = {};
       fd.forEach(function (v, k) { d[k] = String(v).trim(); });
-      if (!SERVER) {
+      // A design's sample (155c, SERVER.demo): the answer stays here.
+      if (!SERVER || SERVER.demo) {
         show(d);
         try { localStorage.setItem(key, JSON.stringify(d)); } catch (e2) {}
         toast('Réponse envoyée');
@@ -458,6 +459,7 @@
       // The card's album (155): the guests' pictures live with the event,
       // read from it and sent to the uploads Worker with the card's link.
       // Closed by the organiser, or no Worker to send to: the box says so.
+      if (SERVER.demo) { box.hidden = true; return; }
       if (SERVER.album_on === false || !SERVER.uploads) {
         box.hidden = true;
         box.insertAdjacentHTML('afterend', '<p class="note">' + (SERVER.album_on === false

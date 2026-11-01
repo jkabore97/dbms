@@ -61,6 +61,7 @@ test('a card\'s page and the cards\' files go to the network untouched (152): ne
   for (const url of [
     'https://marakaj.com/e/ines-thomas-ab12',
     'https://marakaj.com/e/ines-thomas-ab12?apercu=f00dbabe&modifier=ed17',
+    'https://marakaj.com/modele/anime_lotus_p',
     'https://marakaj.com/cartes/shared.js',
     'https://marakaj.com/cartes/apercu/come.jpg',
     'https://marakaj.com/evenements/index.html',

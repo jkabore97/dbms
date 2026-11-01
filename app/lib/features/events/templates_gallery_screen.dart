@@ -24,10 +24,15 @@ class TemplatesGalleryScreen extends StatefulWidget {
     this.forEvent,
     this.now,
     this.embedded = false,
+    this.open,
   });
 
   final EventsRepository events;
   final OrgSummary org;
+
+  /// How a page of the site is opened (« Voir le modèle en vrai »): the
+  /// app's way, or a test's stand-in.
+  final Future<void> Function(Uri)? open;
 
   /// The card being made: its name, kind, day and place, waiting for its
   /// design. Chosen, the card is created and handed back.
@@ -77,6 +82,7 @@ class _TemplatesGalleryScreenState extends State<TemplatesGalleryScreen> {
         draft: widget.draft,
         forEvent: widget.forEvent,
         now: widget.now,
+        open: widget.open,
       ),
     ));
     if (!mounted || result == null) return;
@@ -279,6 +285,7 @@ class TemplatePreviewScreen extends StatefulWidget {
     this.draft,
     this.forEvent,
     this.now,
+    this.open,
   });
 
   final EventsRepository events;
@@ -287,6 +294,7 @@ class TemplatePreviewScreen extends StatefulWidget {
   final EventDraft? draft;
   final EventSummary? forEvent;
   final DateTime Function()? now;
+  final Future<void> Function(Uri)? open;
 
   @override
   State<TemplatePreviewScreen> createState() => _TemplatePreviewScreenState();
@@ -294,6 +302,15 @@ class TemplatePreviewScreen extends StatefulWidget {
 
 class _TemplatePreviewScreenState extends State<TemplatePreviewScreen> {
   bool _busy = false;
+
+  /// The design as the guests would see it (155c): the site's sample
+  /// page, inside the app.
+  Future<void> _demo() async {
+    final uri = Uri.parse('${eventSiteOrigin()}/modele/${widget.template.key}');
+    final open = widget.open;
+    if (open != null) return open(uri);
+    await openSitePage(uri);
+  }
 
   Future<void> _use() async {
     if (_busy) return;
@@ -411,6 +428,11 @@ class _TemplatePreviewScreenState extends State<TemplatePreviewScreen> {
                 Chip(label: Text(context.tr(eventKindName(k))), visualDensity: VisualDensity.compact),
             ]),
           ],
+          const SizedBox(height: 10),
+          Text(
+            context.tr('La carte telle que vos invités la verront, avec des mots d’exemple ; elle s’ouvre dans l’application.'),
+            style: theme.textTheme.bodySmall,
+          ),
           if (forEvent != null || draft != null) ...[
             const SizedBox(height: 10),
             Text(
@@ -421,23 +443,36 @@ class _TemplatePreviewScreenState extends State<TemplatePreviewScreen> {
           ],
         ],
       ),
-      // The button under the picture whatever the scroll: the picture is a
-      // whole phone tall.
+      // The buttons under the picture whatever the scroll: the picture is a
+      // whole phone tall. « Voir le modèle en vrai » (155c) opens the
+      // site's sample page inside the app.
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-        child: SizedBox(
-          height: 52,
-          child: FilledButton.icon(
-            key: const Key('template-use'),
-            onPressed: _busy || current ? null : _use,
-            icon: Icon(draft != null ? Icons.check : Icons.auto_awesome_outlined),
-            label: Text(current
-                ? context.tr('Le modèle actuel de cette carte')
-                : draft != null
-                    ? context.tr('Créer la carte avec ce modèle')
-                    : context.tr('Utiliser ce modèle')),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          SizedBox(
+            height: 46,
+            child: OutlinedButton.icon(
+              key: const Key('template-demo'),
+              onPressed: _demo,
+              icon: const Icon(Icons.play_circle_outline),
+              label: Text(context.tr('Voir le modèle en vrai')),
+            ),
           ),
-        ),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 52,
+            child: FilledButton.icon(
+              key: const Key('template-use'),
+              onPressed: _busy || current ? null : _use,
+              icon: Icon(draft != null ? Icons.check : Icons.auto_awesome_outlined),
+              label: Text(current
+                  ? context.tr('Le modèle actuel de cette carte')
+                  : draft != null
+                      ? context.tr('Créer la carte avec ce modèle')
+                      : context.tr('Utiliser ce modèle')),
+            ),
+          ),
+        ]),
       ),
     );
   }
