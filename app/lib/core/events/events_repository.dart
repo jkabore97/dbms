@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../net/timeout_client.dart';
+
 /// Événementiel (152): the events a business creates — a card with an
 /// address, sent to its guests — and what the guests answered.
 ///
@@ -13,7 +15,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class EventsRepository {
   EventsRepository(this._client, {String? uploadsUrl, http.Client? httpClient})
       : _uploads = (uploadsUrl ?? const String.fromEnvironment('UPLOADS_URL')).replaceAll(RegExp(r'/+$'), ''),
-        _http = httpClient ?? http.Client();
+        // Bounded, as every request the app makes (freeze_test): a Worker
+        // that never answers must not hang the card's page.
+        _http = httpClient ?? TimeoutClient.bounded();
 
   final SupabaseClient? _client;
 
