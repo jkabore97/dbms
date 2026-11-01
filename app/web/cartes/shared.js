@@ -172,11 +172,92 @@
       }
     }
     draft.type = type;
-    if (!silent) { save(); toast('Carte réglée pour : ' + p.label); }
+    if (!silent) {
+      // Another type rewrote the words: the organiser's own words written
+      // over the old ones (x-…) no longer sit where they were.
+      Object.keys(draft).forEach(function (k) { if (k.indexOf('t:x-') === 0) delete draft[k]; });
+      markAll();
+      if (document.body.classList.contains('editing')) editables().forEach(function (el) { el.setAttribute('contenteditable', 'true'); });
+      save(); toast('Carte réglée pour : ' + p.label);
+    }
   }
+
+  // Every word of the card is the organiser's to write (159c): the cards
+  // marked only their names and a few headlines; the programme, « Bon à
+  // savoir », the section titles, the footer stayed as the model wrote
+  // them. Each text the card shows, beyond what is marked already, gets a
+  // key by its place on the page (x-1, x-2, … in reading order, the same
+  // at every opening for the same type) — kept as t:x-N like any other.
+  // Not the links and buttons (they act), not the form, the album, the
+  // pictures, the countdown.
+  var SKIP = 'a, button, label, select, option, textarea, input, form, svg, script, style, .edbar, .album-box, .toast, [data-count], [data-pic], [data-slot], [data-edit]';
+  function markAll() {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-edit^="x-"]'), function (el) {
+      if (el.hasAttribute('data-x-wrap')) { el.replaceWith(document.createTextNode(el.textContent)); return; }
+      el.removeAttribute('data-edit'); el.removeAttribute('contenteditable');
+    });
+    var n = 0, root = document.querySelector('.card') || document.body;
+    (function walk(el) {
+      Array.prototype.forEach.call(el.children, function (c) {
+        if (c.matches(SKIP)) return;
+        var own = Array.prototype.some.call(c.childNodes, function (t) { return t.nodeType === 3 && t.textContent.trim(); });
+        if (!own) { walk(c); return; }
+        if (!c.querySelector(SKIP)) { c.setAttribute('data-edit', 'x-' + (++n)); return; }
+        // Text beside a link or a marked word: each run of it on its own.
+        Array.prototype.slice.call(c.childNodes).forEach(function (t) {
+          if (t.nodeType !== 3 || !t.textContent.trim()) return;
+          var span = document.createElement('span');
+          span.setAttribute('data-edit', 'x-' + (++n)); span.setAttribute('data-x-wrap', '');
+          span.textContent = t.textContent; t.replaceWith(span);
+        });
+        walk(c);
+      });
+    })(root);
+  }
+  function editables() { return Array.prototype.slice.call(document.querySelectorAll('[data-edit]')); }
 
   // ------------------------------------------------- what the draft says
   if (draft.type) applyPreset(draft.type, true);
+  markAll();
+
+  // ------------------------------------------ colours and writing (159c)
+  // Like the animated designs: the model's own, or one of these, kept as
+  // pal (0 = the model's) and font ('' = the model's) in the card's content.
+  // Every card draws with the same variables, so each set fits all twelve.
+  var PALS = [
+    ['Celle du modèle'],
+    ['Ivoire et noir', '#141414', '#f6f3ec', '#151515', '#cfc9bd', '#151515', '#f6f3ec'],
+    ['Sauge', '#4e5c47', '#f6f2e8', '#2f3a2c', '#c9c4b1', '#5b6b52', '#f6f2e8'],
+    ['Terre cuite', '#7a3b22', '#fbf3ea', '#3b2418', '#e3cdb8', '#b9552f', '#fbf3ea'],
+    ['Nuit et or', '#06080f', '#0d1322', '#ece4cf', '#3a4260', '#c9a45c', '#0d1322'],
+    ['Rose poudré', '#b98a84', '#fbf4f1', '#3d2f2d', '#ead5ce', '#b06a63', '#fbf4f1'],
+    ['Bleu nuit', '#1d2b45', '#f4f6fa', '#1f2a3d', '#cdd5e2', '#2f4a7a', '#f4f6fa'],
+    ['Bordeaux', '#4a1520', '#f7f2ea', '#2a1a1c', '#d9cdb8', '#6b1f2a', '#f7f2ea'],
+    ['Wax vert et or', '#0f4d3a', '#fbf5e8', '#1f2a23', '#e3d3b0', '#c79a2e', '#1f2a23']
+  ];
+  var FONTS = [
+    { id: '', name: 'Celle du modèle' },
+    { id: 'classique', name: 'Classique', display: "'Cormorant Garamond',serif", body: "'Montserrat',sans-serif", script: "'Pinyon Script',cursive", q: 'Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Montserrat:wght@300;400;500&family=Pinyon+Script' },
+    { id: 'moderne', name: 'Moderne', display: "'Bodoni Moda',serif", body: "'Jost',sans-serif", script: "'Bodoni Moda',serif", q: 'Bodoni+Moda:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400;500' },
+    { id: 'majestueuse', name: 'Majestueuse', display: "'Cinzel',serif", body: "'EB Garamond',serif", script: "'Parisienne',cursive", q: 'Cinzel:wght@400;600&family=EB+Garamond:ital,wght@0,400;1,400&family=Parisienne' },
+    { id: 'romantique', name: 'Romantique', display: "'Playfair Display',serif", body: "'Lora',serif", script: "'Great Vibes',cursive", q: 'Playfair+Display:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Great+Vibes' },
+    { id: 'epuree', name: 'Épurée', display: "'Italiana',serif", body: "'Raleway',sans-serif", script: "'Italiana',serif", q: 'Italiana&family=Raleway:wght@300;400;500' },
+    { id: 'joyeuse', name: 'Joyeuse', display: "'Fraunces',serif", body: "'Josefin Sans',sans-serif", script: "'Caveat',cursive", q: 'Fraunces:ital,wght@0,400;0,600;1,400&family=Josefin+Sans:wght@300;400;600&family=Caveat:wght@500' }
+  ];
+  function applyLook() {
+    var st = document.documentElement.style, p = PALS[+draft.pal || 0];
+    ['--back', '--paper', '--ink', '--line', '--accent', '--on-accent'].forEach(function (v, i) {
+      if (p && p.length > 1) st.setProperty(v, p[i + 1]); else st.removeProperty(v);
+    });
+    var f = FONTS.filter(function (x) { return x.id && x.id === draft.font; })[0];
+    ['display', 'body', 'script'].forEach(function (k) { if (f) st.setProperty('--' + k, f[k]); else st.removeProperty('--' + k); });
+    if (f && !document.querySelector('link[data-font="' + f.id + '"]')) {
+      var l = document.createElement('link'); l.rel = 'stylesheet'; l.setAttribute('data-font', f.id);
+      l.href = 'https://fonts.googleapis.com/css2?family=' + f.q + '&display=swap';
+      document.head.appendChild(l);
+    }
+  }
+  applyLook();
   Object.keys(draft).forEach(function (k) {
     if (k.indexOf('t:') === 0) {
       var el = document.querySelector('[data-edit="' + k.slice(2) + '"]');
@@ -311,7 +392,6 @@
   });
 
   // ------------------------------------------------------------- editor
-  var editable = document.querySelectorAll('[data-edit]');
   if (card && (!SERVER || ORGANISER)) {
     var bar = document.createElement('div');
     bar.className = 'edbar';
@@ -320,6 +400,12 @@
       '<button type="button" class="ed-toggle">Modifier cette carte</button>' +
       '<div class="ed-tools" hidden>' +
       '<label class="ed-type">Événement <select>' + opts + '</select></label>' +
+      '<div class="ed-look"><div class="ed-pals" role="group" aria-label="Couleurs">' +
+      PALS.map(function (p, i) {
+        var bg = p.length > 1 ? 'linear-gradient(135deg,' + p[2] + ' 50%,' + p[5] + ' 50%)' : 'conic-gradient(#f6f3ec 0 25%,#5b6b52 0 50%,#c9a45c 0 75%,#151515 0)';
+        return '<button type="button" class="ed-pal" data-p="' + i + '" title="' + p[0] + '" aria-label="' + p[0] + '" style="background:' + bg + '"></button>';
+      }).join('') + '</div>' +
+      '<select class="ed-font" aria-label="Écriture">' + FONTS.map(function (f) { return '<option value="' + f.id + '">Aa · ' + f.name + '</option>'; }).join('') + '</select></div>' +
       '<p class="ed-hint">Touchez un texte pour l’écrire, une photo pour la remplacer, glissez-la pour la recadrer.</p>' +
       '<div class="ed-row">' +
       (ORGANISER ? '<button type="button" class="ed-done ed-save">Enregistrer</button>'
@@ -327,7 +413,16 @@
       '</div></div>';
     document.body.appendChild(bar);
     document.body.classList.add('has-edbar');
-    var sel = bar.querySelector('select');
+    var sel = bar.querySelector('.ed-type select');
+    function drawLook() {
+      Array.prototype.forEach.call(bar.querySelectorAll('.ed-pal'), function (b) { b.setAttribute('aria-pressed', String(+b.getAttribute('data-p') === (+draft.pal || 0))); });
+      bar.querySelector('.ed-font').value = draft.font || '';
+    }
+    Array.prototype.forEach.call(bar.querySelectorAll('.ed-pal'), function (b) {
+      b.addEventListener('click', function () { draft.pal = +b.getAttribute('data-p'); applyLook(); drawLook(); save(); });
+    });
+    bar.querySelector('.ed-font').addEventListener('change', function (e) { draft.font = e.target.value; applyLook(); save(); });
+    drawLook();
     var def = card.getAttribute('data-type') || 'mariage';
     sel.value = draft.type || def;
     sel.addEventListener('change', function () { applyPreset(sel.value); });
@@ -335,7 +430,7 @@
       document.body.classList.toggle('editing', on);
       bar.querySelector('.ed-toggle').hidden = on;
       bar.querySelector('.ed-tools').hidden = !on;
-      Array.prototype.forEach.call(editable, function (el) {
+      editables().forEach(function (el) {
         if (on) el.setAttribute('contenteditable', 'true'); else el.removeAttribute('contenteditable');
       });
       if (on) toast('Mode édition'); else if (!ORGANISER) toast('Carte enregistrée sur ce téléphone');
@@ -348,7 +443,7 @@
       var saveBtn = bar.querySelector('.ed-save');
       markDirty = function () { saveBtn.textContent = 'Enregistrer'; saveBtn.disabled = false; };
       saveBtn.addEventListener('click', function () {
-        Array.prototype.forEach.call(editable, function (el) { el.blur(); });
+        editables().forEach(function (el) { el.blur(); });
         saveBtn.disabled = true; saveBtn.textContent = 'Envoi…';
         fetch(SERVER.api.url.replace(/\/+$/, '') + '/rest/v1/rpc/event_content_save', {
           method: 'POST',
@@ -372,13 +467,17 @@
         location.reload();
       });
     }
+    // Delegated: the words a type change writes anew are written in place too.
     var t;
-    Array.prototype.forEach.call(editable, function (el) {
-      el.addEventListener('input', function () {
-        draft['t:' + el.getAttribute('data-edit')] = el.innerHTML;
-        clearTimeout(t); t = setTimeout(save, 400);
-      });
-      el.addEventListener('keydown', function (e) { if (e.key === 'Enter' && el.tagName !== 'P' && el.tagName !== 'DIV') { e.preventDefault(); el.blur(); } });
+    document.addEventListener('input', function (e) {
+      var el = e.target.closest && e.target.closest('[data-edit]');
+      if (!el || !document.body.classList.contains('editing')) return;
+      draft['t:' + el.getAttribute('data-edit')] = el.innerHTML;
+      clearTimeout(t); t = setTimeout(save, 400);
+    });
+    document.addEventListener('keydown', function (e) {
+      var el = e.target.closest && e.target.closest('[data-edit]');
+      if (el && e.key === 'Enter' && el.tagName !== 'P' && el.tagName !== 'DIV') { e.preventDefault(); el.blur(); }
     });
   }
 

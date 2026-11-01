@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sophie & Jean</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Great+Vibes&display=swap">
+<link rel="stylesheet" href="shared.css">
+<style>
+/* Carte « Rivage » — after the owner's picture: deep sage around a cream
+   page; the names in tall capitals over a lakeside photo, a framed photo
+   beside the date in script, a veil of green over a second photo for the
+   couple's word, the day as a row of drawn icons, and the answer beside a
+   band of stripes. */
+:root{
+  --back:#5c6a4d;--paper:#fbf6ec;--ink:#3c4733;--line:#d8d0bd;--green:#4c5c3d;
+  --accent:#4c5c3d;--on-accent:#fbf6ec;
+  --slot-a:#a7b09a;--slot-b:#6f7d62;--slot-c:#c2c0a8;--slot-ink:#fbf6ec;
+  --display:'Italiana','Didot',serif;--script:'Great Vibes','Snell Roundhand',cursive;--body:'Cormorant Garamond','Times New Roman',serif;
+}
+body{font-size:16px}
+.hero{position:relative;min-height:420px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fbf6ec}
+.hero > .slot{position:absolute;inset:0}
+.hero::after{content:"";position:absolute;inset:0;background:rgba(60,72,50,.38);pointer-events:none}
+.hero .in{position:relative;z-index:2;padding:30px 20px}
+.hero h1{font-family:var(--display);font-weight:400;font-size:clamp(52px,15vw,84px);line-height:.92;margin:0;text-transform:uppercase;letter-spacing:.02em}
+.hero h1 em{display:block;font-family:var(--script);text-transform:none;font-size:.6em;line-height:1.1;font-style:normal}
+.hero .sub{font-family:var(--display);font-size:13px;letter-spacing:.24em;text-transform:uppercase;margin-top:12px}
+.when{display:grid;grid-template-columns:1fr;gap:24px;align-items:center;justify-items:center;padding-top:36px;padding-bottom:36px}
+@media (min-width:520px){.when{grid-template-columns:1fr 1fr}}
+.frame{padding:10px;border:2px solid var(--green);outline:1px solid var(--green);outline-offset:6px;width:min(240px,70vw)}
+.frame .slot{aspect-ratio:4/5;filter:grayscale(1)}
+.when .date{text-align:center}
+.when .script{font-family:var(--script);font-size:40px;line-height:1.05}
+.when .place{font-family:var(--display);font-size:22px;letter-spacing:.12em;text-transform:uppercase;margin-top:6px}
+.veil{position:relative;padding:46px 18px}
+.veil > .slot{position:absolute;inset:0}
+.veil .panel{position:relative;z-index:2;background:rgba(76,92,61,.82);color:#fbf6ec;text-align:center;padding:34px 22px;max-width:460px;margin:0 auto}
+.veil .script{font-family:var(--script);font-size:38px;line-height:1.1;margin:0 0 14px}
+.veil p{font-size:15px;line-height:1.7;margin:0 0 12px}
+.veil .sign{font-family:var(--script);font-size:28px;margin-top:6px}
+.day{text-align:center}
+.day h2{font-family:var(--display);font-size:34px;letter-spacing:.06em;text-transform:uppercase}
+.day .script{font-family:var(--script);font-size:24px;margin:6px 0 22px}
+.icons{display:grid;grid-template-columns:repeat(3,1fr);gap:22px 8px;list-style:none;margin:0;padding:0}
+@media (min-width:520px){.icons{grid-template-columns:repeat(6,1fr)}}
+.icons li{display:flex;flex-direction:column;align-items:center}
+.icons svg{width:38px;height:38px;color:var(--green);stroke-width:1.1}
+.icons [data-t]{font-family:var(--display);font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin-top:8px}
+.icons [data-b]{font-family:var(--script);font-size:24px;line-height:1.1}
+.icons [data-s]{display:none}
+.answer{background:var(--green);color:#fbf6ec;display:grid;grid-template-columns:1fr;padding:0}
+@media (min-width:520px){.answer{grid-template-columns:1.6fr 1fr}}
+.answer .form{padding:36px 24px}
+.answer h2{font-family:var(--display);color:#fbf6ec;font-size:34px;text-transform:uppercase;letter-spacing:.06em}
+.answer .lead{font-size:14px;margin:8px 0 20px;opacity:.9}
+.answer label.f input,.answer label.f select,.answer label.f textarea{border-color:rgba(251,246,236,.5);color:#fbf6ec}
+.answer .btn{background:#fbf6ec;color:var(--green);border-color:#fbf6ec}
+.answer .stripes{min-height:120px;background:repeating-linear-gradient(90deg,#fbf6ec 0 14px,var(--green) 14px 28px)}
+.answer .ok{border-color:rgba(251,246,236,.5)}
+.album-sec{background:#f1ebdc}
+.foot{font-family:var(--display);letter-spacing:.24em}
+.icons svg{fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
+</style>
+</head>
+<body>
+<div class="back"><a href="index.html">← Les cartes</a></div>
+<article class="card" data-card="rivage" data-type="mariage">
+  <header class="hero">
+    <div class="slot" data-pic="hero"><img src="img/wed-lake.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div>
+    <div class="in">
+      <h1 data-edit="names">Sophie<em>et</em>Jean</h1>
+      <p class="sub" data-role="kicker" data-edit="kicker">se marient !</p>
+    </div>
+  </header>
+
+  <section class="when">
+    <div class="frame"><div class="slot" data-pic="p2"><img src="img/wed-bw-2.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div></div>
+    <div class="date">
+      <div class="script" data-edit="date">Le 1<sup>er</sup> septembre<br>à</div>
+      <div class="place" data-edit="place">Maison du Lac</div>
+    </div>
+  </section>
+
+  <section class="veil">
+    <div class="slot" data-pic="p3"><img src="img/garden-3.jpg" alt="" onerror="this.remove()"><div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div></div>
+    <div class="panel">
+      <p class="script" data-role="word-title" data-edit="word-title">Notre grand jour</p>
+      <p data-edit="word-1">Nous sommes si heureux de célébrer ce moment avec notre famille et nos amis les plus chers. Votre amour et votre présence comptent tant pour nous.</p>
+      <p data-edit="word-2">En attendant le jour J, cette carte vous tient au courant de tout. Merci de faire partie de notre histoire : nous avons hâte de fêter ça avec vous !</p>
+      <p data-edit="word-3">Avec amour,</p>
+      <div class="sign" data-edit="sign">Sophie et Jean</div>
+    </div>
+  </section>
+
+  <section class="day" id="programme">
+    <h2 data-role="prog-title" data-edit="prog-title">Le jour J</h2>
+    <p class="script" data-role="prog-intro" data-edit="prog-intro">Rendez-vous au salon de la maison dès 12 h 30</p>
+    <ol class="icons" data-prog>
+      <li><svg><use href="#i-rings"/></svg><span data-t>13 h</span><i data-b>cérémonie</i><span data-s></span></li>
+      <li><svg><use href="#i-glass"/></svg><span data-t>14 h</span><i data-b>apéritif</i><span data-s></span></li>
+      <li><svg><use href="#i-cake"/></svg><span data-t>16 h</span><i data-b>le gâteau</i><span data-s></span></li>
+      <li><svg><use href="#i-dinner"/></svg><span data-t>18 h</span><i data-b>dîner</i><span data-s></span></li>
+      <li><svg><use href="#i-music"/></svg><span data-t>20 h</span><i data-b>la fête</i><span data-s></span></li>
+      <li><svg><use href="#i-car"/></svg><span data-t>minuit</span><i data-b>le retour</i><span data-s></span></li>
+    </ol>
+  </section>
+
+  <section>
+    <p class="eyebrow">Bon à savoir</p>
+    <ul class="infos">
+      <li><svg><use href="#i-pin"/></svg><div><b>Le lieu</b><p>Maison du Lac, au bord de l’eau. Un parking est prévu à l’entrée.</p></div></li>
+      <li><svg><use href="#i-dress"/></svg><div><b>Tenue</b><p>Tons verts et crème, si le cœur vous en dit.</p></div></li>
+      <li><svg><use href="#i-bed"/></svg><div><b>Dormir sur place</b><p>Quelques chambres sont réservées : écrivez-nous.</p></div></li>
+    </ul>
+  </section>
+
+  <section class="answer" id="rsvp">
+    <div class="form">
+      <h2 data-role="rsvp-title" data-edit="rsvp-title">RSVP</h2>
+      <p class="lead" data-role="rsvp-lead" data-edit="rsvp-lead">Dites-nous si vous pouvez être des nôtres pour célébrer avec nous.</p>
+      <form class="rsvp" data-key="rivage">
+        <div class="row">
+          <label class="f">Nom(s) <input id="c15-name" name="name" required autocomplete="name"></label>
+          <label class="f">Nombre de personnes <select id="c15-n" name="n"><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
+          <div class="choice">
+            <label><input type="radio" name="rep" value="oui" checked> Avec joie</label>
+            <label><input type="radio" name="rep" value="non"> Avec regret</label>
+          </div>
+          <label class="f">Un mot <textarea id="c15-msg" name="msg"></textarea></label>
+          <div><button class="btn" type="submit">Envoyer</button></div>
+        </div>
+        <div class="ok" role="status"></div>
+      </form>
+    </div>
+    <div class="stripes" aria-hidden="true"></div>
+  </section>
+
+  <section class="album-sec">
+    <p class="eyebrow">Vos photos</p>
+    <h2 data-role="album-title" data-edit="album-title">La journée par vos yeux</h2>
+    <p class="lead" style="margin:12px 0 22px;font-size:15px" data-role="album-lead" data-edit="album-lead">Ajoutez vos photos de la journée : elles rejoignent l’album des mariés.</p>
+    <div class="album-box">
+      <label class="drop" for="c15-files" tabindex="0">
+        <svg><use href="#i-up"/></svg>
+        <span>Glissez vos photos ici ou</span>
+        <span class="btn ghost">Choisir des photos</span>
+        <input id="c15-files" type="file" accept="image/*" multiple>
+      </label>
+      <label class="who">Votre nom (sous la photo) <input id="c15-who" name="who" placeholder="Nora"></label>
+      <div class="album-meta"><span><span class="count">3 photos</span> dans l’album</span><span>Validées par Sophie et Jean</span></div>
+      <div class="album">
+        <figure class="slot"><img src="img/guest-3.jpg" alt="" onerror="this.remove()"><div class="tag">Nora</div><figcaption>Nora</figcaption></figure>
+        <figure class="slot"><img src="img/guest-1.jpg" alt="" onerror="this.remove()"><div class="tag">Julie</div><figcaption>Julie</figcaption></figure>
+        <figure class="slot"><img src="img/guest-4.jpg" alt="" onerror="this.remove()"><div class="tag">Les cousins</div><figcaption>Les cousins</figcaption></figure>
+      </div>
+      <p class="note">Maquette : les photos restent sur votre téléphone. Dans Marakaj, elles arrivent dans l’album des mariés.</p>
+    </div>
+  </section>
+
+  <footer class="foot">Sophie &amp; Jean · 1<sup>er</sup> septembre · Carte créée avec Marakaj</footer>
+</article>
+<script src="shared.js"></script>
+</body>
+</html>

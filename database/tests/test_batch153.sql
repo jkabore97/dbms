@@ -76,11 +76,11 @@ grant select on t153 to anon;
 -- 1. installed twice, the same
 do $$
 begin
-    assert (select count(*) from event_templates) = 47, 'forty-seven templates';
-    assert (select count(*) from event_templates where family = 'classique' and not premium) = 12, 'twelve classic cards';
+    assert (select count(*) from event_templates where key not in ('cimbrone', 'bouquet', 'rivage')) = 47, 'forty-seven templates of its own (160 adds three)';
+    assert (select count(*) from event_templates where family = 'classique' and not premium and key not in ('cimbrone', 'bouquet', 'rivage')) = 12, 'twelve classic cards';
     assert (select count(*) from event_templates where family = 'anime' and not premium) = 21, 'twenty-one animated layouts';
     assert (select count(*) from event_templates where family = 'anime' and premium) = 14, 'fourteen Premium films';
-    assert (select count(distinct sort) from event_templates) = 47, 'each in its place';
+    assert (select count(distinct sort) from event_templates where key not in ('cimbrone', 'bouquet', 'rivage')) = 47, 'each in its place';
     assert exists (select 1 from pg_constraint where conname = 'events_card_fkey'), 'events.card references the templates';
     assert exists (select 1 from information_schema.columns where table_name = 'events' and column_name = 'tz'), 'events.tz';
     assert (select relrowsecurity from pg_class where relname = 'event_templates'), 'the templates have row level security';

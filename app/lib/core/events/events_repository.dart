@@ -260,6 +260,9 @@ const eventCards = <(String, String, String)>[
   ('gala', 'Dix ans', 'gala'),
   ('dot', 'Dot', 'dot'),
   ('hommage', 'Hommage', 'hommage'),
+  ('cimbrone', 'Cimbrone', 'mariage'),
+  ('bouquet', 'Bouquet', 'mariage'),
+  ('rivage', 'Rivage', 'mariage'),
 ];
 
 String eventKindName(String kind) {
@@ -338,6 +341,9 @@ const knownTemplates = <EventTemplate>[
   EventTemplate(key: 'gala', family: 'classique', name: 'Dix ans', sort: 10, kinds: ['gala'], line: 'Une soirée habillée'),
   EventTemplate(key: 'dot', family: 'classique', name: 'Dot', sort: 11, kinds: ['dot'], line: 'Les deux familles'),
   EventTemplate(key: 'hommage', family: 'classique', name: 'Hommage', sort: 12, kinds: ['hommage'], line: 'En sa mémoire'),
+  EventTemplate(key: 'cimbrone', family: 'classique', name: 'Cimbrone', sort: 48, kinds: ['mariage'], line: 'Une photo plein cadre, le noir et blanc'),
+  EventTemplate(key: 'bouquet', family: 'classique', name: 'Bouquet', sort: 49, kinds: ['mariage'], line: 'Des fleurs, une longue table, l’olive'),
+  EventTemplate(key: 'rivage', family: 'classique', name: 'Rivage', sort: 50, kinds: ['mariage'], line: 'Vert sauge, un lac, les heures en dessins'),
   EventTemplate(key: 'anime_lettre', family: 'anime', name: 'La Lettre', sort: 13, line: 'Une enveloppe qui s’ouvre'),
   EventTemplate(key: 'anime_jardin', family: 'anime', name: 'Le Jardin', sort: 14, line: 'Une arche fleurie qui pousse'),
   EventTemplate(key: 'anime_nuit', family: 'anime', name: 'La Nuit', sort: 15, line: 'Du coucher de soleil aux étoiles'),

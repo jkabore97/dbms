@@ -185,8 +185,25 @@ class _BusinessFrameState extends State<BusinessFrame> {
     }
     context.go(Routes.org(org.id));
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) p.onTap();
+      if (mounted) _fresh(p).onTap();
     });
+  }
+
+  /// The same place as the home on screen now lays it out: after `go` back
+  /// to the home, the home may be a new one, and [p]'s action the old
+  /// home's. Matched by its route, then its label; [p] itself when the
+  /// home has not published yet.
+  HomeDestination _fresh(HomeDestination p) {
+    final nav = _nav.nav;
+    if (nav == null) return p;
+    final all = [...nav.slots(context), ...nav.overflow];
+    for (final q in all) {
+      if (q.route != null && q.route == p.route && q.label == p.label) return q;
+    }
+    for (final q in all) {
+      if (q.label == p.label) return q;
+    }
+    return p;
   }
 
   /// « Quitter sans enregistrer ? » — true to leave.

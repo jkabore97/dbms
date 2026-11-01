@@ -108,3 +108,11 @@ body.editing .slot[data-pic]::before{content:"Toucher : remplacer · Glisser : r
 .pass .pass-qr svg{display:block;width:96px;height:96px}
 .pass b{font-size:17px}
 .pass small{font-size:12px;opacity:.8}
+/* the colours and the writing (159c) */
+.ed-look{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0 6px}
+.ed-pals{display:flex;gap:6px;flex-wrap:wrap}
+.ed-pal{width:28px;height:28px;border-radius:50%;border:2px solid transparent;padding:0;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}
+.ed-pal[aria-pressed="true"]{border-color:#111}
+.ed-font{min-height:38px;border:1px solid #ccc;border-radius:10px;padding:0 8px;font:500 14px system-ui,sans-serif;background:#fff;color:#111;flex:1 1 140px}
+/* the models' ornaments let the organiser's taps through to the words */
+body.editing .card *::before,body.editing .card *::after{pointer-events:none}
