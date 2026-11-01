@@ -113,12 +113,18 @@ class BusinessNav extends ChangeNotifier {
   HomeNav? get nav => (_owner?.mounted ?? false) ? _nav : null;
 
   void publish(BuildContext owner, HomeNav nav) {
+    // A new home (its page rebuilt from scratch: back to it after `go`, the
+    // business reopened) publishes the same places as the one before. The
+    // frame must redraw all the same: the bar it drew holds the old home's
+    // actions, and a tap on them reached a home no longer on screen — the
+    // owner's « the bottom bar buttons sometimes stop working ».
+    final newOwner = !identical(owner, _owner);
     _owner = owner;
     _nav = nav;
     final org = orgId;
     if (org != null) _known[org] = (owner.trLanguage, nav);
     final drawn = nav.signature;
-    if (drawn == _drawn) return;
+    if (drawn == _drawn && !newOwner) return;
     _drawn = drawn;
     // Asked from the home's build: the frame redraws on the next frame.
     SchedulerBinding.instance.addPostFrameCallback((_) {
