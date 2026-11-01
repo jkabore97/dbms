@@ -436,35 +436,102 @@
 
   // ------------------------------------------------- the guests' album
   Array.prototype.forEach.call(document.querySelectorAll('.album-box'), function (box) {
-    if (SERVER) {
-      // The guests' pictures come with the uploads Worker's event routes
-      // (piece 2): until then the album says so, and asks for nothing.
-      box.hidden = true;
-      box.insertAdjacentHTML('afterend', '<p class="note">L’album des invités ouvre bientôt : vous pourrez y déposer vos photos le jour même.</p>');
-      return;
-    }
     var input = box.querySelector('input[type=file]');
     var grid = box.querySelector('.album');
     var count = box.querySelector('.count');
     var who = box.querySelector('input[name=who]');
     var drop = box.querySelector('.drop');
     var n = grid.querySelectorAll('figure').length;
+    function counted() { if (count) count.textContent = n + (n > 1 ? ' photos' : ' photo'); }
+    function figureFor(src, full, name) {
+      var fig = document.createElement('figure');
+      var img = new Image();
+      img.src = src; img.alt = ''; img.loading = 'lazy';
+      fig.appendChild(img);
+      var cap = document.createElement('figcaption');
+      cap.textContent = name || 'Un invité';
+      fig.appendChild(cap);
+      fig.addEventListener('click', function () { lightbox(full); });
+      return fig;
+    }
+    if (SERVER) {
+      // The card's album (155): the guests' pictures live with the event,
+      // read from it and sent to the uploads Worker with the card's link.
+      // Closed by the organiser, or no Worker to send to: the box says so.
+      if (SERVER.album_on === false || !SERVER.uploads) {
+        box.hidden = true;
+        box.insertAdjacentHTML('afterend', '<p class="note">' + (SERVER.album_on === false
+          ? 'L’album est fermé pour cet événement.'
+          : 'L’album des invités n’est pas disponible pour le moment.') + '</p>');
+        return;
+      }
+      grid.innerHTML = ''; n = 0; counted();
+      var note = box.querySelector('.note');
+      if (note) note.textContent = 'Vos photos arrivent dans l’album de l’événement, sous votre prénom, visibles par tous les invités.';
+      var meta = box.querySelectorAll('.album-meta > span');
+      if (meta.length > 1) meta[meta.length - 1].textContent = 'Visibles par tous les invités';
+      var headers = { apikey: SERVER.api.key, Authorization: 'Bearer ' + SERVER.api.key, 'Content-Type': 'application/json' };
+      fetch(SERVER.api.url.replace(/\/+$/, '') + '/rest/v1/rpc/event_album', {
+        method: 'POST', headers: headers,
+        body: JSON.stringify({ p_slug: SERVER.slug, p_preview: SERVER.preview || null })
+      }).then(function (r) { return r.ok ? r.json() : []; }).then(function (list) {
+        (Array.isArray(list) ? list : []).forEach(function (p) {
+          if (p && p.key) { grid.appendChild(figureFor(picUrl(p.key) + '?w=400', picUrl(p.key), p.guest)); n++; }
+        });
+        counted();
+      }).catch(function () {});
+      var send = function (file) {
+        if (!file.type || file.type.indexOf('image/') !== 0) return Promise.resolve(null);
+        var name = (who && who.value.trim()) || '';
+        return new Promise(function (res) {
+          shrink(file, 1400, function (src, canvas) {
+            canvas.toBlob(function (blob) {
+              fetch(SERVER.uploads + '/v1/events/' + encodeURIComponent(SERVER.slug) + '/album?apercu=' + encodeURIComponent(SERVER.preview || '') + '&invite=' + encodeURIComponent(name), {
+                method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob
+              }).then(function (r) {
+                return r.json().then(function (j) {
+                  if (!r.ok || !j || !j.key) throw new Error(j && j.error ? j.error : 'La photo n’est pas passée. Réessayez.');
+                  return j;
+                }, function () { throw new Error('La photo n’est pas passée. Réessayez.'); });
+              }).then(function (j) {
+                grid.insertBefore(figureFor(src, picUrl(j.key), name), grid.firstChild);
+                n++; counted(); res(j);
+              }, function (err) { toast(err && err.message ? err.message : 'La photo n’est pas passée. Réessayez.'); res(null); });
+            }, 'image/jpeg', 0.82);
+          });
+        });
+      };
+      var sendAll = function (files) {
+        if (!files.length) return;
+        toast(files.length > 1 ? 'Envoi des photos…' : 'Envoi de la photo…');
+        Promise.all(files.map(send)).then(function (r) {
+          var k = r.filter(Boolean).length;
+          if (k) toast(k > 1 ? k + ' photos ajoutées à l’album' : 'Photo ajoutée à l’album');
+        });
+      };
+      input.addEventListener('change', function () {
+        var files = Array.prototype.slice.call(input.files);
+        input.value = '';
+        sendAll(files);
+      });
+      if (drop) {
+        drop.addEventListener('dragover', function (e) { e.preventDefault(); drop.classList.add('over'); });
+        drop.addEventListener('dragleave', function () { drop.classList.remove('over'); });
+        drop.addEventListener('drop', function (e) {
+          e.preventDefault(); drop.classList.remove('over');
+          sendAll(Array.prototype.slice.call(e.dataTransfer.files));
+        });
+      }
+      return;
+    }
     function add(file) {
       if (!file.type || file.type.indexOf('image/') !== 0) return;
       var url = URL.createObjectURL(file);
-      var fig = document.createElement('figure');
-      var img = new Image();
-      img.src = url; img.alt = '';
-      fig.appendChild(img);
-      var cap = document.createElement('figcaption');
-      cap.textContent = (who && who.value.trim()) || 'Un invité';
-      fig.appendChild(cap);
-      fig.addEventListener('click', function () { lightbox(url); });
-      grid.insertBefore(fig, grid.firstChild);
+      grid.insertBefore(figureFor(url, url, (who && who.value.trim()) || ''), grid.firstChild);
       n++;
     }
     function done(k) {
-      if (count) count.textContent = n + (n > 1 ? ' photos' : ' photo');
+      counted();
       toast(k > 1 ? k + ' photos ajoutées à l’album' : 'Photo ajoutée à l’album');
     }
     input.addEventListener('change', function () {

@@ -48,6 +48,7 @@ grant usage on schema auth to anon, authenticated;
 -- 154 (the edit token, event_public's third argument): restored after
 -- 153's re-run, as the migrations run in order.
 \i database/migrations/154_events_editor.sql
+\i database/migrations/155_events_album.sql
 
 begin;
 
@@ -263,6 +264,7 @@ insert into events (org_id, kind, card, slug, preview_token, title)
 values ('15315315-1111-0000-0000-000000000001', 'mariage', 'come', 'vieille-carte-153', repeat('a', 24), 'Vieille carte');
 \i database/migrations/153_events_kind.sql
 \i database/migrations/154_events_editor.sql
+\i database/migrations/155_events_album.sql
 do $$
 begin
     assert not exists (select 1 from events where slug = 'vieille-carte-153'), 'the shop''s old card is gone';

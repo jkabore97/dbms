@@ -1,4 +1,9 @@
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../net/timeout_client.dart';
 
 /// Événementiel (152): the events a business creates — a card with an
 /// address, sent to its guests — and what the guests answered.
@@ -8,9 +13,18 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// once the platform's switch opens the module to them — events_open), and
 /// a stale list would show a screen the server refuses.
 class EventsRepository {
-  EventsRepository(this._client);
+  EventsRepository(this._client, {String? uploadsUrl, http.Client? httpClient})
+      : _uploads = (uploadsUrl ?? const String.fromEnvironment('UPLOADS_URL')).replaceAll(RegExp(r'/+$'), ''),
+        // Bounded, as every request the app makes (freeze_test): a Worker
+        // that never answers must not hang the card's page.
+        _http = httpClient ?? TimeoutClient.bounded();
 
   final SupabaseClient? _client;
+
+  /// The uploads Worker's address (154): where a card's pictures are read,
+  /// and removed (155). Empty on an installation without one.
+  final String _uploads;
+  final http.Client _http;
 
   bool get isConfigured => _client != null;
 
@@ -117,6 +131,51 @@ class EventsRepository {
 
   Future<void> setRsvpOn(String id, bool on) async {
     await _require().from('events').update({'rsvp_on': on}).eq('id', id);
+  }
+
+  /// The guests' album open or closed (155).
+  Future<void> setAlbumOn(String id, bool on) async {
+    await _require().from('events').update({'album_on': on}).eq('id', id);
+  }
+
+  /// The guests' pictures of a card (155), newest first — the business's
+  /// admins read the rows; the street reads the album by the card's link.
+  Future<List<EventPicture>> pictures(String eventId) async {
+    final rows = await _require()
+        .from('event_pictures')
+        .select()
+        .eq('event_id', eventId)
+        .eq('state', 'stored')
+        .eq('source', 'guest')
+        .order('done_at', ascending: false)
+        .limit(500);
+    return [for (final r in rows) EventPicture.fromJson(Map<String, dynamic>.from(r))];
+  }
+
+  /// A stored picture's small copy, for a tile (the Worker's `?w=`); null
+  /// without an uploads Worker.
+  String? pictureUrl(String key, {int width = 400}) =>
+      _uploads.isEmpty ? null : '$_uploads/v1/public/objects/${Uri.encodeComponent(key)}?w=$width';
+
+  /// Removes a picture (155): the uploads Worker asks the server as this
+  /// admin (the row goes under the business's own policy), then drops the
+  /// bytes. The server's refusal comes back in its own words.
+  Future<void> removePicture(String key) async {
+    final token = _client?.auth.currentSession?.accessToken;
+    if (_uploads.isEmpty || token == null) {
+      throw const EventsException('Les photos ne sont pas disponibles sur cette installation.');
+    }
+    final r = await _http.delete(
+      Uri.parse('$_uploads/v1/objects/${Uri.encodeComponent(key)}'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (r.statusCode == 204) return;
+    var message = 'La photo n’a pas pu être retirée.';
+    try {
+      final j = jsonDecode(r.body);
+      if (j is Map && j['error'] is String) message = j['error'] as String;
+    } catch (_) {}
+    throw EventsException(message);
   }
 
   Future<void> delete(String id) async {
@@ -384,4 +443,31 @@ class EventRsvp {
   final String? message;
   final Map<String, dynamic> extra;
   final DateTime createdAt;
+}
+
+/// The server's or the Worker's refusal, in the person's words.
+class EventsException implements Exception {
+  const EventsException(this.message);
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
+/// One of the guests' pictures (155): its key under the event, the name
+/// the guest gave, when its bytes came in.
+class EventPicture {
+  const EventPicture({required this.key, required this.guest, required this.bytes, required this.doneAt});
+
+  factory EventPicture.fromJson(Map<String, dynamic> j) => EventPicture(
+        key: j['key'] as String,
+        guest: j['guest'] as String?,
+        bytes: (j['bytes'] as num?)?.toInt(),
+        doneAt: j['done_at'] == null ? null : DateTime.tryParse(j['done_at'] as String)?.toLocal(),
+      );
+
+  final String key;
+  final String? guest;
+  final int? bytes;
+  final DateTime? doneAt;
 }

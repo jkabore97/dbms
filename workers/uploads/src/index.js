@@ -107,6 +107,14 @@ export default {
         return withCors(await putEventPicture(request, env, picture[1], url.searchParams.get("modifier") || ""), cors);
       }
 
+      // POST /v1/events/<slug>/album?apercu=<preview token>&invite=<name> —
+      // a guest's picture for the card's album (155): signed out, the
+      // card's link is the key; Postgres mints and confirms every key.
+      const album = url.pathname.match(/^\/v1\/events\/([a-z0-9-]+)\/album$/);
+      if (album && request.method === "POST") {
+        return withCors(await putAlbumPicture(request, env, album[1], url.searchParams.get("apercu") || "", url.searchParams.get("invite") || ""), cors);
+      }
+
       // GET /v1/public/objects/<key> — a vitrine photo, for anyone. No token:
       // the shop chose to show this article to the street. Postgres still
       // decides, per key, that the picture is of a published article on an
@@ -121,6 +129,11 @@ export default {
       const object = url.pathname.match(/^\/v1\/objects\/(.+)$/);
       if (object && (request.method === "GET" || request.method === "HEAD")) {
         return withCors(await get(request, env, decodeURIComponent(object[1])), cors);
+      }
+      // DELETE /v1/objects/<events/…> — the organiser removes a card's
+      // picture (155): Postgres as the caller, then the bytes.
+      if (object && request.method === "DELETE") {
+        return withCors(await deleteEventPicture(request, env, decodeURIComponent(object[1])), cors);
       }
 
       // POST /v1/orgs/<org_id>/read-page — the handwriting reader: a
@@ -547,6 +560,29 @@ async function putEventPicture(request, env, slug, edit) {
   if (!/^[0-9a-f]{24}$/.test(edit)) {
     return refusal(403, "Cette carte ne peut pas être modifiée d'ici.");
   }
+  return storeEventPicture(request, env, {
+    mint: (ext) => rpcAnonAsked(env, "event_picture_slot", { p_slug: slug, p_edit: edit, p_ext: ext }),
+    confirm: (key, bytes) => rpcAnonAsked(env, "event_picture_done", { p_key: key, p_edit: edit, p_bytes: bytes }),
+    meta: { event: slug },
+  });
+}
+
+// A guest's picture for the album (155): the card's link (the preview
+// token, or none for a published card) and the guest's first name.
+async function putAlbumPicture(request, env, slug, preview, guest) {
+  const who = guest.trim().slice(0, 60);
+  const link = /^[0-9a-f]{24}$/.test(preview) ? preview : null;
+  return storeEventPicture(request, env, {
+    mint: (ext) => rpcAnonAsked(env, "event_album_slot", { p_slug: slug, p_preview: link, p_ext: ext, p_guest: who || null }),
+    confirm: (key, bytes) => rpcAnonAsked(env, "event_album_done", { p_key: key, p_preview: link, p_bytes: bytes }),
+    meta: { event: slug, guest: who },
+  });
+}
+
+// The one shape of a card's upload: Postgres mints the key, the Worker
+// puts the bytes, Postgres confirms them — and a refusal there deletes
+// what was just written, so nothing stays behind unreferenced.
+async function storeEventPicture(request, env, { mint, confirm, meta }) {
   const contentType = (request.headers.get("Content-Type") || "")
     .split(";")[0]
     .trim()
@@ -559,11 +595,7 @@ async function putEventPicture(request, env, slug, edit) {
     return refusal(413, "Cette image est trop lourde (8 Mo au plus).");
   }
 
-  const slot = await rpcAnonAsked(env, "event_picture_slot", {
-    p_slug: slug,
-    p_edit: edit,
-    p_ext: EXTENSIONS[contentType],
-  });
+  const slot = await mint(EXTENSIONS[contentType]);
   if (!slot.ok) {
     return refused(slot);
   }
@@ -581,19 +613,37 @@ async function putEventPicture(request, env, slug, edit) {
 
   await env.UPLOADS.put(slot.value, body, {
     httpMetadata: { contentType },
-    customMetadata: { event: slug },
+    customMetadata: meta,
   });
-  const done = await rpcAnonAsked(env, "event_picture_done", {
-    p_key: slot.value,
-    p_edit: edit,
-    p_bytes: body.byteLength,
-  });
+  const done = await confirm(slot.value, body.byteLength);
   if (!done.ok) {
-    // Never left behind unreferenced: this is the key just written.
     await env.UPLOADS.delete(slot.value);
     return refused(done);
   }
   return json({ key: slot.value, bytes: body.byteLength, url: `/v1/public/objects/${encodeURIComponent(slot.value)}` }, 201);
+}
+
+// The organiser removes a card's picture (155): Postgres deletes the row
+// as the caller — 154's policy, the business's admins — and says whether
+// it did; only then do the bytes go. A key that is not a card's, or one
+// the caller may not touch, is a 404: nothing confirms which keys exist.
+async function deleteEventPicture(request, env, key) {
+  const token = bearer(request);
+  if (!token) {
+    return problem(401, "Sign in first.");
+  }
+  if (!EVENT_KEY.test(key)) {
+    return problem(404, "No such object.");
+  }
+  const gone = await rpcAs(env, token, "event_picture_delete", { p_key: key });
+  if (!gone.ok) {
+    return refused(gone);
+  }
+  if (gone.value !== true) {
+    return problem(404, "No such object.");
+  }
+  await env.UPLOADS.delete(key);
+  return new Response(null, { status: 204 });
 }
 
 /// An RPC as the anonymous role, with the answer or the refusal's words:

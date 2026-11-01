@@ -464,6 +464,9 @@ class EventScreen extends StatefulWidget {
 class _EventScreenState extends State<EventScreen> {
   EventSummary? _event;
   List<EventRsvp> _rsvps = const [];
+
+  /// The guests' album (155): their pictures, newest first.
+  List<EventPicture> _pictures = const [];
   bool _loading = true;
   String? _error;
 
@@ -482,10 +485,21 @@ class _EventScreenState extends State<EventScreen> {
     try {
       final e = await widget.events.find(widget.eventId);
       final r = e == null ? const <EventRsvp>[] : await widget.events.rsvps(e.id);
+      // The album is read apart: a database before 155 has no album, and
+      // the card's page must still open.
+      var p = const <EventPicture>[];
+      if (e != null) {
+        try {
+          p = await widget.events.pictures(e.id);
+        } catch (_) {
+          p = const [];
+        }
+      }
       if (!mounted) return;
       setState(() {
         _event = e;
         _rsvps = r;
+        _pictures = p;
         _loading = false;
       });
     } catch (e) {
@@ -527,6 +541,24 @@ class _EventScreenState extends State<EventScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(link)));
     }
+  }
+
+  /// A guest's picture removed (155): the uploads Worker asks the server
+  /// as this admin, then drops the bytes; the album no longer shows it.
+  Future<void> _removePicture(EventPicture p) async {
+    final sure = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(context.tr('Retirer cette photo ?')),
+        content: Text(context.tr('Elle disparaît de l’album et de la carte.')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.tr('Annuler'))),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(context.tr('Retirer'))),
+        ],
+      ),
+    );
+    if (sure != true || !mounted) return;
+    await _run(() => widget.events.removePicture(p.key), done: context.tr('Photo retirée'));
   }
 
   Future<void> _delete() async {
@@ -675,6 +707,15 @@ class _EventScreenState extends State<EventScreen> {
                         value: e.rsvpOn,
                         onChanged: (v) => _run(() => widget.events.setRsvpOn(e.id, v)),
                       ),
+                      // The guests' album (155): open, the card takes their
+                      // pictures; closed, it says so and takes none.
+                      SwitchListTile(
+                        key: const Key('event-album-on'),
+                        title: Text(context.tr('Album des invités ouvert')),
+                        subtitle: Text(context.tr('Les invités déposent leurs photos sur la carte ; elles arrivent ici.')),
+                        value: e.albumOn,
+                        onChanged: (v) => _run(() => widget.events.setAlbumOn(e.id, v)),
+                      ),
                     ]),
                   ),
                   const SizedBox(height: 18),
@@ -687,9 +728,97 @@ class _EventScreenState extends State<EventScreen> {
                     Text(context.tr('Personne n’a encore répondu.'), style: theme.textTheme.bodyMedium)
                   else
                     for (final r in _rsvps) RsvpTile(rsvp: r),
+                  const SizedBox(height: 18),
+                  Text(
+                    '${context.tr('Album des invités')} · ${_pictures.length}',
+                    style: theme.textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  if (_pictures.isEmpty)
+                    Text(context.tr('Aucune photo d’invité pour le moment.'), style: theme.textTheme.bodyMedium)
+                  else
+                    GridView.count(
+                      crossAxisCount: 3,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      mainAxisSpacing: 6,
+                      crossAxisSpacing: 6,
+                      children: [
+                        for (final p in _pictures)
+                          _PictureTile(
+                            key: ValueKey(p.key),
+                            picture: p,
+                            url: widget.events.pictureUrl(p.key),
+                            onRemove: () => _removePicture(p),
+                          ),
+                      ],
+                    ),
                 ],
               ),
             ),
+    );
+  }
+}
+
+/// One of the guests' pictures (155): its small copy, the name under it,
+/// and the cross that removes it.
+class _PictureTile extends StatelessWidget {
+  const _PictureTile({super.key, required this.picture, required this.url, required this.onRemove});
+
+  final EventPicture picture;
+
+  /// The small copy's address, or null without an uploads Worker.
+  final String? url;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final blank = ColoredBox(
+      color: theme.colorScheme.surfaceContainerHighest,
+      child: Icon(Icons.photo_outlined, color: theme.colorScheme.onSurfaceVariant),
+    );
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: Stack(fit: StackFit.expand, children: [
+        if (url == null)
+          blank
+        else
+          Image.network(url!, fit: BoxFit.cover, errorBuilder: (_, _, _) => blank),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(6, 10, 6, 4),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.transparent, Colors.black54],
+              ),
+            ),
+            child: Text(
+              picture.guest ?? context.tr('Un invité'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelSmall?.copyWith(color: Colors.white),
+            ),
+          ),
+        ),
+        Positioned(
+          top: 0,
+          right: 0,
+          child: IconButton(
+            key: Key('picture-remove-${picture.key}'),
+            tooltip: context.tr('Retirer'),
+            onPressed: onRemove,
+            visualDensity: VisualDensity.compact,
+            style: IconButton.styleFrom(backgroundColor: Colors.black38, foregroundColor: Colors.white),
+            icon: const Icon(Icons.close, size: 18),
+          ),
+        ),
+      ]),
     );
   }
 }

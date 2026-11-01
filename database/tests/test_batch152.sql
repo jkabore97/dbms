@@ -54,6 +54,7 @@ create extension pgcrypto schema extensions;
 \i database/migrations/152_events.sql
 \i database/migrations/153_events_kind.sql
 \i database/migrations/154_events_editor.sql
+\i database/migrations/155_events_album.sql
 insert into orgs (id, name, slug, profile, default_currency) values
     ('15215215-1111-0000-0000-000000000009', 'Sans pgcrypto', 'sans-pgcrypto-152', 'events', 'XOF');
 do $$
@@ -77,6 +78,7 @@ rollback;
 \i database/migrations/153_events_kind.sql
 -- 154 (the edit token, event_public's third argument): restored too.
 \i database/migrations/154_events_editor.sql
+\i database/migrations/155_events_album.sql
 
 begin;
 

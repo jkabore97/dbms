@@ -267,6 +267,13 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch154.sql
 
+      # 155: the guests' album — a picture with the card's link, named,
+      # listed and served once its bytes are in; removed by the admins.
+      - name: Prove the guests' album (155)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch155.sql
+
       # The bell: the right people hear the right events and nobody else,
       # a threshold rings on the crossing rather than on every sale below
       # it, and the neighbour hears nothing at all.

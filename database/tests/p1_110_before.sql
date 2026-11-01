@@ -125,14 +125,17 @@ update platform_settings set value = '3500' where key = 'spot_price_shop_7';
 
 -- The spots: on the Pro shop an article spot and a shop spot running; on
 -- the Basic shop a spot asked for, and an article Mara put « À la une ».
+-- The free article spot is this month's (created on the 1st, whatever the
+-- month): 071's one-free-spot-a-month then reads as used, as the later
+-- rule does — seeded on a fixed 1 October, the check broke on 1 November.
 insert into promotions (id, org_id, product_id, kind, days, price, currency, free, status,
                         starts_at, ends_at, requested_by, decided_at, created_at) values
     ('11100000-0000-0000-0000-0000000000c1', '11100000-0000-0000-0000-0000000000a1', '11100000-0000-0000-00a0-000000000001',
      'article', 7, 0, 'XOF', true, 'approved', now() - interval '1 day', now() + interval '6 days',
-     '11100000-0000-0000-0000-000000000001', now() - interval '1 day', '2026-10-01 09:00+00'),
+     '11100000-0000-0000-0000-000000000001', now() - interval '1 day', date_trunc('month', now()) + interval '9 hours'),
     ('11100000-0000-0000-0000-0000000000c2', '11100000-0000-0000-0000-0000000000a1', null,
      'shop', 7, 2500, 'XOF', false, 'approved', now() - interval '1 day', now() + interval '6 days',
-     '11100000-0000-0000-0000-000000000001', now() - interval '1 day', '2026-10-01 09:01+00'),
+     '11100000-0000-0000-0000-000000000001', now() - interval '1 day', date_trunc('month', now()) + interval '9 hours 1 minute'),
     ('11100000-0000-0000-0000-0000000000c3', '11100000-0000-0000-0000-0000000000a2', null,
      'shop', 7, 2500, 'XOF', false, 'requested', null, null,
      '11100000-0000-0000-0000-000000000002', null, '2026-10-01 09:02+00');

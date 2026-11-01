@@ -27,20 +27,25 @@ void main() {
 
   testWidgets('« Toutes les vitrines » comes first, then the footer band, '
       'centred', (tester) async {
-    tester.view.physicalSize = const Size(400, 1400);
+    // 600 wide, and settled: the band's wordmark is a picture whose width
+    // is known once decoded, and the test font draws the slogan twice as
+    // wide as a real one — at 400 the slogan's line wrapped or not with
+    // the runner's timing (CI went red on 1 November for that alone).
+    tester.view.physicalSize = const Size(600, 1400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
           body: SingleChildScrollView(child: ShopFooter(onDirectory: () {}))),
     ));
+    await tester.pumpAndSettle();
     final link = tester.getCenter(find.byKey(const Key('footer-directory')));
     final band = tester.getRect(find.byKey(const Key('shop-footer')));
     final powered = tester.getCenter(find.byKey(const Key('powered-by')));
     expect(link.dy, lessThan(band.top), reason: 'the link sits above the footer');
-    expect(band.width, 400, reason: 'the band spans the page');
-    expect(powered.dx, closeTo(200, 1), reason: 'centred');
-    expect(link.dx, closeTo(200, 1));
+    expect(band.width, 600, reason: 'the band spans the page');
+    expect(powered.dx, closeTo(300, 1), reason: 'centred');
+    expect(link.dx, closeTo(300, 1));
     expect(band.contains(powered), isTrue);
     expect(band.height, lessThan(90), reason: 'a small footer');
   });

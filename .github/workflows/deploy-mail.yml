@@ -114,7 +114,7 @@ jobs:
           {
             echo "### Mail Worker deployed"
             echo
-            echo "1. Migration 124 applied live (\`database/migrations/124_welcome_email.sql\`, also in the bundle \`database/apply_006_to_154.sql\`)?"
+            echo "1. Migration 124 applied live (\`database/migrations/124_welcome_email.sql\`, also in the bundle \`database/apply_006_to_155.sql\`)?"
             echo "2. In Supabase: Database → Webhooks → Create: table \`welcome_emails\`, event INSERT, HTTP POST to \`<kaj-mail origin above>/v1/welcome\`, header \`Authorization: Bearer <MAIL_WEBHOOK_SECRET>\`."
             echo "3. Resend: the domain \`marakaj.com\` verified (README, « Welcome e-mail (Resend) »)."
             echo
