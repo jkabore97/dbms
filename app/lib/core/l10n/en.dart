@@ -8795,6 +8795,10 @@ const enStrings = <String, String>{
       'The answers from all your cards, newest first.',
   'Modifier la carte':
       'Edit the card',
+  'Modifier les infos':
+      'Edit the details',
+  'Infos enregistrées : la carte les montre à sa prochaine ouverture.':
+      'Details saved: the card shows them the next time it opens.',
   'Sur la carte : touchez un texte pour l’écrire, une photo pour la remplacer, glissez-la pour la recadrer, puis « Enregistrer ».':
       'On the card: touch a text to write it, a picture to replace it, drag it to reframe, then “Save”.',
   'Cartes d’invitation, réponses des invités':

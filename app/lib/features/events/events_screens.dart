@@ -295,13 +295,16 @@ IconData _kindIcon(String kind) => switch (kind) {
 /// place. Hands back an [EventDraft]: the design comes next, from the
 /// gallery — unless [card] was chosen there first.
 class NewEventSheet extends StatefulWidget {
-  const NewEventSheet({super.key, required this.org, this.now, this.card});
+  const NewEventSheet({super.key, required this.org, this.now, this.card, this.initial});
 
   final OrgSummary org;
   final DateTime Function()? now;
 
   /// The design chosen before the words (browsing the gallery).
   final String? card;
+
+  /// The card whose facts are changed (157): its own prefilled, « Enregistrer ».
+  final EventSummary? initial;
 
   @override
   State<NewEventSheet> createState() => _NewEventSheetState();
@@ -314,6 +317,21 @@ class _NewEventSheetState extends State<NewEventSheet> {
   DateTime? _day;
   TimeOfDay _time = const TimeOfDay(hour: 15, minute: 0);
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    final i = widget.initial;
+    if (i == null) return;
+    _title.text = i.title;
+    _kind = i.kind;
+    final at = i.startsAt;
+    if (at != null) {
+      _day = DateTime(at.year, at.month, at.day);
+      _time = TimeOfDay(hour: at.hour, minute: at.minute);
+    }
+    _place.text = i.place ?? '';
+  }
 
   @override
   void dispose() {
@@ -364,6 +382,7 @@ class _NewEventSheetState extends State<NewEventSheet> {
         ? context.tr('Choisir le jour et l’heure')
         : '${DateFormat('EEEE d MMMM yyyy', context.trLocale).format(_day!)} · ${_time.format(context)}';
     final card = widget.card;
+    final editing = widget.initial != null;
     return Padding(
       // Above the keyboard, and above the phone's bar at the foot (the
       // owner's screenshot: the button cut under the edge).
@@ -374,7 +393,7 @@ class _NewEventSheetState extends State<NewEventSheet> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(context.tr('Nouvelle carte'), style: theme.textTheme.titleLarge),
+            Text(context.tr(editing ? 'Modifier les infos' : 'Nouvelle carte'), style: theme.textTheme.titleLarge),
             if (card != null)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
@@ -437,8 +456,12 @@ class _NewEventSheetState extends State<NewEventSheet> {
             FilledButton.icon(
               key: const Key('event-save'),
               onPressed: _next,
-              icon: Icon(card == null ? Icons.arrow_forward : Icons.check),
-              label: Text(card == null ? context.tr('Choisir le modèle') : context.tr('Créer la carte')),
+              icon: Icon(editing || card != null ? Icons.check : Icons.arrow_forward),
+              label: Text(editing
+                  ? context.tr('Enregistrer')
+                  : card == null
+                      ? context.tr('Choisir le modèle')
+                      : context.tr('Créer la carte')),
             ),
           ],
         ),
@@ -557,6 +580,26 @@ class _EventScreenState extends State<EventScreen> {
 
   /// « Changer de modèle » (155b): the gallery for this card; back with
   /// true, the page reads the card again.
+  Future<void> _editInfo(EventSummary e) async {
+    final draft = await showModalBottomSheet<EventDraft>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => NewEventSheet(org: widget.org, initial: e),
+    );
+    if (draft == null || !mounted) return;
+    try {
+      await widget.events.update(e.id, title: draft.title, kind: draft.kind, startsAt: draft.startsAt, place: draft.place);
+    } catch (err) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AuthRepository.describeError(err))));
+      return;
+    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.tr('Infos enregistrées : la carte les montre à sa prochaine ouverture.'))));
+    await _load();
+  }
+
   Future<void> _changeCard(EventSummary e) async {
     final changed = await Navigator.of(context).push<Object>(MaterialPageRoute<Object>(
       builder: (_) => TemplatesGalleryScreen(events: widget.events, org: widget.org, forEvent: e),
@@ -691,6 +734,15 @@ class _EventScreenState extends State<EventScreen> {
                             onPressed: () => _copy(e.published ? e.publicPath : e.previewPath),
                             icon: const Icon(Icons.link),
                             label: Text(context.tr('Copier le lien')),
+                          ),
+                          // The card's facts (157): the title, the kind, the
+                          // day and the hour, the place — changed here; the
+                          // card shows them at its next opening.
+                          OutlinedButton.icon(
+                            key: const Key('event-info-edit'),
+                            onPressed: () => _editInfo(e),
+                            icon: const Icon(Icons.tune),
+                            label: Text(context.tr('Modifier les infos')),
                           ),
                           // Another design for this card (155b): the gallery,
                           // its words, day and place kept.
