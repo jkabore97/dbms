@@ -277,11 +277,11 @@ void main() {
       await tester.tap(find.byKey(const Key('template-use')));
       await tester.pumpAndSettle();
       expect(find.text('Pour quelle carte ?'), findsOneWidget);
-      expect(find.byKey(const Key('use-card-e1')), findsOneWidget);
+      expect(find.byKey(Key('use-card-${e.id}')), findsOneWidget);
       expect(find.text('Inès & Thomas'), findsOneWidget);
-      await tester.tap(find.byKey(const Key('use-card-e1')));
+      await tester.tap(find.byKey(Key('use-card-${e.id}')));
       await tester.pumpAndSettle();
-      expect(repo.calls.last, 'card:e1=ravello');
+      expect(repo.calls.last, 'card:${e.id}=ravello');
       // On the card's page, with its new design and its own words.
       expect(find.byKey(const Key('event-preview')), findsOneWidget);
       expect(find.textContaining('modèle Ravello'), findsOneWidget);
