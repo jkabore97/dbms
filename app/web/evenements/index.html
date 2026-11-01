@@ -1027,6 +1027,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
   function rsvpHTML() {
     return '<form class="rsvp" id="rsvp" novalidate><label for="rName">Votre nom<input id="rName" autocomplete="name"></label>' +
       '<label for="rCount">Nombre de personnes<select id="rCount"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>' +
+      (SERVER && !SERVER.demo ? '<label for="rPhone">WhatsApp, si vous voulez un rappel la veille<input id="rPhone" inputmode="tel" autocomplete="tel" placeholder="+226 70 00 00 00" maxlength="24"></label>' : '') +
       '<div class="choice"><button type="button" class="btn" id="rYes" aria-pressed="false">Je viens</button><button type="button" class="btn" id="rNo" aria-pressed="false">Je ne peux pas</button></div>' +
       '<button type="submit" class="btn solid">Envoyer ma réponse</button></form><div class="done" id="rDone" aria-live="polite"></div>';
   }
@@ -3331,7 +3332,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
   function qr(name) {
     var box = document.getElementById('qr'); if (!box) return;
     if (typeof qrcode === 'undefined') { box.textContent = 'QR'; return; }
-    var q = qrcode(0, 'M'); q.addData('MARAKAJ-EVENT|demo|' + name); q.make(); box.innerHTML = q.createSvgTag({cellSize: 4, margin: 0, scalable: true});
+    var q = qrcode(0, 'M'); q.addData(PASS && SERVER ? location.origin + '/e/' + encodeURIComponent(SERVER.slug) + '/invite/' + PASS : 'MARAKAJ-EVENT|demo|' + name); q.make(); box.innerHTML = q.createSvgTag({cellSize: 4, margin: 0, scalable: true});
   }
   function wire() {
     var y = document.getElementById('rYes'), n = document.getElementById('rNo'), f = document.getElementById('rsvp'), out = document.getElementById('rDone'), ans = null;
@@ -3362,13 +3363,16 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
         headers: {'Content-Type': 'application/json', apikey: api.key, Authorization: 'Bearer ' + api.key},
         body: JSON.stringify({p_slug: SERVER.slug, p_preview: SERVER.preview || null, p_name: nm,
           p_people: parseInt(document.getElementById('rCount').value, 10) || 1,
-          p_answer: ans === 'yes' ? 'oui' : 'non', p_message: null, p_extra: {}})
+          p_answer: ans === 'yes' ? 'oui' : 'non', p_message: null,
+          p_extra: (function () { var el = document.getElementById('rPhone'), ph = el && el.value ? String(el.value).trim() : ''; return ph ? {whatsapp: ph} : {}; })()})
       }).then(function (r) {
-        if (r.ok) return null;
+        // The answer's id is the guest's pass (158): the QR opens it.
+        if (r.ok) return r.json().then(function (id) { return {id: typeof id === 'string' ? id : null}; }, function () { return {id: null}; });
         return r.json().then(function (j) { return (j && (j.message || j.hint)) || 'Réponse refusée.'; }, function () { return 'Réponse refusée.'; });
-      }).then(function (err) {
+      }).then(function (res) {
         if (btn) btn.disabled = false;
-        if (err) { out.textContent = String(err); return; }
+        if (typeof res === 'string') { out.textContent = res; return; }
+        PASS = res && res.id; if (PASS) document.body.dataset.pass = PASS;
         out.textContent = thanks;
         if (ans === 'yes') { document.getElementById('passName').textContent = nm; qr(nm); }
         if (btn) btn.disabled = true;
@@ -3412,7 +3416,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
 
   // ================= photos =================
   // Kept in this phone's memory only, for the prototype; the real version stores them with the event.
-  var PH = [], KEYS = [], SL = {}, curSlot = null;
+  var PH = [], KEYS = [], SL = {}, curSlot = null, PASS = null;
   // The card's pictures (154): content's p:<slot> = {key}, read by key.
   if (SERVER && SERVER.uploads) (function (ct) {
     Object.keys(ct).forEach(function (k) {

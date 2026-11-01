@@ -102,3 +102,9 @@ body.editing [data-edit]:focus{outline:2px solid #ff7828;background:rgba(255,120
 body.editing .slot[data-pic]{cursor:grab;touch-action:none;outline:2px dashed #ff7828;outline-offset:-2px}
 body.editing .slot[data-pic]::before{content:"Toucher : remplacer · Glisser : recadrer";position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:3;font-family:'Jost','Helvetica Neue',Arial,sans-serif;font-size:10px;letter-spacing:.08em;background:rgba(27,27,27,.85);color:#fff;padding:5px 9px;border-radius:999px;white-space:nowrap;max-width:94%;overflow:hidden;text-overflow:ellipsis}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+/* the guest's pass (158) */
+.pass{display:flex;align-items:center;gap:14px;margin-top:14px;padding:12px;border-radius:12px;background:rgba(255,255,255,.7);color:#1a140c;text-align:left}
+.pass .pass-qr{flex:0 0 auto;width:96px;height:96px}
+.pass .pass-qr svg{display:block;width:96px;height:96px}
+.pass b{font-size:17px}
+.pass small{font-size:12px;opacity:.8}

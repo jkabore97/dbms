@@ -281,6 +281,27 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch156.sql
 
+      # 157: a Premium design is Marakaj Pro's — refused to a free business
+      # at creation and at a change of design, taken by a Pro one.
+      - name: Prove a Premium design is Marakaj Pro's (157)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch157.sql
+
+      # 158: a guest's answer is a pass the street reads by its id; the
+      # arrival is the business's admins' mark alone.
+      - name: Prove the guest pass (158)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch158.sql
+
+      # 159: the day before, a published card's admins are told once how
+      # many said yes, on the event's own clock.
+      - name: Prove the reminder the day before (159)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch159.sql
+
       # The bell: the right people hear the right events and nobody else,
       # a threshold rings on the crossing rather than on every sale below
       # it, and the neighbour hears nothing at all.

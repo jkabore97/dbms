@@ -4,7 +4,9 @@ import '../../core/auth/auth_repository.dart' show AuthRepository;
 import '../../core/auth/models.dart' show OrgSummary;
 import '../../core/events/events_repository.dart';
 import '../../core/l10n/tr.dart';
+import '../../core/nav/app_scope.dart';
 import '../../core/notify/bell_room.dart';
+import '../account/pro_sheet.dart';
 import 'events_screens.dart';
 
 /// « Modèles » (153, chosen the owner's way in 155b): the designs a card
@@ -312,6 +314,18 @@ class _TemplatePreviewScreenState extends State<TemplatePreviewScreen> {
     await openSitePage(uri);
   }
 
+  /// A Premium design for a business that is not Pro (157): the Pro sheet,
+  /// as every Pro door opens it; the server refuses the design anyway.
+  void _pro() {
+    final scope = AppScope.maybeOf(context);
+    if (scope == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.tr('Ce modèle fait partie de Marakaj Pro. Ouvrez Compte › Marakaj Pro.'))));
+      return;
+    }
+    ProSheet.open(context, org: widget.org, terms: scope.session.planTerms, admin: scope.admin, canRequest: widget.org.isAdmin);
+  }
+
   Future<void> _use() async {
     if (_busy) return;
     final t = widget.template;
@@ -383,6 +397,7 @@ class _TemplatePreviewScreenState extends State<TemplatePreviewScreen> {
     final draft = widget.draft;
     final forEvent = widget.forEvent;
     final current = forEvent != null && forEvent.card == t.key;
+    final locked = t.premium && !widget.org.isPro;
     final buttons = Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -400,11 +415,21 @@ class _TemplatePreviewScreenState extends State<TemplatePreviewScreen> {
           height: 52,
           child: FilledButton.icon(
             key: const Key('template-use'),
-            onPressed: _busy || current ? null : _use,
-            icon: Icon(draft != null ? Icons.check : Icons.auto_awesome_outlined),
+            onPressed: _busy || current
+                ? null
+                : locked
+                    ? _pro
+                    : _use,
+            icon: Icon(locked
+                ? Icons.lock_outline
+                : draft != null
+                    ? Icons.check
+                    : Icons.auto_awesome_outlined),
             label: Text(current
                 ? context.tr('Le modèle actuel de cette carte')
-                : draft != null
+                : locked
+                    ? context.tr('Modèle Premium : passer à Marakaj Pro')
+                    : draft != null
                     ? context.tr('Créer la carte avec ce modèle')
                     : context.tr('Utiliser ce modèle')),
           ),
@@ -467,6 +492,14 @@ class _TemplatePreviewScreenState extends State<TemplatePreviewScreen> {
             context.tr('La carte telle que vos invités la verront, avec des mots d’exemple ; elle s’ouvre dans l’application.'),
             style: theme.textTheme.bodySmall,
           ),
+          if (locked) ...[
+            const SizedBox(height: 10),
+            Text(
+              context.tr('Ce modèle fait partie de Marakaj Pro : passez à Pro pour l’utiliser. Vous pouvez le voir en vrai.'),
+              key: const Key('template-premium-note'),
+              style: theme.textTheme.bodySmall?.copyWith(color: scheme.tertiary),
+            ),
+          ],
           if (forEvent != null || draft != null) ...[
             const SizedBox(height: 10),
             Text(

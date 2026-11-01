@@ -8797,6 +8797,34 @@ const enStrings = <String, String>{
       'Edit the card',
   'Modifier les infos':
       'Edit the details',
+  'à':
+      'at',
+  'Présent':
+      'Present',
+  'Arrivé':
+      'Arrived',
+  'Arrivé à {time}':
+      'Arrived at {time}',
+  'Scanner une carte d’invité':
+      'Scan a guest pass',
+  'La carte d’invité':
+      'The guest pass',
+  'Ce code n’est pas une carte d’invité.':
+      'This code is not a guest pass.',
+  'Carte d’invité inconnue : pas une réponse de vos cartes.':
+      'Unknown guest pass: not an answer to one of your cards.',
+  '{name} : arrivé·e.':
+      '{name}: arrived.',
+  'Bonjour {name}, petit rappel : « {title} », c’est{when}{place}. À très vite !':
+      'Hello {name}, a little reminder: “{title}” is{when}{place}. See you very soon!',
+  'Demain : « {title} » — {yes} invités ont dit oui ({people} personnes). Rappelez-les depuis Invités.':
+      'Tomorrow: “{title}” — {yes} guests said yes ({people} people). Remind them from Guests.',
+  'Modèle Premium : passer à Marakaj Pro':
+      'Premium design: go Marakaj Pro',
+  'Ce modèle fait partie de Marakaj Pro. Ouvrez Compte › Marakaj Pro.':
+      'This design is part of Marakaj Pro. Open Account › Marakaj Pro.',
+  'Ce modèle fait partie de Marakaj Pro : passez à Pro pour l’utiliser. Vous pouvez le voir en vrai.':
+      'This design is part of Marakaj Pro: go Pro to use it. You can still see it for real.',
   'Infos enregistrées : la carte les montre à sa prochaine ouverture.':
       'Details saved: the card shows them the next time it opens.',
   'Sur la carte : touchez un texte pour l’écrire, une photo pour la remplacer, glissez-la pour la recadrer, puis « Enregistrer ».':
