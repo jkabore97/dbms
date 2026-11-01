@@ -53,6 +53,19 @@ class _Events extends EventsRepository {
   }
 
   @override
+  Future<void> update(String id, {required String title, required String kind, DateTime? startsAt, String? place}) async {
+    calls.add('update:$id');
+    final i = rows.indexWhere((r) => r.id == id);
+    if (i < 0) return;
+    final r = rows[i];
+    rows[i] = EventSummary(
+      id: r.id, orgId: r.orgId, kind: kind, card: r.card, slug: r.slug, previewToken: r.previewToken,
+      editToken: r.editToken, title: title, startsAt: startsAt, place: place, content: r.content, rsvpOn: r.rsvpOn,
+      albumOn: r.albumOn, published: r.published, createdAt: r.createdAt,
+    );
+  }
+
+  @override
   bool get isConfigured => true;
 
   @override
@@ -300,6 +313,29 @@ void main() {
       expect(find.byKey(const Key('event-preview')), findsOneWidget);
       expect(find.textContaining('modèle Ravello'), findsOneWidget);
       expect(find.text('Villa Serena'), findsOneWidget);
+    });
+
+    testWidgets('« Modifier les infos » on a card: its title, kind, day and place changed from the app', (tester) async {
+      final repo = _Events();
+      final e = await repo.create(
+          orgId: 'o1', title: 'Inès & Thomas', kind: 'mariage', card: 'come',
+          startsAt: DateTime(2027, 6, 5, 15), place: 'Villa Serena');
+      await _pump(tester, EventScreen(events: repo, org: _org, eventId: e.id, open: (u) async {}));
+      await tester.tap(find.byKey(const Key('event-info-edit')));
+      await tester.pumpAndSettle();
+      expect(find.text('Modifier les infos'), findsWidgets);
+      expect(tester.widget<TextField>(find.byKey(const Key('event-title'))).controller!.text, 'Inès & Thomas',
+          reason: 'the card\'s own words prefilled');
+      expect(find.textContaining('samedi 5 juin 2027'), findsNWidgets(2), reason: 'its day and hour too (the screen behind shows them as well)');
+      await tester.enterText(find.byKey(const Key('event-title')), 'Inès & Thomas, enfin');
+      await tester.enterText(find.byKey(const Key('event-place')), 'Jardins de Koulouba');
+      await tester.tap(find.byKey(const Key('event-save')));
+      await tester.pumpAndSettle();
+      expect(repo.calls.last, 'update:${e.id}');
+      expect(repo.rows.first.title, 'Inès & Thomas, enfin');
+      expect(repo.rows.first.place, 'Jardins de Koulouba');
+      expect(repo.rows.first.startsAt, DateTime(2027, 6, 5, 15), reason: 'the day and the hour kept when untouched');
+      expect(find.text('Jardins de Koulouba'), findsOneWidget, reason: 'the screen re-read');
     });
 
     testWidgets('« Changer de modèle » on a card: the gallery for it, the current design marked, another chosen',

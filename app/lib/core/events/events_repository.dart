@@ -139,6 +139,20 @@ class EventsRepository {
     await _require().from('events').update({'card': card}).eq('id', id);
   }
 
+  /// The card's own facts (157): the title, the kind, the day and the hour,
+  /// the place — the row's, changed by the business's admins as 152's
+  /// policy allows; the pages read them at their next opening. The offset
+  /// goes with the hour, as at creation.
+  Future<void> update(String id, {required String title, required String kind, DateTime? startsAt, String? place}) async {
+    await _require().from('events').update({
+      'title': title,
+      'kind': kind,
+      'starts_at': startsAt?.toUtc().toIso8601String(),
+      'place': place,
+      if (startsAt != null) 'tz': offsetOf(startsAt),
+    }).eq('id', id);
+  }
+
   /// The guests' album open or closed (155).
   Future<void> setAlbumOn(String id, bool on) async {
     await _require().from('events').update({'album_on': on}).eq('id', id);
