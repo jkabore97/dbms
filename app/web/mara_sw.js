@@ -209,6 +209,12 @@ self.addEventListener('fetch', (event) => {
   // kept here, never answered from a copy. Before /sb it was another
   // origin and passed by the line above this one's.
   if (path === '/sb' || path.startsWith('/sb/')) return;
+  // A card's page (/e/<slug>, 152) is the site Worker's own page, with
+  // the event written in and never cached — not the app: the browser asks
+  // the server for it, and for the cards' own files, every time. Before
+  // this line the shell answered, and a phone that keeps Mara opened the
+  // app on a card's address, to nothing.
+  if (path.startsWith('/e/') || path.startsWith('/cartes/') || path.startsWith('/evenements/')) return;
 
   if (request.mode === 'navigate') {
     event.respondWith(LEGAL.has(path.replace(/\/+$/, ''))

@@ -543,6 +543,18 @@ class _EventScreenState extends State<EventScreen> {
     }
   }
 
+  /// « Changer de modèle » (155b): the gallery for this card; back with
+  /// true, the page reads the card again.
+  Future<void> _changeCard(EventSummary e) async {
+    final changed = await Navigator.of(context).push<Object>(MaterialPageRoute<Object>(
+      builder: (_) => TemplatesGalleryScreen(events: widget.events, org: widget.org, forEvent: e),
+    ));
+    if (changed == true && mounted) {
+      await _load();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('Modèle changé'))));
+    }
+  }
+
   /// A guest's picture removed (155): the uploads Worker asks the server
   /// as this admin, then drops the bytes; the album no longer shows it.
   Future<void> _removePicture(EventPicture p) async {
@@ -667,6 +679,14 @@ class _EventScreenState extends State<EventScreen> {
                             onPressed: () => _copy(e.published ? e.publicPath : e.previewPath),
                             icon: const Icon(Icons.link),
                             label: Text(context.tr('Copier le lien')),
+                          ),
+                          // Another design for this card (155b): the gallery,
+                          // its words, day and place kept.
+                          OutlinedButton.icon(
+                            key: const Key('event-card-change'),
+                            onPressed: () => _changeCard(e),
+                            icon: const Icon(Icons.auto_awesome_outlined),
+                            label: Text(context.tr('Changer de modèle')),
                           ),
                         ]),
                         const SizedBox(height: 6),

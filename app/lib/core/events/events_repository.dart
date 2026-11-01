@@ -133,6 +133,12 @@ class EventsRepository {
     await _require().from('events').update({'rsvp_on': on}).eq('id', id);
   }
 
+  /// A card's design changed (155b): its words, day and place stay its
+  /// own; the pages read them whatever the design.
+  Future<void> setCard(String id, String card) async {
+    await _require().from('events').update({'card': card}).eq('id', id);
+  }
+
   /// The guests' album open or closed (155).
   Future<void> setAlbumOn(String id, bool on) async {
     await _require().from('events').update({'album_on': on}).eq('id', id);
