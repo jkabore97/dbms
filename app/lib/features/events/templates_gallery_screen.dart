@@ -5,7 +5,6 @@ import '../../core/auth/models.dart' show OrgSummary;
 import '../../core/events/events_repository.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
-import '../../core/theme/kaj_card.dart';
 import 'events_screens.dart';
 
 /// « Modèles » (153, chosen the owner's way in 155b): the designs a card
@@ -236,15 +235,16 @@ class _Tile extends StatelessWidget {
 /// width), from the site; its initial on its family's colour before it
 /// arrives, or without it.
 class TemplatePicture extends StatelessWidget {
-  const TemplatePicture({super.key, required this.template, this.alignment = Alignment.topCenter});
+  const TemplatePicture({super.key, required this.template, this.alignment = Alignment.topCenter, this.fit = BoxFit.cover});
 
   final EventTemplate template;
   final Alignment alignment;
+  final BoxFit fit;
 
   @override
   Widget build(BuildContext context) => Image.network(
         '${eventSiteOrigin()}${template.previewPath()}',
-        fit: BoxFit.cover,
+        fit: fit,
         alignment: alignment,
         errorBuilder: (_, _, _) => _Blank(template: template),
         loadingBuilder: (context, child, progress) => progress == null ? child : _Blank(template: template),
@@ -383,18 +383,52 @@ class _TemplatePreviewScreenState extends State<TemplatePreviewScreen> {
     final draft = widget.draft;
     final forEvent = widget.forEvent;
     final current = forEvent != null && forEvent.card == t.key;
+    final buttons = Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        SizedBox(
+          height: 46,
+          child: OutlinedButton.icon(
+            key: const Key('template-demo'),
+            onPressed: _demo,
+            icon: const Icon(Icons.play_circle_outline),
+            label: Text(context.tr('Voir le modèle en vrai')),
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 52,
+          child: FilledButton.icon(
+            key: const Key('template-use'),
+            onPressed: _busy || current ? null : _use,
+            icon: Icon(draft != null ? Icons.check : Icons.auto_awesome_outlined),
+            label: Text(current
+                ? context.tr('Le modèle actuel de cette carte')
+                : draft != null
+                    ? context.tr('Créer la carte avec ce modèle')
+                    : context.tr('Utiliser ce modèle')),
+          ),
+        ),
+      ]),
+    );
     return Scaffold(
       appBar: AppBar(title: Text(t.name), actions: const [bellRoom]),
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(16, 12, 16, 24 + MediaQuery.viewPaddingOf(context).bottom),
-        children: [
-          // The picture at a phone's proportions, as the card is seen.
+      // The page scrolls above the buttons, which keep the foot of the
+      // screen whatever the scroll: the picture is a whole phone tall, and
+      // nothing of it hides under them (the owner saw it cut).
+      body: Column(children: [
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            children: [
+          // The picture whole, at the proportions it was rendered at (a
+          // phone's, 390 × 844): nothing cut.
           ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: AspectRatio(
-              aspectRatio: 9 / 16,
+              aspectRatio: 390 / 844,
               child: Stack(fit: StackFit.expand, children: [
-                TemplatePicture(template: t),
+                TemplatePicture(template: t, fit: BoxFit.contain),
                 if (t.premium)
                   Positioned(
                     top: 10,
@@ -441,39 +475,11 @@ class _TemplatePreviewScreenState extends State<TemplatePreviewScreen> {
               style: theme.textTheme.bodySmall,
             ),
           ],
-        ],
-      ),
-      // The buttons under the picture whatever the scroll: the picture is a
-      // whole phone tall. « Voir le modèle en vrai » (155c) opens the
-      // site's sample page inside the app.
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          SizedBox(
-            height: 46,
-            child: OutlinedButton.icon(
-              key: const Key('template-demo'),
-              onPressed: _demo,
-              icon: const Icon(Icons.play_circle_outline),
-              label: Text(context.tr('Voir le modèle en vrai')),
-            ),
+            ],
           ),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 52,
-            child: FilledButton.icon(
-              key: const Key('template-use'),
-              onPressed: _busy || current ? null : _use,
-              icon: Icon(draft != null ? Icons.check : Icons.auto_awesome_outlined),
-              label: Text(current
-                  ? context.tr('Le modèle actuel de cette carte')
-                  : draft != null
-                      ? context.tr('Créer la carte avec ce modèle')
-                      : context.tr('Utiliser ce modèle')),
-            ),
-          ),
-        ]),
-      ),
+        ),
+        SafeArea(top: false, child: buttons),
+      ]),
     );
   }
 }
@@ -500,7 +506,9 @@ class _WhichCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(context.tr('Modèle : {name}', {'name': template.name}), style: theme.textTheme.bodyMedium),
           const SizedBox(height: 12),
-          KajCard(
+          // Plain cards: KajCard shows itself on scroll, and a sheet does not
+          // scroll — the owner saw an empty sheet.
+          Card(
             margin: const EdgeInsets.only(bottom: 8),
             child: ListTile(
               key: const Key('use-new-card'),
@@ -511,7 +519,7 @@ class _WhichCard extends StatelessWidget {
             ),
           ),
           for (final c in cards)
-            KajCard(
+            Card(
               margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(
                 key: Key('use-card-${c.id}'),

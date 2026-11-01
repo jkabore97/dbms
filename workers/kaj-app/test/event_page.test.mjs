@@ -27,7 +27,13 @@ const env = {
   ASSETS: {
     async fetch(request) {
       const path = new URL(request.url).pathname;
-      const [body, type] = files[path] || files["/index.html"];
+      // As the real binding (html_handling auto-trailing-slash): a page's
+      // .html address sends to its bare one, a folder's index to the folder.
+      if (path.endsWith(".html") && path !== "/index.html") {
+        const to = path.endsWith("/index.html") ? path.slice(0, -"index.html".length) : path.slice(0, -".html".length);
+        return new Response(null, { status: 301, headers: { Location: to } });
+      }
+      const [body, type] = files[path] || files[`${path}.html`] || files[`${path}index.html`] || files["/index.html"];
       return new Response(body, { headers: { "Content-Type": type, "Cache-Control": "public, max-age=0, must-revalidate" } });
     },
   },
@@ -215,6 +221,9 @@ test("the cards' pages are not addresses of their own", async () => {
   assert.equal(css.status, 200, "their files are");
   const anime = await get("/evenements/index.html");
   assert.equal(anime.status, 404, "the animated page neither");
+  assert.equal((await get("/cartes/come")).status, 404, "nor by its bare address");
+  assert.equal((await get("/evenements/")).status, 404, "nor the animated page's folder");
+  assert.equal((await get("/cartes/apercu/come.jpg")).status, 200, "its pictures are");
 });
 
 test("without the project's address, nothing", async () => {

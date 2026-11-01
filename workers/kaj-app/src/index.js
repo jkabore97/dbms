@@ -138,7 +138,7 @@ async function serve(request, env) {
     }
     // The cards' pages — the twelve under /cartes, the animated one under
     // /evenements — are not addresses of their own: only /e/<slug> is.
-    if (/^\/(cartes\/[a-z]+|evenements\/index)\.html$/.test(url.pathname)) {
+    if (/^\/(cartes\/[a-z]+(\.html)?|evenements\/(index\.html)?)$/.test(url.pathname)) {
       return new Response("Introuvable.", {
         status: 404,
         headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
@@ -432,7 +432,7 @@ async function cardPage(request, env, { slug, data, preview, edit, editor, demo 
     ? (ANIMATED.test(String(data.card || "")) ? String(data.card) : "anime_lettre")
     : (EVENT_CARDS.has(data.card) ? data.card : "come");
   const base = animated ? "/evenements/" : "/cartes/";
-  const page = await env.ASSETS.fetch(new Request(new URL(animated ? "/evenements/index.html" : `/cartes/${card}.html`, request.url), request));
+  const page = await assetPage(env, request, animated ? "/evenements/index.html" : `/cartes/${card}.html`);
   if (!page.ok) return gone();
 
   // The day and hour on the organiser's clock (events.tz, 153): the
@@ -497,6 +497,26 @@ async function cardPage(request, env, { slug, data, preview, edit, editor, demo 
   headers.set("Cache-Control", demo ? "public, max-age=3600" : "no-store");
   headers.set("Content-Type", "text/html; charset=utf-8");
   return new Response(rewritten.body, { status: 200, headers });
+}
+
+// A page of the build, by its file's address. The assets binding answers
+// a page's address the way the site is set (html_handling, Cloudflare's
+// default auto-trailing-slash): /cartes/come.html sends to /cartes/come,
+// /evenements/index.html to /evenements/ — a redirect, which is not the
+// page. Followed here, a hop or two; every card and every sample read
+// « Cette carte n'est pas ouverte » on the live site before this.
+async function assetPage(env, request, path) {
+  let url = new URL(path, request.url);
+  for (let hop = 0; hop < 3; hop++) {
+    const res = await env.ASSETS.fetch(new Request(url.toString(), { method: "GET", headers: { Accept: "text/html" } }));
+    const to = res.headers.get("Location");
+    if (res.status >= 300 && res.status < 400 && to) {
+      url = new URL(to, url);
+      continue;
+    }
+    return res;
+  }
+  return new Response(null, { status: 404 });
 }
 
 // Asked fresh every time (a card is private until published, and the

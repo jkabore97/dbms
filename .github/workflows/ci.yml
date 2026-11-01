@@ -274,6 +274,13 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch155.sql
 
+      # 156: a published card opens for its guests whatever the platform's
+      # switch; unpublished, only its tokens.
+      - name: Prove a published card opens for its guests, whatever the switch (156)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch156.sql
+
       # The bell: the right people hear the right events and nobody else,
       # a threshold rings on the crossing rather than on every sale below
       # it, and the neighbour hears nothing at all.
