@@ -214,7 +214,7 @@ self.addEventListener('fetch', (event) => {
   // the server for it, and for the cards' own files, every time. Before
   // this line the shell answered, and a phone that keeps Mara opened the
   // app on a card's address, to nothing.
-  if (path.startsWith('/e/') || path.startsWith('/cartes/') || path.startsWith('/evenements/')) return;
+  if (path.startsWith('/e/') || path.startsWith('/modele/') || path.startsWith('/cartes/') || path.startsWith('/evenements/')) return;
 
   if (request.mode === 'navigate') {
     event.respondWith(LEGAL.has(path.replace(/\/+$/, ''))

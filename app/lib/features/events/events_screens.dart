@@ -16,6 +16,18 @@ import 'templates_gallery_screen.dart';
 /// keeps its own address), marakaj.com from the phone apps.
 String eventSiteOrigin() => kIsWeb ? Uri.base.origin : 'https://marakaj.com';
 
+/// A page of the site opened from the app (155c): inside the app on a
+/// phone — the browser's own tab over the app (Chrome Custom Tabs,
+/// SFSafariViewController), with its cookies and accounts, closed by its
+/// cross — and a new tab on the web app, which is a browser already.
+Future<void> openSitePage(Uri uri) async {
+  await launchUrl(
+    uri,
+    mode: kIsWeb ? LaunchMode.platformDefault : LaunchMode.inAppBrowserView,
+    webOnlyWindowName: '_blank',
+  );
+}
+
 /// What « Nouvelle carte » asks before the design (153): the name, the
 /// kind, the day and hour, the place — and the design itself when it was
 /// chosen first, from the gallery.
@@ -528,7 +540,7 @@ class _EventScreenState extends State<EventScreen> {
     final uri = Uri.parse('${eventSiteOrigin()}$path');
     final open = widget.open;
     if (open != null) return open(uri);
-    await launchUrl(uri, mode: LaunchMode.externalApplication, webOnlyWindowName: '_blank');
+    await openSitePage(uri);
   }
 
   Future<void> _copy(String path) async {

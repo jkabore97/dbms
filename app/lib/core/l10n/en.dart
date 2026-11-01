@@ -8835,4 +8835,8 @@ const enStrings = <String, String>{
       'For which card?',
   'Ses mots, sa date et son lieu, puis la carte.':
       'Its words, date and place, then the card.',
+  'Voir le modèle en vrai':
+      'See the design for real',
+  'La carte telle que vos invités la verront, avec des mots d’exemple ; elle s’ouvre dans l’application.':
+      'The card as your guests will see it, with sample words; it opens inside the app.',
 };

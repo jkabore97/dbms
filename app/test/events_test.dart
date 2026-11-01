@@ -265,6 +265,20 @@ void main() {
       expect(find.byKey(const Key('event-preview')), findsOneWidget);
     });
 
+    testWidgets('« Voir le modèle en vrai »: the site\'s sample page for the design, through the app\'s own opener',
+        (tester) async {
+      final repo = _Events();
+      final opened = <Uri>[];
+      await _pump(tester, TemplatesGalleryScreen(events: repo, org: _org, open: (u) async => opened.add(u)));
+      await tester.tap(find.byKey(const Key('template-come')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('template-demo')));
+      await tester.pumpAndSettle();
+      expect(opened, hasLength(1));
+      expect(opened.single.path, '/modele/come');
+      expect(repo.calls, isEmpty);
+    });
+
     testWidgets('browsing with a card already made: « Pour quelle carte ? » gives it the design, its words kept',
         (tester) async {
       final repo = _Events();

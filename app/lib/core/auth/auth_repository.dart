@@ -7,7 +7,7 @@ import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform, kIsWeb, visibleForTesting;
 import 'package:http/http.dart' as http;
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
-import 'package:url_launcher/url_launcher.dart' show closeInAppWebView;
+import 'package:url_launcher/url_launcher.dart' show closeInAppWebView, launchUrl;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'apple_js.dart';
@@ -262,14 +262,33 @@ class AuthRepository {
   /// Google — and one with the same verified e-mail is the same account.
   Future<void> signInWithGoogle() async {
     final client = _requireClient();
+    // Several Google accounts on one phone are common: let them choose.
+    const queryParams = {'prompt': 'select_account'};
+    if (_android) {
+      // Inside the app (155c): the browser's own tab over the app (Chrome
+      // Custom Tabs), with the phone's Google accounts already in it, and
+      // back to the app through [androidCallback]. Google refuses an
+      // embedded web view, not this tab; supabase_flutter's
+      // signInWithOAuth sends the whole browser out for Google on Android
+      // regardless, so the page is launched here from the same address
+      // it would build.
+      final res = await client.auth.getOAuthSignInUrl(
+        provider: OAuthProvider.google,
+        redirectTo: androidCallback,
+        queryParams: queryParams,
+      );
+      final launched = await launchUrl(Uri.parse(res.url), mode: LaunchMode.inAppBrowserView);
+      if (!launched) {
+        throw StateError("La page de connexion Google n'a pas pu s'ouvrir.");
+      }
+      return;
+    }
     final launched = await client.auth.signInWithOAuth(
       OAuthProvider.google,
       redirectTo: kIsWeb ? '${Uri.base.origin}/connexion' : androidCallback,
-      // Several Google accounts on one phone are common: let them choose.
-      queryParams: const {'prompt': 'select_account'},
+      queryParams: queryParams,
       // On an iPhone, in the in-app Safari sheet (SFSafariViewController),
-      // which [closeSignInSheet] can close; Android has its own browser
-      // (supabase_flutter forces it for Google).
+      // which [closeSignInSheet] can close.
       authScreenLaunchMode: _ios ? LaunchMode.inAppBrowserView : LaunchMode.platformDefault,
     );
     if (!launched) {
@@ -278,6 +297,7 @@ class AuthRepository {
   }
 
   static bool get _ios => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+  static bool get _android => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
   /// Closes the in-app Safari sheet Google's page opened in (130).
   ///

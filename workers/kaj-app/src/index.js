@@ -130,6 +130,12 @@ async function serve(request, env) {
     if (event && request.method === "GET") {
       return eventPage(request, env, event[1], url.searchParams.get("apercu"), url.searchParams.get("modifier"));
     }
+    // /modele/<key> — a design shown as a card, with sample words (155c):
+    // what the app's gallery opens on « Voir le modèle en vrai ».
+    const demo = url.pathname.match(/^\/modele\/([a-z0-9_]+)\/?$/);
+    if (demo && request.method === "GET") {
+      return demoPage(request, env, demo[1]);
+    }
     // The cards' pages — the twelve under /cartes, the animated one under
     // /evenements — are not addresses of their own: only /e/<slug> is.
     if (/^\/(cartes\/[a-z]+|evenements\/index)\.html$/.test(url.pathname)) {
@@ -364,7 +370,60 @@ export async function eventPage(request, env, slug, preview, edit) {
   }
   if (!data || typeof data !== "object" || !data.title) return gone();
   const editor = data.editor === true && !!edit;
+  return cardPage(request, env, { slug, data, preview, edit: editor ? edit : null, editor, demo: false });
+}
 
+// The sample words of a design shown as a card (155c), by the kind of
+// event it was drawn for.
+const DEMO_KIND = {
+  anniv: "anniversaire", bapteme: "bapteme", naissance: "naissance", diplome: "diplome",
+  gala: "gala", dot: "dot", hommage: "hommage",
+};
+const DEMO_TITLE = {
+  mariage: "Inès & Thomas", anniversaire: "Les 30 ans de Rokia", bapteme: "Noé", naissance: "Imani",
+  diplome: "Promotion 2027", gala: "Gala des Anciens", dot: "Awa & Moussa", hommage: "Papa Jo",
+};
+
+// /modele/<key> — a design as the guests would see it, with sample words:
+// the answers stay on the phone (demo), the album is away, nothing is
+// saved. Cached: the same for everyone.
+export async function demoPage(request, env, key) {
+  const animated = ANIMATED.test(key);
+  if (!animated && !EVENT_CARDS.has(key)) {
+    return new Response("Introuvable.", {
+      status: 404,
+      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
+    });
+  }
+  const kind = DEMO_KIND[key] || "mariage";
+  const starts = new Date(Date.now() + 45 * 864e5);
+  starts.setUTCHours(15, 0, 0, 0);
+  const data = {
+    slug: `modele-${key}`,
+    kind,
+    card: key,
+    family: animated ? "anime" : "classique",
+    premium: /_p$/.test(key),
+    title: DEMO_TITLE[kind] || DEMO_TITLE.mariage,
+    starts_at: starts.toISOString(),
+    tz: "Africa/Ouagadougou",
+    place: "Villa Serena, Ouagadougou",
+    content: {},
+    rsvp_on: true,
+    album_on: false,
+    published: false,
+    org_name: "",
+  };
+  return cardPage(request, env, { slug: data.slug, data, preview: null, edit: null, editor: false, demo: true });
+}
+
+// The card's page, the event written in: /e/<slug> (152) and the designs'
+// samples (/modele/<key>, 155c) share it.
+async function cardPage(request, env, { slug, data, preview, edit, editor, demo }) {
+  const gone = () => new Response("Cette carte n'est pas ouverte.", {
+    status: 404,
+    headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
+  });
   // Two families of design (153): the twelve cards under /cartes, each its
   // own page; the animated layouts, one page under /evenements that draws
   // the layout the event names (window.CARTE.lay).
@@ -403,7 +462,9 @@ export async function eventPage(request, env, slug, preview, edit) {
     editor,
     edit: editor ? edit : null,
     uploads: env.UPLOADS_URL ? env.UPLOADS_URL.replace(/\/$/, "") : null,
-    api: { url: env.SUPABASE_URL, key: env.SUPABASE_PUBLISHABLE_KEY },
+    // A design's sample (155c): the page keeps the answers on the phone.
+    demo,
+    api: { url: env.SUPABASE_URL || null, key: env.SUPABASE_PUBLISHABLE_KEY || null },
   };
   // Safe inside <script>: no « < » (so no « </script> »), no line separators.
   const json = JSON.stringify(boot).replace(/</g, "\\u003c").replace(/[\u2028\u2029]/g, "");
@@ -423,7 +484,7 @@ export async function eventPage(request, env, slug, preview, edit) {
         e.append(
           `<meta property="og:title" content="${escapeHtml(data.title)}">` +
           `<meta property="og:description" content="${escapeHtml(description)}">` +
-          `<meta property="og:url" content="${SITE}/e/${escapeHtml(slug)}">` +
+          `<meta property="og:url" content="${SITE}/${demo ? `modele/${escapeHtml(data.card)}` : `e/${escapeHtml(slug)}`}">` +
           `<meta property="og:type" content="website">` +
           `<meta name="robots" content="noindex">` +
           `<script>window.CARTE=${json}</script>`,
@@ -433,7 +494,7 @@ export async function eventPage(request, env, slug, preview, edit) {
     })
     .transform(page);
   const headers = new Headers(rewritten.headers);
-  headers.set("Cache-Control", "no-store");
+  headers.set("Cache-Control", demo ? "public, max-age=3600" : "no-store");
   headers.set("Content-Type", "text/html; charset=utf-8");
   return new Response(rewritten.body, { status: 200, headers });
 }

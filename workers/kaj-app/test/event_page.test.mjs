@@ -182,6 +182,32 @@ test("the organiser's editor (154): « modifier » is asked of the server, and t
   assert.ok(html.includes('"uploads":"https://up.example"'), "the uploads Worker's address, no trailing slash");
 });
 
+test("a design's sample (155c): /modele/<key> is the card's page with sample words, demo, cached, nothing asked of the server", async () => {
+  asked.length = 0;
+  let r = await get("/modele/come");
+  assert.equal(r.status, 200);
+  assert.equal(r.headers.get("Cache-Control"), "public, max-age=3600");
+  let html = await r.text();
+  assert.ok(html.includes('<base href="/cartes/">'));
+  assert.ok(html.includes('"demo":true'), "the page keeps the answers on the phone");
+  assert.ok(html.includes('"title":"Inès & Thomas"') && html.includes('"kind":"mariage"'), "sample words for a wedding card");
+  assert.ok(html.includes('"album_on":false') && html.includes('"editor":false'));
+  assert.ok(html.includes('<meta property="og:url" content="https://marakaj.com/modele/come">'));
+  assert.equal(asked.length, 0, "no event behind it");
+  r = await get("/modele/anniv");
+  html = await r.text();
+  assert.ok(html.includes('"title":"Les 30 ans de Rokia"') && html.includes('"kind":"anniversaire"'), "a birthday card's sample");
+  r = await get("/modele/anime_lotus_p");
+  html = await r.text();
+  assert.ok(html.includes('<base href="/evenements/">') && html.includes('"lay":"lotus_p"') && html.includes('"premium":true'), "an animated design, its layout");
+  assert.ok(/"date":"\d{4}-\d\d-\d\d"/.test(html) && html.includes('"time":"15:00"'), "a day ahead, at 15 h in Ouagadougou");
+  assert.equal((await get("/modele/nope")).status, 404);
+  assert.ok(!(await (await get("/modele/..%2Findex")).text()).includes("window.CARTE="), "not a card: the app's page");
+  // Without the project's address the sample still shows: no server behind it.
+  const bare = await site.fetch(new Request("https://marakaj.com/modele/come"), { ASSETS: env.ASSETS });
+  assert.equal(bare.status, 200);
+});
+
 test("the cards' pages are not addresses of their own", async () => {
   const r = await get("/cartes/come.html");
   assert.equal(r.status, 404);
