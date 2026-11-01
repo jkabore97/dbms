@@ -13,8 +13,8 @@
 --      words seeded and escaped — the shop's seller sees none of it, the
 --      admin sees it, and so does an association's;
 --   3. the card for the street: nothing for an unpublished event, the card
---      with its preview token, the card once published and public, nothing
---      once published but the switch off — unless the token — and the
+--      with its preview token, the card once published (whatever the
+--      switch since 156; 152 needed it on), and the
 --      token never in the answer;
 --   4. a guest's answer through event_rsvp: refused on a card the street
 --      may not see, taken with the token or once public, each check in
@@ -55,6 +55,7 @@ create extension pgcrypto schema extensions;
 \i database/migrations/153_events_kind.sql
 \i database/migrations/154_events_editor.sql
 \i database/migrations/155_events_album.sql
+\i database/migrations/156_events_published_open.sql
 insert into orgs (id, name, slug, profile, default_currency) values
     ('15215215-1111-0000-0000-000000000009', 'Sans pgcrypto', 'sans-pgcrypto-152', 'events', 'XOF');
 do $$
@@ -79,6 +80,7 @@ rollback;
 -- 154 (the edit token, event_public's third argument): restored too.
 \i database/migrations/154_events_editor.sql
 \i database/migrations/155_events_album.sql
+\i database/migrations/156_events_published_open.sql
 
 begin;
 
@@ -223,15 +225,22 @@ begin
 
     update platform_settings set value = 'false' where key = 'events_public';
     set local role anon;
-    assert event_public(v_slug) is null, 'the switch off: the street sees nothing, published or not';
-    assert event_public(v_slug, v_token) is not null, 'but the preview link still does';
+    -- 156: a published card opens for its guests whatever the switch (152
+    -- closed it with the switch; the owner's short link went nowhere).
+    assert event_public(v_slug) is not null, 'the switch off: a published card still opens for the street (156)';
+    assert event_public(v_slug, v_token) is not null, 'and the preview link too';
     reset role;
     -- The business's own admin sees the card signed in, switch off or on.
     set local role authenticated;
     perform set_config('request.jwt.claim.sub', '15215215-0000-0000-0000-000000000001', true);
     assert event_public(v_slug) is not null, 'the owner sees her card';
     perform set_config('request.jwt.claim.sub', '15215215-0000-0000-0000-000000000002', true);
-    assert event_public(v_slug) is null, 'the seller does not';
+    assert event_public(v_slug) is not null, 'the seller too: a published card is anyone''s to see (156)';
+    reset role;
+    update events set published = false where slug = v_slug;
+    set local role authenticated;
+    perform set_config('request.jwt.claim.sub', '15215215-0000-0000-0000-000000000002', true);
+    assert event_public(v_slug) is null, 'unpublished, the seller sees nothing: not an admin';
     reset role;
     perform set_config('request.jwt.claim.sub', '', true);
     update platform_settings set value = 'true' where key = 'events_public';

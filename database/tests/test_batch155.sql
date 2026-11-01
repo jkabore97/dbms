@@ -35,7 +35,9 @@ grant usage on schema auth to anon, authenticated;
 grant select, insert, update, delete on all tables in schema public to authenticated;
 -- Installed twice, the same.
 \i database/migrations/155_events_album.sql
+\i database/migrations/156_events_published_open.sql
 \i database/migrations/155_events_album.sql
+\i database/migrations/156_events_published_open.sql
 
 begin;
 

@@ -1,5 +1,5 @@
 -- ============================================================
--- apply_006_to_155.sql — applies migrations 006 through 155 in order.
+-- apply_006_to_156.sql — applies migrations 006 through 156 in order.
 --
 -- Paste this whole file into the Supabase SQL editor and run it once.
 --
@@ -71670,6 +71670,33 @@ begin
 end;
 $$;
 
+-- And the organiser's door confirms the organiser's own slots only (154
+-- confirmed any slot with the edit token; a guest's is the album's).
+create or replace function event_picture_done(p_key text, p_edit text, p_bytes integer default null)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    p event_pictures;
+    e events;
+begin
+    select * into p from event_pictures
+     where key = p_key and state = 'slot' and source = 'organiser' and created_at > now() - interval '1 hour'
+     for update;
+    if not found then
+        raise exception 'Envoi inconnu.';
+    end if;
+    select * into e from events where id = p.event_id;
+    if p_edit is null or p_edit <> e.edit_token then
+        raise exception 'Cette carte ne peut pas être modifiée d''ici.';
+    end if;
+    update event_pictures set state = 'stored', bytes = p_bytes, done_at = clock_timestamp() where key = p_key;
+    return true;
+end;
+$$;
+
 -- ------------------------------------------------------------
 -- 3. The album's doors (anon: a guest is signed out, the card's link
 --    is the key)
@@ -71821,6 +71848,60 @@ begin
         grant  execute on function event_album_done(text, text, integer)       to authenticated;
         grant  execute on function event_album(text, text)                     to authenticated;
         grant  execute on function event_picture_delete(text)                  to authenticated;
+    end if;
+end $$;
+
+notify pgrst, 'reload schema';
+
+
+-- ============================================================
+-- 156_events_published_open.sql
+-- ============================================================
+-- ============================================================
+-- 156 — A published card opens for its guests, whatever the switch.
+--
+-- 152 showed a published card to the street only once the platform's
+-- switch events_public was on — the switch that opens the module to
+-- every business. The owner, with a card published and its short link in
+-- hand while the switch was off: « Cette carte n'est pas ouverte ».
+-- Publishing is the organiser's deliberate act, for guests who are never
+-- members: a published card opens for anyone with its link, switch or
+-- not. The switch keeps its other meaning — who may make an
+-- Événementiel (create_my_business, 153) and whether members see the
+-- module (events_open, 152). The preview and edit tokens open a card as
+-- before; an unpublished card stays closed to the street.
+-- Applies twice.
+-- ============================================================
+
+do $$ begin
+    if to_regprocedure('event_visible(events, text, text)') is null then
+        raise exception '156 needs 154 (event_visible with the edit token) applied first';
+    end if;
+end $$;
+
+create or replace function event_visible(p_event events, p_preview text, p_edit text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public, auth
+as $$
+    select (p_edit is not null and p_edit = p_event.edit_token)
+        or (p_preview is not null and p_preview = p_event.preview_token)
+        or p_event.published
+        or (auth.uid() is not null and is_org_admin(p_event.org_id));
+$$;
+
+-- The grants of 154 stand: never callable by the street itself — the
+-- doors (event_public, event_rsvp, the album's) call it.
+revoke execute on function event_visible(events, text, text) from public;
+do $$
+begin
+    if exists (select 1 from pg_roles where rolname = 'anon') then
+        revoke execute on function event_visible(events, text, text) from anon;
+    end if;
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        revoke execute on function event_visible(events, text, text) from authenticated;
     end if;
 end $$;
 

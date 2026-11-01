@@ -39,8 +39,10 @@ grant usage on schema auth to anon, authenticated;
 -- twice — installed twice, the same.
 \i database/migrations/154_events_editor.sql
 \i database/migrations/155_events_album.sql
+\i database/migrations/156_events_published_open.sql
 \i database/migrations/154_events_editor.sql
 \i database/migrations/155_events_album.sql
+\i database/migrations/156_events_published_open.sql
 
 begin;
 
