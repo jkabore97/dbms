@@ -226,6 +226,37 @@ test("the cards' pages are not addresses of their own", async () => {
   assert.equal((await get("/cartes/apercu/come.jpg")).status, 200, "its pictures are");
 });
 
+test("the real pages take the card's data: each has the <head> the Worker writes into", async () => {
+  // The animated page shipped without <html>/<head>/<body> (an artifact
+  // fragment): the rewriter's head handler never fired, and every animated
+  // card on the live site ran as the bare prototype. The stub above has a
+  // head of its own — this test serves the files as they are.
+  const { readFileSync } = await import("node:fs");
+  const real = {
+    "/index.html": files["/index.html"],
+    "/cartes/come.html": [readFileSync(new URL("../../../app/web/cartes/come.html", import.meta.url), "utf8"), "text/html; charset=utf-8"],
+    "/evenements/index.html": [readFileSync(new URL("../../../app/web/evenements/index.html", import.meta.url), "utf8"), "text/html; charset=utf-8"],
+  };
+  const realEnv = { ...env, ASSETS: { async fetch(request) {
+    const path = new URL(request.url).pathname;
+    if (path.endsWith(".html") && path !== "/index.html") {
+      const to = path.endsWith("/index.html") ? path.slice(0, -"index.html".length) : path.slice(0, -".html".length);
+      return new Response(null, { status: 301, headers: { Location: to } });
+    }
+    const [body, type] = real[path] || real[`${path}.html`] || real[`${path}index.html`] || real["/index.html"];
+    return new Response(body, { headers: { "Content-Type": type } });
+  } } };
+  for (const [path, base, mark] of [["/modele/anime_lettre", "/evenements/", '"lay":"lettre"'], ["/modele/come", "/cartes/", '"card":"come"']]) {
+    const r = await site.fetch(new Request(`https://marakaj.com${path}`), realEnv);
+    const html = await r.text();
+    assert.equal(r.status, 200, path);
+    assert.ok(/<head[\s>]/i.test(html), `${path}: the page has a <head>`);
+    assert.ok(html.includes(`<base href="${base}">`), `${path}: its base written in`);
+    assert.ok(html.includes("window.CARTE=") && html.includes(mark), `${path}: the card's data written in`);
+    assert.ok(html.indexOf("window.CARTE=") < html.indexOf("</head>"), `${path}: before the page's own script`);
+  }
+});
+
 test("without the project's address, nothing", async () => {
   const r = await site.fetch(new Request("https://marakaj.com/e/x"), { ASSETS: env.ASSETS });
   assert.equal(r.status, 404);
