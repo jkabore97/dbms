@@ -7,11 +7,13 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/auth/auth_repository.dart' show AuthRepository;
 import '../../core/auth/models.dart' show OrgSummary;
 import '../../core/events/events_repository.dart';
+import '../../core/events/tickets_repository.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import '../../core/theme/kaj_card.dart';
 import '../capture/barcode_sheet.dart';
 import 'templates_gallery_screen.dart';
+import 'tickets_screens.dart';
 
 /// Where the cards live: the site itself on the web (a preview deploy
 /// keeps its own address), marakaj.com from the phone apps.
@@ -528,6 +530,9 @@ class _EventScreenState extends State<EventScreen> {
 
   /// The guests' album (155): their pictures, newest first.
   List<EventPicture> _pictures = const [];
+
+  /// Ticket sales (161): this business may sell (the server's answer).
+  bool _canSell = false;
   bool _loading = true;
   String? _error;
 
@@ -556,11 +561,13 @@ class _EventScreenState extends State<EventScreen> {
           p = const [];
         }
       }
+      final sell = e == null ? false : await widget.events.tickets.allowed(e.orgId);
       if (!mounted) return;
       setState(() {
         _event = e;
         _rsvps = r;
         _pictures = p;
+        _canSell = sell;
         _loading = false;
       });
     } catch (e) {
@@ -839,6 +846,10 @@ class _EventScreenState extends State<EventScreen> {
                       ),
                     ]),
                   ),
+                  if (_canSell) ...[
+                    const SizedBox(height: 12),
+                    TicketsCard(tickets: widget.events.tickets, event: e, open: widget.open),
+                  ],
                   const SizedBox(height: 18),
                   Text(
                     '${context.tr('Réponses des invités')} · ${_rsvps.length}',
@@ -1090,6 +1101,25 @@ class _GuestsScreenState extends State<GuestsScreen> {
   Future<void> _arrivedFromPass(String text) async {
     final id = EventsRepository.passIdFrom(text);
     final messenger = ScaffoldMessenger.of(context);
+    // A ticket (161), not a guest's card: checked at the door the same.
+    final ticket = TicketsRepository.ticketIdFrom(text);
+    if (ticket != null) {
+      try {
+        final r = await widget.events.tickets.scan(ticket);
+        if (!mounted) return;
+        messenger.showSnackBar(SnackBar(
+          content: Text(switch (r.result) {
+            'valid' => context.tr('Billet valide : {name} · {type}', {'name': r.holder, 'type': r.type}),
+            'used' => context.tr('Billet déjà utilisé : {name}', {'name': r.holder}),
+            'void' => context.tr('Billet annulé'),
+            _ => context.tr('Billet inconnu'),
+          }),
+        ));
+      } catch (e) {
+        if (mounted) messenger.showSnackBar(SnackBar(content: Text(AuthRepository.describeError(e))));
+      }
+      return;
+    }
     if (id == null) {
       messenger.showSnackBar(SnackBar(content: Text(context.tr('Ce code n’est pas une carte d’invité.'))));
       return;

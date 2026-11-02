@@ -3338,6 +3338,11 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
     var y = document.getElementById('rYes'), n = document.getElementById('rNo'), f = document.getElementById('rsvp'), out = document.getElementById('rDone'), ans = null;
     function pick(v) { ans = v; y.setAttribute('aria-pressed', v === 'yes'); n.setAttribute('aria-pressed', v === 'no'); }
     y.onclick = function () { pick('yes'); }; n.onclick = function () { pick('no'); };
+    if (SERVER && SERVER.tickets && !SERVER.demo) {
+      f.hidden = true; f.style.display = 'none';
+      out.innerHTML = '<p style="margin:0 0 14px">Cet événement se fait sur billet. Réservez vos places, payez l’organisateur, recevez vos billets avec leur QR code.</p>' + '<a class="btn solid" href="/e/' + encodeURIComponent(SERVER.slug) + '/billets' + (SERVER.preview ? '?apercu=' + encodeURIComponent(SERVER.preview) : '') + '">Réserver mes billets</a>';
+      return;
+    }
     if (SERVER && SERVER.rsvp_on === false) {
       f.hidden = true;
       out.className = 'rsvp-closed'; out.textContent = 'Les réponses sont fermées pour cet événement.';

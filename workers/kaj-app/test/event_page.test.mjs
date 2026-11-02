@@ -102,7 +102,9 @@ test("a card the server shows: the page under /cartes, the event in it, never ca
   assert.ok(html.includes('"api":{"url":"https://x.supabase.co","key":"sb_publishable_test"}'), "the public key, for the RSVP");
   assert.ok(html.includes('<meta property="og:title" content="Inès &amp; Thomas &lt;3">'), "og tags escaped");
   assert.ok(html.includes('<meta name="robots" content="noindex">'), "an invitation is not indexed");
-  assert.equal(asked.length, 1);
+  // event_public, then the card's ticket offer (161).
+  assert.equal(asked.length, 2);
+  assert.equal(new URL(asked[1]).pathname, "/rest/v1/rpc/event_ticket_offer");
   const u = new URL(asked[0]);
   assert.equal(u.pathname, "/rest/v1/rpc/event_public");
   assert.equal(u.searchParams.get("p_slug"), "ines-thomas-ab12");
@@ -283,6 +285,46 @@ test("a guest's pass (158): /e/<slug>/invite/<id> reads event_pass, never cached
   asked.length = 0;
   assert.equal((await get("/e/ines-thomas-ab12/invite/not-an-id")).status, 404);
   assert.equal(asked.length, 0, "a malformed id never asks the server");
+});
+
+test("the ticket pages (161): the offer, the buyer's request, one ticket; never cached; a stranger's id is nothing", async () => {
+  const id = "0f0f0f0f-0f0f-4f0f-8f0f-0f0f0f0f0f0f";
+  answer = { on: true, open: true, slug: "concert-fatim", title: "Concert Fatim", date_fr: "samedi 12 décembre 2026", place: "CENASA",
+    currency: "XOF", hold_hours: 72, org_name: "Awa Concerts", pay_whatsapp: "+22670000001",
+    pay_methods: [{ kind: "orange", number: "70 00 00 01", name: "Awa K." }],
+    types: [{ id: "t1", name: "Standard", price: 2000, left: 3 }, { id: "t2", name: "VIP", price: 5000, left: 0 }] };
+  asked.length = 0;
+  let r = await get("/e/concert-fatim/billets");
+  let html = await r.text();
+  assert.equal(r.status, 200);
+  assert.equal(r.headers.get("Cache-Control"), "no-store");
+  assert.ok(html.includes("Concert Fatim") && html.includes("Standard") && html.includes("2 000 FCFA") && html.includes("Plus que 3 places"), "the types and their prices");
+  assert.ok(html.includes("Complet"), "a sold-out type says so");
+  assert.ok(html.includes("gardées 72 heures") && html.includes("Marakaj n’encaisse rien"), "the hold and the notice");
+  assert.equal(new URL(asked[0]).pathname, "/rest/v1/rpc/event_ticket_offer");
+  answer = { on: false };
+  assert.equal((await get("/e/concert-fatim/billets")).status, 404, "no sale, no page");
+
+  answer = { id, ref: "MK-7F3A2", status: "pending", name: "Tanti Rose", total: 9000, currency: "XOF", hold_until: "2026-12-01T10:00:00Z",
+    slug: "concert-fatim", title: "Concert Fatim", date_fr: "samedi", place: "CENASA", pay_whatsapp: "+22670000001",
+    pay_methods: [{ kind: "orange", number: "70 00 00 01", name: "Awa K." }], lines: [{ name: "Standard", qty: 2, price: 2000 }], tickets: [] };
+  html = await (await get(`/e/concert-fatim/billets/${id}`)).text();
+  assert.ok(html.includes("MK-7F3A2") && html.includes("Orange Money") && html.includes("70 00 00 01") && html.includes("9 000 FCFA"), "where to pay and the reference");
+  assert.ok(html.includes("https://wa.me/22670000001?text="), "the organiser on WhatsApp");
+  answer = { ...answer, status: "paid", tickets: [{ id: "a1a1a1a1-a1a1-4a1a-8a1a-a1a1a1a1a1a1", type: "Standard", holder: "Tanti Rose", status: "valid" },
+    { id: "b2b2b2b2-b2b2-4b2b-8b2b-b2b2b2b2b2b2", type: "Standard", holder: "Tanti Rose", status: "valid" }] };
+  html = await (await get(`/e/concert-fatim/billets/${id}`)).text();
+  assert.ok(html.includes("Payé · 2 billets") && html.includes(`data-qr="https://marakaj.com/e/concert-fatim/billet/a1a1a1a1-a1a1-4a1a-8a1a-a1a1a1a1a1a1"`), "one QR per ticket");
+  assert.ok(!html.includes(`href="/billets/`), "no link to an app page that is not there yet");
+  assert.equal((await get(`/e/autre-carte/billets/${id}`)).status, 404, "another card's request: nothing");
+  asked.length = 0;
+  assert.equal((await get("/e/concert-fatim/billets/nope")).status, 404);
+  assert.equal(asked.length, 0, "a malformed id asks nobody");
+
+  answer = { id: "a1a1a1a1-a1a1-4a1a-8a1a-a1a1a1a1a1a1", holder: "Tanti Rose", type: "VIP", status: "used", title: "Concert Fatim", ref: "MK-7F3A2" };
+  html = await (await get("/e/concert-fatim/billet/a1a1a1a1-a1a1-4a1a-8a1a-a1a1a1a1a1a1")).text();
+  assert.ok(html.includes("Tanti Rose") && html.includes("Déjà utilisé") && html.includes("VIP"), "one ticket");
+  answer = null;
 });
 
 test("without the project's address, nothing", async () => {

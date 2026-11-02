@@ -518,6 +518,15 @@
       s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'; s.onload = draw;
       document.head.appendChild(s);
     }
+    // A card that sells tickets (161): the answer is a ticket, asked on the
+    // ticket page; the form gives way to its button.
+    if (SERVER && SERVER.tickets && !SERVER.demo) {
+      var tb = document.createElement('div'); tb.className = 'tickets';
+      tb.innerHTML = '<p>Cet événement se fait sur billet. Réservez vos places, payez l’organisateur, recevez vos billets avec leur QR code.</p>' +
+        '<a class="btn" href="/e/' + encodeURIComponent(SERVER.slug) + '/billets' + (SERVER.preview ? '?apercu=' + encodeURIComponent(SERVER.preview) : '') + '">Réserver mes billets</a>';
+      f.parentNode.insertBefore(tb, f); f.hidden = true; f.style.display = 'none';
+      return;
+    }
     // The guest's WhatsApp, if they wish (159): the organiser's reminder
     // the day before goes through it. Collected with the answer (extra).
     if (SERVER && !SERVER.demo && !f.querySelector('[name=whatsapp]')) {

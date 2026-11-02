@@ -8871,4 +8871,164 @@ const enStrings = <String, String>{
       'See the design for real',
   'La carte telle que vos invités la verront, avec des mots d’exemple ; elle s’ouvre dans l’application.':
       'The card as your guests will see it, with sample words; it opens inside the app.',
+  'Billetterie':
+      'Ticketing',
+  'Le paiement se fait directement à l’organisateur. Marakaj n’encaisse rien.':
+      'Payment goes straight to the organiser. Marakaj collects nothing.',
+  'Vente de billets':
+      'Ticket sales',
+  'Types de billets, prix, où payer':
+      'Ticket types, prices, where to pay',
+  'Demandes de billets':
+      'Ticket requests',
+  'Valider un paiement reçu, refuser':
+      'Confirm a payment received, or refuse',
+  'Contrôle à l’entrée':
+      'Door check',
+  'Scanner les billets, même sans réseau':
+      'Scan tickets, even with no signal',
+  'Ajoutez d’abord un type de billet.':
+      'Add a ticket type first.',
+  'Ajoutez d’abord un numéro où payer.':
+      'Add a number to pay to first.',
+  'Vente ouverte : le bouton « Réserver » est sur la carte.':
+      'Sales open: the “Book” button is on the card.',
+  'Vente ouverte':
+      'Sales open',
+  'Le bouton « Réserver » apparaît sur la carte.':
+      'The “Book” button shows on the card.',
+  'Types de billets':
+      'Ticket types',
+  'places illimitées':
+      'unlimited places',
+  '{n} places':
+      '{n} places',
+  'Ajouter un type de billet':
+      'Add a ticket type',
+  'Où payer':
+      'Where to pay',
+  'Le numéro que l’acheteur paie, sur son propre téléphone.':
+      'The number the buyer pays, from their own phone.',
+  'Ajouter un numéro':
+      'Add a number',
+  'WhatsApp pour les acheteurs':
+      'WhatsApp for buyers',
+  'Ils y envoient la preuve de paiement.':
+      'They send the proof of payment there.',
+  'Places gardées sans paiement':
+      'Places held without payment',
+  'Passé ce délai, la demande expire et ses places reviennent en vente.':
+      'After this, the request expires and its places go back on sale.',
+  '{n} heures':
+      '{n} hours',
+  'Fin de la vente':
+      'Sales close',
+  'Jusqu’au début de l’événement':
+      'Until the event starts',
+  'Le paiement se fait directement à l’organisateur. Marakaj n’encaisse rien : vous validez chaque demande quand l’argent est arrivé sur votre téléphone.':
+      'Payment goes straight to the organiser. Marakaj collects nothing: you confirm each request once the money has reached your phone.',
+  'Un nom, en 60 caractères au plus.':
+      'A name, 60 characters at most.',
+  'Un prix, 0 pour un billet gratuit.':
+      'A price, 0 for a free ticket.',
+  'Un nombre de places, ou rien pour illimité.':
+      'A number of places, or nothing for unlimited.',
+  'Nouveau type de billet':
+      'New ticket type',
+  'Type de billet':
+      'Ticket type',
+  'Standard, VIP…':
+      'Standard, VIP…',
+  'Prix (FCFA)':
+      'Price (FCFA)',
+  'Places':
+      'Places',
+  'Vide : illimité':
+      'Empty: unlimited',
+  'Au nom de':
+      'Account name',
+  'Ce que l’acheteur voit en payant':
+      'What the buyer sees when paying',
+  'Un numéro de téléphone.':
+      'A phone number.',
+  'Paiement reçu ?':
+      'Payment received?',
+  'Refuser cette demande ?':
+      'Refuse this request?',
+  '{total} de {name} : vérifiez sur votre téléphone que l’argent est bien arrivé. Les billets partent alors à l’acheteur.':
+      '{total} from {name}: check on your phone that the money has arrived. The tickets then go to the buyer.',
+  'Ses places reviennent en vente.':
+      'Its places go back on sale.',
+  'Note (facultative)':
+      'Note (optional)',
+  'Validé : {n} billet(s) créé(s).':
+      'Confirmed: {n} ticket(s) created.',
+  'Demande refusée':
+      'Request refused',
+  'Ce numéro WhatsApp n’est pas valide.':
+      'This WhatsApp number is not valid.',
+  'Bonjour {name}, votre paiement est bien reçu. Vos billets pour « {title} » (réf. {ref}) : {link}':
+      'Hello {name}, your payment has been received. Your tickets for “{title}” (ref. {ref}): {link}',
+  'Bonjour {name}, nous avons bien reçu votre demande de billets pour « {title} » (réf. {ref}). Pour payer et suivre : {link}':
+      'Hello {name}, we have received your ticket request for “{title}” (ref. {ref}). To pay and follow it: {link}',
+  'Billets vendus':
+      'Tickets sold',
+  'Encaissé (validé)':
+      'Collected (confirmed)',
+  'À valider · {n}':
+      'To confirm · {n}',
+  'Payées · {n}':
+      'Paid · {n}',
+  'Aucune demande ici.':
+      'No requests here.',
+  'Transaction indiquée : {txn}':
+      'Transaction given: {txn}',
+  'Places gardées jusqu’au {date}':
+      'Places held until {date}',
+  '{n} billets gardés sur ce téléphone.':
+      '{n} tickets kept on this phone.',
+  'Scans envoyés.':
+      'Scans sent.',
+  'Scans envoyés. {n} billet(s) étaient déjà utilisés ailleurs.':
+      'Scans sent. {n} ticket(s) had already been used elsewhere.',
+  'Un billet':
+      'A ticket',
+  'Pas de réseau, et pas de liste sur ce téléphone : téléchargez-la avant l’ouverture des portes.':
+      'No signal, and no list on this phone: download it before the doors open.',
+  'Billet valide':
+      'Valid ticket',
+  'Déjà utilisé':
+      'Already used',
+  'Billet annulé':
+      'Ticket cancelled',
+  'Billet inconnu':
+      'Unknown ticket',
+  'Sans réseau : d’après la liste du téléphone':
+      'No signal: from the phone’s list',
+  'Scanner un billet':
+      'Scan a ticket',
+  'Sans réseau dans la salle ?':
+      'No signal in the hall?',
+  'Téléchargez la liste des billets avant l’ouverture : le téléphone contrôle alors seul.':
+      'Download the ticket list before opening: the phone then checks on its own.',
+  '{n} billets sur ce téléphone · {in} entrés · liste du {date}':
+      '{n} tickets on this phone · {in} in · list from {date}',
+  'Télécharger la liste':
+      'Download the list',
+  'Mettre à jour la liste':
+      'Update the list',
+  'Envoyer {n} scan(s)':
+      'Send {n} scan(s)',
+  'Billet valide : {name} · {type}':
+      'Valid ticket: {name} · {type}',
+  'Billet déjà utilisé : {name}':
+      'Ticket already used: {name}',
+  'Expirée : places remises en vente':
+      'Expired: places back on sale',
+  'Remboursée':
+      'Refunded',
+  'Orange Money':
+      'Orange Money',
+  'Moov Money':
+      'Moov Money',
 };

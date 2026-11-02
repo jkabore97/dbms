@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../db/local_db.dart';
 import '../net/timeout_client.dart';
+import 'tickets_repository.dart';
 
 /// Événementiel (152): the events a business creates — a card with an
 /// address, sent to its guests — and what the guests answered.
@@ -13,13 +15,21 @@ import '../net/timeout_client.dart';
 /// once the platform's switch opens the module to them — events_open), and
 /// a stale list would show a screen the server refuses.
 class EventsRepository {
-  EventsRepository(this._client, {String? uploadsUrl, http.Client? httpClient})
-      : _uploads = (uploadsUrl ?? const String.fromEnvironment('UPLOADS_URL')).replaceAll(RegExp(r'/+$'), ''),
+  EventsRepository(this._client, {String? uploadsUrl, http.Client? httpClient, LocalDb? keep})
+      // ignore: prefer_initializing_formals
+      : _keep = keep,
+        _uploads = (uploadsUrl ?? const String.fromEnvironment('UPLOADS_URL')).replaceAll(RegExp(r'/+$'), ''),
         // Bounded, as every request the app makes (freeze_test): a Worker
         // that never answers must not hang the card's page.
         _http = httpClient ?? TimeoutClient.bounded();
 
   final SupabaseClient? _client;
+
+  /// The phone's own store, where the door keeps its list (161).
+  final LocalDb? _keep;
+
+  /// Ticket sales (161), on the same client.
+  late final TicketsRepository tickets = TicketsRepository(_client, keep: _keep);
 
   /// The uploads Worker's address (154): where a card's pictures are read,
   /// and removed (155). Empty on an installation without one.
