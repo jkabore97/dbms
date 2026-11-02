@@ -911,7 +911,8 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
   if (SERVER) {
     (function (c) {
       var kinds = {mariage: 'mariage', dot: 'dot', anniversaire: 'anniv', bapteme: 'bapteme', naissance: 'naissance',
-                   diplome: 'diplome', gala: 'soiree', inauguration: 'entreprise', retraite: 'retraite', hommage: 'hommage'};
+                   diplome: 'diplome', gala: 'soiree', inauguration: 'entreprise', retraite: 'retraite', hommage: 'hommage',
+                   concert: 'concert', culture: 'concert', conference: 'conference'};
       var title = String(c.title || '').trim();
       var two = title.split(/\s*(?:&|\bet\b)\s*/);
       S.type = kinds[c.kind] || 'autre';

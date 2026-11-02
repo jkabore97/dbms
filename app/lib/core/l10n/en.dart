@@ -9193,4 +9193,10 @@ const enStrings = <String, String>{
       '{name} has {n} entr(y/ies) in its books. Delete them permanently with the business?',
   'Supprimer aussi les comptes':
       'Delete the books too',
+  'Concert, spectacle':
+      'Concert, show',
+  'Festival, événement culturel':
+      'Festival, cultural event',
+  'Conférence, séminaire':
+      'Conference, seminar',
 };

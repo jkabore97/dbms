@@ -270,6 +270,10 @@ const eventKinds = <(String, String)>[
   ('diplome', 'Remise de diplômes'),
   ('gala', 'Soirée, gala'),
   ('inauguration', 'Inauguration'),
+  // A business that sells tickets (161): its stages and its halls.
+  ('concert', 'Concert, spectacle'),
+  ('culture', 'Festival, événement culturel'),
+  ('conference', 'Conférence, séminaire'),
   ('retraite', 'Départ à la retraite'),
   ('hommage', 'Hommage'),
 ];
@@ -367,7 +371,7 @@ const knownTemplates = <EventTemplate>[
   EventTemplate(key: 'bapteme', family: 'classique', name: 'Noé', sort: 7, kinds: ['bapteme'], line: 'Blanc, doux, en famille'),
   EventTemplate(key: 'naissance', family: 'classique', name: 'Imani', sort: 8, kinds: ['naissance'], line: 'Un bébé arrive'),
   EventTemplate(key: 'diplome', family: 'classique', name: 'Promotion', sort: 9, kinds: ['diplome'], line: 'La toque et le diplôme'),
-  EventTemplate(key: 'gala', family: 'classique', name: 'Dix ans', sort: 10, kinds: ['gala'], line: 'Une soirée habillée'),
+  EventTemplate(key: 'gala', family: 'classique', name: 'Dix ans', sort: 10, kinds: ['gala', 'concert', 'culture', 'conference'], line: 'Une soirée habillée'),
   EventTemplate(key: 'dot', family: 'classique', name: 'Dot', sort: 11, kinds: ['dot'], line: 'Les deux familles'),
   EventTemplate(key: 'hommage', family: 'classique', name: 'Hommage', sort: 12, kinds: ['hommage'], line: 'En sa mémoire'),
   EventTemplate(key: 'cimbrone', family: 'classique', name: 'Cimbrone', sort: 48, kinds: ['mariage'], line: 'Une photo plein cadre, le noir et blanc'),
