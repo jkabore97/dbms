@@ -9187,4 +9187,10 @@ const enStrings = <String, String>{
       'Your public events at the top of “Events” on Marakaj’s street, marked “Sponsored”.',
   'Vos événements en tête de la rue':
       'Your events at the top of the street',
+  'Ses comptes aussi ?':
+      'Its books too?',
+  '{name} a {n} écriture(s) dans ses comptes. Les supprimer définitivement avec l’activité ?':
+      '{name} has {n} entr(y/ies) in its books. Delete them permanently with the business?',
+  'Supprimer aussi les comptes':
+      'Delete the books too',
 };
