@@ -16,6 +16,7 @@ class StreetEvent {
     this.payWhatsapp,
     this.types = const [],
     this.salesOpen = false,
+    this.sponsored = false,
   });
 
   factory StreetEvent.fromJson(Map<String, dynamic> j) {
@@ -34,6 +35,7 @@ class StreetEvent {
       currency: '${j['currency'] ?? 'XOF'}',
       payWhatsapp: j['pay_whatsapp'] as String?,
       salesOpen: offer?['open'] == true,
+      sponsored: j['sponsored'] == true,
       types: [
         for (final t in (offer?['types'] as List? ?? const []))
           (
@@ -66,6 +68,9 @@ class StreetEvent {
   final String? payWhatsapp;
   final List<({String name, double price, int? left})> types;
   final bool salesOpen;
+
+  /// Its business pays a spot (165): first in the strip, said so.
+  final bool sponsored;
 
   String get cardPath => '/e/$slug';
   String get ticketsPath => '/e/$slug/billets';

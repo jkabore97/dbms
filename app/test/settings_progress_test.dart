@@ -31,8 +31,9 @@ class _Retail extends RetailRepository {
 }
 
 class _Admin extends AdminRepository {
-  _Admin({this.list = _half, this.phone, this.lat}) : super(null);
+  _Admin({this.list = _half, this.phone, this.lat, this.profile = 'retail'}) : super(null);
 
+  final String profile;
   final VitrineChecklist list;
   final String? phone;
   final double? lat;
@@ -42,7 +43,7 @@ class _Admin extends AdminRepository {
     'id': orgId,
     'name': 'Boutique Awa',
     'slug': 'boutique-awa',
-    'profile': 'retail',
+    'profile': profile,
     'default_currency': 'XOF',
   };
 
@@ -189,5 +190,16 @@ void main() {
     await tester.tap(find.byKey(const Key('unlock-ok')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('unlock-dialog')), findsNothing);
+  });
+
+  testWidgets('an Événementiel: no articles, vitrine, position, delivery or shop access — « Mettre en avant » instead',
+      (tester) async {
+    await pump(tester, _Admin(profile: 'events'));
+    expect(find.text('Identité'), findsOneWidget);
+    for (final gone in ['Vos articles', 'Vitrine', 'La position de ma boutique', 'Livraison', 'Équipe et accès', 'MARAKAJ PRO']) {
+      expect(find.text(gone), findsNothing, reason: gone);
+    }
+    expect(find.text('Mettre en avant'), findsOneWidget);
+    expect(find.text('Tout est prêt'), findsOneWidget, reason: 'its name is its only first step');
   });
 }

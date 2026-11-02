@@ -8,6 +8,7 @@ import '../../core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../events/events_screens.dart' show eventSiteOrigin, openOutside, openSitePage, whatsappDigits;
+import 'directory_screen.dart' show SponsoredTag;
 import 'lazy_photo.dart';
 import 'shop_style.dart';
 
@@ -133,6 +134,8 @@ class _EventTile extends StatelessWidget {
               width: 200,
               child: Stack(fit: StackFit.expand, children: [
                 _Poster(event: event, capture: capture),
+                if (event.sponsored)
+                  const Positioned(right: 8, top: 8, child: SponsoredTag()),
                 Positioned(
                   left: 8,
                   top: 8,
