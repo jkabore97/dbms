@@ -486,6 +486,13 @@ class SessionController extends ChangeNotifier {
   /// such business. Null is the whole defence against a typed or stale org id:
   /// the list is what the server returned, so an id that is not in it simply
   /// does not resolve.
+  /// The businesses this person sees: an Événementiel only while the
+  /// platform's switch is on (152), or for a platform admin. With the switch
+  /// off its pages are closed to its own owner (the server's events_open):
+  /// shown, it would open onto « Réservé aux administrateurs ».
+  List<OrgSummary> _shown(List<OrgSummary> list, bool platformAdmin) =>
+      platformAdmin || _eventsPublic ? list : [for (final o in list) if (!o.isEvents) o];
+
   OrgSummary? orgById(String? id) {
     if (id == null) return null;
     for (final org in _orgs) {
@@ -1023,6 +1030,7 @@ class SessionController extends ChangeNotifier {
     required bool platformAdmin,
     required String? notice,
   }) async {
+    orgs = _shown(orgs, platformAdmin);
     // A failure here must never escape: resolveOrgs is kicked off unawaited by
     // boot(), so anything it throws is unhandled and freezes the app on the
     // spinner with the phase stuck at `resolving`. Sync is best-effort anyway.
@@ -1184,7 +1192,7 @@ class SessionController extends ChangeNotifier {
       } catch (_) {}
       final List<OrgSummary> orgs;
       try {
-        orgs = await auth.fetchOrgs().timeout(resolveTimeout);
+        orgs = _shown(await auth.fetchOrgs().timeout(resolveTimeout), platformAdmin);
       } catch (_) {
         return; // No signal is not news: everything stays as it is.
       }
