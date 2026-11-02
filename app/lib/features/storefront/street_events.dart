@@ -5,6 +5,7 @@ import '../../core/capture/capture_repository.dart';
 import '../../core/events/street_event.dart';
 import '../../core/format/money.dart';
 import '../../core/l10n/tr.dart';
+import '../../core/notify/bell_room.dart';
 import '../../core/storefront/storefront_repository.dart';
 import '../events/events_screens.dart' show eventSiteOrigin, openOutside, openSitePage, whatsappDigits;
 import 'lazy_photo.dart';
@@ -335,7 +336,7 @@ class _EventVitrineScreenState extends State<EventVitrineScreen> {
     ]);
     return Scaffold(
       backgroundColor: ShopStyle.paper,
-      appBar: AppBar(title: Text(context.tr('Événement'))),
+      appBar: AppBar(title: Text(context.tr('Événement')), actions: const [bellRoom]),
       body: ListView(
         padding: EdgeInsets.fromLTRB(16, 12, 16, 40 + MediaQuery.viewPaddingOf(context).bottom),
         children: [
