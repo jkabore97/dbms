@@ -860,6 +860,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
       : switch (_profile) {
           'farm' => context.tr('La ferme à la une, 7 jours'),
           'association' || 'church' => context.tr('L\'association à la une, 7 jours'),
+          'events' => context.tr('L\'événement à la une, 7 jours'),
           _ => context.tr('La boutique à la une, 7 jours'),
         };
 
@@ -1104,6 +1105,7 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
     final kindWord = switch (_profile) {
       'farm' => context.tr('La ferme'),
       'association' || 'church' => context.tr('L\'association'),
+      'events' => context.tr('Vos événements'),
       _ => context.tr('La boutique'),
     };
     final price = _priceText();

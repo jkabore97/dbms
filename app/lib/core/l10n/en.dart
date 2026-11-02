@@ -9177,4 +9177,14 @@ const enStrings = <String, String>{
       'You approve each photo before the guests see it.',
   'Photo validée':
       'Photo approved',
+  'L’événement à la une, 7 jours':
+      'The event in the spotlight, 7 days',
+  'L\'événement à la une, 7 jours':
+      'The event in the spotlight, 7 days',
+  'Vos événements':
+      'Your events',
+  'Vos événements publics en tête de « Événements », sur la rue de Marakaj, marqués « Sponsorisé ».':
+      'Your public events at the top of “Events” on Marakaj’s street, marked “Sponsored”.',
+  'Vos événements en tête de la rue':
+      'Your events at the top of the street',
 };

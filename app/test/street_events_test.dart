@@ -151,4 +151,13 @@ void main() {
     expect(find.text('Cet événement n’est plus sur la rue.'), findsOneWidget);
     expect(find.byKey(const Key('event-vitrine-book')), findsNothing);
   });
+
+  testWidgets('165: a sponsored event says so on the street', (tester) async {
+    final sponsored = StreetEvent.fromJson({
+      'slug': 'gala-ab12', 'title': 'Gala', 'kind': 'gala', 'starts_at': DateTime(2026, 11, 9, 20).toUtc().toIso8601String(),
+      'tickets': false, 'sponsored': true,
+    });
+    await _pump(tester, StreetEventsStrip(storefront: _Street([sponsored, _party]), capture: CaptureRepository(null, db: db), now: () => _now));
+    expect(find.text('Sponsorisé'), findsOneWidget);
+  });
 }

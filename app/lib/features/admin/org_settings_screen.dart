@@ -793,7 +793,10 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
 
   /// The order a new business is walked through: the articles first —
   /// a vitrine is its shelf — then the name, the window, the pin.
-  static const _flow = [_Part.articles, _Part.identity, _Part.vitrine, _Part.position];
+  /// An Événementiel has no shelf, no window, no pin: its name alone.
+  List<_Part> get _flow => _events
+      ? const [_Part.identity]
+      : const [_Part.articles, _Part.identity, _Part.vitrine, _Part.position];
 
   _Part? get _next {
     final i = _flow.indexOf(_saved ?? _Part.articles);
@@ -2126,6 +2129,12 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         : [..._delivery(theme), ..._saveBar(theme)],
     _Part.position => [..._position(theme), ..._saveBar(theme)],
     _Part.team => _team(theme),
+    _Part.promote => [
+        Text(context.tr('Vos événements publics en tête de « Événements », sur la rue de Marakaj, marqués « Sponsorisé ».'),
+            style: theme.textTheme.bodyMedium),
+        const SizedBox(height: 12),
+        SpotsCard(orgId: widget.orgId, admin: widget.admin, retail: widget.retail, vitrineOnly: true),
+      ],
     _Part.platform => _platform(theme),
   };
 
@@ -2190,6 +2199,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
                   : '${base.isEmpty ? '0' : base} $money + ${perKm.isEmpty ? '0' : perKm} $money/km',
           '${reach.isEmpty ? '15' : reach} km',
         ].join(' · ');
+      case _Part.promote:
+        return context.tr('Vos événements en tête de la rue');
       case _Part.team:
         return _lockRule == null
             ? context.tr('Aucune règle de verrouillage')
@@ -2225,6 +2236,10 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
 
   bool get _association => _profile == 'association' || _profile == 'church';
 
+  /// An Événementiel (153): its cards, not a shop — no articles, vitrine,
+  /// position, delivery or the shop team's access levels.
+  bool get _events => _profile == 'events';
+
   /// An association offers services, not articles (098): « Vos services ».
   /// The position is the business's own place, said as the owner says it
   /// (108): « La position de ma boutique », de ma ferme, de mon association.
@@ -2259,7 +2274,15 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
     };
   }
 
-  List<_Part> get _parts => [
+  List<_Part> get _parts => _events
+      ? [
+          _Part.identity,
+          if (_waveAllowed) _Part.payments,
+          if (!_hidden('spots') && sellsSpotsInApp) _Part.promote,
+          _Part.team,
+          if (widget.canSetPlan || widget.canSuspend) _Part.platform,
+        ]
+      : [
     _Part.articles,
     _Part.identity,
     _Part.vitrine,
@@ -2331,7 +2354,9 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
           ],
         ),
         // Mara Pro (081, 031): delivery and the team's access, apart and
-        // badged — not part of a new business's first steps.
+        // badged — not part of a new business's first steps. Neither is an
+        // Événementiel's: its team's roles are per event (163).
+        if (!_events) ...[
         const SizedBox(height: 24),
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 8),
@@ -2379,6 +2404,7 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
             ),
           ],
         ),
+        ],
         if (_parts.contains(_Part.platform)) ...[
           const SizedBox(height: 24),
           Padding(
@@ -2509,6 +2535,8 @@ enum _Part {
   delivery('Livraison', Icons.delivery_dining_outlined, 'livraison'),
   position('Position', Icons.place_outlined, 'position'),
   team("Sécurité de l'équipe", Icons.shield_outlined, 'equipe'),
+  // An Événementiel's way onto the street's head (« Mettre en avant »).
+  promote('Mettre en avant', Icons.campaign_outlined, 'promotion'),
   platform('Formule et modération', Icons.admin_panel_settings_outlined, 'plateforme');
 
   const _Part(this.label, this.icon, this.key);
