@@ -116,3 +116,6 @@ body.editing .slot[data-pic]::before{content:"Toucher : remplacer · Glisser : r
 .ed-font{min-height:38px;border:1px solid #ccc;border-radius:10px;padding:0 8px;font:500 14px system-ui,sans-serif;background:#fff;color:#111;flex:1 1 140px}
 /* the models' ornaments let the organiser's taps through to the words */
 body.editing .card *::before,body.editing .card *::after{pointer-events:none}
+/* a card that sells tickets (161) */
+.tickets{margin:8px 0 4px}
+.tickets p{margin:0 0 14px}
