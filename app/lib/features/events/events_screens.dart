@@ -835,6 +835,20 @@ class _EventScreenState extends State<EventScreen> {
                         value: e.rsvpOn,
                         onChanged: (v) => _run(() => widget.events.setRsvpOn(e.id, v)),
                       ),
+                      // Public or private (162): on the street's
+                      // « Événements », or only for those with the link.
+                      SwitchListTile(
+                        key: const Key('event-listed'),
+                        title: Text(context.tr('Événement public')),
+                        subtitle: Text(e.published
+                            ? context.tr('Dans « Événements » sur la rue de Marakaj, jusqu’à sa fin. Sinon, seuls ceux qui ont le lien le voient.')
+                            : context.tr('Publiez d’abord la carte.')),
+                        value: e.listed && e.published,
+                        onChanged: !e.published || e.startsAt == null
+                            ? null
+                            : (v) => _run(() => widget.events.setListed(e.id, v),
+                                done: v ? context.tr('Sur la rue, dans « Événements »') : context.tr('Retiré de la rue')),
+                      ),
                       // The guests' album (155): open, the card takes their
                       // pictures; closed, it says so and takes none.
                       SwitchListTile(

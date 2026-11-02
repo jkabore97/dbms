@@ -98,6 +98,11 @@ class _Events extends EventsRepository {
 
   @override
   Future<List<EventPicture>> pictures(String eventId) async => const [];
+
+  final listed = <bool>[];
+
+  @override
+  Future<void> setListed(String id, bool on) async => listed.add(on);
 }
 
 final _event = EventSummary(
@@ -258,5 +263,16 @@ void main() {
     expect(t.calls.last, 'sync:$_ticket2');
     expect(find.byKey(const Key('door-send')), findsNothing);
     expect(await t.keptScans('e1'), isEmpty);
+  });
+
+  testWidgets('162: « Événement public » puts a published card on the street', (tester) async {
+    final events = _Events(_Tickets()..may = false);
+    await _pump(tester, EventScreen(events: events, org: _org, eventId: 'e1'));
+    await tester.ensureVisible(find.byKey(const Key('event-listed')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('event-listed')));
+    await tester.pumpAndSettle();
+    expect(events.listed, [true]);
+    expect(find.text('Sur la rue, dans « Événements »'), findsOneWidget);
   });
 }

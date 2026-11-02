@@ -1,0 +1,154 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:kaj_app/core/capture/capture_repository.dart';
+import 'package:kaj_app/core/db/local_db.dart';
+import 'package:kaj_app/core/events/street_event.dart';
+import 'package:kaj_app/core/storefront/storefront_repository.dart';
+import 'package:kaj_app/features/storefront/street_events.dart';
+import 'package:kaj_app/l10n/strings.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
+/// 162 in the app: the street's « Événements » strip — nothing when there
+/// is no event — and one event's page: how far off, the tickets and their
+/// places, « Réserver », the invitation, WhatsApp, share.
+class _Street extends StorefrontRepository {
+  _Street(this.list, {this.one}) : super(null);
+
+  final List<StreetEvent> list;
+  final StreetEvent? one;
+
+  @override
+  Future<List<StreetEvent>> streetEvents() async => list;
+
+  @override
+  Future<StreetEvent?> streetEvent(String slug) async => one;
+}
+
+final _now = DateTime(2026, 11, 2, 10);
+
+StreetEvent _concert({bool full = false}) => StreetEvent.fromJson({
+      'slug': 'concert-fatim-ab12',
+      'title': 'Concert Fatim',
+      'kind': 'concert',
+      'starts_at': DateTime(2026, 11, 5, 20).toUtc().toIso8601String(),
+      'date_fr': 'jeudi 5 novembre à 20 h',
+      'place': 'CENASA',
+      'org_name': 'Awa Concerts',
+      'tickets': true,
+      'from_price': 2000,
+      'currency': 'XOF',
+      'pay_whatsapp': '+226 70 00 00 01',
+      if (full)
+        'offer': {
+          'open': true,
+          'types': [
+            {'name': 'Standard', 'price': 2000, 'left': 12},
+            {'name': 'VIP', 'price': 10000, 'left': 0},
+          ],
+        },
+    });
+
+final _party = StreetEvent.fromJson({
+  'slug': 'fete-ab12',
+  'title': 'Fête du quartier',
+  'kind': 'anniversaire',
+  'starts_at': DateTime(2026, 11, 2, 19).toUtc().toIso8601String(),
+  'date_fr': 'lundi 2 novembre à 19 h',
+  'tickets': false,
+});
+
+Future<void> _pump(WidgetTester tester, Widget home) async {
+  tester.view.physicalSize = const Size(420, 900);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.reset);
+  await tester.pumpWidget(MaterialApp(
+    locale: const Locale('fr'),
+    localizationsDelegates: Strings.localizationsDelegates,
+    supportedLocales: Strings.supportedLocales,
+    home: Scaffold(body: home),
+  ));
+  await tester.pumpAndSettle();
+}
+
+void main() {
+  setUpAll(() async {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+    await initializeDateFormatting('fr_FR', null);
+  });
+
+  late LocalDb db;
+  setUp(() async => db = await LocalDb.open(path: inMemoryDatabasePath));
+  tearDown(() => db.close());
+
+  test('how far off: in progress, today, tomorrow, in n days', () {
+    expect(eventCountdown(DateTime(2026, 11, 2, 9), _now).phrase, 'En cours');
+    expect(eventCountdown(DateTime(2026, 11, 2, 22), _now).phrase, 'Aujourd’hui');
+    expect(eventCountdown(DateTime(2026, 11, 3, 1), _now).phrase, 'Demain');
+    final c = eventCountdown(DateTime(2026, 11, 5, 20), _now);
+    expect((c.phrase, c.n), ('Dans {n} j', 3));
+  });
+
+  testWidgets('no event: no strip at all', (tester) async {
+    await _pump(tester, StreetEventsStrip(storefront: _Street(const []), capture: CaptureRepository(null, db: db)));
+    expect(find.byKey(const Key('street-events')), findsNothing);
+    expect(find.text('Événements'), findsNothing);
+  });
+
+  testWidgets('the strip: each event with how far off, the date and from what price; a tap opens its page',
+      (tester) async {
+    final street = _Street([_party, _concert()], one: _concert(full: true));
+    await _pump(tester, StreetEventsStrip(storefront: street, capture: CaptureRepository(null, db: db), now: () => _now));
+    expect(find.text('ÉVÉNEMENTS'), findsOneWidget);
+    expect(find.text('Aujourd’hui'), findsOneWidget);
+    expect(find.text('Dans 3 j'), findsOneWidget);
+    expect(find.text('Entrée libre'), findsOneWidget);
+    expect(find.textContaining('Billets dès 2'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('street-event-concert-fatim-ab12')));
+    await tester.pumpAndSettle();
+    expect(find.text('Concert Fatim'), findsOneWidget);
+    expect(find.text('Organisé par Awa Concerts'), findsOneWidget);
+    expect(find.text('12 places'), findsOneWidget);
+    expect(find.text('Complet'), findsOneWidget);
+  });
+
+  testWidgets('the event page: « Réserver » opens the tickets, the invitation, WhatsApp, share', (tester) async {
+    final opened = <Uri>[];
+    final shared = <String>[];
+    await _pump(
+      tester,
+      EventVitrineScreen(
+        storefront: _Street(const [], one: _concert(full: true)),
+        capture: CaptureRepository(null, db: db),
+        first: _concert(),
+        now: () => _now,
+        open: (u) async => opened.add(u),
+        share: (t) async => shared.add(t),
+      ),
+    );
+    expect(find.text('DANS 3 J'), findsOneWidget);
+    expect(find.text('Le paiement se fait directement à l’organisateur. Marakaj n’encaisse rien.'), findsOneWidget);
+    for (final k in ['event-vitrine-book', 'event-vitrine-card', 'event-vitrine-wa', 'event-vitrine-share']) {
+      await tester.ensureVisible(find.byKey(Key(k)));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(Key(k)));
+      await tester.pumpAndSettle();
+    }
+    expect(opened[0].path, '/e/concert-fatim-ab12/billets');
+    expect(opened[1].path, '/e/concert-fatim-ab12');
+    expect(opened[2].host, 'wa.me');
+    expect(opened[2].path, '/22670000001');
+    expect(shared.single, contains('https://marakaj.com/e/concert-fatim-ab12'));
+  });
+
+  testWidgets('an event no longer on the street says so; no « Réserver »', (tester) async {
+    await _pump(
+      tester,
+      EventVitrineScreen(storefront: _Street(const []), capture: CaptureRepository(null, db: db), first: _concert(), now: () => _now),
+    );
+    expect(find.text('Cet événement n’est plus sur la rue.'), findsOneWidget);
+    expect(find.byKey(const Key('event-vitrine-book')), findsNothing);
+  });
+}
