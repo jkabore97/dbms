@@ -670,6 +670,9 @@ begin
         revoke execute on function event_ticket_taken(uuid) from anon;
         revoke execute on function events_tickets_guard() from anon;
         revoke execute on function event_ticket_status_of(event_ticket_requests) from anon;
+        -- Supabase's default rights on a new table are wide: the street
+        -- reaches tickets only through the functions above.
+        revoke all on event_ticket_types, event_ticket_requests, event_ticket_lines, event_tickets from anon;
         grant execute on function event_ticket_offer(text, text) to anon;
         grant execute on function event_ticket_request(text, text, text, text, jsonb, text) to anon;
         grant execute on function event_ticket_status(uuid) to anon;
@@ -689,6 +692,8 @@ begin
         grant execute on function event_ticket_claim(uuid) to authenticated;
         grant execute on function my_event_tickets() to authenticated;
         grant execute on function event_tickets_ready(uuid) to authenticated;
+        -- Requests and tickets are written by the functions alone.
+        revoke all on event_ticket_requests, event_ticket_lines, event_tickets from authenticated;
         -- The organiser lays out the sale from the app (RLS: its admins).
         grant select, insert, update, delete on event_ticket_types to authenticated;
         grant select on event_ticket_requests, event_ticket_lines, event_tickets to authenticated;
