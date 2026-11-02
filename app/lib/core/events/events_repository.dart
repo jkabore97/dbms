@@ -164,6 +164,11 @@ class EventsRepository {
   }
 
   /// The guests' album open or closed (155).
+  /// On the street's « Événements » or not (162); a draft never is.
+  Future<void> setListed(String id, bool on) async {
+    await _require().from('events').update({'listed': on}).eq('id', id);
+  }
+
   Future<void> setAlbumOn(String id, bool on) async {
     await _require().from('events').update({'album_on': on}).eq('id', id);
   }
@@ -408,6 +413,7 @@ class EventSummary {
     required this.albumOn,
     required this.published,
     required this.createdAt,
+    this.listed = false,
   });
 
   factory EventSummary.fromJson(Map<String, dynamic> j) => EventSummary(
@@ -426,6 +432,7 @@ class EventSummary {
         albumOn: (j['album_on'] as bool?) ?? true,
         published: (j['published'] as bool?) ?? false,
         createdAt: DateTime.tryParse('${j['created_at']}')?.toLocal() ?? DateTime.now(),
+        listed: (j['listed'] as bool?) ?? false,
       );
 
   final String id;
@@ -446,6 +453,9 @@ class EventSummary {
   final bool albumOn;
   final bool published;
   final DateTime createdAt;
+
+  /// On the street's « Événements » (162): public, not just by its link.
+  final bool listed;
 
   /// The card's address on the site, for the guests.
   String get publicPath => '/e/$slug';

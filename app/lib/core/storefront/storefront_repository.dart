@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart' show listEquals;
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../events/street_event.dart';
+
 import '../orders/booking.dart' show BookingCancelTerms;
 import '../orders/orders.dart';
 import '../site/site.dart';
@@ -520,6 +522,26 @@ class StorefrontRepository {
         .map((r) =>
             DirectoryEntry.fromRow(Map<String, dynamic>.from(r as Map)))
         .toList();
+  }
+
+  /// The public events (162), soonest first: the street's « Événements ».
+  /// A failure, or a database before 162, is no event — never an error.
+  Future<List<StreetEvent>> streetEvents() async {
+    final client = _client;
+    if (client == null) return const [];
+    try {
+      final rows = await client.rpc('street_events') as List<dynamic>? ?? const [];
+      return [for (final r in rows) StreetEvent.fromJson(Map<String, dynamic>.from(r as Map))];
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  /// One public event (162), with its ticket offer; null when it is not
+  /// (or no longer) on the street.
+  Future<StreetEvent?> streetEvent(String slug) async {
+    final r = await _requireClient().rpc('street_event', params: {'p_slug': slug});
+    return r == null ? null : StreetEvent.fromJson(Map<String, dynamic>.from(r as Map));
   }
 
   Future<Set<String>>? _showcases;

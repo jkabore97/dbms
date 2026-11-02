@@ -9031,4 +9031,38 @@ const enStrings = <String, String>{
       'Orange Money',
   'Moov Money':
       'Moov Money',
+  'Entrée libre':
+      'Free entry',
+  'Billets en vente':
+      'Tickets on sale',
+  'Billets dès {price}':
+      'Tickets from {price}',
+  'Bonjour, au sujet de « {title} ».':
+      'Hello, about “{title}”.',
+  'Organisé par {name}':
+      'Organised by {name}',
+  'Cet événement n’est plus sur la rue.':
+      'This event is no longer on the street.',
+  'Réserver mes billets':
+      'Book my tickets',
+  'Vente terminée':
+      'Sales closed',
+  'Voir l’invitation':
+      'See the invitation',
+  'Événement':
+      'Event',
+  'Événement public':
+      'Public event',
+  'Dans « Événements » sur la rue de Marakaj, jusqu’à sa fin. Sinon, seuls ceux qui ont le lien le voient.':
+      'In “Events” on Marakaj’s street until it ends. Otherwise only people with the link see it.',
+  'Publiez d’abord la carte.':
+      'Publish the card first.',
+  'Sur la rue, dans « Événements »':
+      'On the street, in “Events”',
+  'Retiré de la rue':
+      'Taken off the street',
+  'Aujourd’hui':
+      'Today',
+  'Dans {n} j':
+      'In {n} d',
 };

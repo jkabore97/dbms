@@ -24,6 +24,7 @@ import 'directory_map.dart' deferred as street_map;
 import 'lazy_photo.dart';
 import 'shop_skeleton.dart';
 import 'open_badge.dart';
+import 'street_events.dart';
 import 'shop_style.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
@@ -549,6 +550,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       onPressed: _load, child: Text(context.tr('Réessayer'))),
                 )
               : _Street(
+                  // The public events (162), in their own strip.
+                  events: StreetEventsStrip(storefront: widget.storefront, capture: widget.capture),
                   // « Créer mon activité » (134), at the top of the list,
                   // for anybody with no business, signed in or not —
                   // until closed on this device, or a business is theirs.
@@ -803,6 +806,7 @@ class _AccountCorner extends StatelessWidget {
 class _Street extends StatelessWidget {
   const _Street({
     this.invite,
+    this.events,
     required this.entries,
     required this.previews,
     required this.featured,
@@ -834,6 +838,9 @@ class _Street extends StatelessWidget {
   /// « Créer mon activité » (134), first in the list; null or empty for
   /// whoever has a business.
   final Widget? invite;
+
+  /// « Événements » (162): the public events, before the paid spots.
+  final Widget? events;
   final List<DirectoryEntry> entries;
   final Map<String, List<ShopPreview>> previews;
   final List<FeaturedItem> featured;
@@ -990,6 +997,7 @@ class _Street extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ?invite,
+              ?events,
               // The paid spots, when there are any: a strip, not the page.
               if (featured.isNotEmpty) ...[
                 const SizedBox(height: 32),
