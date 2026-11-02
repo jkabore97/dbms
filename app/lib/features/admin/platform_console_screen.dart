@@ -338,7 +338,36 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
             builder: (_) => DeleteBusinessDialog(org: org.toPlatformOrg()),
           );
           if (confirmed != true) return;
-          await widget.admin.deleteOrg(orgId: org.id, confirmName: org.name);
+          try {
+            await widget.admin.deleteOrg(orgId: org.id, confirmName: org.name);
+          } catch (error) {
+            // A business with books (an association's contributions, a
+            // shop's sales): the server asks for a second, explicit act,
+            // and says how many entries it would destroy. The console never
+            // gave it, so such a business could not be deleted at all.
+            final books = RegExp(r'has (\d+) entries in its books').firstMatch('$error');
+            if (books == null || !mounted) rethrow;
+            final also = await showDialog<bool>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: Text(context.tr('Ses comptes aussi ?')),
+                content: Text(context.tr(
+                    '{name} a {n} écriture(s) dans ses comptes. Les supprimer définitivement avec l’activité ?',
+                    {'name': org.name, 'n': books.group(1)})),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.tr('Annuler'))),
+                  FilledButton(
+                    key: const Key('console-delete-books'),
+                    style: FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error),
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: Text(context.tr('Supprimer aussi les comptes')),
+                  ),
+                ],
+              ),
+            );
+            if (also != true) return;
+            await widget.admin.deleteOrg(orgId: org.id, confirmName: org.name, force: true);
+          }
       }
       if (mounted) await _load();
     } catch (error) {
