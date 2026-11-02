@@ -3377,7 +3377,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
       }).then(function (res) {
         if (btn) btn.disabled = false;
         if (typeof res === 'string') { out.textContent = res; return; }
-        PASS = res && res.id; if (PASS) document.body.dataset.pass = PASS;
+        PASS = res && res.id; if (PASS) { document.body.dataset.pass = PASS; try { localStorage.setItem('mk-pass-' + SERVER.slug, PASS); } catch (e2) {} }
         out.textContent = thanks;
         if (ans === 'yes') { document.getElementById('passName').textContent = nm; qr(nm); }
         if (btn) btn.disabled = true;
@@ -3685,5 +3685,94 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
 })();
 </script>
 
+<style>
+.album-anime{max-width:980px;margin:0 auto;padding:64px 20px 80px;text-align:center}
+.album-anime h2{font-family:"Cormorant Garamond",serif;font-weight:500;font-size:clamp(30px,6vw,44px);margin:0 0 8px;color:var(--deep)}
+.album-anime p{margin:0 auto 18px;max-width:520px;line-height:1.6}
+.album-anime .who{display:block;max-width:320px;margin:0 auto 14px;text-align:left;font-size:13px}
+.album-anime .who input{width:100%;margin-top:6px;padding:12px 14px;border:1px solid var(--soft);border-radius:12px;background:transparent;color:var(--ink);font:inherit}
+.album-anime .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:26px}
+.album-anime figure{margin:0;position:relative;aspect-ratio:1;overflow:hidden;border-radius:14px;background:var(--soft)}
+.album-anime img{width:100%;height:100%;object-fit:cover;display:block}
+.album-anime figcaption{position:absolute;left:0;right:0;bottom:0;padding:6px 8px;font-size:12px;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.55));text-align:left}
+.album-anime .say{min-height:22px;margin-top:12px;font-size:14px}
+body.has-album #site > footer.f{display:none}
+</style>
+<script>
+(function () {
+  var S = (window.CARTE && typeof window.CARTE === 'object' && window.CARTE.slug) ? window.CARTE : null;
+  if (!S || S.demo || S.editor || S.album_on === false || !S.uploads || !S.api || !S.api.url) return;
+  var api = S.api.url.replace(/\/+$/, ''), H = {apikey: S.api.key, Authorization: 'Bearer ' + S.api.key, 'Content-Type': 'application/json'};
+  var pic = function (k) { return S.uploads + '/v1/public/objects/' + encodeURIComponent(k); };
+  var sec = document.createElement('section');
+  sec.className = 'album-anime'; sec.id = 'album';
+  sec.innerHTML = '<h2>Vos photos</h2><p class="lead">Ajoutez les photos que vous prenez : elles rejoignent l\u2019album de l\u2019\u00e9v\u00e9nement, sous votre pr\u00e9nom.</p>'
+    + '<label class="who">Votre nom (sous la photo)<input name="who" maxlength="60" placeholder="Nora"></label>'
+    + '<label class="btn solid">Ajouter des photos<input type="file" accept="image/*" multiple hidden></label>'
+    + '<div class="say" role="status"></div><div class="grid"></div>';
+  document.body.appendChild(sec);
+  // The page's foot under the album, not above it: the drawn page keeps
+  // its own (hidden), redrawn as it likes.
+  var foot = document.querySelector('#site > footer.f');
+  if (foot) { var f2 = foot.cloneNode(true); document.body.appendChild(f2); document.body.classList.add('has-album'); }
+  var grid = sec.querySelector('.grid'), say = sec.querySelector('.say'), lead = sec.querySelector('.lead');
+  var input = sec.querySelector('input[type=file]'), who = sec.querySelector('input[name=who]');
+  var rules = {review: false, limit: false};
+  var fig = function (src, name) {
+    var f = document.createElement('figure'), i = new Image(); i.src = src; i.alt = ''; i.loading = 'lazy'; f.appendChild(i);
+    var c = document.createElement('figcaption'); c.textContent = name || 'Un invit\u00e9'; f.appendChild(c); return f;
+  };
+  var pass = function () {
+    if (document.body.dataset.pass) return document.body.dataset.pass;
+    try { var p = localStorage.getItem('mk-pass-' + S.slug); if (p) return p; } catch (e) {}
+    try { var b = JSON.parse(localStorage.getItem('mk-billets') || '[]'); for (var i = b.length - 1; i >= 0; i--) if (b[i] && b[i].slug === S.slug && b[i].id) return b[i].id; } catch (e) {}
+    return '';
+  };
+  var post = function (fn, body) { return fetch(api + '/rest/v1/rpc/' + fn, {method: 'POST', headers: H, body: JSON.stringify(body)}).then(function (r) { return r.ok ? r.json() : null; }); };
+  post('event_album_rules', {p_slug: S.slug, p_preview: S.preview || null}).then(function (j) {
+    if (!j) return; rules = j; var t = [];
+    if (j.limit) t.push((j.per_pass || 5) + ' photos par invit\u00e9 : r\u00e9pondez d\u2019abord \u00e0 l\u2019invitation (ou r\u00e9servez votre billet) sur ce t\u00e9l\u00e9phone.');
+    if (j.review) t.push('Elles apparaissent une fois valid\u00e9es par l\u2019organisateur.');
+    if (t.length) lead.textContent = t.join(' ');
+  }).catch(function () {});
+  post('event_album', {p_slug: S.slug, p_preview: S.preview || null}).then(function (list) {
+    (Array.isArray(list) ? list : []).forEach(function (p) { if (p && p.key) grid.appendChild(fig(pic(p.key) + '?w=400', p.guest)); });
+  }).catch(function () {});
+  var shrink = function (file, done) {
+    var img = new Image(), url = URL.createObjectURL(file);
+    img.onload = function () {
+      var m = 1400, w = img.naturalWidth, h = img.naturalHeight, k = Math.min(1, m / Math.max(w, h));
+      var c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+      c.toBlob(function (b) { done(b, c.toDataURL('image/jpeg', .7)); }, 'image/jpeg', .82);
+    };
+    img.onerror = function () { done(null); }; img.src = url;
+  };
+  var send = function (file) {
+    return new Promise(function (res) {
+      if (!file.type || file.type.indexOf('image/') !== 0) return res(null);
+      var name = who.value.trim();
+      shrink(file, function (blob, src) {
+        if (!blob) return res(null);
+        fetch(S.uploads + '/v1/events/' + encodeURIComponent(S.slug) + '/album?apercu=' + encodeURIComponent(S.preview || '') + '&invite=' + encodeURIComponent(name) + '&pass=' + encodeURIComponent(pass()), {
+          method: 'POST', headers: {'Content-Type': 'image/jpeg'}, body: blob
+        }).then(function (r) { return r.json().then(function (j) { if (!r.ok || !j || !j.key) throw new Error(j && j.error ? j.error : 'La photo n\u2019est pas pass\u00e9e. R\u00e9essayez.'); return j; }); })
+          .then(function (j) { if (!rules.review) grid.insertBefore(fig(src, name), grid.firstChild); res(j); },
+                function (e) { say.textContent = e && e.message ? e.message : 'La photo n\u2019est pas pass\u00e9e. R\u00e9essayez.'; res(null); });
+      });
+    });
+  };
+  input.addEventListener('change', function () {
+    var files = Array.prototype.slice.call(input.files); input.value = '';
+    if (!files.length) return;
+    say.textContent = files.length > 1 ? 'Envoi des photos\u2026' : 'Envoi de la photo\u2026';
+    Promise.all(files.map(send)).then(function (r) {
+      var k = r.filter(Boolean).length; if (!k) return;
+      say.textContent = rules.review ? (k > 1 ? k + ' photos envoy\u00e9es : visibles apr\u00e8s validation' : 'Photo envoy\u00e9e : visible apr\u00e8s validation')
+                                    : (k > 1 ? k + ' photos ajout\u00e9es \u00e0 l\u2019album' : 'Photo ajout\u00e9e \u00e0 l\u2019album');
+    });
+  });
+})();
+</script>
 </body>
 </html>

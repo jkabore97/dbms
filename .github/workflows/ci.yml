@@ -321,6 +321,18 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch162.sql
 
+      # An event's team, refunds, door sales, report, journal (163).
+      - name: Prove an event's team reaches only its role's doors, and the journal keeps every act
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch163.sql
+
+      # The guests' album as a Pro option (164): five per pass, the yes.
+      - name: Prove the album is Pro once the switch is on, five photos a pass, shown after the organiser's yes
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch164.sql
+
       # The bell: the right people hear the right events and nobody else,
       # a threshold rings on the crossing rather than on every sale below
       # it, and the neighbour hears nothing at all.

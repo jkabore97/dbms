@@ -25,6 +25,8 @@ import 'lazy_photo.dart';
 import 'shop_skeleton.dart';
 import 'open_badge.dart';
 import 'street_events.dart';
+import 'my_tickets_screens.dart';
+import '../../core/events/my_tickets.dart';
 import 'shop_style.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
@@ -58,9 +60,14 @@ class DirectoryScreen extends StatefulWidget {
     required this.capture,
     required this.session,
     this.shopper,
+    this.tickets,
   });
 
   final StorefrontRepository storefront;
+
+  /// The buyer's tickets on this phone (part 4): the slim bar over the
+  /// street. Null: no bar.
+  final MyTicketsStore? tickets;
 
   /// The shopper's follows (113), for the ♥ on each card. Null: no hearts.
   final ShopperRepository? shopper;
@@ -541,7 +548,15 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       brand: const MaraWordmark(key: Key('mara-header'), height: 34),
       announcements: ShopPage.street,
       trailing: _AccountCorner(session: widget.session),
-      body: _loading
+      body: widget.tickets == null ? _body(context) : Column(children: [
+        StreetTicketsBar(store: widget.tickets!),
+        Expanded(child: _body(context)),
+      ]),
+    );
+  }
+
+  Widget _body(BuildContext context) {
+    return _loading
           ? const ShopSkeleton.street()
           : _error != null
               ? ShopNotice(
@@ -592,8 +607,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   hunting: _hunting,
                   onSearchChanged: _onSearchChanged,
                   onClearSearch: _clearSearch,
-                ),
-    );
+                );
   }
 }
 

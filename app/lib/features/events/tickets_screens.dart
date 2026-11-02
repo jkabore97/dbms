@@ -10,6 +10,7 @@ import '../../core/notify/bell_room.dart';
 import '../../core/theme/kaj_card.dart';
 import '../capture/barcode_sheet.dart';
 import 'events_screens.dart' show openOutside, whatsappDigits;
+import 'tickets_team_screens.dart';
 
 /// Ticket sales (161), on the card's page: the three doors — the sale's
 /// setup, the requests to validate, the door. Shown only to a business
@@ -60,7 +61,37 @@ class TicketsCard extends StatelessWidget {
           title: Text(context.tr('Contrôle à l’entrée')),
           subtitle: Text(context.tr('Scanner les billets, même sans réseau')),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () => go(TicketDoorScreen(tickets: tickets, event: event)),
+          onTap: () => go(TicketDoorScreen(tickets: tickets, event: event, canSell: true)),
+        ),
+        // 163: the event's team, its figures, its journal, its end.
+        ListTile(
+          key: const Key('tickets-team'),
+          leading: const Icon(Icons.badge_outlined),
+          title: Text(context.tr('Équipe de l’événement')),
+          subtitle: Text(context.tr('Billetterie, Contrôle, Lecture')),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => go(EventTeamScreen(tickets: tickets, event: event)),
+        ),
+        ListTile(
+          key: const Key('tickets-report'),
+          leading: const Icon(Icons.insights_outlined),
+          title: Text(context.tr('Bilan')),
+          subtitle: Text(context.tr('Vendu, encaissé, qui a validé, espèces par agent')),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => go(TicketReportScreen(tickets: tickets, eventId: event.id, title: event.title)),
+        ),
+        ListTile(
+          key: const Key('tickets-journal'),
+          leading: const Icon(Icons.history),
+          title: Text(context.tr('Journal')),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => go(TicketJournalScreen(tickets: tickets, eventId: event.id)),
+        ),
+        ListTile(
+          key: const Key('tickets-cancel'),
+          leading: Icon(Icons.event_busy_outlined, color: theme.colorScheme.error),
+          title: Text(context.tr('Annuler l’événement'), style: TextStyle(color: theme.colorScheme.error)),
+          onTap: () => cancelEvent(context, tickets, event, open: open),
         ),
       ]),
     );
@@ -546,35 +577,22 @@ class _TicketRequestsScreenState extends State<TicketRequestsScreen> {
     ..showSnackBar(SnackBar(content: Text(text)));
 
   Future<void> _decide(TicketRequest r, bool paid) async {
-    final note = TextEditingController();
-    final sure = await showDialog<bool>(
+    // The note's box belongs to the dialog: it lives until the dialog has
+    // finished leaving, never a frame less.
+    final text = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(paid ? context.tr('Paiement reçu ?') : context.tr('Refuser cette demande ?')),
-        content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(paid
-              ? context.tr('{total} de {name} : vérifiez sur votre téléphone que l’argent est bien arrivé. Les billets partent alors à l’acheteur.',
-                  {'total': moneyFormat(r.currency).format(r.total), 'name': r.name})
-              : context.tr('Ses places reviennent en vente.')),
-          TextField(
-            controller: note,
-            maxLength: 300,
-            decoration: InputDecoration(labelText: context.tr('Note (facultative)')),
-          ),
-        ]),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.tr('Annuler'))),
-          FilledButton(
-            key: const Key('ticket-decide-ok'),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(paid ? context.tr('Oui, payé') : context.tr('Refuser')),
-          ),
-        ],
+      builder: (ctx) => NoteDialog(
+        title: paid ? context.tr('Paiement reçu ?') : context.tr('Refuser cette demande ?'),
+        body: paid
+            ? context.tr('{total} de {name} : vérifiez sur votre téléphone que l’argent est bien arrivé. Les billets partent alors à l’acheteur.',
+                {'total': moneyFormat(r.currency).format(r.total), 'name': r.name})
+            : context.tr('Ses places reviennent en vente.'),
+        label: context.tr('Note (facultative)'),
+        confirm: paid ? context.tr('Oui, payé') : context.tr('Refuser'),
+        confirmKey: const Key('ticket-decide-ok'),
       ),
     );
-    final text = note.text.trim();
-    note.dispose();
-    if (sure != true || !mounted) return;
+    if (text == null || !mounted) return;
     setState(() => _busy.add(r.id));
     try {
       await widget.tickets.decide(r.id, paid: paid, note: text.isEmpty ? null : text);
@@ -582,6 +600,35 @@ class _TicketRequestsScreenState extends State<TicketRequestsScreen> {
       _say(paid ? context.tr('Validé : {n} billet(s) créé(s).', {'n': r.count}) : context.tr('Demande refusée'));
       await _load();
       if (paid && mounted) await _write(r, sendTickets: true);
+    } catch (e) {
+      if (mounted) _say(AuthRepository.describeError(e));
+    } finally {
+      if (mounted) setState(() => _busy.remove(r.id));
+    }
+  }
+
+  /// Refunded (163): the money given back from the organiser's phone; here
+  /// the tickets cancelled and the reversal in the books.
+  Future<void> _refund(TicketRequest r) async {
+    final sure = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(context.tr('Rembourser {ref} ?', {'ref': r.ref})),
+        content: Text(context.tr('Rendez d’abord {total} à {name} depuis votre téléphone. Ses billets sont alors annulés : la porte les refuse.',
+            {'total': moneyFormat(r.currency).format(r.total), 'name': r.name})),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.tr('Annuler'))),
+          FilledButton(key: const Key('ticket-refund-ok'), onPressed: () => Navigator.pop(ctx, true), child: Text(context.tr('Remboursé'))),
+        ],
+      ),
+    );
+    if (sure != true || !mounted) return;
+    setState(() => _busy.add(r.id));
+    try {
+      await widget.tickets.refund(r.id);
+      if (!mounted) return;
+      _say(context.tr('Remboursé : billets annulés.'));
+      await _load();
     } catch (e) {
       if (mounted) _say(AuthRepository.describeError(e));
     } finally {
@@ -708,6 +755,12 @@ class _TicketRequestsScreenState extends State<TicketRequestsScreen> {
                                 onPressed: _busy.contains(r.id) ? null : () => _decide(r, false),
                                 child: Text(context.tr('Refuser')),
                               ),
+                            if (r.status == 'paid')
+                              OutlinedButton(
+                                key: Key('ticket-refund-${r.id}'),
+                                onPressed: _busy.contains(r.id) ? null : () => _refund(r),
+                                child: Text(context.tr('Rembourser')),
+                              ),
                             TextButton.icon(
                               key: Key('ticket-wa-${r.id}'),
                               onPressed: () => _write(r),
@@ -754,10 +807,13 @@ class _Figure extends StatelessWidget {
 /// are sent once the signal is back — a ticket shown twice in the hall is
 /// reported then.
 class TicketDoorScreen extends StatefulWidget {
-  const TicketDoorScreen({super.key, required this.tickets, required this.event, this.scan});
+  const TicketDoorScreen({super.key, required this.tickets, required this.event, this.scan, this.canSell = false});
 
   final TicketsRepository tickets;
   final EventSummary event;
+
+  /// The door sells too (163): the admins and the billetterie.
+  final bool canSell;
 
   /// Reads a QR (the tests hand one); the camera by default.
   final Future<String?> Function(BuildContext context)? scan;
@@ -931,6 +987,16 @@ class _TicketDoorScreenState extends State<TicketDoorScreen> {
             icon: const Icon(Icons.qr_code_scanner),
             label: Text(context.tr('Scanner un billet')),
           ),
+          if (widget.canSell) ...[
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              key: const Key('door-sell'),
+              style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+              onPressed: _busy ? null : () => showDoorSale(context, widget.tickets, widget.event.id),
+              icon: const Icon(Icons.payments_outlined),
+              label: Text(context.tr('Vendre à l’entrée')),
+            ),
+          ],
           const SizedBox(height: 18),
           KajCard(
             child: Padding(
@@ -969,6 +1035,65 @@ class _TicketDoorScreenState extends State<TicketDoorScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// A question with an optional note (161, 163): the note's text back when
+/// confirmed (empty when none was written), null when left. The dialog
+/// owns its text box, so the box outlives the dialog's exit animation.
+class NoteDialog extends StatefulWidget {
+  const NoteDialog({
+    super.key,
+    required this.title,
+    required this.body,
+    required this.label,
+    required this.confirm,
+    this.confirmKey,
+    this.cancel,
+    this.danger = false,
+  });
+
+  final String title;
+  final String body;
+  final String label;
+  final String confirm;
+  final Key? confirmKey;
+  final String? cancel;
+  final bool danger;
+
+  @override
+  State<NoteDialog> createState() => _NoteDialogState();
+}
+
+class _NoteDialogState extends State<NoteDialog> {
+  final _note = TextEditingController();
+
+  @override
+  void dispose() {
+    _note.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.title),
+      content: SingleChildScrollView(
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(widget.body),
+          TextField(controller: _note, maxLength: 300, decoration: InputDecoration(labelText: widget.label)),
+        ]),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(widget.cancel ?? context.tr('Annuler'))),
+        FilledButton(
+          key: widget.confirmKey,
+          style: widget.danger ? FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error) : null,
+          onPressed: () => Navigator.pop(context, _note.text.trim()),
+          child: Text(widget.confirm),
+        ),
+      ],
     );
   }
 }

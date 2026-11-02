@@ -617,6 +617,34 @@
       var meta = box.querySelectorAll('.album-meta > span');
       if (meta.length > 1) meta[meta.length - 1].textContent = 'Visibles par tous les invités';
       var headers = { apikey: SERVER.api.key, Authorization: 'Bearer ' + SERVER.api.key, 'Content-Type': 'application/json' };
+      // The guest's pass (164): their answer on this card (158), or the
+      // tickets this browser booked for it (161) — five photos each when
+      // the organiser limits the album.
+      var passFor = function () {
+        try {
+          var f = document.querySelector('form.rsvp');
+          var saved = f && JSON.parse(localStorage.getItem('rsvp-' + (f.getAttribute('data-key') || '')) || 'null');
+          if (saved && saved.pass && saved.rep !== 'non') return saved.pass;
+        } catch (e) {}
+        try {
+          var b = JSON.parse(localStorage.getItem('mk-billets') || '[]');
+          for (var i = b.length - 1; i >= 0; i--) if (b[i] && b[i].slug === SERVER.slug && b[i].id) return b[i].id;
+        } catch (e) {}
+        return '';
+      };
+      var rules = { review: false, limit: false };
+      fetch(SERVER.api.url.replace(/\/+$/, '') + '/rest/v1/rpc/event_album_rules', {
+        method: 'POST', headers: headers,
+        body: JSON.stringify({ p_slug: SERVER.slug, p_preview: SERVER.preview || null })
+      }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+        if (!j) return;
+        rules = j;
+        var said = [];
+        if (j.limit) said.push((j.per_pass || 5) + ' photos par invité : répondez d’abord à l’invitation (ou réservez votre billet) sur ce téléphone.');
+        if (j.review) said.push('Elles apparaissent dans l’album une fois validées par l’organisateur.');
+        if (said.length && note) note.textContent = said.join(' ');
+        if (j.review && meta.length > 1) meta[meta.length - 1].textContent = 'Validées par l’organisateur';
+      }).catch(function () {});
       fetch(SERVER.api.url.replace(/\/+$/, '') + '/rest/v1/rpc/event_album', {
         method: 'POST', headers: headers,
         body: JSON.stringify({ p_slug: SERVER.slug, p_preview: SERVER.preview || null })
@@ -632,7 +660,7 @@
         return new Promise(function (res) {
           shrink(file, 1400, function (src, canvas) {
             canvas.toBlob(function (blob) {
-              fetch(SERVER.uploads + '/v1/events/' + encodeURIComponent(SERVER.slug) + '/album?apercu=' + encodeURIComponent(SERVER.preview || '') + '&invite=' + encodeURIComponent(name), {
+              fetch(SERVER.uploads + '/v1/events/' + encodeURIComponent(SERVER.slug) + '/album?apercu=' + encodeURIComponent(SERVER.preview || '') + '&invite=' + encodeURIComponent(name) + '&pass=' + encodeURIComponent(passFor()), {
                 method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob
               }).then(function (r) {
                 return r.json().then(function (j) {
@@ -640,8 +668,9 @@
                   return j;
                 }, function () { throw new Error('La photo n’est pas passée. Réessayez.'); });
               }).then(function (j) {
-                grid.insertBefore(figureFor(src, picUrl(j.key), name), grid.firstChild);
-                n++; counted(); res(j);
+                // Waiting for the organiser's yes (164): not in the album yet.
+                if (!rules.review) { grid.insertBefore(figureFor(src, picUrl(j.key), name), grid.firstChild); n++; counted(); }
+                res(j);
               }, function (err) { toast(err && err.message ? err.message : 'La photo n’est pas passée. Réessayez.'); res(null); });
             }, 'image/jpeg', 0.82);
           });
@@ -652,7 +681,8 @@
         toast(files.length > 1 ? 'Envoi des photos…' : 'Envoi de la photo…');
         Promise.all(files.map(send)).then(function (r) {
           var k = r.filter(Boolean).length;
-          if (k) toast(k > 1 ? k + ' photos ajoutées à l’album' : 'Photo ajoutée à l’album');
+          if (k && rules.review) toast(k > 1 ? k + ' photos envoyées : visibles après validation' : 'Photo envoyée : visible après validation');
+          else if (k) toast(k > 1 ? k + ' photos ajoutées à l’album' : 'Photo ajoutée à l’album');
         });
       };
       input.addEventListener('change', function () {

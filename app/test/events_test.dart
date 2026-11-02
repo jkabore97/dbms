@@ -515,6 +515,8 @@ void main() {
       expect(find.text('Ne viendra pas'), findsOneWidget);
       await tester.drag(find.byType(Scrollable).first, const Offset(0, 800));
       await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const Key('event-preview')));
+      await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const Key('event-preview')));
       await tester.pumpAndSettle();
@@ -524,6 +526,8 @@ void main() {
       expect(opened.single.queryParameters.containsKey('modifier'), isFalse, reason: 'a look is not an edit');
 
       // « Modifier la carte » (154): the page's own editor, with the edit token.
+      await tester.ensureVisible(find.byKey(const Key('event-edit')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('event-edit')));
       await tester.pumpAndSettle();
       expect(opened, hasLength(2));
