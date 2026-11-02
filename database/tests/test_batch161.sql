@@ -200,6 +200,11 @@ begin
     assert jsonb_array_length(j) = 1 and j -> 0 ->> 'title' = 'Concert Fatim' and jsonb_array_length(j -> 0 -> 'tickets') = 3, 'the account''s tickets: ' || j::text;
     perform set_config('request.jwt.claim.sub', '16116116-0000-0000-0000-000000000002', true);
     assert not event_ticket_claim((select v from t161 where k = 'rose')::uuid), 'another account cannot take them';
+    -- The app's question: its own admins alone hear the answer.
+    assert not event_tickets_ready('16116116-1111-0000-0000-000000000001'), 'Bob cannot ask about Awa''s business';
+    assert not event_tickets_ready('16116116-1111-0000-0000-000000000002'), 'Bob''s free business does not sell';
+    perform set_config('request.jwt.claim.sub', '16116116-0000-0000-0000-000000000001', true);
+    assert event_tickets_ready('16116116-1111-0000-0000-000000000001'), 'Awa''s Pro business sells';
     reset role;
     perform set_config('request.jwt.claim.sub', '', true);
     assert not has_function_privilege('anon', 'event_tickets_allowed(uuid)', 'execute'), 'the street cannot ask who sells';

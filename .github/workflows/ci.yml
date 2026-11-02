@@ -308,6 +308,13 @@ jobs:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch160.sql
 
+      # Ticket sales (161): Pro or Marakaj's own trial, places held and
+      # given back, one ticket per seat into the books, the door once.
+      - name: Prove ticket sales hold places, validate into the books and admit once
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch161.sql
+
       # The bell: the right people hear the right events and nobody else,
       # a threshold rings on the crossing rather than on every sale below
       # it, and the neighbour hears nothing at all.

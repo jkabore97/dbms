@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../db/local_db.dart';
 
 /// Ticket sales (161): the payment goes from the buyer to the organiser,
 /// outside the app; Marakaj carries the ticket types, the requests, the
@@ -6,9 +10,44 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// server's (event_ticket_decide, event_ticket_scan…) or bound by its
 /// policies (the types, the sale's settings).
 class TicketsRepository {
-  TicketsRepository(this._client);
+  // A named parameter cannot be private: keep is handed to _keep.
+  // ignore: prefer_initializing_formals
+  TicketsRepository(this._client, {LocalDb? keep}) : _keep = keep;
 
   final SupabaseClient? _client;
+
+  /// Where the door's list and its scans without signal are kept: the
+  /// phone's preferences, or memory alone (the tests, a phone with none).
+  final LocalDb? _keep;
+  final _memory = <String, String>{};
+
+  Future<String?> _read(String key) async {
+    try {
+      if (_keep != null) return await _keep.readPref(key);
+    } catch (_) {}
+    return _memory[key];
+  }
+
+  Future<void> _write(String key, String? value) async {
+    if (value == null) {
+      _memory.remove(key);
+    } else {
+      _memory[key] = value;
+    }
+    try {
+      await _keep?.writePref(key, value);
+    } catch (_) {}
+  }
+
+  /// Whether this business may sell tickets (Marakaj Pro, or the
+  /// platform's own while the switch is off). False when it cannot be asked.
+  Future<bool> allowed(String orgId) async {
+    try {
+      return (await _require().rpc('event_tickets_ready', params: {'p_org': orgId})) == true;
+    } catch (_) {
+      return false;
+    }
+  }
 
   bool get isConfigured => _client != null;
 
@@ -112,6 +151,45 @@ class TicketsRepository {
         if ((x as Map)['applied'] != true) '${x['id']}',
     ];
   }
+
+  /// The door's list kept on the phone, with when it was taken.
+  Future<({List<DoorTicket> tickets, DateTime? at})?> keptDoor(String eventId) async {
+    final raw = await _read('tickets.door.$eventId');
+    if (raw == null) return null;
+    try {
+      final j = jsonDecode(raw) as Map;
+      return (
+        tickets: [for (final t in (j['rows'] as List)) DoorTicket.fromJson(Map<String, dynamic>.from(t as Map))],
+        at: DateTime.tryParse('${j['at']}')?.toLocal(),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> keepDoor(String eventId, List<DoorTicket> tickets) => _write(
+        'tickets.door.$eventId',
+        jsonEncode({'at': DateTime.now().toUtc().toIso8601String(), 'rows': [for (final t in tickets) t.toJson()]}),
+      );
+
+  /// The scans made without signal, waiting to be sent.
+  Future<List<({String id, DateTime at})>> keptScans(String eventId) async {
+    final raw = await _read('tickets.scans.$eventId');
+    if (raw == null) return const [];
+    try {
+      return [
+        for (final s in (jsonDecode(raw) as List))
+          (id: '${(s as Map)['id']}', at: DateTime.tryParse('${s['at']}')?.toLocal() ?? DateTime.now()),
+      ];
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<void> keepScans(String eventId, List<({String id, DateTime at})> scans) => _write(
+        'tickets.scans.$eventId',
+        scans.isEmpty ? null : jsonEncode([for (final s in scans) {'id': s.id, 'at': s.at.toUtc().toIso8601String()}]),
+      );
 
   /// « Garder mes billets dans Marakaj ».
   Future<bool> claim(String requestId) async =>
@@ -306,6 +384,10 @@ class DoorTicket {
   final String holder;
   final String type;
   final String status;
+
+  Map<String, dynamic> toJson() => {'id': id, 'holder': holder, 'type': type, 'status': status};
+
+  DoorTicket used() => DoorTicket(id: id, holder: holder, type: type, status: 'used');
 }
 
 /// One request the signed-in person keeps (my_event_tickets).

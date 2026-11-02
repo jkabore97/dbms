@@ -586,8 +586,7 @@ export async function ticketStatusPage(env, slug, id) {
       (r.tickets || []).map((k, i) => `<div class="ticket"><div class="eye">Billet ${i + 1} · ${escapeHtml(k.type)}</div>` +
         `<div class="qr" data-qr="${SITE}/e/${encodeURIComponent(slug)}/billet/${escapeHtml(k.id)}"></div>` +
         `<b>${escapeHtml(k.holder)}</b><div class="muted">${k.status === "used" ? "Déjà utilisé" : k.status === "void" ? "Annulé" : "Valable une fois, à présenter à l’entrée"}</div></div>`).join("") +
-      `<a class="btn" href="/billets/${escapeHtml(r.id)}">Garder mes billets dans Marakaj</a>` +
-      `<p class="muted" style="text-align:center">Gardés dans votre compte, ils s’ouvrent même sans connexion.</p></div>`;
+      `<p class="muted" style="text-align:center">Gardez cette page : vos billets s’y trouvent, et une capture d’écran suffit à l’entrée.</p></div>`;
   } else {
     const word = r.status === "refused" ? "Demande refusée par l’organisateur." : r.status === "refunded" ? "Billets remboursés." : "Demande expirée : le paiement n’a pas été vu à temps.";
     body += `<div class="card"><span class="tag no">${escapeHtml(word)}</span>` +

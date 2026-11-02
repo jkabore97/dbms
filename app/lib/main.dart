@@ -585,7 +585,7 @@ class _KajAppState extends State<KajApp> with WidgetsBindingObserver {
       accounting: widget.accounting,
       console: widget.console,
       // Événementiel (152), on the same client as everything else.
-      events: EventsRepository(widget.auth.client),
+      events: EventsRepository(widget.auth.client, keep: widget.db),
       farm: widget.farm,
       invoicing: widget.invoicing,
       retail: widget.retail,

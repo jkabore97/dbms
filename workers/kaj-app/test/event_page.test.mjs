@@ -315,7 +315,7 @@ test("the ticket pages (161): the offer, the buyer's request, one ticket; never 
     { id: "b2b2b2b2-b2b2-4b2b-8b2b-b2b2b2b2b2b2", type: "Standard", holder: "Tanti Rose", status: "valid" }] };
   html = await (await get(`/e/concert-fatim/billets/${id}`)).text();
   assert.ok(html.includes("Payé · 2 billets") && html.includes(`data-qr="https://marakaj.com/e/concert-fatim/billet/a1a1a1a1-a1a1-4a1a-8a1a-a1a1a1a1a1a1"`), "one QR per ticket");
-  assert.ok(html.includes(`href="/billets/${id}"`), "kept in Marakaj");
+  assert.ok(!html.includes(`href="/billets/`), "no link to an app page that is not there yet");
   assert.equal((await get(`/e/autre-carte/billets/${id}`)).status, 404, "another card's request: nothing");
   asked.length = 0;
   assert.equal((await get("/e/concert-fatim/billets/nope")).status, 404);

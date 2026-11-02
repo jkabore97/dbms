@@ -78,6 +78,19 @@ as $$
 $$;
 revoke execute on function event_ticket_can(events, text) from public;
 
+-- The app's question: may this business, which the caller runs, sell
+-- tickets? Its own admins alone hear the answer.
+create or replace function event_tickets_ready(p_org uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public, auth
+as $$
+    select auth.uid() is not null and is_org_admin(p_org) and event_tickets_allowed(p_org);
+$$;
+revoke execute on function event_tickets_ready(uuid) from public;
+
 -- ------------------------------------------------------------
 -- 2. The event's sale
 -- ------------------------------------------------------------
@@ -653,6 +666,7 @@ begin
     if exists (select 1 from pg_roles where rolname = 'anon') then
         revoke execute on function event_tickets_allowed(uuid) from anon;
         revoke execute on function event_ticket_can(events, text) from anon;
+        revoke execute on function event_tickets_ready(uuid) from anon;
         revoke execute on function event_ticket_taken(uuid) from anon;
         revoke execute on function events_tickets_guard() from anon;
         revoke execute on function event_ticket_status_of(event_ticket_requests) from anon;
@@ -674,6 +688,7 @@ begin
         grant execute on function event_tickets_door_sync(uuid, jsonb) to authenticated;
         grant execute on function event_ticket_claim(uuid) to authenticated;
         grant execute on function my_event_tickets() to authenticated;
+        grant execute on function event_tickets_ready(uuid) to authenticated;
         -- The organiser lays out the sale from the app (RLS: its admins).
         grant select, insert, update, delete on event_ticket_types to authenticated;
         grant select on event_ticket_requests, event_ticket_lines, event_tickets to authenticated;
