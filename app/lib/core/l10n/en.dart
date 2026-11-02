@@ -9065,4 +9065,116 @@ const enStrings = <String, String>{
       'Today',
   'Dans {n} j':
       'In {n} d',
+  'Équipe de l’événement':
+      'Event team',
+  'Billetterie : valide les paiements, rembourse, vend à l’entrée. Contrôle : scanne les billets, rien d’autre. Lecture : voit les chiffres.':
+      'Ticketing: confirms payments, refunds, sells at the door. Door check: scans tickets, nothing else. Read-only: sees the figures.',
+  'Invitez d’abord vos collaborateurs dans l’équipe de l’activité (Plus › Équipe).':
+      'First invite your colleagues to the business’s team (More › Team).',
+  'Validé (encaissé)':
+      'Confirmed (collected)',
+  'Billets':
+      'Tickets',
+  'Entrés':
+      'In',
+  'Par type':
+      'By type',
+  '{sold} vendus{cap} · {in} entrés':
+      '{sold} sold{cap} · {in} in',
+  'Par personne':
+      'By person',
+  'Personne n’a encore validé ni scanné.':
+      'Nobody has confirmed or scanned yet.',
+  'Paiements validés':
+      'Payments confirmed',
+  'Ventes à l’entrée':
+      'Door sales',
+  'Espèces à remettre':
+      'Cash to hand over',
+  'Entrées scannées':
+      'Entries scanned',
+  'Rien pour le moment.':
+      'Nothing yet.',
+  'Aucun billet en vente.':
+      'No ticket on sale.',
+  'Vendre à l’entrée':
+      'Sell at the door',
+  'À encaisser en espèces : {total}':
+      'To collect in cash: {total}',
+  'Encaissé':
+      'Collected',
+  '{n} billet(s) vendu(s) à l’entrée ({ref}).':
+      '{n} ticket(s) sold at the door ({ref}).',
+  'Annuler l’événement ?':
+      'Cancel the event?',
+  'La vente se ferme pour de bon et l’événement quitte la rue. Vous écrivez ensuite à chaque acheteur ; les remboursements se font de votre téléphone.':
+      'Sales close for good and the event leaves the street. You then write to each buyer; refunds are made from your phone.',
+  'Raison (facultative)':
+      'Reason (optional)',
+  'Annuler l’événement':
+      'Cancel the event',
+  'Prévenir les acheteurs':
+      'Tell the buyers',
+  'Personne n’avait de billet : rien à prévenir.':
+      'Nobody had a ticket: nobody to tell.',
+  '{n} acheteur(s) à prévenir. Touchez chacun pour lui écrire sur WhatsApp.':
+      '{n} buyer(s) to tell. Tap each to write on WhatsApp.',
+  'Bonjour {name}, nous sommes désolés : « {title} » est annulé{why}. Votre demande {ref} : nous revenons vers vous pour le remboursement.':
+      'Hello {name}, we are sorry: “{title}” is cancelled{why}. Your request {ref}: we will get back to you about the refund.',
+  'Aucun événement ne vous est confié pour le moment.':
+      'No event has been entrusted to you yet.',
+  'Votre rôle : {role}':
+      'Your role: {role}',
+  'Billetterie, Contrôle, Lecture':
+      'Ticketing, Door check, Read-only',
+  'Vendu, encaissé, qui a validé, espèces par agent':
+      'Sold, collected, who confirmed, cash per agent',
+  'Rembourser {ref} ?':
+      'Refund {ref}?',
+  'Rendez d’abord {total} à {name} depuis votre téléphone. Ses billets sont alors annulés : la porte les refuse.':
+      'First give {total} back to {name} from your phone. Their tickets are then cancelled: the door refuses them.',
+  'Remboursé : billets annulés.':
+      'Refunded: tickets cancelled.',
+  'Rembourser':
+      'Refund',
+  'Contrôle':
+      'Door check',
+  'Lecture':
+      'Read-only',
+  'Aucun rôle':
+      'No role',
+  'Paiement validé':
+      'Payment confirmed',
+  'Vente à l’entrée':
+      'Door sale',
+  'Événement annulé':
+      'Event cancelled',
+  '+{n} autre(s)':
+      '+{n} more',
+  'Mes billets':
+      'My tickets',
+  'Aucun billet sur ce téléphone.':
+      'No ticket on this phone.',
+  'Sans réseau : vos billets tels que gardés sur ce téléphone.':
+      'No signal: your tickets as kept on this phone.',
+  'En attente de paiement · {ref}':
+      'Awaiting payment · {ref}',
+  'Les billets arrivent ici dès que l’organisateur valide.':
+      'The tickets arrive here as soon as the organiser confirms.',
+  'Billet {n} · {type}':
+      'Ticket {n} · {type}',
+  'Code du billet':
+      'Ticket code',
+  'Valable une fois, à présenter à l’entrée':
+      'Valid once, to show at the door',
+  '5 photos par invité':
+      '5 photos per guest',
+  'Réservé à ceux qui ont répondu ou ont un billet : cinq photos chacun.':
+      'Only for those who answered or hold a ticket: five photos each.',
+  'Photos visibles après validation':
+      'Photos shown once approved',
+  'Vous validez chaque photo avant que les invités la voient.':
+      'You approve each photo before the guests see it.',
+  'Photo validée':
+      'Photo approved',
 };

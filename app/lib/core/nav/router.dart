@@ -7,6 +7,7 @@ import '../console/command_center.dart';
 import 'package:go_router/go_router.dart';
 import 'business_screens.dart' deferred as biz;
 import '../events/events_repository.dart';
+import '../events/my_tickets.dart';
 import '../../features/events/events_access.dart';
 import '../access/store_rules.dart' show sellsProThroughStore, storeBillingPlatform;
 
@@ -21,6 +22,7 @@ import '../../features/auth/org_picker_screen.dart';
 import '../../features/auth/pin_screen.dart';
 import '../../features/auth/profile_form_screen.dart';
 import '../../features/storefront/directory_screen.dart';
+import '../../features/storefront/my_tickets_screens.dart';
 import '../../features/storefront/storefront_screen.dart';
 import '../../features/notify/notifications_screen.dart' show NotificationsScreen;
 import '../../features/notify/push_prompt.dart' show PushPromptQuiet;
@@ -176,6 +178,9 @@ abstract final class Routes {
   /// Every open vitrine, as a list or a map — the street's front door.
   static const directory = '/vitrines';
 
+  /// The buyer's tickets on this phone (ticket sales, part 4).
+  static const myTickets = '/billets';
+
   /// « Vitrines masquées » (batch 150): the vitrines hidden on this device,
   /// public like the street — the hiding needs no account.
   static const hiddenVitrines = '/vitrines/masquees';
@@ -330,6 +335,8 @@ GoRouter buildRouter(SessionController session) {
         // WhatsApp, and must never be bounced to a sign-in page for looking
         // in a shop window.
         at(Routes.directory) ||
+        // A buyer's tickets, with or without an account (part 4).
+        at(Routes.myTickets) ||
         here.startsWith('/s/')) {
       return null;
     }
@@ -685,8 +692,30 @@ GoRouter buildRouter(SessionController session) {
             capture: scope.capture,
             session: scope.session,
             shopper: ShopperRepository(scope.auth.client),
+            tickets: MyTicketsStore(scope.auth.client, scope.db),
           ));
         },
+      ),
+      // « Mes billets » (part 4): public like the street — a ticket bought
+      // with no account opens here, kept on this phone; its QR codes open
+      // at the door with no signal. /billets/<id> keeps the request first.
+      GoRoute(
+        path: Routes.myTickets,
+        builder: (context, _) {
+          final scope = AppScope.of(context);
+          return MyTicketsScreen(store: MyTicketsStore(scope.auth.client, scope.db));
+        },
+        routes: [
+          GoRoute(
+            path: ':id',
+            builder: (context, state) {
+              final scope = AppScope.of(context);
+              final id = state.pathParameters['id']!;
+              final ok = RegExp(r'^[0-9a-fA-F-]{36}$').hasMatch(id);
+              return MyTicketsScreen(store: MyTicketsStore(scope.auth.client, scope.db), keepId: ok ? id : null);
+            },
+          ),
+        ],
       ),
       // « Vitrines masquées » (150): public like the street — the hiding is
       // the device's and needs no account.

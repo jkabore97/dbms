@@ -201,6 +201,67 @@ class TicketsRepository {
     return [for (final t in (r as List? ?? const [])) MyTickets.fromJson(Map<String, dynamic>.from(t as Map))];
   }
 
+  // ------------------------------------------------------------ 163
+  /// The types on sale (163: the door's sale, read by its team too).
+  Future<List<TicketType>> activeTypes(String eventId) async {
+    final rows = await _require().from('event_ticket_types').select().eq('event_id', eventId).eq('active', true).order('sort');
+    return [for (final t in rows) TicketType.fromJson(Map<String, dynamic>.from(t))];
+  }
+
+  /// The business's members, each with their role on this event (or none).
+  Future<List<TeamMember>> team(String eventId) async {
+    final r = await _require().rpc('event_team', params: {'p_event': eventId});
+    return [for (final m in (r as List)) TeamMember.fromJson(Map<String, dynamic>.from(m as Map))];
+  }
+
+  /// A role on the event (billetterie, controle, lecture), or none (null).
+  Future<void> setStaff(String eventId, String userId, String? role) async {
+    await _require().rpc('event_staff_set', params: {'p_event': eventId, 'p_user': userId, 'p_role': role});
+  }
+
+  /// The events the signed-in member works on.
+  Future<List<StaffEvent>> myStaff() async {
+    try {
+      final r = await _require().rpc('my_event_staff');
+      return [for (final e in (r as List? ?? const [])) StaffEvent.fromJson(Map<String, dynamic>.from(e as Map))];
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<void> refund(String requestId, {String? note}) async {
+    await _require().rpc('event_ticket_refund', params: {'p_id': requestId, 'p_note': note});
+  }
+
+  /// Sold at the door for cash: the tickets let in at once.
+  Future<({String ref, int count, double total})> doorSale(String eventId, Map<String, int> lines, {String? name}) async {
+    final r = Map<String, dynamic>.from(await _require().rpc('event_ticket_door_sale', params: {
+      'p_event': eventId,
+      'p_lines': [for (final l in lines.entries) if (l.value > 0) {'type': l.key, 'qty': l.value}],
+      'p_name': name,
+    }) as Map);
+    return (ref: '${r['ref']}', count: (r['count'] as num).toInt(), total: (r['total'] as num).toDouble());
+  }
+
+  Future<Map<String, dynamic>> report(String eventId) async =>
+      Map<String, dynamic>.from(await _require().rpc('event_ticket_report', params: {'p_event': eventId}) as Map);
+
+  Future<List<Map<String, dynamic>>> journal(String eventId) async {
+    final r = await _require().rpc('event_ticket_journal', params: {'p_event': eventId});
+    return [for (final x in (r as List)) Map<String, dynamic>.from(x as Map)];
+  }
+
+  /// Cancels the event; the holders to write to come back.
+  Future<List<Map<String, dynamic>>> cancel(String eventId, {String? reason}) async {
+    final r = await _require().rpc('event_cancel', params: {'p_event': eventId, 'p_reason': reason});
+    return [for (final x in (r as List)) Map<String, dynamic>.from(x as Map)];
+  }
+
+  Future<List<Map<String, dynamic>>> holders(String eventId) async {
+    final r = await _require().rpc('event_ticket_holders', params: {'p_event': eventId});
+    return [for (final x in (r as List)) Map<String, dynamic>.from(x as Map)];
+  }
+
   /// A ticket's id inside its QR (`https://marakaj.com/e/<slug>/billet/<id>`).
   static String? ticketIdFrom(String text) {
     final m = RegExp(r'/billet/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/?\s*$', caseSensitive: false)
@@ -444,3 +505,69 @@ class MyTickets {
   /// What the QR of a ticket carries.
   String qrOf(String ticketId) => 'https://marakaj.com/e/$slug/billet/$ticketId';
 }
+
+/// A member of the business and their role on one event (163).
+class TeamMember {
+  const TeamMember({required this.userId, required this.name, this.phone, this.orgRole, this.eventRole});
+
+  factory TeamMember.fromJson(Map<String, dynamic> j) => TeamMember(
+        userId: '${j['user_id']}',
+        name: '${j['name'] ?? ''}',
+        phone: j['phone'] as String?,
+        orgRole: j['org_role'] as String?,
+        eventRole: j['event_role'] as String?,
+      );
+
+  final String userId;
+  final String name;
+  final String? phone;
+  final String? orgRole;
+
+  /// billetterie, controle, lecture, or null: not on the event.
+  final String? eventRole;
+}
+
+/// An event the signed-in member works on (163), and their role there.
+class StaffEvent {
+  const StaffEvent({
+    required this.id,
+    required this.orgId,
+    required this.slug,
+    required this.title,
+    required this.role,
+    this.startsAt,
+    this.place,
+    this.cancelled = false,
+  });
+
+  factory StaffEvent.fromJson(Map<String, dynamic> j) => StaffEvent(
+        id: '${j['id']}',
+        orgId: '${j['org_id']}',
+        slug: '${j['slug'] ?? ''}',
+        title: '${j['title'] ?? ''}',
+        role: '${j['role'] ?? 'lecture'}',
+        startsAt: j['starts_at'] == null ? null : DateTime.tryParse('${j['starts_at']}')?.toLocal(),
+        place: j['place'] as String?,
+        cancelled: j['cancelled'] == true,
+      );
+
+  final String id;
+  final String orgId;
+  final String slug;
+  final String title;
+  final String role;
+  final DateTime? startsAt;
+  final String? place;
+  final bool cancelled;
+
+  bool get sells => role == 'billetterie';
+  bool get door => role == 'billetterie' || role == 'controle';
+}
+
+/// The French name of an event role.
+String eventRoleName(String? role) => switch (role) {
+      'billetterie' => 'Billetterie',
+      'controle' => 'Contrôle',
+      'lecture' => 'Lecture',
+      _ => 'Aucun rôle',
+    };

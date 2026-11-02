@@ -10,6 +10,7 @@ import '../../core/retail/staff.dart';
 import '../../core/theme/app_bar_title.dart';
 import '../home/home_nav.dart';
 import 'events_screens.dart';
+import 'tickets_team_screens.dart';
 
 /// An Événementiel's home (153): its cards, and the bar — Cartes, Modèles,
 /// Invités, Plus. No till, no stock, no vitrine: the business is its
@@ -128,13 +129,19 @@ class _EventsHomeScreenState extends State<EventsHomeScreen> {
             bellRoom,
           ],
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          key: const Key('event-new'),
-          onPressed: _create,
-          icon: const Icon(Icons.add),
-          label: Text(context.tr('Nouvelle carte')),
-        ),
-        body: EventsList(events: widget.events, org: widget.org, reloadTick: _tick),
+        // A member who is not an admin (163): the events entrusted to them,
+        // nothing to create.
+        floatingActionButton: !widget.org.isAdmin
+            ? null
+            : FloatingActionButton.extended(
+                key: const Key('event-new'),
+                onPressed: _create,
+                icon: const Icon(Icons.add),
+                label: Text(context.tr('Nouvelle carte')),
+              ),
+        body: widget.org.isAdmin
+            ? EventsList(events: widget.events, org: widget.org, reloadTick: _tick)
+            : StaffEventsList(tickets: widget.events.tickets, orgId: widget.org.id),
       ),
     );
   }

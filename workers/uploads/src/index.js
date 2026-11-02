@@ -107,12 +107,14 @@ export default {
         return withCors(await putEventPicture(request, env, picture[1], url.searchParams.get("modifier") || ""), cors);
       }
 
-      // POST /v1/events/<slug>/album?apercu=<preview token>&invite=<name> —
+      // POST /v1/events/<slug>/album?apercu=<preview token>&invite=<name>&pass=<id> —
       // a guest's picture for the card's album (155): signed out, the
       // card's link is the key; Postgres mints and confirms every key.
+      // The pass (164): the guest's answer or ticket request, five photos
+      // each when the album is limited.
       const album = url.pathname.match(/^\/v1\/events\/([a-z0-9-]+)\/album$/);
       if (album && request.method === "POST") {
-        return withCors(await putAlbumPicture(request, env, album[1], url.searchParams.get("apercu") || "", url.searchParams.get("invite") || ""), cors);
+        return withCors(await putAlbumPicture(request, env, album[1], url.searchParams.get("apercu") || "", url.searchParams.get("invite") || "", url.searchParams.get("pass") || ""), cors);
       }
 
       // GET /v1/public/objects/<key> — a vitrine photo, for anyone. No token:
@@ -569,11 +571,12 @@ async function putEventPicture(request, env, slug, edit) {
 
 // A guest's picture for the album (155): the card's link (the preview
 // token, or none for a published card) and the guest's first name.
-async function putAlbumPicture(request, env, slug, preview, guest) {
+async function putAlbumPicture(request, env, slug, preview, guest, pass = "") {
   const who = guest.trim().slice(0, 60);
   const link = /^[0-9a-f]{24}$/.test(preview) ? preview : null;
+  const card = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(pass) ? pass.toLowerCase() : null;
   return storeEventPicture(request, env, {
-    mint: (ext) => rpcAnonAsked(env, "event_album_slot", { p_slug: slug, p_preview: link, p_ext: ext, p_guest: who || null }),
+    mint: (ext) => rpcAnonAsked(env, "event_album_add", { p_slug: slug, p_preview: link, p_ext: ext, p_guest: who || null, p_pass: card }),
     confirm: (key, bytes) => rpcAnonAsked(env, "event_album_done", { p_key: key, p_preview: link, p_bytes: bytes }),
     meta: { event: slug, guest: who },
   });

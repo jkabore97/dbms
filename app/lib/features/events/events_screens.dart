@@ -858,6 +858,23 @@ class _EventScreenState extends State<EventScreen> {
                         value: e.albumOn,
                         onChanged: (v) => _run(() => widget.events.setAlbumOn(e.id, v)),
                       ),
+                      // The album's rules (164).
+                      if (e.albumOn) ...[
+                        SwitchListTile(
+                          key: const Key('event-album-limit'),
+                          title: Text(context.tr('5 photos par invité')),
+                          subtitle: Text(context.tr('Réservé à ceux qui ont répondu ou ont un billet : cinq photos chacun.')),
+                          value: e.albumLimit,
+                          onChanged: (v) => _run(() => widget.events.setAlbumRules(e.id, limit: v)),
+                        ),
+                        SwitchListTile(
+                          key: const Key('event-album-review'),
+                          title: Text(context.tr('Photos visibles après validation')),
+                          subtitle: Text(context.tr('Vous validez chaque photo avant que les invités la voient.')),
+                          value: e.albumReview,
+                          onChanged: (v) => _run(() => widget.events.setAlbumRules(e.id, review: v)),
+                        ),
+                      ],
                     ]),
                   ),
                   if (_canSell) ...[
@@ -901,6 +918,7 @@ class _EventScreenState extends State<EventScreen> {
                             picture: p,
                             url: widget.events.pictureUrl(p.key),
                             onRemove: () => _removePicture(p),
+                            onApprove: () => _run(() => widget.events.approvePicture(p.key), done: context.tr('Photo validée')),
                           ),
                       ],
                     ),
@@ -914,9 +932,12 @@ class _EventScreenState extends State<EventScreen> {
 /// One of the guests' pictures (155): its small copy, the name under it,
 /// and the cross that removes it.
 class _PictureTile extends StatelessWidget {
-  const _PictureTile({super.key, required this.picture, required this.url, required this.onRemove});
+  const _PictureTile({super.key, required this.picture, required this.url, required this.onRemove, this.onApprove});
 
   final EventPicture picture;
+
+  /// The organiser's yes (164), on a picture still waiting for it.
+  final VoidCallback? onApprove;
 
   /// The small copy's address, or null without an uploads Worker.
   final String? url;
@@ -969,6 +990,23 @@ class _PictureTile extends StatelessWidget {
             icon: const Icon(Icons.close, size: 18),
           ),
         ),
+        if (!picture.approved && onApprove != null)
+          Positioned(
+            top: 0,
+            left: 0,
+            child: TextButton.icon(
+              key: Key('picture-approve-${picture.key}'),
+              onPressed: onApprove,
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.black54,
+                foregroundColor: Colors.white,
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+              ),
+              icon: const Icon(Icons.check, size: 16),
+              label: Text(context.tr('Valider'), style: const TextStyle(fontSize: 12)),
+            ),
+          ),
       ]),
     );
   }

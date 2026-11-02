@@ -169,6 +169,20 @@ class EventsRepository {
     await _require().from('events').update({'listed': on}).eq('id', id);
   }
 
+  /// The album's rules (164): « 5 photos par invité », « visibles après
+  /// validation ». Marakaj Pro's once the platform's switch is on.
+  Future<void> setAlbumRules(String id, {bool? limit, bool? review}) async {
+    await _require().from('events').update({
+      'album_limit': ?limit,
+      'album_review': ?review,
+    }).eq('id', id);
+  }
+
+  /// The organiser's yes: a guest's picture joins the card's album.
+  Future<void> approvePicture(String key) async {
+    await _require().rpc('event_picture_approve', params: {'p_key': key});
+  }
+
   Future<void> setAlbumOn(String id, bool on) async {
     await _require().from('events').update({'album_on': on}).eq('id', id);
   }
@@ -414,6 +428,8 @@ class EventSummary {
     required this.published,
     required this.createdAt,
     this.listed = false,
+    this.albumLimit = false,
+    this.albumReview = false,
   });
 
   factory EventSummary.fromJson(Map<String, dynamic> j) => EventSummary(
@@ -433,6 +449,8 @@ class EventSummary {
         published: (j['published'] as bool?) ?? false,
         createdAt: DateTime.tryParse('${j['created_at']}')?.toLocal() ?? DateTime.now(),
         listed: (j['listed'] as bool?) ?? false,
+        albumLimit: (j['album_limit'] as bool?) ?? false,
+        albumReview: (j['album_review'] as bool?) ?? false,
       );
 
   final String id;
@@ -456,6 +474,11 @@ class EventSummary {
 
   /// On the street's « Événements » (162): public, not just by its link.
   final bool listed;
+
+  /// The album's rules (164): five photos per guest pass or ticket; shown
+  /// once the organiser said yes.
+  final bool albumLimit;
+  final bool albumReview;
 
   /// The card's address on the site, for the guests.
   String get publicPath => '/e/$slug';
@@ -526,17 +549,22 @@ class EventsException implements Exception {
 /// One of the guests' pictures (155): its key under the event, the name
 /// the guest gave, when its bytes came in.
 class EventPicture {
-  const EventPicture({required this.key, required this.guest, required this.bytes, required this.doneAt});
+  const EventPicture({required this.key, required this.guest, required this.bytes, required this.doneAt, this.approved = true});
 
   factory EventPicture.fromJson(Map<String, dynamic> j) => EventPicture(
         key: j['key'] as String,
         guest: j['guest'] as String?,
         bytes: (j['bytes'] as num?)?.toInt(),
         doneAt: j['done_at'] == null ? null : DateTime.tryParse(j['done_at'] as String)?.toLocal(),
+        approved: (j['approved'] as bool?) ?? true,
       );
 
   final String key;
   final String? guest;
   final int? bytes;
   final DateTime? doneAt;
+
+  /// Shown in the card's album (164): false while it waits for the
+  /// organiser's yes.
+  final bool approved;
 }

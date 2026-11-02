@@ -69,8 +69,8 @@ function env(objects) {
   };
 }
 
-const upload = (e, { preview = PREVIEW, guest = "Tanti Rose", slug = "ines-thomas-ab12", type = "image/jpeg", bytes = PHOTO } = {}) =>
-  worker.fetch(new Request(`https://up.example/v1/events/${slug}/album?apercu=${preview}&invite=${encodeURIComponent(guest)}`, {
+const upload = (e, { preview = PREVIEW, guest = "Tanti Rose", slug = "ines-thomas-ab12", type = "image/jpeg", bytes = PHOTO, pass = null } = {}) =>
+  worker.fetch(new Request(`https://up.example/v1/events/${slug}/album?apercu=${preview}&invite=${encodeURIComponent(guest)}${pass === null ? "" : `&pass=${encodeURIComponent(pass)}`}`, {
     method: "POST",
     headers: { "Content-Type": type, Origin: "https://marakaj.com" },
     body: bytes,
@@ -79,7 +79,7 @@ const upload = (e, { preview = PREVIEW, guest = "Tanti Rose", slug = "ines-thoma
 test("a guest's picture: the key minted with the card's link and the name, the bytes put, the key confirmed", async () => {
   const e = env();
   await withPostgres({
-    event_album_slot: (body) => body.p_preview === PREVIEW && body.p_slug === "ines-thomas-ab12" && body.p_ext === "jpg" && body.p_guest === "Tanti Rose"
+    event_album_add: (body) => body.p_preview === PREVIEW && body.p_slug === "ines-thomas-ab12" && body.p_ext === "jpg" && body.p_guest === "Tanti Rose"
       ? [200, KEY] : [403, { message: "Cette carte n'est pas ouverte." }],
     event_album_done: (body) => body.p_key === KEY && body.p_preview === PREVIEW && body.p_bytes === 3000 ? [200, true] : [403, { message: "Envoi inconnu." }],
   }, async (asked) => {
@@ -88,7 +88,7 @@ test("a guest's picture: the key minted with the card's link and the name, the b
     const j = await r.json();
     assert.equal(j.key, KEY);
     assert.equal(j.url, `/v1/public/objects/${encodeURIComponent(KEY)}`);
-    assert.deepEqual(asked.map((a) => a.name), ["event_album_slot", "event_album_done"]);
+    assert.deepEqual(asked.map((a) => a.name), ["event_album_add", "event_album_done"]);
     assert.ok(asked.every((a) => a.token === "pub"), "asked as the anonymous role");
     assert.equal(e.UPLOADS.puts.length, 1);
     assert.equal(e.UPLOADS.puts[0].options.customMetadata.guest, "Tanti Rose");
@@ -98,7 +98,7 @@ test("a guest's picture: the key minted with the card's link and the name, the b
 test("a published card: no link needed, no name given — Postgres is asked with nulls", async () => {
   const e = env();
   await withPostgres({
-    event_album_slot: (body) => body.p_preview === null && body.p_guest === null ? [200, KEY] : [403, { message: "no" }],
+    event_album_add: (body) => body.p_preview === null && body.p_guest === null ? [200, KEY] : [403, { message: "no" }],
     event_album_done: (body) => body.p_preview === null ? [200, true] : [403, { message: "no" }],
   }, async () => {
     const r = await upload(e, { preview: "", guest: "" });
@@ -109,7 +109,7 @@ test("a published card: no link needed, no name given — Postgres is asked with
 test("Postgres refuses the slot (album closed): its words, nothing put", async () => {
   const e = env();
   await withPostgres({
-    event_album_slot: () => [403, { message: "L'album est fermé pour cet événement." }],
+    event_album_add: () => [403, { message: "L'album est fermé pour cet événement." }],
   }, async () => {
     const r = await upload(e);
     assert.equal(r.status, 403);
@@ -121,7 +121,7 @@ test("Postgres refuses the slot (album closed): its words, nothing put", async (
 test("Postgres refuses the confirmation: the bytes just written are deleted", async () => {
   const e = env();
   await withPostgres({
-    event_album_slot: () => [200, KEY],
+    event_album_add: () => [200, KEY],
     event_album_done: () => [403, { message: "Envoi inconnu." }],
   }, async () => {
     const r = await upload(e);
@@ -143,7 +143,7 @@ test("a PDF, a file too large: refused before Postgres is asked; a long name is 
     assert.equal(asked.length, 0);
   });
   await withPostgres({
-    event_album_slot: (body) => body.p_guest.length === 60 ? [200, KEY] : [403, { message: "long" }],
+    event_album_add: (body) => body.p_guest.length === 60 ? [200, KEY] : [403, { message: "long" }],
     event_album_done: () => [200, true],
   }, async () => {
     assert.equal((await upload(e, { guest: "x".repeat(90) })).status, 201);
@@ -177,4 +177,18 @@ test("the organiser removes a picture: Postgres as the admin, then the bytes go;
     assert.equal(vitrine.status, 404);
     assert.equal(asked.length, 2, "Postgres not asked for it");
   });
+});
+
+test("164: the guest's pass goes with the picture; anything else is no pass", async () => {
+  const PASS = "16416416-4444-0000-0000-000000000001";
+  for (const [given, sent] of [[PASS, PASS], [PASS.toUpperCase(), PASS], ["../x", null], ["", null]]) {
+    const e = env();
+    await withPostgres({
+      event_album_add: (body) => body.p_pass === sent ? [200, KEY] : [403, { message: "pass " + body.p_pass }],
+      event_album_done: () => [200, true],
+    }, async () => {
+      const r = await upload(e, { pass: given });
+      assert.equal(r.status, 201, `pass ${given}`);
+    });
+  }
 });
