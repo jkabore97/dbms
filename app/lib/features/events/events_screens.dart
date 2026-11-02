@@ -316,6 +316,9 @@ IconData _kindIcon(String kind) => switch (kind) {
       'diplome' => Icons.school_outlined,
       'gala' || 'inauguration' || 'retraite' => Icons.business_center_outlined,
       'hommage' => Icons.spa_outlined,
+      'concert' => Icons.music_note_outlined,
+      'culture' => Icons.theater_comedy_outlined,
+      'conference' => Icons.mic_none_outlined,
       _ => Icons.favorite_outline,
     };
 

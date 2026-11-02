@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -661,7 +663,16 @@ void main() {
         expect(kinds, contains(c.$3), reason: c.$1);
       }
       expect(eventCards, hasLength(15), reason: "the twelve and the three after the owner's pictures (160)");
-      expect(eventKinds, hasLength(10));
+      // 166: concerts, festivals and conferences join the ten.
+      expect(eventKinds, hasLength(13));
+      // The classic cards have words for every kind, the animated ones a
+      // type for each: no kind lands on a card that cannot say it.
+      final shared = File('web/cartes/shared.js').readAsStringSync();
+      final anime = File('web/evenements/index.html').readAsStringSync();
+      for (final k in eventKinds) {
+        expect(shared, contains('    ${k.$1}: { label:'), reason: 'classic preset for ${k.$1}');
+        expect(anime, contains('${k.$1}: \''), reason: 'animated type for ${k.$1}');
+      }
     });
   });
 }
