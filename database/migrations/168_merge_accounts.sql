@@ -26,7 +26,7 @@
 --     same-org check…) watch business columns, not who made a row: when one
 --     refuses only because a person's id changes, that table's triggers
 --     are set aside for this one statement, inside the transaction, and put
---     back before it ends.
+--     back before it ends. No lock is waited for more than 5 seconds.
 --
 -- An email-and-password login lives on the account itself, not in
 -- auth.identities: absorbed, it stops working. The preview says so; keep
@@ -215,6 +215,9 @@ begin
     -- Google and Apple sign-ins: now the kept account's.
     update auth.identities set user_id = p_keep, updated_at = now() where user_id = p_absorb;
 
+    -- A lock the app holds is waited for a few seconds at most: past that
+    -- the merge stops, whole, and can be run again.
+    perform set_config('lock_timeout', '5s', true);
     for c in select * from _person_columns() loop
         begin
             n := _merge_move(c.tbl, c.col, p_keep, p_absorb);
