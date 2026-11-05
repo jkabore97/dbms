@@ -26,10 +26,14 @@ class _Auth extends AuthRepository {
 }
 
 class _Admin extends AdminRepository {
-  _Admin({this.platform = false, this.open = false}) : super(null);
+  _Admin({this.platform = false, this.open = false, this.allowed = const {}}) : super(null);
 
   final bool platform;
   final bool open;
+  final Set<String> allowed;
+
+  @override
+  Future<Set<String>> eventsAllowed() async => allowed;
 
   @override
   Future<bool> isPlatformAdmin() async => platform;
@@ -72,5 +76,19 @@ void main() {
   test('a platform admin keeps the Événementiel whatever the switch', () async {
     final s = await resolve(_Admin(platform: true));
     expect(s.orgs.map((o) => o.id), ['s1', 'e1']);
+  });
+
+  // 167: « Mariage Phanuel & Esperance », made while the switch was on, let
+  // in by a platform admin while it is off: theirs, and nobody else's.
+  test('the switch off, this Événementiel allowed: in the list and its pages open', () async {
+    final s = await resolve(_Admin(allowed: {'e1'}));
+    expect(s.orgs.map((o) => o.id), ['s1', 'e1']);
+    expect(s.eventsOpenFor(s.orgById('e1')!), isTrue);
+    expect(s.eventsPublic, isFalse, reason: 'the module stays closed to everyone else');
+  });
+
+  test('another business allowed: this one stays hidden', () async {
+    final s = await resolve(_Admin(allowed: {'zz'}));
+    expect(s.orgs.map((o) => o.id), ['s1']);
   });
 }

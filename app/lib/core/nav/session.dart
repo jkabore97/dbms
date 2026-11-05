@@ -477,6 +477,16 @@ class SessionController extends ChangeNotifier {
   bool _eventsPublic = false;
   bool get eventsPublic => _eventsPublic;
 
+  /// The Événementiels a platform admin let in one by one (167), among this
+  /// person's: theirs to use while the switch is off.
+  Set<String> _eventsAllowed = const {};
+
+  /// Whether this business's Événementiel pages are open to this person:
+  /// a platform admin, the switch on, or the business allowed (167). The
+  /// server's policies ask the same of the row's business (events_open).
+  bool eventsOpenFor(OrgSummary org) =>
+      _isPlatformAdmin || _eventsPublic || _eventsAllowed.contains(org.id);
+
   String? _notice;
   String? get notice => _notice;
 
@@ -487,11 +497,13 @@ class SessionController extends ChangeNotifier {
   /// the list is what the server returned, so an id that is not in it simply
   /// does not resolve.
   /// The businesses this person sees: an Événementiel only while the
-  /// platform's switch is on (152), or for a platform admin. With the switch
-  /// off its pages are closed to its own owner (the server's events_open):
-  /// shown, it would open onto « Réservé aux administrateurs ».
-  List<OrgSummary> _shown(List<OrgSummary> list, bool platformAdmin) =>
-      platformAdmin || _eventsPublic ? list : [for (final o in list) if (!o.isEvents) o];
+  /// platform's switch is on (152), for a platform admin, or when it was
+  /// allowed by itself (167). With the switch off its pages are closed to
+  /// its own owner (the server's events_open): shown, it would open onto
+  /// « Réservé aux administrateurs ».
+  List<OrgSummary> _shown(List<OrgSummary> list, bool platformAdmin) => platformAdmin || _eventsPublic
+      ? list
+      : [for (final o in list) if (!o.isEvents || _eventsAllowed.contains(o.id)) o];
 
   OrgSummary? orgById(String? id) {
     if (id == null) return null;
@@ -900,6 +912,7 @@ class SessionController extends ChangeNotifier {
     _notice = null;
     _isPlatformAdmin = false;
     _eventsPublic = false;
+    _eventsAllowed = const {};
     _adminDevice = false;
     _twoStepEnrolled = false;
     _phase = SessionPhase.signedOut;
@@ -968,6 +981,11 @@ class SessionController extends ChangeNotifier {
           .eventsPublic()
           .timeout(resolveTimeout)
           .catchError((Object _) => false);
+      // 167: the Événementiels let in one by one — none when it cannot be asked.
+      final askedAllowed = admin
+          .eventsAllowed()
+          .timeout(resolveTimeout)
+          .catchError((Object _) => const <String>{});
       final claimed = admin
           .claimMyInvitations()
           .timeout(resolveTimeout)
@@ -992,6 +1010,7 @@ class SessionController extends ChangeNotifier {
       platformAdmin = await askedAdmin;
       await _rememberAdmin(platformAdmin);
       _eventsPublic = await askedEvents;
+      _eventsAllowed = await askedAllowed;
       var got = await askedOrgs;
       if (await claimed > 0) got = await askOrgs();
 
@@ -1186,6 +1205,9 @@ class SessionController extends ChangeNotifier {
       if (platformAdmin) _adminDevice = true;
       try {
         _eventsPublic = await admin.eventsPublic().timeout(resolveTimeout);
+      } catch (_) {}
+      try {
+        _eventsAllowed = await admin.eventsAllowed().timeout(resolveTimeout);
       } catch (_) {}
       try {
         await admin.claimMyInvitations().timeout(resolveTimeout);

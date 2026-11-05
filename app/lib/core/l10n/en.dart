@@ -9199,4 +9199,13 @@ const enStrings = <String, String>{
       'Festival, cultural event',
   'Conférence, séminaire':
       'Conference, seminar',
+  // 167: an Événementiel let in one by one.
+  '{name} peut utiliser l’Événementiel.':
+      '{name} can use Événementiel.',
+  '{name} n’a plus accès à l’Événementiel tant que le module est fermé.':
+      '{name} no longer has Événementiel while the module is closed.',
+  'Retirer l’accès à l’Événementiel':
+      'Remove Événementiel access',
+  'Autoriser l’Événementiel (module fermé)':
+      'Allow Événementiel (module closed)',
 };
