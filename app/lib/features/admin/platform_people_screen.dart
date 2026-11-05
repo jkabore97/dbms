@@ -16,6 +16,7 @@ import '../../core/phone/country_codes.dart' show displayPhone;
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
+import 'merge_accounts_sheet.dart';
 
 /// The platform admin's global directory of people — the other axis to the
 /// business console. Search any account across every business, see where they
@@ -554,6 +555,16 @@ class _PersonSheetState extends State<PersonSheet> {
     );
   }
 
+  Future<void> _openMerge() async {
+    final merged = await showMaraSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => MergeAccountsSheet(console: widget.console, person: widget.person),
+    );
+    if (merged == true && mounted) Navigator.of(context).pop(true);
+  }
+
   Future<void> _delete() async {
     final ok = await showDialog<bool>(
       context: context,
@@ -675,6 +686,15 @@ class _PersonSheetState extends State<PersonSheet> {
                 subtitle: Text(
                     context.tr('Voir et gérer toutes les entreprises de la plateforme.')),
               ),
+
+            // 168: two accounts of one person (Apple, then Google), one.
+            const SizedBox(height: 4),
+            OutlinedButton.icon(
+              key: const Key('person-merge'),
+              onPressed: _busy ? null : _openMerge,
+              icon: const Icon(Icons.call_merge),
+              label: Text(context.tr('Fusionner avec un autre compte…')),
+            ),
 
             if (_canWorker) ...[
               const SizedBox(height: 4),

@@ -22,6 +22,21 @@ create table auth.users (
     created_at         timestamptz default now()
 );
 
+-- 168: what merging two accounts reads — the password and the last sign-in
+-- on the account, and its ways of signing in (Google, Apple, email).
+alter table auth.users add column encrypted_password varchar(255);
+alter table auth.users add column last_sign_in_at timestamptz;
+create table auth.identities (
+    id           uuid primary key default gen_random_uuid(),
+    provider_id  text not null,
+    user_id      uuid not null references auth.users(id) on delete cascade,
+    identity_data jsonb not null default '{}'::jsonb,
+    provider     text not null,
+    created_at   timestamptz default now(),
+    updated_at   timestamptz default now(),
+    unique (provider_id, provider)
+);
+
 -- Supabase resolves the current user from the JWT it puts on the request.
 -- Tests impersonate someone the same way PostgREST does:
 --
