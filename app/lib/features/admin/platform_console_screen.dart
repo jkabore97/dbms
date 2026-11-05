@@ -105,6 +105,9 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
   bool _loading = true;
   String? _error;
 
+  /// The Événementiels let in one by one while the switch is off (167).
+  Set<String> _eventsAllowed = const {};
+
   /// True when the console is running against `all_orgs()` because the
   /// database has not been migrated to 021 yet. Filtering and paging then
   /// happen on the client, which is what 021 exists to stop — so the screen
@@ -160,8 +163,14 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
         limit: _pageSize,
         offset: _page * _pageSize,
       );
+      // 167: best-effort — before 167, or refused, no business is marked.
+      Set<String> allowed = const {};
+      try {
+        allowed = await widget.admin.eventsAllowedOrgs();
+      } catch (_) {}
       if (!mounted) return;
       setState(() {
+        _eventsAllowed = allowed;
         _overview = overview;
         _rows = page.rows;
         _total = page.total;
@@ -332,6 +341,16 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
           await widget.admin.archiveOrg(org.id);
         case 'restore':
           await widget.admin.restoreOrg(org.id);
+        // 167: an Événementiel let in while the switch is off — its admins
+        // use it as if the switch were on; nobody else's opens.
+        case 'events_allow':
+          final said = context.tr('{name} peut utiliser l’Événementiel.', {'name': org.name});
+          await widget.admin.setEventsAllowed(org.id, true);
+          messenger.showSnackBar(SnackBar(content: Text(said)));
+        case 'events_revoke':
+          final said = context.tr('{name} n’a plus accès à l’Événementiel tant que le module est fermé.', {'name': org.name});
+          await widget.admin.setEventsAllowed(org.id, false);
+          messenger.showSnackBar(SnackBar(content: Text(said)));
         case 'delete':
           final confirmed = await showDialog<bool>(
             context: context,
@@ -493,6 +512,7 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
                           ? null
                           : () => widget.onOpen!(org),
                       onAction: (a) => _rowAction(org, a),
+                      eventsAllowed: org.profile == 'events' ? _eventsAllowed.contains(org.id) : null,
                       selected: ticking ? _selected.containsKey(org.id) : null,
                       onTick: ticking ? () => _tick(org) : null,
                     ),
@@ -823,9 +843,14 @@ class _OrgRowTile extends StatelessWidget {
     this.onOpen,
     this.selected,
     this.onTick,
+    this.eventsAllowed,
   });
 
   final OrgRow org;
+
+  /// For an Événementiel, whether it was let in while the switch is off
+  /// (167); null for any other kind.
+  final bool? eventsAllowed;
   final bool wide;
   final DateFormat date;
   final void Function(String action) onAction;
@@ -878,6 +903,12 @@ class _OrgRowTile extends StatelessWidget {
           PopupMenuItem(value: 'archive', child: Text(context.tr('Archiver'))),
         if (org.isArchived)
           PopupMenuItem(value: 'delete', child: Text(context.tr('Supprimer…'))),
+        if (eventsAllowed != null && !org.isArchived)
+          eventsAllowed!
+              ? PopupMenuItem(
+                  value: 'events_revoke', child: Text(context.tr('Retirer l’accès à l’Événementiel')))
+              : PopupMenuItem(
+                  value: 'events_allow', child: Text(context.tr('Autoriser l’Événementiel (module fermé)'))),
       ],
     );
 

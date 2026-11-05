@@ -2248,9 +2248,10 @@ Widget _withOrg(
 bool _admins(OrgSummary org) => org.isAdmin;
 
 /// The Événementiel's pages (153): the kind's own admins, while the module
-/// is theirs (a platform admin, or the platform's switch on).
+/// is theirs (a platform admin, the platform's switch on, or this business
+/// let in by itself, 167).
 bool _eventsAdmins(BuildContext context, OrgSummary org) =>
-    org.isEvents && org.isAdmin && eventsShownFor(context);
+    org.isEvents && org.isAdmin && eventsOpenFor(context, org);
 
 /// « Réservé aux administrateurs »: what somebody else sees at one of their
 /// addresses — a word and the way back, never the form.

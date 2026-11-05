@@ -600,6 +600,36 @@ class AdminRepository {
     }
   }
 
+  /// The caller's Événementiels a platform admin let in one by one (167,
+  /// my_events_allowed): none when it cannot be asked, or before 167.
+  Future<Set<String>> eventsAllowed() async {
+    final client = _client;
+    if (client == null) return const {};
+    try {
+      final v = await client.rpc('my_events_allowed');
+      return v is List ? {for (final id in v) id.toString()} : const {};
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  /// The console's list of the Événementiels let in (167): a platform
+  /// admin's. Throws when it cannot be asked: the console says so.
+  Future<Set<String>> eventsAllowedOrgs() async {
+    final client = _client;
+    if (client == null) return const {};
+    final v = await client.rpc('events_allowed_orgs');
+    return v is List ? {for (final id in v) id.toString()} : const {};
+  }
+
+  /// Lets one Événementiel in while the switch is off, or takes it back
+  /// (167). The server checks the platform-admin flag and the kind.
+  Future<void> setEventsAllowed(String orgId, bool on) async {
+    final client = _client;
+    if (client == null) throw StateError('Pas de connexion au serveur');
+    await client.rpc('set_events_allowed', params: {'p_org': orgId, 'p_on': on});
+  }
+
   /// Creates a business and returns its id.
   ///
   /// `create_org` is SECURITY DEFINER and checks the platform-admin flag
