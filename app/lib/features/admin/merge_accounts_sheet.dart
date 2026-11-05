@@ -139,8 +139,7 @@ class _MergeAccountsSheetState extends State<MergeAccountsSheet> {
             Text(context.tr('Fusionner deux comptes'), style: theme.textTheme.titleLarge),
             const SizedBox(height: 6),
             Text(
-              context.tr('Pour une personne qui a deux comptes (par exemple Apple et Google) : après la fusion, '
-                  'elle retrouve le même compte, quelle que soit la façon de se connecter. Irréversible.'),
+              context.tr('Pour une personne qui a deux comptes (par exemple Apple et Google) : après la fusion, elle retrouve le même compte, quelle que soit la façon de se connecter. Irréversible.'),
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 16),
@@ -200,8 +199,7 @@ class _MergeAccountsSheetState extends State<MergeAccountsSheet> {
                 if (p.absorb.password) ...[
                   const SizedBox(height: 8),
                   Text(
-                    context.tr('Attention : le compte absorbé se connecte par e-mail et mot de passe. Cette connexion ne marchera plus ; '
-                        'la personne se connectera comme le compte gardé.'),
+                    context.tr('Attention : le compte absorbé se connecte par e-mail et mot de passe. Cette connexion ne marchera plus ; la personne se connectera comme le compte gardé.'),
                     style: TextStyle(color: theme.colorScheme.error),
                   ),
                 ],
