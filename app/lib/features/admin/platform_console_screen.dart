@@ -344,13 +344,13 @@ class _PlatformConsoleScreenState extends State<PlatformConsoleScreen> {
         // 167: an Événementiel let in while the switch is off — its admins
         // use it as if the switch were on; nobody else's opens.
         case 'events_allow':
+          final said = context.tr('{name} peut utiliser l’Événementiel.', {'name': org.name});
           await widget.admin.setEventsAllowed(org.id, true);
-          messenger.showSnackBar(SnackBar(
-              content: Text(context.tr('{name} peut utiliser l’Événementiel.', {'name': org.name}))));
+          messenger.showSnackBar(SnackBar(content: Text(said)));
         case 'events_revoke':
+          final said = context.tr('{name} n’a plus accès à l’Événementiel tant que le module est fermé.', {'name': org.name});
           await widget.admin.setEventsAllowed(org.id, false);
-          messenger.showSnackBar(SnackBar(
-              content: Text(context.tr('{name} n’a plus accès à l’Événementiel tant que le module est fermé.', {'name': org.name}))));
+          messenger.showSnackBar(SnackBar(content: Text(said)));
         case 'delete':
           final confirmed = await showDialog<bool>(
             context: context,
