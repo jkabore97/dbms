@@ -226,6 +226,23 @@ class ConsoleRepository {
         .toList();
   }
 
+  /// Two accounts of one person, side by side before they are merged (168):
+  /// each one's email, ways of signing in, businesses, and how many rows of
+  /// the absorbed one move. A platform admin's; the server checks.
+  Future<AccountMergePreview> mergePreview({required String keepId, required String absorbId}) async {
+    final client = _requireClient();
+    final v = await client.rpc('account_merge_preview', params: {'p_keep': keepId, 'p_absorb': absorbId});
+    return AccountMergePreview.fromJson(Map<String, dynamic>.from(v as Map));
+  }
+
+  /// Merges the absorbed account into the kept one (168): its Google or
+  /// Apple sign-in now opens the kept account, everything it had follows,
+  /// it is deleted. [confirm] is what the preview says to type back.
+  Future<void> mergeAccounts({required String keepId, required String absorbId, required String confirm}) async {
+    final client = _requireClient();
+    await client.rpc('merge_accounts', params: {'p_keep': keepId, 'p_absorb': absorbId, 'p_confirm': confirm});
+  }
+
   /// The businesses one person belongs to, and their role in each.
   Future<List<PersonOrg>> userOrgs(String userId) async {
     final client = _requireClient();

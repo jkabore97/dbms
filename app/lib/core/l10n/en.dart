@@ -9208,4 +9208,23 @@ const enStrings = <String, String>{
       'Remove Événementiel access',
   'Autoriser l’Événementiel (module fermé)':
       'Allow Événementiel (module closed)',
+  // 168: two accounts of one person, merged.
+  'Fusionner avec un autre compte…': 'Merge with another account…',
+  'Fusionner deux comptes': 'Merge two accounts',
+  'Pour une personne qui a deux comptes (par exemple Apple et Google) : après la fusion, elle retrouve le même compte, quelle que soit la façon de se connecter. Irréversible.':
+      'For a person with two accounts (for example Apple and Google): after the merge, they reach the same account whichever way they sign in. Cannot be undone.',
+  'L\'autre compte : nom, e-mail ou téléphone': 'The other account: name, email or phone',
+  'Aucun autre compte trouvé.': 'No other account found.',
+  'Garder {label}': 'Keep {label}',
+  'Gardé': 'Kept',
+  'Absorbé puis supprimé': 'Absorbed, then deleted',
+  '{n} élément(s) passent au compte gardé : entreprises, commandes, écritures, réglages…':
+      '{n} item(s) move to the kept account: businesses, orders, entries, settings…',
+  'Attention : le compte absorbé se connecte par e-mail et mot de passe. Cette connexion ne marchera plus ; la personne se connectera comme le compte gardé.':
+      'Note: the absorbed account signs in with email and password. That sign-in will stop working; the person signs in as the kept account does.',
+  'Pour confirmer, tapez : {label}': 'To confirm, type: {label}',
+  'Fusionner les comptes': 'Merge the accounts',
+  'Choisir un autre compte': 'Choose another account',
+  'Connexion : {ways}': 'Sign-in: {ways}',
+  'Comptes fusionnés : {label} est maintenant un seul compte.': 'Accounts merged: {label} is now one account.',
 };

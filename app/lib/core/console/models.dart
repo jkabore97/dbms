@@ -511,3 +511,82 @@ class PlatformAuditEvent {
         summary: r['summary'] as String?,
       );
 }
+
+/// One account as the merge shows it (168).
+class MergeAccountCard {
+  const MergeAccountCard({
+    required this.id,
+    this.email,
+    this.phone,
+    this.name,
+    this.providers = const [],
+    this.password = false,
+    this.platformAdmin = false,
+    this.businesses = const [],
+  });
+
+  final String id;
+  final String? email;
+  final String? phone;
+  final String? name;
+
+  /// How it signs in: google, apple, email, phone.
+  final List<String> providers;
+
+  /// An email-and-password login: it lives on the account and stops working
+  /// once the account is absorbed.
+  final bool password;
+  final bool platformAdmin;
+
+  /// « Boutique Awa · owner ».
+  final List<({String org, String role})> businesses;
+
+  /// What the server asks to have typed back to absorb this account.
+  String get confirmLabel {
+    final e = email?.trim() ?? '';
+    if (e.isNotEmpty) return e;
+    final p = phone?.trim() ?? '';
+    return p.isNotEmpty ? p : id;
+  }
+
+  String get label {
+    final n = name?.trim() ?? '';
+    return n.isNotEmpty ? n : confirmLabel;
+  }
+
+  factory MergeAccountCard.fromJson(Map<String, dynamic> j) => MergeAccountCard(
+        id: j['id'] as String,
+        email: j['email'] as String?,
+        phone: j['phone'] as String?,
+        name: j['name'] as String?,
+        providers: [for (final p in (j['providers'] as List? ?? const [])) p.toString()],
+        password: j['password'] == true,
+        platformAdmin: j['platform_admin'] == true,
+        businesses: [
+          for (final b in (j['businesses'] as List? ?? const []))
+            (org: (b as Map)['org'].toString(), role: b['role'].toString()),
+        ],
+      );
+}
+
+/// Both accounts and what moves (168).
+class AccountMergePreview {
+  const AccountMergePreview({required this.keep, required this.absorb, this.rows = const {}});
+
+  final MergeAccountCard keep;
+  final MergeAccountCard absorb;
+
+  /// « table.column » → rows of the absorbed account that move.
+  final Map<String, int> rows;
+
+  int get rowCount => rows.values.fold(0, (a, b) => a + b);
+
+  factory AccountMergePreview.fromJson(Map<String, dynamic> j) => AccountMergePreview(
+        keep: MergeAccountCard.fromJson(Map<String, dynamic>.from(j['keep'] as Map)),
+        absorb: MergeAccountCard.fromJson(Map<String, dynamic>.from(j['absorb'] as Map)),
+        rows: {
+          for (final e in (Map<String, dynamic>.from((j['rows'] as Map?) ?? const {})).entries)
+            e.key: (e.value as num).toInt(),
+        },
+      );
+}
