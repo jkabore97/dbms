@@ -94,7 +94,7 @@ const accountAdminUrl = String.fromEnvironment('ACCOUNT_ADMIN_URL');
 /// The app's own version, for the crash reporter's release tag. Kept in one
 /// place next to pubspec's `version:` — bump both together
 /// (test/batch125_test.dart fails when they differ).
-const appVersion = '1.0.0';
+const appVersion = '1.0.1';
 
 Future<void> main() => CrashReporting.run(_boot, version: appVersion);
 
