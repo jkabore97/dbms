@@ -215,6 +215,11 @@ self.addEventListener('fetch', (event) => {
   // this line the shell answered, and a phone that keeps Mara opened the
   // app on a card's address, to nothing.
   if (path.startsWith('/e/') || path.startsWith('/modele/') || path.startsWith('/cartes/') || path.startsWith('/evenements/')) return;
+  // The app's download link (/telecharger, /download — the site Worker's
+  // download.js) sends a phone on to its store: the server's answer, not
+  // the app. Answered by the shell, a phone that had opened marakaj.com
+  // once landed on the sign-in page instead of the store.
+  if (/^\/(telecharger|download)\/?$/.test(path)) return;
 
   if (request.mode === 'navigate') {
     event.respondWith(LEGAL.has(path.replace(/\/+$/, ''))

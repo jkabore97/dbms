@@ -77,3 +77,23 @@ test('a card\'s page and the cards\' files go to the network untouched (152): ne
     assert.equal(e.answered, true, url);
   }
 });
+
+test('the download link goes to the server, which sends the phone to its store — never the app\'s shell', () => {
+  const onFetch = worker();
+  for (const url of [
+    'https://marakaj.com/telecharger',
+    'https://marakaj.com/telecharger/',
+    'https://marakaj.com/download',
+    'https://marakaj.com/telecharger?utm_source=whatsapp',
+  ]) {
+    // A tap on the link: a navigation (Node's Request cannot say so itself).
+    const e = event(url);
+    Object.defineProperty(e.request, 'mode', { value: 'navigate' });
+    onFetch(e);
+    assert.equal(e.answered, false, url);
+  }
+  const app = event('https://marakaj.com/telechargement');
+  Object.defineProperty(app.request, 'mode', { value: 'navigate' });
+  onFetch(app);
+  assert.equal(app.answered, true);
+});
