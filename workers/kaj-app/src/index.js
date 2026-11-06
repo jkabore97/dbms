@@ -45,6 +45,7 @@ import { mapsLink } from "./maps.js";
 import { isLegalPath, legalPage } from "./legal.js";
 import { helpPage, supportContacts } from "./help.js";
 import { isProxyPath, proxySupabase } from "./supabase_proxy.js";
+import { downloadPage, isDownloadPath } from "./download.js";
 
 const SITE = "https://marakaj.com";
 
@@ -115,6 +116,11 @@ async function serve(request, env) {
         return Response.redirect(`${url.origin}/aide${url.search}`, 301);
       }
       if (url.pathname === "/aide") return helpPage(await supportContacts(env));
+    }
+
+    // One link for the app (download.js): the phone's own store.
+    if ((request.method === "GET" || request.method === "HEAD") && isDownloadPath(url.pathname)) {
+      return downloadPage(request, env);
     }
 
     // A short Google Maps link's position (maps.js).
