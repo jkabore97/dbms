@@ -9208,6 +9208,15 @@ const enStrings = <String, String>{
       'Remove Événementiel access',
   'Autoriser l’Événementiel (module fermé)':
       'Allow Événementiel (module closed)',
+  // 169: an existing account added to a business from the console.
+  'Ajouter à une entreprise…': 'Add to a business…',
+  'Ajouter à une entreprise': 'Add to a business',
+  '{who} rejoint l’entreprise tout de suite, sans code d’invitation. Ses administrateurs sont prévenus.':
+      '{who} joins the business right away, without an invitation code. Its admins are told.',
+  'Entreprise : nom': 'Business: name',
+  'Aucune entreprise trouvée.': 'No business found.',
+  'Ajouter comme {role}': 'Add as {role}',
+  '{who} a été ajouté·e à {org}.': '{who} was added to {org}.',
   // 168: two accounts of one person, merged.
   'Fusionner avec un autre compte…': 'Merge with another account…',
   'Fusionner deux comptes': 'Merge two accounts',
