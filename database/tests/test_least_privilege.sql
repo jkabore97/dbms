@@ -138,6 +138,10 @@ begin
                              -- served to anyone who has its key.
                              'event_content_save', 'event_picture_slot',
                              'event_picture_done', 'event_picture_allowed', 'event_album_slot', 'event_album_done', 'event_album',
+                             -- 171: Studio, the same signed-out editor: the
+                             -- card's document saved, its versions listed,
+                             -- read, restored, and the model's card again.
+                             'event_doc_save', 'event_doc_versions', 'event_doc_version', 'event_doc_restore', 'event_doc_clear',
                              -- 077's pre-request hook runs on every request,
                              -- the street's included; it reads nothing for anon.
                              'two_step_gate')

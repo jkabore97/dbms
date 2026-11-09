@@ -720,6 +720,8 @@
       '<div class="ed-selrow" hidden><span>Le texte choisi :</span><button type="button" data-sz="-1">A− plus petit</button><button type="button" data-sz="1">A+ plus grand</button></div>' +
       '<div class="ed-sw" role="group" aria-label="Sur la carte"></div>' +
       '<div class="ed-add"><button type="button" class="ed-plus-text">+ Un texte</button><button type="button" class="ed-plus-pic">+ Une photo</button></div>' +
+      // Studio (171), once the server keeps documents: the whole card to rewrite.
+      (ORGANISER && ORGANISER.studio === true ? '<div class="ed-studio"><button type="button" class="ed-studio-btn"><b>Studio</b> · nouveau<span>Ajoutez, déplacez, stylez chaque bloc, comme sur Canva.</span></button></div>' : '') +
       '<p class="ed-hint">Touchez un texte pour l’écrire, videz-le pour l’enlever ; une photo pour la remplacer, glissez-la pour la recadrer.</p>' +
       '<div class="ed-row">' +
       (ORGANISER ? '<button type="button" class="ed-done ed-save">Enregistrer</button>'
@@ -826,6 +828,13 @@
         setOff(k, !was); toast(was ? 'Remise sur la carte.' : 'Retirée de la carte. Touchez-la encore pour la remettre.');
       }
       applyHides(); placePlus(); applySizes(); save();
+    });
+    var studioBtn = bar.querySelector('.ed-studio-btn');
+    if (studioBtn) studioBtn.addEventListener('click', function () {
+      // Studio starts from the card as saved
+      if (dirty && !confirm('Vos derniers changements ne sont pas enregistrés. Studio part de la carte enregistrée : continuer quand même ?')) return;
+      dirty = false;
+      location.href = '/e/' + encodeURIComponent(ORGANISER.slug) + '/studio?modifier=' + encodeURIComponent(ORGANISER.edit) + (ORGANISER.preview ? '&apercu=' + encodeURIComponent(ORGANISER.preview) : '');
     });
     bar.querySelector('.ed-plus-text').addEventListener('click', function () {
       // a new text, the last of those under the intro

@@ -136,6 +136,12 @@ async function serve(request, env) {
     if (event && request.method === "GET") {
       return eventPage(request, env, event[1], url.searchParams.get("apercu"), url.searchParams.get("modifier"));
     }
+    // /e/<slug>/studio?modifier=<edit token> — the card in Studio (171),
+    // the organiser's editor that works like Canva.
+    const studio = url.pathname.match(/^\/e\/([a-z0-9-]+)\/studio\/?$/);
+    if (studio && request.method === "GET") {
+      return studioPage(request, env, studio[1], url.searchParams.get("apercu"), url.searchParams.get("modifier"));
+    }
     // /e/<slug>/invite/<id> — a guest's pass (158): what the QR on their
     // answer opens. The id is the key; the server (event_pass) decides.
     // /e/<slug>/billets — a ticket request (161); /e/<slug>/billets/<id> —
@@ -164,8 +170,9 @@ async function serve(request, env) {
       return demoPage(request, env, demo[1]);
     }
     // The cards' pages — the twelve under /cartes, the animated one under
-    // /evenements — are not addresses of their own: only /e/<slug> is.
-    if (/^\/(cartes\/[a-z]+(\.html)?|evenements\/(index\.html)?)$/.test(url.pathname)) {
+    // /evenements, Studio's two under /cartes/studio — are not addresses of
+    // their own: only /e/<slug> (and /e/<slug>/studio) is.
+    if (/^\/(cartes\/[a-z]+(\.html)?|cartes\/studio\/(editor|card)?(\.html)?|evenements\/(index\.html)?)$/.test(url.pathname)) {
       return new Response("Introuvable.", {
         status: 404,
         headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
@@ -406,7 +413,104 @@ export async function eventPage(request, env, slug, preview, edit) {
     data.tickets = false;
   }
   const editor = data.editor === true && !!edit;
-  return cardPage(request, env, { slug, data, preview, edit: editor ? edit : null, editor, demo: false });
+  // A card made in Studio (171): its organiser edits it there — the old
+  // editor would change words the guests no longer see. « studio=lire »
+  // is Studio reading the card it was made from (the converter's frame).
+  const reading = new URL(request.url).searchParams.get("studio") === "lire";
+  if (editor && hasDoc(data) && !reading) {
+    return new Response(null, {
+      status: 302,
+      headers: { Location: studioHref(slug, edit, preview), "Cache-Control": "no-store" },
+    });
+  }
+  return cardPage(request, env, { slug, data, preview, edit: editor ? edit : null, editor, demo: false, classic: reading });
+}
+
+// A card with a Studio document (171) — events.doc, as event_public gives it.
+function hasDoc(data) {
+  return !!(data && data.doc && typeof data.doc === "object" && Array.isArray(data.doc.blocks));
+}
+
+function studioHref(slug, edit, preview) {
+  return `/e/${encodeURIComponent(slug)}/studio?modifier=${encodeURIComponent(edit)}` +
+    (preview ? `&apercu=${encodeURIComponent(preview)}` : "");
+}
+
+// /e/<slug>/studio?modifier=<edit token> — Studio (171): the card as a
+// document the organiser writes, adds to, moves and styles, saved with the
+// edit token (event_doc_save). The first time, the editor reads the card as
+// it is (the converter) and nothing changes for the guests until « Enregistrer ».
+// Before migration 171 is live (event_public without « doc »), a page that
+// says so and leads back to the card's editor: nothing breaks.
+export async function studioPage(request, env, slug, preview, edit) {
+  const plain = (status, title, text, href, label) => new Response(
+    `<!doctype html><html lang="fr"><head><meta charset="utf-8">` +
+    `<meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">` +
+    `<title>${escapeHtml(title)} · Marakaj</title><link rel="stylesheet" href="/cartes/studio/editor.css"></head>` +
+    `<body class="ed-body"><main class="ed-plain"><h1>${escapeHtml(title)}</h1><p>${escapeHtml(text)}</p>` +
+    (href ? `<a href="${escapeHtml(href)}">${escapeHtml(label)}</a>` : "") + `</main></body></html>`,
+    { status, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" } },
+  );
+  const refused = () => plain(404, "Ce lien ne s’ouvre pas", "Ouvrez Studio depuis Marakaj : Événements, la carte, « Modifier la carte ».");
+  if (!edit || !env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) return refused();
+  let data = null;
+  try {
+    data = await rpcFresh(env, "event_public", { p_slug: slug, p_preview: preview || "", p_edit: edit });
+  } catch (_) {
+    data = null;
+  }
+  if (!data || typeof data !== "object" || !data.title || data.editor !== true) return refused();
+  const back = `/e/${encodeURIComponent(slug)}?modifier=${encodeURIComponent(edit)}` + (preview ? `&apercu=${encodeURIComponent(preview)}` : "");
+  if (!("doc" in data)) {
+    return plain(200, "Studio arrive bientôt", "Votre carte se modifie encore avec l’éditeur que vous connaissez : rien n’est perdu.", back, "Modifier ma carte");
+  }
+  try {
+    const offer = await rpcFresh(env, "event_ticket_offer", { p_slug: slug, p_preview: preview || "" });
+    data.tickets = !!(offer && offer.on === true);
+  } catch (_) {
+    data.tickets = false;
+  }
+  const page = await assetPage(env, request, "/cartes/studio/editor.html");
+  if (!page.ok) return refused();
+  const when = localParts(data.starts_at, data.tz);
+  const boot = {
+    slug: data.slug,
+    kind: data.kind,
+    card: data.card,
+    family: data.family === "anime" || ANIMATED.test(String(data.card || "")) ? "anime" : "classique",
+    title: data.title,
+    starts_at: data.starts_at || null,
+    tz: data.tz || null,
+    date: when.date,
+    time: when.time,
+    place: data.place || null,
+    content: data.content && typeof data.content === "object" ? data.content : {},
+    doc: hasDoc(data) ? data.doc : null,
+    doc_saved_at: data.doc_saved_at || null,
+    rsvp_on: data.rsvp_on !== false,
+    album_on: data.album_on !== false,
+    tickets: data.tickets === true,
+    published: data.published === true,
+    org_name: data.org_name || "",
+    preview: preview || null,
+    editor: true,
+    edit,
+    uploads: env.UPLOADS_URL ? env.UPLOADS_URL.replace(/\/$/, "") : null,
+    api: { url: env.SUPABASE_URL || null, key: env.SUPABASE_PUBLISHABLE_KEY || null },
+  };
+  const rewritten = new HTMLRewriter()
+    .on("title", { element(e) { e.setInnerContent(`Studio · ${data.title}`); } })
+    .on("head", {
+      element(e) {
+        e.prepend(`<base href="/cartes/studio/">`, { html: true });
+        e.append(`<script>window.CARTE=${jsonForScript(boot)}</script>`, { html: true });
+      },
+    })
+    .transform(page);
+  const headers = new Headers(rewritten.headers);
+  headers.set("Cache-Control", "no-store");
+  headers.set("Content-Type", "text/html; charset=utf-8");
+  return new Response(rewritten.body, { status: 200, headers });
 }
 
 // /e/<slug>/invite/<id> — a guest's pass (158): their name, how many they
@@ -672,20 +776,22 @@ export async function demoPage(request, env, key) {
 
 // The card's page, the event written in: /e/<slug> (152) and the designs'
 // samples (/modele/<key>, 155c) share it.
-async function cardPage(request, env, { slug, data, preview, edit, editor, demo }) {
+async function cardPage(request, env, { slug, data, preview, edit, editor, demo, classic = false }) {
   const gone = () => new Response("Cette carte n'est pas ouverte.", {
     status: 404,
     headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
   });
   // Two families of design (153): the twelve cards under /cartes, each its
   // own page; the animated layouts, one page under /evenements that draws
-  // the layout the event names (window.CARTE.lay).
+  // the layout the event names (window.CARTE.lay). A card made in Studio
+  // (171) is its own page: /cartes/studio/card.html draws its document.
   const animated = data.family === "anime" || ANIMATED.test(String(data.card || ""));
   const card = animated
     ? (ANIMATED.test(String(data.card || "")) ? String(data.card) : "anime_lettre")
     : (EVENT_CARDS.has(data.card) ? data.card : "come");
-  const base = animated ? "/evenements/" : "/cartes/";
-  const page = await assetPage(env, request, animated ? "/evenements/index.html" : `/cartes/${card}.html`);
+  const studio = !demo && !classic && hasDoc(data);
+  const base = studio ? "/cartes/studio/" : animated ? "/evenements/" : "/cartes/";
+  const page = await assetPage(env, request, studio ? "/cartes/studio/card.html" : animated ? "/evenements/index.html" : `/cartes/${card}.html`);
   if (!page.ok) return gone();
 
   // The day and hour on the organiser's clock (events.tz, 153): the
@@ -719,6 +825,10 @@ async function cardPage(request, env, { slug, data, preview, edit, editor, demo 
     // A design's sample (155c): the page keeps the answers on the phone.
     demo,
     api: { url: env.SUPABASE_URL || null, key: env.SUPABASE_PUBLISHABLE_KEY || null },
+    // Studio (171): the card's document, and whether the server keeps
+    // documents at all (the old editors then offer « Studio »).
+    doc: studio ? data.doc : null,
+    studio: "doc" in data,
   };
   // Safe inside <script>: no « < » (so no « </script> »), no line separators.
   const json = JSON.stringify(boot).replace(/</g, "\\u003c").replace(/[\u2028\u2029]/g, "");

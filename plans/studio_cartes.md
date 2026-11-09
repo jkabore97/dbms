@@ -215,6 +215,13 @@ editor (blocks add/remove/reorder/hide/duplicate, text styles, theme editor with
 custom colours and fonts, photo blocks with crop/filter/frame, stock library,
 undo/redo, autosave, versions, guest preview, share). Classic cards move to v2 on
 first edit.
+*Built in batch 171.* One migration holds both (171: `events.doc` and its twenty
+versions; 170 went to the sprint, which needed none). The editor is
+`/e/<slug>/studio?modifier=<token>` rather than `/studio/<slug>` (the site's
+service worker already lets `/e/` through), its files under `app/web/cartes/studio/`.
+A card moves to Studio when its organiser opens « Studio · nouveau » in the old
+editor and saves; from then on « Modifier la carte » opens Studio. Opening Studio
+directly for every card is one line in the Worker, kept for the owner's go.
 
 **Phase 2 — the animated world and the library (3 weeks)**: the 35 animated
 designs as starting documents with scene backgrounds and decor packs; motifs,
