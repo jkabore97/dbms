@@ -116,11 +116,16 @@
   // t:plus-N — texts of their own after the word; p:gN — their own photos
   // in a gallery before the answer.
   function hideList() { return String(draft['t:hide'] || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean); }
-  function off(k) { return hideList().indexOf(k) >= 0; }
+  function showList() { return String(draft['t:show'] || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean); }
+  // Off by default (170d): the guest's card on a fiançailles (dot) card —
+  // shown only once the organiser switches it on (t:show).
+  function offByDefault(k) { return k === 'qr' && SERVER && SERVER.kind === 'dot'; }
+  function off(k) { return hideList().indexOf(k) >= 0 || (offByDefault(k) && showList().indexOf(k) < 0); }
   function setOff(k, on) {
-    var l = hideList().filter(function (x) { return x !== k; });
-    if (on) l.push(k);
+    var l = hideList().filter(function (x) { return x !== k; }), s = showList().filter(function (x) { return x !== k; });
+    if (on) l.push(k); else if (offByDefault(k)) s.push(k);
     if (l.length) draft['t:hide'] = l.join(','); else delete draft['t:hide'];
+    if (s.length) draft['t:show'] = s.join(','); else delete draft['t:show'];
   }
   function colorsOf() { var m = /^(#[0-9a-f]{6}),(#[0-9a-f]{6}),(#[0-9a-f]{6}),(#[0-9a-f]{6})$/i.exec(String(draft['t:colors'] || '')); return m ? [m[1], m[2], m[3], m[4]] : null; }
   function rgbOf(h) { return [parseInt(h.substr(1, 2), 16), parseInt(h.substr(3, 2), 16), parseInt(h.substr(5, 2), 16)]; }
@@ -129,7 +134,7 @@
   function light(h) { var c = rgbOf(h); return (c[0] * 299 + c[1] * 587 + c[2] * 114) / 255000; }
   function numKeys(re) { return Object.keys(draft).map(function (k) { var m = re.exec(k); return m ? +m[1] : 0; }).filter(Boolean).sort(function (a, b) { return a - b; }); }
   var PICS = Math.max.apply(null, [0].concat(numKeys(/^p:g(\d+)$/)));
-  var SECTIONS = { word: '[data-role="word-title"]', prog: '[data-prog], [data-role="prog-title"]', rsvp: 'form.rsvp', album: '.album-box' };
+  var SECTIONS = { word: '[data-role="word-title"]', prog: '[data-prog], [data-role="prog-title"]', infos: 'ul.infos', pics: '.pics', rsvp: 'form.rsvp', album: '.album-box', foot: '.foot' };
   function sectionOf(k) {
     var el = document.querySelector(SECTIONS[k]);
     return el ? (el.closest('section') || el) : null;
@@ -137,8 +142,108 @@
   function applyHides() {
     Object.keys(SECTIONS).forEach(function (k) { var s = sectionOf(k); if (s) s.classList.toggle('is-off', off(k)); });
     Array.prototype.forEach.call(document.querySelectorAll('[data-count]'), function (el) { el.classList.toggle('is-off', off('cd')); });
-    Array.prototype.forEach.call(document.querySelectorAll('[data-prog] [data-t]'), function (el) { el.classList.toggle('is-off', off('times')); });
+    // the hours off: blanked where the step is a grid (the columns stay put), gone elsewhere
+    Array.prototype.forEach.call(document.querySelectorAll('[data-prog] [data-t]'), function (el) {
+      var grid = /grid/.test(getComputedStyle(el.parentElement).display);
+      el.classList.toggle('is-blank', off('times') && grid); el.classList.toggle('is-off', off('times') && !grid);
+    });
+    applyItems();
   }
+  // ---------------------------------------------------- the lists (170d)
+  // The programme and « Bon à savoir » are lists the organiser shapes. A
+  // step or an item of the model is taken away by its place in the
+  // model's list (t:hide « prog-0 », « infos-2 »): gone for the guests,
+  // faded for the organiser. New ones come after them, each with its own
+  // id (t:prog-adds / t:infos-adds, « 1,2 ») and keys of its own (pa-1-t,
+  // pa-1-b, pa-1-s; ia-1-b, ia-1-p) — the model's words keep their places
+  // (x-N, numbered in reading order), whatever is added.
+  var LISTS = {
+    prog: { sel: '[data-prog]', adds: 't:prog-adds', key: 'pa', fields: [['[data-t]', 't'], ['[data-b]', 'b'], ['[data-s]', 's']], add: '+ Une étape', label: 'Les étapes', none: 'Nouvelle étape' },
+    infos: { sel: 'ul.infos', adds: 't:infos-adds', key: 'ia', fields: [['b', 'b'], ['p', 'p']], add: '+ Une info', label: 'Bon à savoir', none: 'Nouvelle info' }
+  };
+  function addIds(kind) { return String(draft[LISTS[kind].adds] || '').split(',').map(function (s) { return parseInt(s, 10); }).filter(function (n) { return n > 0 && n < 100; }); }
+  function setAddIds(kind, ids) { if (ids.length) draft[LISTS[kind].adds] = ids.join(','); else delete draft[LISTS[kind].adds]; }
+  // The model's items get their place (data-li) once, before anything is added.
+  function markItems() {
+    Object.keys(LISTS).forEach(function (kind) {
+      var list = document.querySelector(LISTS[kind].sel); if (!list) return;
+      var i = 0;
+      Array.prototype.forEach.call(list.children, function (li) { if (li.tagName === 'LI' && !li.hasAttribute('data-la')) li.setAttribute('data-li', String(i++)); });
+    });
+  }
+  function addedItem(kind, id) {
+    var L = LISTS[kind], list = document.querySelector(L.sel), proto = list && list.querySelector('li[data-li]');
+    if (!proto) return null;
+    var li = proto.cloneNode(true);
+    li.removeAttribute('data-li'); li.setAttribute('data-la', String(id)); li.classList.remove('is-off', 'li-off');
+    Array.prototype.forEach.call(li.querySelectorAll('a, button, .copy, [data-copy]'), function (x) { x.parentNode && x.parentNode.removeChild(x); });
+    L.fields.forEach(function (f) {
+      var el = li.querySelector(f[0]); if (!el) return;
+      el.setAttribute('data-edit', L.key + '-' + id + '-' + f[1]); el.removeAttribute('data-x-wrap');
+      var k = 't:' + L.key + '-' + id + '-' + f[1];
+      el.innerHTML = draft[k] ? clean(draft[k]) : '';
+    });
+    // the model's other words in the copy (a number « 01 », a note): not this item's
+    Array.prototype.forEach.call(li.querySelectorAll('[data-edit^="x-"]'), function (x) {
+      x.removeAttribute('data-edit'); x.removeAttribute('contenteditable');
+      x.textContent = /^\s*\d+\s*$/.test(x.textContent) ? String(list.querySelectorAll('li').length + 1).padStart(2, '0') : '';
+    });
+    if (document.body.classList.contains('editing')) Array.prototype.forEach.call(li.querySelectorAll('[data-edit]'), function (x) { x.setAttribute('contenteditable', 'true'); });
+    return li;
+  }
+  function itemTitle(li, kind) {
+    var b = li.querySelector(kind === 'prog' ? '[data-b]' : 'b'), t = b ? b.textContent.replace(/\s+/g, ' ').trim() : '';
+    return t || LISTS[kind].none;
+  }
+  // Every list as the draft says: the model's items shown or taken away,
+  // the added ones after them, and — in edit mode — a row of chips under
+  // the list: each item (tap: take away / put back; × on an added one),
+  // and « + Une étape ».
+  function applyItems() {
+    Object.keys(LISTS).forEach(function (kind) {
+      var L = LISTS[kind], list = document.querySelector(L.sel); if (!list) return;
+      Array.prototype.forEach.call(list.querySelectorAll('li[data-la]'), function (li) { li.parentNode.removeChild(li); });
+      addIds(kind).forEach(function (id) { var li = addedItem(kind, id); if (li) list.appendChild(li); });
+      Array.prototype.forEach.call(list.querySelectorAll('li[data-li]'), function (li) {
+        var gone = off(kind + '-' + li.getAttribute('data-li'));
+        li.classList.toggle('is-off', gone && !EDITABLE); li.classList.toggle('li-off', gone && EDITABLE);
+      });
+      var old = list.parentNode.querySelector('.li-ed[data-list="' + kind + '"]'); if (old) old.parentNode.removeChild(old);
+      if (!EDITABLE) return;
+      var ed = document.createElement('div'); ed.className = 'li-ed'; ed.setAttribute('data-list', kind);
+      ed.innerHTML = '<span class="li-lab">' + L.label + ' — touchez pour retirer ou remettre :</span>' +
+        Array.prototype.map.call(list.querySelectorAll('li[data-li], li[data-la]'), function (li) {
+          var la = li.getAttribute('data-la'), shown = !li.classList.contains('li-off');
+          return '<button type="button" ' + (la ? 'data-a="' + la + '"' : 'data-i="' + li.getAttribute('data-li') + '" aria-pressed="' + shown + '"') + '>' +
+            esc(itemTitle(li, kind)).slice(0, 40) + (la ? ' ×' : shown ? '' : ' (retirée)') + '</button>';
+        }).join('') + '<button type="button" class="li-add">' + L.add + '</button>';
+      list.parentNode.insertBefore(ed, list.nextSibling);
+    });
+  }
+  // Text sizes (170d): t:sizes « key:L,key:S » — S, L, XL around the
+  // model's own size for that text (measured, so a title grows as a title).
+  var SIZES = { S: .82, L: 1.22, XL: 1.5 }, STEPS = ['S', 'M', 'L', 'XL'];
+  function sizeMap() {
+    var m = {};
+    String(draft['t:sizes'] || '').split(',').forEach(function (x) { var r = /^([a-z0-9-]{1,40}):(S|L|XL)$/.exec(x.trim()); if (r) m[r[1]] = r[2]; });
+    return m;
+  }
+  function setSize(key, sz) {
+    var m = sizeMap(); if (sz && sz !== 'M') m[key] = sz; else delete m[key];
+    var l = Object.keys(m).map(function (k) { return k + ':' + m[k]; });
+    if (l.length) draft['t:sizes'] = l.join(','); else delete draft['t:sizes'];
+  }
+  function applySizes() {
+    var m = sizeMap();
+    Array.prototype.forEach.call(document.querySelectorAll('[data-fs]'), function (el) { el.style.removeProperty('font-size'); el.removeAttribute('data-fs'); });
+    Object.keys(m).forEach(function (k) {
+      Array.prototype.forEach.call(document.querySelectorAll('[data-edit="' + k + '"]'), function (el) {
+        var base = parseFloat(getComputedStyle(el).fontSize) || 16;
+        el.style.fontSize = (base * SIZES[m[k]]).toFixed(1) + 'px'; el.setAttribute('data-fs', m[k]);
+      });
+    });
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function plusText(k) { var d = document.createElement('div'); d.innerHTML = clean(draft[k]); return d.textContent.replace(/\s+/g, ' ').trim(); }
   // The organiser's own texts (170c): t:plus-N the words; t:plus-at where
   // each one stands, in reading order — « N@intro » (under the word or the
@@ -185,7 +290,8 @@
       l = document.querySelector('[data-prog]') || document.querySelector('#programme .moments');
       if (!l || off('prog') || (l.closest('section') && l.closest('section').classList.contains('is-off'))) return null;
       like = bodyParas(l.closest('section') || l.parentNode)[0] || null;
-      return { parent: l.parentNode, before: l.nextSibling, like: like };
+      var chips = l.parentNode.querySelector(':scope > .li-ed[data-list="prog"]');
+      return { parent: l.parentNode, before: chips ? chips.nextSibling : l.nextSibling, like: like };
     }
     if (a === 'rsvp') {
       f = document.querySelector('form.rsvp');
@@ -342,7 +448,10 @@
       // Another type rewrote the words: the organiser's own words written
       // over the old ones (x-…) no longer sit where they were.
       Object.keys(draft).forEach(function (k) { if (k.indexOf('t:x-') === 0) delete draft[k]; });
-      markAll();
+      // the programme was drawn anew: the steps taken away were the old type's
+      hideList().forEach(function (k) { if (/^prog-\d+$/.test(k)) setOff(k, false); });
+      Array.prototype.forEach.call(document.querySelectorAll('[data-prog] li'), function (li) { li.removeAttribute('data-li'); li.classList.remove('is-off', 'li-off'); });
+      markAll(); markItems(); applyHides(); placePlus(); applySizes();
       if (document.body.classList.contains('editing')) editables().forEach(function (el) { el.setAttribute('contenteditable', 'true'); });
       save(); toast('Carte réglée pour : ' + p.label);
     }
@@ -356,7 +465,7 @@
   // at every opening for the same type) — kept as t:x-N like any other.
   // Not the links and buttons (they act), not the form, the album, the
   // pictures, the countdown.
-  var SKIP = 'a, button, label, select, option, textarea, input, form, svg, script, style, .edbar, .album-box, .toast, [data-count], [data-pic], [data-slot], [data-edit]';
+  var SKIP = 'a, button, label, select, option, textarea, input, form, svg, script, style, .edbar, .album-box, .toast, .li-ed, .xmove, [data-count], [data-pic], [data-slot], [data-edit]';
   function markAll() {
     Array.prototype.forEach.call(document.querySelectorAll('[data-edit^="x-"]'), function (el) {
       if (el.hasAttribute('data-x-wrap')) { el.replaceWith(document.createTextNode(el.textContent)); return; }
@@ -385,6 +494,7 @@
   // ------------------------------------------------- what the draft says
   if (draft.type) applyPreset(draft.type, true);
   markAll();
+  markItems();
 
   // ------------------------------------------ colours and writing (159c)
   // Like the animated designs: the model's own, or one of these, kept as
@@ -400,6 +510,22 @@
     ['Bleu nuit', '#1d2b45', '#f4f6fa', '#1f2a3d', '#cdd5e2', '#2f4a7a', '#f4f6fa'],
     ['Bordeaux', '#4a1520', '#f7f2ea', '#2a1a1c', '#d9cdb8', '#6b1f2a', '#f7f2ea'],
     ['Wax vert et or', '#0f4d3a', '#fbf5e8', '#1f2a23', '#e3d3b0', '#c79a2e', '#1f2a23']
+  ];
+  // 24 more (170d): ready-made sets of the organiser's own four colours
+  // (fond, papier, texte, accent), the same on every card.
+  var XPALS = [
+    ['Ivoire et or', '#3b2f22', '#fbf6ec', '#2b2118', '#b8893b'], ['Blanc et sauge', '#4f5d4a', '#f7f6f1', '#2e3a2c', '#7a9a6e'],
+    ['Émeraude et or', '#0b3d2e', '#f6f1e3', '#13261d', '#c9a24a'], ['Bordeaux et crème', '#4b1622', '#f8f1e7', '#2b1418', '#8e2a3b'],
+    ['Nuit et argent', '#0f1a2e', '#f2f4f8', '#1a2436', '#8fa3c0'], ['Rose poudré', '#c79a96', '#fcf5f3', '#4a3533', '#c0716c'],
+    ['Terracotta', '#8a3f24', '#fbf1e8', '#3a2016', '#c9643a'], ['Lavande', '#5e5277', '#f7f4fa', '#362e46', '#9a86c4'],
+    ['Moutarde et noir', '#1b1a17', '#fbf6e9', '#1b1a17', '#c9951c'], ['Turquoise et corail', '#0f5257', '#f3faf9', '#163a3d', '#e0664c'],
+    ['Bogolan', '#3d2a1b', '#efe3cf', '#2f2014', '#9a6a3b'], ['Faso Dan Fani', '#13315c', '#f8f3e6', '#13284d', '#d9a52c'],
+    ['Kente', '#1c4a2c', '#fbf3dc', '#1c2a1f', '#c8372a'], ['Wax fuchsia', '#5a0f3c', '#fdf2f7', '#3d0b28', '#d2468e'],
+    ['Indigo', '#1e2a5a', '#f2f3fb', '#1b2240', '#4f63c9'], ['Olive et crème', '#4a4a26', '#f7f4e6', '#2f2f18', '#7d7d32'],
+    ['Pêche', '#d98f70', '#fff6f1', '#4a2c22', '#d46e4a'], ['Menthe', '#2f6f5a', '#f2faf6', '#1f3a30', '#2f8f68'],
+    ['Prune et or', '#3b1530', '#f8f0f4', '#2a1023', '#b58b45'], ['Noir et blanc', '#111111', '#ffffff', '#111111', '#111111'],
+    ['Ciel', '#2b6cb0', '#f3f8fd', '#1c3046', '#2f7fcf'], ['Sable et cuivre', '#6b4a2b', '#f8efe2', '#3a2a1a', '#a85f26'],
+    ['Sapin et rouge', '#123524', '#f7f3ea', '#13261c', '#a82b25'], ['Champagne', '#8a7558', '#fbf7ef', '#3b3226', '#a88a4f']
   ];
   var FONTS = [
     { id: '', name: 'Celle du modèle' },
@@ -440,6 +566,7 @@
       if (el) el.innerHTML = clean(draft[k]);
     }
   });
+  applySizes();
 
   // ------------------------------------------------------------ pictures
   function wirePic(slot) {
@@ -577,7 +704,7 @@
       '<button type="button" class="ed-toggle">Modifier cette carte</button>' +
       // The organiser's panel folds away (170b): a scroll or a tap on a text
       // leaves only « Outils » and « Enregistrer »; « Outils » opens it again.
-      (ORGANISER ? '<div class="ed-mini" hidden><button type="button" class="ed-unfold">Outils</button><button type="button" class="ed-save ed-mini-save">Enregistrer</button></div>' : '') +
+      (ORGANISER ? '<div class="ed-mini" hidden><button type="button" class="ed-unfold">Outils</button><span class="ed-sizes" hidden><button type="button" data-sz="-1" aria-label="Texte plus petit">A−</button><button type="button" data-sz="1" aria-label="Texte plus grand">A+</button></span><button type="button" class="ed-save ed-mini-save">Enregistrer</button></div>' : '') +
       '<div class="ed-tools" hidden>' +
       (ORGANISER ? '<div class="ed-head"><b>Les outils de la carte</b><button type="button" class="ed-fold">Réduire</button></div>' : '') +
       '<label class="ed-type">Événement <select>' + opts + '</select></label>' +
@@ -588,6 +715,9 @@
       }).join('') + '</div>' +
       '<select class="ed-font" aria-label="Écriture">' + FONTS.map(function (f) { return '<option value="' + f.id + '">Aa · ' + f.name + '</option>'; }).join('') + '</select></div>' +
       '<div class="ed-colors" role="group" aria-label="Vos couleurs"></div>' +
+      '<div class="ed-palx-wrap"><button type="button" class="ed-palx-btn" aria-expanded="false">+ 24 palettes</button><div class="ed-palx" hidden>' +
+      XPALS.map(function (p, i) { return '<button type="button" data-x="' + i + '" title="' + p[0] + '" aria-label="' + p[0] + '" style="background:linear-gradient(135deg,' + p[2] + ' 0 50%,' + p[4] + ' 50% 75%,' + p[1] + ' 75%)"></button>'; }).join('') + '</div></div>' +
+      '<div class="ed-selrow" hidden><span>Le texte choisi :</span><button type="button" data-sz="-1">A− plus petit</button><button type="button" data-sz="1">A+ plus grand</button></div>' +
       '<div class="ed-sw" role="group" aria-label="Sur la carte"></div>' +
       '<div class="ed-add"><button type="button" class="ed-plus-text">+ Un texte</button><button type="button" class="ed-plus-pic">+ Une photo</button></div>' +
       '<p class="ed-hint">Touchez un texte pour l’écrire, videz-le pour l’enlever ; une photo pour la remplacer, glissez-la pour la recadrer.</p>' +
@@ -608,7 +738,7 @@
         return '<label class="ed-col"><input type="color" data-c="' + x[1] + '" value="' + now[x[1]] + '"><span>' + x[0] + '</span></label>';
       }).join('') + (C ? '<button type="button" class="ed-col-reset">Couleurs du modèle</button>' : '');
       // what the card shows: only what this card has
-      var sws = [['word', 'Le mot'], ['prog', 'Programme'], ['times', 'Horaires'], ['rsvp', 'Réponse des invités'], ['qr', 'Carte d’invité (QR)'], ['album', 'Album'], ['cd', 'Compte à rebours']];
+      var sws = [['word', 'Le mot'], ['prog', 'Programme'], ['times', 'Horaires'], ['infos', 'Bon à savoir'], ['pics', 'Photos'], ['rsvp', 'Réponse des invités'], ['qr', 'Carte d’invité (QR)'], ['album', 'Album'], ['cd', 'Compte à rebours'], ['foot', 'Pied de page']];
       bar.querySelector('.ed-sw').innerHTML = sws.filter(function (x) {
         if (x[0] === 'times') return !!document.querySelector('[data-prog] [data-t]');
         if (x[0] === 'cd') return !!document.querySelector('[data-count]');
@@ -643,6 +773,59 @@
     bar.querySelector('.ed-sw').addEventListener('change', function (e) {
       var t = e.target; if (!t.matches('[data-sw]')) return;
       setOff(t.dataset.sw, !t.checked); applyHides(); placePlus(); save();
+    });
+    // 24 more palettes (170d): a ready-made set of the four colours
+    bar.querySelector('.ed-palx-btn').addEventListener('click', function (e) {
+      var g = bar.querySelector('.ed-palx'); g.hidden = !g.hidden; e.currentTarget.setAttribute('aria-expanded', String(!g.hidden));
+    });
+    bar.querySelector('.ed-palx').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-x]'); if (!b) return;
+      var p = XPALS[+b.getAttribute('data-x')]; draft['t:colors'] = [p[1], p[2], p[3], p[4]].join(',');
+      applyLook(); drawLook(); applySizes(); save(); toast('Couleurs : ' + p[0]);
+    });
+    // The chosen text (170d): the last one tapped, outlined; A− / A+ size it.
+    var SEL = null;
+    function drawSel() {
+      Array.prototype.forEach.call(bar.querySelectorAll('.ed-sizes, .ed-selrow'), function (x) { x.hidden = !SEL; });
+    }
+    document.addEventListener('focusin', function (e) {
+      var el = e.target.closest && e.target.closest('[data-edit]');
+      if (!el || !document.body.classList.contains('editing')) return;
+      if (SEL && SEL !== el) SEL.classList.remove('is-sel');
+      SEL = el; el.classList.add('is-sel'); drawSel();
+    });
+    bar.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-sz]'); if (!b || !SEL) return;
+      var key = SEL.getAttribute('data-edit'), cur = sizeMap()[key] || 'M';
+      var next = STEPS[Math.max(0, Math.min(STEPS.length - 1, STEPS.indexOf(cur) + (+b.getAttribute('data-sz'))))];
+      if (next === cur) { toast(next === 'XL' ? 'C’est la plus grande taille.' : 'C’est la plus petite taille.'); return; }
+      setSize(key, next); applySizes(); save();
+      toast({ S: 'Petit', M: 'Taille du modèle', L: 'Grand', XL: 'Très grand' }[next]);
+    });
+    // The lists' chips (170d): take a step or an info away, put it back, add one.
+    document.addEventListener('click', function (ev) {
+      var b = ev.target.closest && ev.target.closest('.li-ed button');
+      if (!b || !document.body.classList.contains('editing')) return;
+      ev.preventDefault();
+      var kind = b.closest('.li-ed').getAttribute('data-list'), L = LISTS[kind];
+      if (b.classList.contains('li-add')) {
+        var ids = addIds(kind), id = Math.max.apply(null, [0].concat(ids)) + 1; ids.push(id); setAddIds(kind, ids);
+        applyHides(); placePlus(); applySizes(); save();
+        var li = document.querySelector(L.sel + ' li[data-la="' + id + '"]'), f = li && li.querySelector('[data-edit]');
+        if (f) { f.scrollIntoView({ behavior: 'smooth', block: 'center' }); f.focus(); }
+        toast(kind === 'prog' ? 'Écrivez l’heure, le nom et le détail de l’étape.' : 'Écrivez le titre et le détail.');
+        return;
+      }
+      if (b.hasAttribute('data-a')) {
+        var a = +b.getAttribute('data-a');
+        setAddIds(kind, addIds(kind).filter(function (x) { return x !== a; }));
+        L.fields.forEach(function (f2) { delete draft['t:' + L.key + '-' + a + '-' + f2[1]]; });
+        toast(kind === 'prog' ? 'Étape retirée.' : 'Info retirée.');
+      } else {
+        var k = kind + '-' + b.getAttribute('data-i'), was = off(k);
+        setOff(k, !was); toast(was ? 'Remise sur la carte.' : 'Retirée de la carte. Touchez-la encore pour la remettre.');
+      }
+      applyHides(); placePlus(); applySizes(); save();
     });
     bar.querySelector('.ed-plus-text').addEventListener('click', function () {
       // a new text, the last of those under the intro
@@ -712,6 +895,10 @@
         // an added text left empty is not kept
         Object.keys(draft).forEach(function (k) { if (/^t:plus-\d+$/.test(k) && !plusText(k)) delete draft[k]; });
         setPlusList(plusList().filter(function (x) { return plusText('t:plus-' + x.n); }));
+        Object.keys(LISTS).forEach(function (kind) {
+          var L = LISTS[kind];
+          setAddIds(kind, addIds(kind).filter(function (id) { return L.fields.some(function (f) { return plusText('t:' + L.key + '-' + id + '-' + f[1]); }); }));
+        });
         saveBtn.disabled = true; saveBtn.textContent = 'Envoi…';
         fetch(SERVER.api.url.replace(/\/+$/, '') + '/rest/v1/rpc/event_content_save', {
           method: 'POST',
