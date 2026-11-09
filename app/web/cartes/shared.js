@@ -482,7 +482,11 @@
     var opts = Object.keys(PRESETS).map(function (k) { return '<option value="' + k + '">' + PRESETS[k].label + '</option>'; }).join('');
     bar.innerHTML =
       '<button type="button" class="ed-toggle">Modifier cette carte</button>' +
+      // The organiser's panel folds away (170b): a scroll or a tap on a text
+      // leaves only « Outils » and « Enregistrer »; « Outils » opens it again.
+      (ORGANISER ? '<div class="ed-mini" hidden><button type="button" class="ed-unfold">Outils</button><button type="button" class="ed-save ed-mini-save">Enregistrer</button></div>' : '') +
       '<div class="ed-tools" hidden>' +
+      (ORGANISER ? '<div class="ed-head"><b>Les outils de la carte</b><button type="button" class="ed-fold">Réduire</button></div>' : '') +
       '<label class="ed-type">Événement <select>' + opts + '</select></label>' +
       '<div class="ed-look"><div class="ed-pals" role="group" aria-label="Couleurs">' +
       PALS.map(function (p, i) {
@@ -561,10 +565,20 @@
     var def = card.getAttribute('data-type') || 'mariage';
     sel.value = draft.type || def;
     sel.addEventListener('change', function () { applyPreset(sel.value); });
+    var folded = false, foldY = 0, foldAt = 0;
+    function fold(on) {
+      if (!ORGANISER) return;
+      folded = on;
+      var editing = document.body.classList.contains('editing');
+      bar.querySelector('.ed-tools').hidden = on || !editing;
+      bar.querySelector('.ed-mini').hidden = !on || !editing;
+      if (!on) { foldY = window.scrollY; foldAt = Date.now(); }
+    }
     function setEditing(on) {
       document.body.classList.toggle('editing', on);
       bar.querySelector('.ed-toggle').hidden = on;
-      bar.querySelector('.ed-tools').hidden = !on;
+      bar.querySelector('.ed-tools').hidden = !on || folded;
+      if (ORGANISER) bar.querySelector('.ed-mini').hidden = !on || !folded;
       editables().forEach(function (el) {
         if (on) el.setAttribute('contenteditable', 'true'); else el.removeAttribute('contenteditable');
       });
@@ -575,9 +589,16 @@
       // The organiser's « Enregistrer »: the draft goes to the server
       // (event_content_save, 154) with the edit token; the guests see it
       // at their next visit.
-      var saveBtn = bar.querySelector('.ed-save');
+      // « Enregistrer » sits in the panel and in the folded bar: one state for both.
+      var saveBtns = Array.prototype.slice.call(bar.querySelectorAll('.ed-save'));
+      var saveBtn = { set textContent(v) { saveBtns.forEach(function (b) { b.textContent = v; }); }, set disabled(v) { saveBtns.forEach(function (b) { b.disabled = v; }); } };
       markDirty = function () { saveBtn.textContent = 'Enregistrer'; saveBtn.disabled = false; };
-      saveBtn.addEventListener('click', function () {
+      bar.querySelector('.ed-fold').addEventListener('click', function () { fold(true); });
+      bar.querySelector('.ed-unfold').addEventListener('click', function () { fold(false); });
+      // The panel gets out of the way: a scroll of the card, or a text taken to write.
+      window.addEventListener('scroll', function () { if (!folded && Math.abs(window.scrollY - foldY) > 48 && Date.now() - foldAt > 500) fold(true); }, { passive: true });
+      document.addEventListener('focusin', function (e) { if (!folded && e.target.closest && e.target.closest('[data-edit]')) fold(true); });
+      function onSave() {
         editables().forEach(function (el) { el.blur(); });
         // an added text left empty is not kept
         Object.keys(draft).forEach(function (k) { if (/^t:plus-\d+$/.test(k) && !plusText(k)) delete draft[k]; });
@@ -593,9 +614,10 @@
           markDirty();
           toast(err && err.message ? err.message : 'La carte n’est pas enregistrée. Réessayez.');
         });
-      });
+      }
+      saveBtns.forEach(function (b) { b.addEventListener('click', onSave); });
       window.addEventListener('beforeunload', function (e) { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
-      setEditing(true);
+      setEditing(true); fold(false);
     } else {
       bar.querySelector('.ed-done').addEventListener('click', function () { setEditing(false); });
       bar.querySelector('.ed-reset').addEventListener('click', function () {
