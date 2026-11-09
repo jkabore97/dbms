@@ -1186,8 +1186,8 @@ class _SaleFlowState extends State<SaleFlow> {
             ),
           ),
           const SizedBox(height: 10),
-          SizedBox(
-            height: 52,
+          ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 52),
             child: OutlinedButton.icon(
               key: const Key('sale-typed-add'),
               onPressed: _typedName.text.trim().isNotEmpty &&
@@ -1918,8 +1918,8 @@ class _WavePaymentSheetState extends State<WavePaymentSheet> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: SizedBox(
-                  height: 52,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 52),
                   child: FilledButton.icon(
                     onPressed: _senderController.text.trim().isEmpty
                         ? null

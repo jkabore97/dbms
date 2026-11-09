@@ -398,21 +398,27 @@ class _TemplatePreviewScreenState extends State<TemplatePreviewScreen> {
     final forEvent = widget.forEvent;
     final current = forEvent != null && forEvent.card == t.key;
     final locked = t.premium && !widget.org.isPro;
+    // Heights are minimums, never fixed (171c): the theme puts 16 above and
+    // below a label, and a fixed 46 left « Voir le modèle en vrai » 14 of
+    // the 19 pixels its line needs — the owner saw it cut. At the phone's
+    // usual text size the two buttons keep 46 and 52; larger text, or a
+    // label on two lines, makes them taller instead of cutting the words.
     final buttons = Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
-        SizedBox(
-          height: 46,
+        ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 46),
           child: OutlinedButton.icon(
             key: const Key('template-demo'),
+            style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13)),
             onPressed: _demo,
             icon: const Icon(Icons.play_circle_outline),
-            label: Text(context.tr('Voir le modèle en vrai')),
+            label: Text(context.tr('Voir le modèle en vrai'), textAlign: TextAlign.center),
           ),
         ),
         const SizedBox(height: 8),
-        SizedBox(
-          height: 52,
+        ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 52),
           child: FilledButton.icon(
             key: const Key('template-use'),
             onPressed: _busy || current
@@ -425,13 +431,15 @@ class _TemplatePreviewScreenState extends State<TemplatePreviewScreen> {
                 : draft != null
                     ? Icons.check
                     : Icons.auto_awesome_outlined),
-            label: Text(current
-                ? context.tr('Le modèle actuel de cette carte')
-                : locked
-                    ? context.tr('Modèle Premium : passer à Marakaj Pro')
-                    : draft != null
-                    ? context.tr('Créer la carte avec ce modèle')
-                    : context.tr('Utiliser ce modèle')),
+            label: Text(
+                current
+                    ? context.tr('Le modèle actuel de cette carte')
+                    : locked
+                        ? context.tr('Modèle Premium : passer à Marakaj Pro')
+                        : draft != null
+                            ? context.tr('Créer la carte avec ce modèle')
+                            : context.tr('Utiliser ce modèle'),
+                textAlign: TextAlign.center),
           ),
         ),
       ]),

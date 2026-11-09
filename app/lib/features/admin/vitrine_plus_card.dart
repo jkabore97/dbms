@@ -621,8 +621,8 @@ class _VitrinePlusCardState extends State<VitrinePlusCard> {
             Text(_message!, style: theme.textTheme.bodySmall),
           ],
           const SizedBox(height: 8),
-          SizedBox(
-            height: 48,
+          ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
             child: FilledButton.tonalIcon(
               key: const Key('dressing-save'),
               onPressed: _saving ? null : _save,

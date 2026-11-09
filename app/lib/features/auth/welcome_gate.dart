@@ -331,6 +331,8 @@ class _WelcomeSheet extends StatelessWidget {
                         const SizedBox(height: 12),
                       ],
                       if (google) ...[
+                        // A fixed height on purpose (171c): as tall as
+                        // Apple's, its words one line shrunk to fit (AU-1).
                         SizedBox(
                           height: 52,
                           child: FilledButton(
@@ -364,6 +366,8 @@ class _WelcomeSheet extends StatelessWidget {
                         ),
                       ],
                       if (emailOnly)
+                        // A fixed height on purpose (171c): its words
+                        // one line, shrunk to fit.
                         SizedBox(
                           height: 52,
                           child: FilledButton(

@@ -479,8 +479,8 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
                       ),
                     ),
                     if (me != null && remaining > 0) ...[
-                      SizedBox(
-                        height: 52,
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: 52),
                         child: OutlinedButton.icon(
                           key: const Key('customer-remind'),
                           onPressed: () => _remind(me),

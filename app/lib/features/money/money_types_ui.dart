@@ -148,8 +148,8 @@ class _TypeSheetState extends State<_TypeSheet> {
             ),
             const SizedBox(height: 8),
           ],
-          SizedBox(
-            height: 52,
+          ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 52),
             child: FilledButton(
               key: const Key('type-save'),
               onPressed: _clean.isEmpty || _busy ? null : _save,

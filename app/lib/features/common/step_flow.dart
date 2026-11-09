@@ -209,8 +209,8 @@ class FlowDone extends StatelessWidget {
         if (details != null) ...[const SizedBox(height: 16), details!],
         const SizedBox(height: 24),
         for (final a in actions) ...[
-          SizedBox(
-            height: 56,
+          ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 56),
             child: a.primary
                 ? FilledButton.icon(
                     key: a.key,

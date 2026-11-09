@@ -261,8 +261,8 @@ class _TontineScreenState extends State<TontineScreen> {
                         ),
                       ),
                     const SizedBox(height: 16),
-                    SizedBox(
-                      height: 52,
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 52),
                       child: FilledButton.icon(
                         // Offered only once everyone has paid — the server
                         // enforces it anyway; hiding a button that can only
@@ -365,8 +365,8 @@ class _NewTontineSheetState extends State<_NewTontineSheet> {
                   style:
                       TextStyle(color: Theme.of(context).colorScheme.error)),
             ],
-          SizedBox(
-              height: 52,
+          ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 52),
               child: FilledButton(
                 onPressed: _busy ? null : _save,
                 child: _busy

@@ -475,8 +475,8 @@ class _ProductionFlowState extends State<ProductionFlow> {
                     style: theme.textTheme.bodyMedium),
                 if (widget.addIngredients != null) ...[
                   const SizedBox(height: 12),
-                  SizedBox(
-                    height: 52,
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 52),
                     child: FilledButton.icon(
                       key: const Key('production-add-ingredient'),
                       onPressed: _addIngredients,

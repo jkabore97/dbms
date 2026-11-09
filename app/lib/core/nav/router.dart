@@ -2289,8 +2289,8 @@ class _AdminOnly extends StatelessWidget {
               Text(context.tr('Demandez au propriétaire de l\'entreprise.'),
                   textAlign: TextAlign.center, style: theme.textTheme.bodyLarge),
               const SizedBox(height: 24),
-              SizedBox(
-                height: 52,
+              ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 52),
                 child: FilledButton.icon(
                   onPressed: () => context.go(Routes.org(org.id)),
                   icon: const Icon(Icons.home_outlined),
@@ -2347,8 +2347,8 @@ class FeatureUnavailableScreen extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyLarge),
               const SizedBox(height: 24),
-              SizedBox(
-                height: 52,
+              ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 52),
                 child: FilledButton.icon(
                   onPressed: () => context.go(Routes.org(org.id)),
                   icon: const Icon(Icons.home_outlined),

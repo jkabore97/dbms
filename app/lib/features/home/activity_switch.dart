@@ -114,8 +114,8 @@ class ActivitySwitchSheet extends StatelessWidget {
             _Current(org: org),
             const SizedBox(height: 16),
             if (!locked)
-              SizedBox(
-                height: 52,
+              ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 52),
                 child: FilledButton.icon(
                   key: const Key('activity-create'),
                   onPressed: () =>
@@ -161,8 +161,8 @@ class ActivitySwitchSheet extends StatelessWidget {
               // Pro (125): the card above says what a second needs.
               if (sellsProInApp) ...[
                 const SizedBox(height: 16),
-                SizedBox(
-                  height: 52,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 52),
                   child: FilledButton.icon(
                     key: const Key('activity-go-pro'),
                     style: FilledButton.styleFrom(

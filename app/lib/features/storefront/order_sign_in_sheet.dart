@@ -182,6 +182,8 @@ class _OrderSignInSheetState extends State<OrderSignInSheet> {
               SizedBox(height: google == false ? 28 : 12),
             ],
             if (google != false) ...[
+              // A fixed height on purpose (171c): as tall as Apple's, and
+              // its words cannot be cut — one line, shrunk to fit (AU-1).
               SizedBox(
                 height: buttonHeight,
                 child: FilledButton(

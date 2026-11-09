@@ -220,8 +220,8 @@ class _JoinByCodeScreenState extends State<JoinByCodeScreen> {
                   ),
                 ],
                 const SizedBox(height: 28),
-                SizedBox(
-                  height: 52,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 52),
                   child: _orgName == null
                       ? FilledButton(
                           onPressed:

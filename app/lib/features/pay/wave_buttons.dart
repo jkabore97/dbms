@@ -128,8 +128,8 @@ class _WaveButtonsState extends State<WaveButtons> {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (widget.above != null) ...[widget.above!, const SizedBox(height: 10)],
-        SizedBox(
-          height: 50,
+        ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 50),
           child: FilledButton.icon(
             onPressed: _busy ? null : () => _go(card: false),
             icon: _busy
@@ -147,8 +147,8 @@ class _WaveButtonsState extends State<WaveButtons> {
         ),
         if (_terms!.card) ...[
           const SizedBox(height: 8),
-          SizedBox(
-            height: 48,
+          ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
             child: OutlinedButton.icon(
               onPressed: _busy ? null : () => _go(card: true),
               icon: const Icon(Icons.credit_card_outlined),

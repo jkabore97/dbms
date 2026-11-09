@@ -476,8 +476,8 @@ class _InvoiceFlowState extends State<InvoiceFlow> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  SizedBox(
-                    height: 56,
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 56),
                     child: FilledButton.tonalIcon(
                       key: const Key('invoice-typed-add'),
                       onPressed: _typedName.text.trim().isEmpty ? null : _addTyped,

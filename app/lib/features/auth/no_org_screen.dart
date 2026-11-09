@@ -127,9 +127,8 @@ class NoOrgScreen extends StatelessWidget {
                         // A platform admin is not waiting for anybody, so their action
                         // comes first and the text above it is beside the point.
                         if (onCreateBusiness != null) ...[
-                          SizedBox(
-                            height: 52,
-                            width: double.infinity,
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(minWidth: double.infinity, minHeight: 52),
                             child: FilledButton.icon(
                               onPressed: checking ? null : onCreateBusiness,
                               icon: const Icon(Icons.add_business_outlined),
@@ -176,9 +175,8 @@ class NoOrgScreen extends StatelessWidget {
                           const SizedBox(height: 12),
                         ],
 
-                        SizedBox(
-                          height: 52,
-                          width: double.infinity,
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(minWidth: double.infinity, minHeight: 52),
                           child: OutlinedButton.icon(
                             onPressed: checking ? null : () => onRetry(),
                             icon: checking

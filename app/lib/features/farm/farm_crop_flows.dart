@@ -637,8 +637,8 @@ class _HarvestFlowState extends State<_HarvestFlow> {
           isValid: () => crop != null,
           builder: (_) {
             if (!_loaded) return const LinearProgressIndicator();
-            final add = SizedBox(
-              height: 56,
+            final add = ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 56),
               child: OutlinedButton.icon(
                 key: const Key('farm-harvest-add-crop'),
                 onPressed: _addCrop,
@@ -656,8 +656,8 @@ class _HarvestFlowState extends State<_HarvestFlow> {
                     style: theme.textTheme.bodyLarge,
                   ),
                   const SizedBox(height: 16),
-                  SizedBox(
-                    height: 56,
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 56),
                     child: OutlinedButton.icon(
                       key: const Key('farm-harvest-retry'),
                       onPressed: () {

@@ -948,8 +948,8 @@ class _StepRow extends StatelessWidget {
                   style: theme.textTheme.bodySmall?.copyWith(color: soft)),
             ],
             const SizedBox(height: 10),
-            SizedBox(
-              height: 48,
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
               child: FilledButton.icon(
                 key: const Key('chemin-go'),
                 style: FilledButton.styleFrom(

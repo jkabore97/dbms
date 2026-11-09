@@ -114,8 +114,8 @@ class _ArrivalScreenState extends State<ArrivalScreen> {
                     const SizedBox(height: 12),
                   ],
                   const SizedBox(height: 20),
-                  SizedBox(
-                    height: 54,
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 54),
                     child: FilledButton(
                       key: const Key('arrival-continue'),
                       onPressed: _busy ? null : () => _go(_choice),

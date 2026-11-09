@@ -441,8 +441,8 @@ class _NewAccountSheetState extends State<_NewAccountSheet> {
     return KeyboardSheet(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
       // The fields scroll; the button stays above the keyboard (A6).
-      footer: SizedBox(
-            height: 52,
+      footer: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 52),
             child: FilledButton(
               onPressed: name.isEmpty
                   ? null

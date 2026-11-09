@@ -668,8 +668,8 @@ class _UseFlowState extends State<_UseFlow> {
                           style: theme.textTheme.bodyLarge,
                         ),
                         const SizedBox(height: 16),
-                        SizedBox(
-                          height: 56,
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(minHeight: 56),
                           child: OutlinedButton.icon(
                             key: const Key('farm-receive-first'),
                             onPressed: _receiveFirst,

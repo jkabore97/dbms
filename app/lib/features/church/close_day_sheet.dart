@@ -199,8 +199,8 @@ class _CloseDaySheetState extends State<CloseDaySheet> {
                 ),
 
                 const SizedBox(height: 20),
-                SizedBox(
-                  height: 56,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 56),
                   child: FilledButton.icon(
                     onPressed: _closing ? null : _close,
                     icon: _closing
