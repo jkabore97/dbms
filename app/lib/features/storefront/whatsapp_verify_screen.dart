@@ -218,8 +218,8 @@ class _WhatsAppVerifyScreenState extends State<WhatsAppVerifyScreen> {
           onSubmitted: (_) => _send(),
         ),
         const SizedBox(height: 20),
-        SizedBox(
-          height: 56,
+        ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 56),
           child: FilledButton.icon(
             key: const Key('whatsapp-send'),
             style: FilledButton.styleFrom(backgroundColor: maraGreen, foregroundColor: Colors.white),
@@ -267,8 +267,8 @@ class _WhatsAppVerifyScreenState extends State<WhatsAppVerifyScreen> {
           },
         ),
         const SizedBox(height: 16),
-        SizedBox(
-          height: 56,
+        ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 56),
           child: FilledButton(
             key: const Key('whatsapp-confirm'),
             onPressed: _code.text.trim().length == 6 && !_busy ? _confirm : null,

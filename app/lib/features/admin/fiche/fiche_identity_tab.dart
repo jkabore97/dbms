@@ -280,8 +280,8 @@ class _FicheIdentityTabState extends State<FicheIdentityTab> {
                 Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
               ],
               const SizedBox(height: 20),
-              SizedBox(
-                height: 52,
+              ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 52),
                 child: FilledButton.icon(
                   key: const Key('identity-save'),
                   onPressed: _saving || !_dirty || _slugProblem != null ? null : _save,

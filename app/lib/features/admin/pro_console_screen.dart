@@ -319,8 +319,8 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
                   Text(_saved!, style: theme.textTheme.bodySmall),
                 ],
                 const SizedBox(height: 12),
-                SizedBox(
-                  height: 52,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 52),
                   child: FilledButton.tonalIcon(
                     onPressed: _saving ? null : _saveTerms,
                     icon: _saving

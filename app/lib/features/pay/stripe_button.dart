@@ -110,8 +110,8 @@ class _StripeCardButtonState extends State<StripeCardButton> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
-          height: 52,
+        ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 52),
           child: FilledButton.icon(
             key: const Key('stripe-card'),
             onPressed: _busy ? null : _go,

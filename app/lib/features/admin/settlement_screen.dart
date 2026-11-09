@@ -248,8 +248,8 @@ class _SettlementScreenState extends State<SettlementScreen> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: SizedBox(
-                  height: 52,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 52),
                   child: FilledButton.tonalIcon(
                     onPressed: _saving ? null : _savePct,
                     icon: _saving

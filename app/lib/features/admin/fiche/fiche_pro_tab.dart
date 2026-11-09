@@ -182,8 +182,8 @@ class _FicheProTabState extends State<FicheProTab> {
                   Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
                 ],
                 const SizedBox(height: 12),
-                SizedBox(
-                  height: 52,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 52),
                   child: FilledButton(
                     key: const Key('pro-plan-save'),
                     style: FilledButton.styleFrom(

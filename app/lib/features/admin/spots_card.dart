@@ -890,8 +890,8 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
       ),
       if (e.status == 'requested') ...[
         const SizedBox(height: 12),
-        SizedBox(
-          height: 52,
+        ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 52),
           child: FilledButton(
             key: const Key('spot-resume-pay'),
             onPressed: _busy ? null : () => setState(() => _asked = e),
@@ -1363,8 +1363,8 @@ class _SpotSheetBodyState extends State<_SpotSheetBody> {
           ),
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          height: 52,
+        ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 52),
           child: card
               ? OutlinedButton.icon(
                   onPressed: _busy ? null : _paid,

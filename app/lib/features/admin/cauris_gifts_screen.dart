@@ -508,8 +508,8 @@ class _GiftSheetState extends State<GiftSheet> {
               const SizedBox(height: 8),
               Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
             ],
-          SizedBox(
-              height: 52,
+          ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 52),
               child: FilledButton.icon(
                 key: const Key('gift-save'),
                 onPressed: _busy ? null : _save,

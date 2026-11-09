@@ -748,8 +748,8 @@ class _TeamScreenState extends State<TeamScreen> {
               ),
               const SizedBox(height: 12),
             ],
-            SizedBox(
-              height: 56,
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 56),
               child: FilledButton.icon(
                 key: const Key('team-add'),
                 onPressed: _add,
@@ -1184,8 +1184,8 @@ class _SalarySheetState extends State<SalarySheet> {
               const SizedBox(height: 12),
               Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
             ],
-          SizedBox(
-              height: 52,
+          ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 52),
               child: FilledButton(
                 key: const Key('salary-save'),
                 onPressed: _busy ? null : _save,

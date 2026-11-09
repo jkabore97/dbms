@@ -402,8 +402,8 @@ class PathCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 14),
-            SizedBox(
-              height: 50,
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 50),
               child: FilledButton.icon(
                 key: const Key('path-do'),
                 style: FilledButton.styleFrom(
@@ -676,8 +676,8 @@ class _PathGateSheetState extends State<PathGateSheet> {
               ),
             ],
             const SizedBox(height: 18),
-            SizedBox(
-              height: 50,
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 50),
               child: FilledButton.icon(
                 key: const Key('path-go'),
                 style: FilledButton.styleFrom(

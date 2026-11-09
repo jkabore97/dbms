@@ -305,8 +305,8 @@ class _UnlockSheetState extends State<UnlockSheet> {
                 Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
               ],
               const SizedBox(height: 16),
-              SizedBox(
-                height: 52,
+              ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 52),
                 child: FilledButton.icon(
                   key: const Key('unlock-buy'),
                   onPressed: canBuy && !_busy ? _unlock : null,

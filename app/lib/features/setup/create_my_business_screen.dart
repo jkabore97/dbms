@@ -743,17 +743,24 @@ class _CreateMyBusinessScreenState extends State<CreateMyBusinessScreen> {
               child: Row(
                 children: [
                   if (at > 0) ...[
+                    // A fixed height on purpose (171c): the pair as
+                    // tall as each other, the words one line shrunk to fit
+                    // — « Retour » too, which a fixed 56 cut from 1.3.
                     SizedBox(
                       height: 56,
                       child: OutlinedButton(
                         key: const Key('create-back'),
                         onPressed: _busy ? null : _back,
-                        child: Text(context.tr('Retour')),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(context.tr('Retour'), maxLines: 1),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
                   ],
                   Expanded(
+                    // A fixed height on purpose (171c): see « Retour ».
                     child: SizedBox(
                       height: 56,
                       child: FilledButton(

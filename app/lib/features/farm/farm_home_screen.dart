@@ -380,8 +380,8 @@ class _FarmHomeScreenState extends State<FarmHomeScreen>
                   // the farm records.
                   if (!widget.org.isObserverOnly) ...[
                     const SizedBox(height: 12),
-                    SizedBox(
-                      height: 52,
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 52),
                       child: FilledButton.icon(
                         key: const Key('home-expense'),
                         onPressed: _openExpense,

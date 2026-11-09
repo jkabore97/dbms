@@ -552,8 +552,8 @@ class _AssociationSetupScreenState extends State<AssociationSetupScreen> {
 
   Widget _primary(String label, VoidCallback? onPressed,
           {Key? key, IconData icon = Icons.arrow_forward}) =>
-      SizedBox(
-        height: 56,
+      ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 56),
         child: FilledButton.icon(
           key: key,
           onPressed: _busy ? null : onPressed,

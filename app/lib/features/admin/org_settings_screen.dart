@@ -1490,8 +1490,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
           text: context.tr('Les services ne sont pas proposés sur votre vitrine pour le moment.'),
         )
       else
-      SizedBox(
-        height: 52,
+      ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 52),
         child: FilledButton.icon(
           key: const Key('articles-open'),
           onPressed: () async {
@@ -1975,8 +1975,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         Text(_planMessage!, style: theme.textTheme.bodySmall),
       ],
       const SizedBox(height: 12),
-      SizedBox(
-        height: 52,
+      ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 52),
         child: FilledButton.tonalIcon(
           onPressed: _savingPlan ? null : _savePlan,
           icon: _savingPlan
@@ -2008,8 +2008,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         ),
       ),
       const SizedBox(height: 12),
-      SizedBox(
-        height: 52,
+      ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 52),
         child: OutlinedButton.icon(
           onPressed: _togglingSuspend ? null : _toggleSuspend,
           icon: _togglingSuspend
@@ -2052,8 +2052,8 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       ),
     ],
     const SizedBox(height: 24),
-    SizedBox(
-      height: 52,
+    ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 52),
       child: FilledButton(
         onPressed: _saving ? null : _save,
         child: _saving

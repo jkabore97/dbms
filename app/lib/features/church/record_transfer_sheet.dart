@@ -132,8 +132,8 @@ class _RecordTransferSheetState extends State<RecordTransferSheet> {
     return KeyboardSheet(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
       // The fields scroll; the button stays above the keyboard (A6).
-      footer: SizedBox(
-              height: 56,
+      footer: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 56),
               child: FilledButton(
                 style: FilledButton.styleFrom(
                   backgroundColor: accent,

@@ -658,8 +658,8 @@ class _ArticleFlowState extends State<ArticleFlow> {
           ),
         ),
         const SizedBox(height: 16),
-        SizedBox(
-          height: 56,
+        ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 56),
           child: OutlinedButton.icon(
             key: const Key('article-photo-pick'),
             onPressed: _pickPhoto,
@@ -864,8 +864,8 @@ class _ArticleFlowState extends State<ArticleFlow> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(
-          height: 56,
+        ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 56),
           child: OutlinedButton.icon(
             key: const Key('article-expiry'),
             onPressed: () => _pickDate(expiry: true),

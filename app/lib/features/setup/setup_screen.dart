@@ -433,8 +433,8 @@ class _SetupScreenState extends State<SetupScreen> {
   }
 
   Widget _primary(String label, VoidCallback? onPressed, {Key? key, IconData icon = Icons.arrow_forward}) =>
-      SizedBox(
-        height: 56,
+      ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 56),
         child: FilledButton.icon(
           key: key,
           onPressed: _busy ? null : onPressed,
@@ -764,8 +764,8 @@ class SetupReady extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: theme.textTheme.titleMedium?.copyWith(color: maraCaramel)),
               const SizedBox(height: 32),
-              SizedBox(
-                height: 56,
+              ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 56),
                 child: FilledButton.icon(
                   key: const Key('setup-enter'),
                   style: FilledButton.styleFrom(

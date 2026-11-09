@@ -700,8 +700,8 @@ class _BulkAddSheetState extends State<_BulkAddSheet> {
               const SizedBox(height: 12),
               Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
             ],
-          SizedBox(
-              height: 52,
+          ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 52),
               child: FilledButton(
                 onPressed: _busy || good == 0 ? null : _save,
                 child: _busy
@@ -988,8 +988,8 @@ class _EditProductSheetState extends State<_EditProductSheet> {
               const SizedBox(height: 16),
               Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
             ],
-          SizedBox(
-              height: 52,
+          ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 52),
               child: FilledButton(
                 onPressed: _busy ? null : _save,
                 child: _busy

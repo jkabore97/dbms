@@ -316,8 +316,8 @@ class _AddPersonSheetState extends State<_AddPersonSheet> {
               const SizedBox(height: 16),
               Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
             ],
-          SizedBox(
-              height: 52,
+          ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 52),
               child: FilledButton(
                 onPressed: _name.text.trim().isEmpty || _busy ? null : _save,
                 child: _busy
@@ -458,8 +458,8 @@ class _ShiftSheetState extends State<_ShiftSheet> {
             const SizedBox(height: 16),
             Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
           ],
-          SizedBox(
-            height: 52,
+          ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 52),
             child: FilledButton(
               onPressed: _busy ? null : _save,
               child: _busy

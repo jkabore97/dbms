@@ -248,8 +248,8 @@ class _PhotoSlotSheetState extends State<PhotoSlotSheet> {
             ],
             const SizedBox(height: 16),
             if (cost != null)
-              SizedBox(
-                height: 52,
+              ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 52),
                 child: FilledButton.icon(
                   key: const Key('photo-slot-buy'),
                   onPressed: canBuy && !_busy ? _buy : null,

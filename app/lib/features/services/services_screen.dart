@@ -577,8 +577,8 @@ class _ServiceSheetState extends State<ServiceSheet> {
     final theme = Theme.of(context);
     // The fields scroll; « Enregistrer » stays above the keyboard (A6).
     return KeyboardSheet(
-          footer: SizedBox(
-            height: 52,
+          footer: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 52),
             child: FilledButton(
               key: const Key('service-save'),
               onPressed: _busy ? null : _save,

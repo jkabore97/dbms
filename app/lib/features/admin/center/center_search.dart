@@ -371,8 +371,8 @@ class OrderSheet extends StatelessWidget {
                 o.fulfilment == 'delivery' ? context.tr('Livraison') : context.tr('Retrait')),
             if (o.at != null) line(context.tr('Passée le'), DateFormat('dd/MM/yyyy HH:mm').format(o.at!)),
             const SizedBox(height: 16),
-            SizedBox(
-              height: 52,
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 52),
               child: FilledButton.icon(
                 key: const Key('order-open-shop'),
                 onPressed: () {
@@ -384,8 +384,8 @@ class OrderSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            SizedBox(
-              height: 48,
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
               child: OutlinedButton.icon(
                 onPressed: () {
                   Navigator.of(context).pop();

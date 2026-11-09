@@ -259,8 +259,8 @@ class _JoinOrApplyScreenState extends State<JoinOrApplyScreen> {
                     style: theme.textTheme.bodySmall,
                   ),
                   const SizedBox(height: 12),
-                  SizedBox(
-                    height: 52,
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 52),
                     child: FilledButton.icon(
                       key: const Key('join-create'),
                       onPressed: _busy ? null : () => context.push(Routes.createBusiness),

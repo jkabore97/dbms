@@ -269,8 +269,8 @@ class _GivingStatementScreenState extends State<GivingStatementScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  SizedBox(
-                    height: 52,
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 52),
                     child: FilledButton.icon(
                       onPressed: _sharing || lines.isEmpty ? null : _share,
                       icon: const Icon(Icons.share),

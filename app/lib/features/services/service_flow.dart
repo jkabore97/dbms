@@ -345,8 +345,8 @@ class _ServiceFlowState extends State<ServiceFlow> {
           ),
         ),
         const SizedBox(height: 16),
-        SizedBox(
-          height: 56,
+        ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 56),
           child: OutlinedButton.icon(
             key: const Key('service-flow-photo-pick'),
             onPressed: _pickPhoto,

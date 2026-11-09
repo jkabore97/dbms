@@ -477,9 +477,8 @@ class _TermsGatePageState extends State<TermsGatePage> {
                   constraints: const BoxConstraints(maxWidth: 560),
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 54,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minWidth: double.infinity, minHeight: 54),
                       child: FilledButton(
                         key: const Key('terms-continue'),
                         style: FilledButton.styleFrom(backgroundColor: maraDeep, foregroundColor: maraPaper),

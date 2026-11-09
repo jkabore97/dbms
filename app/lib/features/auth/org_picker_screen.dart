@@ -268,8 +268,8 @@ class _OrgPickerScreenState extends State<OrgPickerScreen> {
         ],
         if (widget.onCreateMine != null) ...[
           const SizedBox(height: 16),
-          SizedBox(
-            height: 56,
+          ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 56),
             child: OutlinedButton.icon(
               key: const Key('picker-create'),
               onPressed: widget.onCreateMine,

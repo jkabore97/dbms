@@ -203,8 +203,8 @@ class _WeeklySummaryScreenState extends State<WeeklySummaryScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  SizedBox(
-                    height: 52,
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 52),
                     child: FilledButton.icon(
                       onPressed: _sharing ? null : _share,
                       icon: _sharing

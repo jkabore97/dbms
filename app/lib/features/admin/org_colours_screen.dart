@@ -175,8 +175,8 @@ class _OrgColoursScreenState extends State<OrgColoursScreen> {
           // is a save button nobody finds.
           bottomNavigationBar: SafeArea(
             minimum: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-            child: SizedBox(
-              height: 52,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 52),
               child: FilledButton(
                 onPressed: (!_dirty || _saving) ? null : _save,
                 child: _saving

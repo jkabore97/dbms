@@ -380,8 +380,8 @@ class _RuleSheetState extends State<_RuleSheet> {
     return KeyboardSheet(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
       // The fields scroll; the button stays above the keyboard (A6).
-      footer: SizedBox(
-              height: 52,
+      footer: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 52),
               child: FilledButton(
                 key: const Key('rule-save'),
                 style: FilledButton.styleFrom(

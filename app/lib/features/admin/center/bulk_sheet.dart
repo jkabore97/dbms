@@ -241,8 +241,8 @@ class _BulkSheetState extends State<BulkSheet> {
               const SizedBox(height: 8),
               Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
             ],
-          SizedBox(
-              height: 52,
+          ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 52),
               child: FilledButton(
                 key: const Key('bulk-send'),
                 style: widget.action == BulkAction.archive

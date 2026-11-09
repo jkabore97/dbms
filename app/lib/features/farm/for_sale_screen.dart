@@ -679,8 +679,8 @@ class _ForSaleSheetState extends State<ForSaleSheet> {
               const SizedBox(height: 4),
               Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
             ],
-          SizedBox(
-              height: 52,
+          ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 52),
               child: FilledButton(
                 key: const Key('for-sale-save'),
                 onPressed: _busy ? null : _save,

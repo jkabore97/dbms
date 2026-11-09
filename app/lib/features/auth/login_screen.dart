@@ -595,6 +595,8 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         if (google) const SizedBox(height: 12),
       ],
+      // A fixed height on purpose (171c): as tall as Apple's above, and
+      // its words cannot be cut — one line, shrunk to fit (AU-1).
       if (google) SizedBox(
         width: double.infinity,
         height: 52,
@@ -806,8 +808,8 @@ class _PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 56,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 56),
       child: FilledButton(
         onPressed: busy ? null : onPressed,
         child: busy

@@ -74,8 +74,8 @@ class FicheVitrineTab extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        SizedBox(
-          height: 56,
+        ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 56),
           child: FilledButton.icon(
             key: const Key('fiche-vitrine-edit'),
             style: FilledButton.styleFrom(
