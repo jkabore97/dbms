@@ -31,7 +31,8 @@
     down: '<svg viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>',
     copy: '<svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>',
     hide: '<svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 5.1A9.7 9.7 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.2M6.6 6.6A17 17 0 0 0 2 12s3.5 7 10 7a9.5 9.5 0 0 0 5.4-1.6"/></svg>',
-    trash: '<svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 13h12l1-13M9 7V4h6v3"/></svg>'
+    trash: '<svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 13h12l1-13M9 7V4h6v3"/></svg>',
+    grip: '<svg viewBox="0 0 24 24" class="ed-dots"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>'
   };
   app.innerHTML =
     '<header class="ed-top"><button class="ed-ib" id="edClose" aria-label="Fermer">' + I.close + '</button>' +
@@ -126,8 +127,16 @@
   function fieldEl(ts) { var bl = canvas.querySelector('[data-bid="' + ts.bid + '"]'); return bl && bl.querySelector('[data-f="' + ts.path + '"]'); }
   function markSel() {
     Array.prototype.forEach.call(canvas.querySelectorAll('.ed-sel'), function (x) { x.classList.remove('ed-sel'); });
+    Array.prototype.forEach.call(canvas.querySelectorAll('.ed-grip'), function (x) { x.remove(); });
     var el = sel && canvas.querySelector('[data-bid="' + sel + '"]');
-    if (el) el.classList.add('ed-sel');
+    if (el) {
+      el.classList.add('ed-sel');
+      // the chosen block's handle: press it and slide the block where it goes
+      var g = document.createElement('button');
+      g.type = 'button'; g.className = 'ed-grip'; g.setAttribute('aria-label', 'Glisser pour déplacer ce bloc (ou flèches haut et bas)');
+      g.innerHTML = I.grip + '<span>Glisser</span>';
+      el.appendChild(g);
+    }
     drawBlockBar();
   }
 
@@ -170,10 +179,147 @@
     if (ph && b && !e.target.closest('[data-f]')) { select(b.id); openPhoto(b.id, ph.getAttribute('data-p')); return; }
     if (e.target.closest('a, button, summary')) e.preventDefault();   // nothing opens, nothing folds
     if (e.target.closest('[data-f]')) { if (b && sel !== b.id) select(b.id); return; }
-    if (b) select(b.id);   // a second tap keeps it chosen; « Fermer » lets it go
+    if (b) { select(b.id); hintOnce(); }   // a second tap keeps it chosen; « Fermer » lets it go
     else if (sel) { sel = null; markSel(); }
   });
   canvas.addEventListener('submit', function (e) { e.preventDefault(); });
+
+  // ------------------------------------------- a block moved with a finger
+  // The chosen block's « Glisser », or a long press on any block, picks it
+  // up; a line shows where it will land; near the top or the bottom of the
+  // screen the card scrolls; let go and it is there (« Annuler » puts it back).
+  var drag = null, press = null, justDragged = false, LONG = 450;
+  function blockEls() { return Array.prototype.slice.call(canvas.querySelectorAll('.st-b[data-bid]')); }
+  canvas.addEventListener('pointerdown', function (e) {
+    if (preview || drag || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    var bl = e.target.closest('.st-b[data-bid]'); if (!bl) return;
+    if (e.target.closest('.ed-grip')) { e.preventDefault(); startDrag(bl.getAttribute('data-bid'), e.clientX, e.clientY, e.target.closest('.ed-grip'), e.pointerId); return; }
+    // a long press, away from the words being written and the buttons
+    if (e.target.closest('[data-f], button, a, input, select, textarea, label, summary, .ed-ins')) return;
+    var id = bl.getAttribute('data-bid'), x = e.clientX, y = e.clientY;
+    clearTimeout(press && press.t);
+    press = { x: x, y: y, t: setTimeout(function () { press = null; startDrag(id, x, y, null, null); }, LONG) };
+  });
+  canvas.addEventListener('pointermove', function (e) {
+    if (press && (Math.abs(e.clientX - press.x) > 10 || Math.abs(e.clientY - press.y) > 10)) { clearTimeout(press.t); press = null; }   // a scroll, not a press
+  });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) { canvas.addEventListener(ev, function () { if (press) { clearTimeout(press.t); press = null; } }); });
+  canvas.addEventListener('contextmenu', function (e) { if (drag || press || !e.target.closest('[data-f]')) { if (e.target.closest('.st-b')) e.preventDefault(); } });
+  // the tap that ends a move opens nothing; the next touch is a new one
+  canvas.addEventListener('pointerdown', function () { justDragged = false; }, true);
+  canvas.addEventListener('click', function (e) { if (justDragged) { justDragged = false; e.preventDefault(); e.stopPropagation(); } }, true);
+  window.addEventListener('pointermove', function (e) { if (drag) { drag.x = e.clientX; drag.y = e.clientY; aim(); } });
+  window.addEventListener('pointerup', function () { if (drag) endDrag(true); });
+  window.addEventListener('pointercancel', function () { if (drag) endDrag(false); });   // the browser took the finger back: nothing moves
+  // while a block is held, the finger moves it, not the page
+  document.addEventListener('touchmove', function (e) { if (drag && e.cancelable) e.preventDefault(); }, { passive: false });
+  function startDrag(id, x, y, handle, pid) {
+    var b = blockById(id); if (!b) return;
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    closeText();
+    var d = S.BLOCKS[b.type], ghost = document.createElement('div'), line = document.createElement('div');
+    ghost.className = 'ed-ghost'; ghost.innerHTML = I.grip + '<b></b>'; ghost.querySelector('b').textContent = d ? d.name : b.type;
+    line.className = 'ed-drop';
+    document.body.appendChild(ghost); document.body.appendChild(line); document.body.classList.add('ed-dragging');
+    drag = { id: id, from: indexOf(id), g: indexOf(id), x: x, y: y, ghost: ghost, line: line, raf: 0 };
+    var el = canvas.querySelector('[data-bid="' + id + '"]'); if (el) el.classList.add('ed-lift');
+    if (handle && pid != null) { try { handle.setPointerCapture(pid); } catch (er) { /* the window still hears it */ } }
+    try { if (navigator.vibrate) navigator.vibrate(12); } catch (er) { /* no buzz */ }
+    aim(); roll();
+  }
+  // where the block would land: before the first block whose middle is below the finger
+  function aim() {
+    var dg = drag; if (!dg) return;
+    var half = (dg.ghost.offsetWidth || 120) / 2 + 8;   // the label stays whole on the screen
+    dg.ghost.style.left = Math.max(half, Math.min(window.innerWidth - half, dg.x)) + 'px'; dg.ghost.style.top = Math.max(70, dg.y) + 'px';
+    var els = blockEls(), g = els.length, at = null;
+    for (var i = 0; i < els.length; i++) { var r = els[i].getBoundingClientRect(); if (dg.y < r.top + r.height / 2) { g = i; at = r.top; break; } }
+    if (at === null && els.length) at = els[els.length - 1].getBoundingClientRect().bottom;
+    dg.g = g;
+    var card = canvas.querySelector('.st-card'), cr = card ? card.getBoundingClientRect() : { left: 0, width: window.innerWidth };
+    var still = g === dg.from || g === dg.from + 1;   // its own place: nothing moves
+    dg.line.hidden = still;
+    dg.line.style.top = Math.max(60, Math.min(window.innerHeight - 8, at || 0)) + 'px';
+    dg.line.style.left = (cr.left + 10) + 'px'; dg.line.style.width = Math.max(40, cr.width - 20) + 'px';
+  }
+  // held near the top or the bottom of the screen (a moment, not in
+  // passing), the card scrolls under the finger, faster nearer the edge
+  function roll() {
+    var dg = drag; if (!dg) return;
+    var top = 56 + 56, bottom = window.innerHeight - 76, v = 0;
+    if (dg.y < top) v = -Math.ceil((top - dg.y) / 4);
+    else if (dg.y > bottom) v = Math.ceil((dg.y - bottom) / 4);
+    if (!v) dg.edge = 0;
+    else if (!dg.edge) dg.edge = Date.now();
+    else if (Date.now() - dg.edge > 220) { window.scrollBy(0, Math.max(-18, Math.min(18, v))); aim(); }
+    dg.raf = requestAnimationFrame(roll);
+  }
+  function endDrag(ok) {
+    var dg = drag; if (!dg) return;
+    drag = null; cancelAnimationFrame(dg.raf);
+    dg.ghost.remove(); dg.line.remove(); document.body.classList.remove('ed-dragging');
+    var el = canvas.querySelector('.ed-lift'); if (el) el.classList.remove('ed-lift');
+    justDragged = true;
+    var to = dg.g > dg.from ? dg.g - 1 : dg.g;
+    if (!ok || to === dg.from || to < 0) { select(dg.id); return; }
+    commit(function () { doc.blocks.splice(to, 0, doc.blocks.splice(dg.from, 1)[0]); });
+    select(dg.id);
+    var nb = canvas.querySelector('[data-bid="' + dg.id + '"]');
+    if (nb) { nb.classList.add('ed-landed'); nb.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+    toast('Bloc déplacé. « Annuler » le remet.');
+  }
+  // the handle, from the keyboard: ↑ and ↓
+  canvas.addEventListener('keydown', function (e) {
+    var g = e.target.closest && e.target.closest('.ed-grip'); if (!g || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+    e.preventDefault();
+    var bt = blockBar.querySelector('[data-bb="' + (e.key === 'ArrowUp' ? 'up' : 'down') + '"]');
+    if (bt && !bt.disabled) { bt.click(); var ng = canvas.querySelector('.ed-grip'); if (ng) ng.focus(); }
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && drag) endDrag(false); });
+
+  // A list in a sheet whose rows move by their « ⠿ » (with a finger, a mouse,
+  // or ↑ ↓ on the keyboard); done(from, to) when one lands elsewhere.
+  function sortable(list, done) {
+    list.addEventListener('pointerdown', function (e) {
+      var hd = e.target.closest('.ed-hd'); if (!hd || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      var row = hd.closest('.ed-list-it'); if (!row || row.parentNode !== list) return;
+      e.preventDefault();
+      var from = Array.prototype.indexOf.call(list.children, row), grab = e.clientY - row.getBoundingClientRect().top;
+      var box = list.closest('.ed-sheet-b');
+      row.classList.add('ed-moving');
+      try { hd.setPointerCapture(e.pointerId); } catch (er) { /* the row still follows */ }
+      function mv(ev) {
+        var others = Array.prototype.filter.call(list.children, function (x) { return x !== row; }), k = others.length;
+        for (var i = 0; i < others.length; i++) { var r = others[i].getBoundingClientRect(); if (ev.clientY < r.top + r.height / 2) { k = i; break; } }
+        if (others[k] !== row.nextSibling) list.insertBefore(row, others[k] || null);
+        row.style.transform = '';
+        row.style.transform = 'translateY(' + (ev.clientY - grab - row.getBoundingClientRect().top) + 'px)';
+        if (box) { var b = box.getBoundingClientRect(); if (ev.clientY < b.top + 40) box.scrollTop -= 10; else if (ev.clientY > b.bottom - 40) box.scrollTop += 10; }
+      }
+      function up() {
+        hd.removeEventListener('pointermove', mv); hd.removeEventListener('pointerup', up); hd.removeEventListener('pointercancel', up);
+        row.style.transform = ''; row.classList.remove('ed-moving');
+        var to = Array.prototype.indexOf.call(list.children, row);
+        if (to !== from) done(from, to);
+      }
+      hd.addEventListener('pointermove', mv); hd.addEventListener('pointerup', up); hd.addEventListener('pointercancel', up);
+    });
+    list.addEventListener('keydown', function (e) {
+      var hd = e.target.closest('.ed-hd'); if (!hd || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+      e.preventDefault();
+      var row = hd.closest('.ed-list-it'), from = Array.prototype.indexOf.call(list.children, row), to = from + (e.key === 'ArrowUp' ? -1 : 1);
+      if (to < 0 || to >= list.children.length) return;
+      done(from, to);
+      var again = list.isConnected ? list : sheetB.querySelector('.ed-list');
+      var nh = again && again.children[to] && again.children[to].querySelector('.ed-hd'); if (nh) nh.focus();
+    });
+  }
+  // Said once on this phone, the first time a block is chosen.
+  function hintOnce() {
+    try { if (localStorage.getItem('studio-astuce-glisser')) return; localStorage.setItem('studio-astuce-glisser', '1'); } catch (e) { return; }
+    toast('Pour déplacer un bloc : faites glisser « Glisser », ou appuyez longuement sur le bloc.');
+  }
+  function handle(label) { return '<button type="button" class="ed-hd" aria-label="Glisser pour déplacer : ' + esc(label) + '">' + I.grip + '</button>'; }
   // writing in place
   var typing = null;
   canvas.addEventListener('focusin', function (e) {
@@ -356,11 +502,11 @@
     var L = LISTS[b.type];
     if (L) {
       var arr = p[L[0]] || [];
-      h += '<p class="ed-lab">' + (b.type === 'gallery' ? 'Les photos' : 'Les éléments') + ' — l’ordre, les icônes</p><div class="ed-list">' + arr.map(function (it, i) {
+      h += '<p class="ed-lab">' + (b.type === 'gallery' ? 'Les photos' : 'Les éléments') + ' — glissez « ⠿ » pour l’ordre</p><div class="ed-list ed-items">' + arr.map(function (it, i) {
         var label = b.type === 'gallery' ? 'Photo ' + (i + 1) : ((it && it[L[1]]) || '(vide)');
-        return '<div class="ed-list-it">' + (b.type === 'gallery' ? '<button type="button" data-photo="photos.' + i + '" style="width:42px;background:#333 url(\'' + esc(S.picSrc(it, ctx, 200)) + '\') center/cover"></button>' : '') +
+        return '<div class="ed-list-it">' + handle(label) + (b.type === 'gallery' ? '<button type="button" data-photo="photos.' + i + '" style="width:42px;background:#333 url(\'' + esc(S.picSrc(it, ctx, 200)) + '\') center/cover"></button>' : '') +
           '<span>' + esc(label) + '</span>' + (L[2] ? iconSelect(it && it.icon, 'data-icon="' + i + '"') : '') +
-          '<button type="button" data-mv="' + i + '" data-d="-1"' + (i ? '' : ' disabled') + '>↑</button><button type="button" data-mv="' + i + '" data-d="1"' + (i < arr.length - 1 ? '' : ' disabled') + '>↓</button><button type="button" data-rm="' + i + '">✕</button></div>';
+          '<button type="button" data-rm="' + i + '" aria-label="Retirer">✕</button></div>';
       }).join('') + '</div><div class="ed-row" style="margin-top:8px"><button type="button" class="ed-chip" data-additem="' + L[0] + '">+ Ajouter</button></div>';
       if (b.type === 'infos') h += '<p class="ed-lab">Un lien sur un élément (facultatif)</p>' + arr.map(function (it, i) { return '<label class="ed-field">' + esc((it && it.title) || 'Élément ' + (i + 1)) + '<input data-ihref="' + i + '" type="url" placeholder="https://…" value="' + esc((it && it.href) || '') + '"></label>'; }).join('');
     }
@@ -393,6 +539,11 @@
   function wireSettings(box, id) {
     var b = function () { return blockById(id); };
     var re = function () { openSettings(id); };
+    var items = box.querySelector('.ed-items');
+    if (items) sortable(items, function (from, to) {
+      var bb = b(), key = bb && LISTS[bb.type] && LISTS[bb.type][0]; if (!key) return;
+      commit(function () { var a2 = bb.props[key]; a2.splice(to, 0, a2.splice(from, 1)[0]); }); re();
+    });
     box.addEventListener('click', function (e) {
       var t = e.target.closest('button'); if (!t) return;
       var bb = b(); if (!bb) return;
@@ -408,7 +559,6 @@
         if (t.hasAttribute('data-' + a[0])) { var v2 = t.getAttribute('data-' + a[0]); commit(function () { bb.style = bb.style || {}; if (v2) bb.style[a[1]] = v2; else delete bb.style[a[1]]; }); re(); }
       });
       var L = LISTS[bb.type];
-      if (L && t.hasAttribute('data-mv')) { var i = +t.getAttribute('data-mv'), j = i + (+t.getAttribute('data-d')); commit(function () { var a2 = bb.props[L[0]]; a2.splice(j, 0, a2.splice(i, 1)[0]); }); re(); return; }
       if (L && t.hasAttribute('data-rm')) { var k = +t.getAttribute('data-rm'); commit(function () { bb.props[L[0]].splice(k, 1); }); re(); return; }
       if (t.hasAttribute('data-additem')) { closeSheet(); addItem(bb, t.getAttribute('data-additem')); return; }
       if (t.hasAttribute('data-dcadd')) { commit(function () { bb.props.colors = (bb.props.colors || []).concat(['#c9a24a']); }); re(); return; }
@@ -586,17 +736,18 @@
   function openBlocks() {
     var h = '<div class="ed-list ed-blocks">' + doc.blocks.map(function (b, i) {
       var d = S.BLOCKS[b.type], label = (b.props && (b.props.title || b.props.names || b.props.text || b.props.label)) || '';
-      return '<div class="ed-list-it"><span data-go="' + b.id + '">' + esc(d ? d.name : b.type) + (b.hidden ? ' · masqué' : '') + '<small>' + esc(String(label).slice(0, 60)) + '</small></span>' +
-        '<button type="button" data-bmv="' + i + '" data-d="-1"' + (i ? '' : ' disabled') + '>↑</button><button type="button" data-bmv="' + i + '" data-d="1"' + (i < doc.blocks.length - 1 ? '' : ' disabled') + '>↓</button>' +
-        '<button type="button" data-bhide="' + i + '">' + (b.hidden ? '◌' : '●') + '</button></div>';
+      return '<div class="ed-list-it">' + handle(d ? d.name : b.type) + '<span data-go="' + b.id + '">' + esc(d ? d.name : b.type) + (b.hidden ? ' · masqué' : '') + '<small>' + esc(String(label).slice(0, 60)) + '</small></span>' +
+        '<button type="button" data-bhide="' + i + '" aria-label="' + (b.hidden ? 'Afficher' : 'Masquer') + '">' + (b.hidden ? '◌' : '●') + '</button></div>';
     }).join('') + '</div><div class="ed-row" style="margin-top:10px"><button type="button" class="ed-chip" data-addblock>+ Ajouter un bloc</button></div>';
     openSheet('Les blocs de la carte', h, function (box) {
+      sortable(box.querySelector('.ed-blocks'), function (from, to) {
+        commit(function () { doc.blocks.splice(to, 0, doc.blocks.splice(from, 1)[0]); }); openBlocks();
+      });
       box.addEventListener('click', function (e) {
         var go = e.target.closest('[data-go]');
         if (go) { closeSheet(); select(go.getAttribute('data-go'), true); return; }
         var t = e.target.closest('button'); if (!t || t.disabled) return;
         if (t.hasAttribute('data-addblock')) { closeSheet(); openLibrary(); return; }
-        if (t.hasAttribute('data-bmv')) { var i = +t.getAttribute('data-bmv'), j = i + (+t.getAttribute('data-d')); commit(function () { doc.blocks.splice(j, 0, doc.blocks.splice(i, 1)[0]); }); openBlocks(); return; }
         if (t.hasAttribute('data-bhide')) { var k = +t.getAttribute('data-bhide'); commit(function () { doc.blocks[k].hidden = !doc.blocks[k].hidden; }); openBlocks(); }
       });
     });

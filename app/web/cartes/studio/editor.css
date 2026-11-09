@@ -137,3 +137,24 @@ body.ed-body{font-family:var(--ed-font);-webkit-tap-highlight-color:transparent}
   .ed-nav,.ed-blockbar{justify-content:center}
   .ed-nav button,.ed-blockbar button{flex:0 0 auto;min-width:96px}
 }
+/* moving with a finger: the chosen block's handle, a long press, the landing line */
+.ed-on .st-b{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.ed-on .st-b [data-f]{-webkit-user-select:text;user-select:text}
+.ed-grip{position:absolute;top:12px;right:12px;z-index:7;display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 14px 0 10px;border:2px solid #fff;border-radius:999px;background:var(--ed-acc);color:#1b140a;font:700 12px var(--ed-font);box-shadow:0 6px 18px rgba(0,0,0,.3);touch-action:none;cursor:grab}
+.ed-grip:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.ed-dots{width:18px;height:18px;fill:currentColor;stroke:none}
+.ed-dragging,.ed-dragging *{cursor:grabbing!important;-webkit-user-select:none!important;user-select:none!important}
+.ed-on .st-b.ed-lift{opacity:.35!important;outline:3px dashed var(--ed-acc);outline-offset:-3px}
+.ed-ghost{position:fixed;left:0;top:0;z-index:120;display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:14px;background:var(--ed-bg);color:var(--ed-fg);font:700 14px var(--ed-font);box-shadow:0 16px 40px rgba(0,0,0,.45);pointer-events:none;white-space:nowrap;transform:translate(-50%,calc(-100% - 24px))}
+.ed-drop{position:fixed;z-index:119;height:4px;margin-top:-2px;border-radius:2px;background:var(--ed-acc);box-shadow:0 0 0 3px rgba(255,181,71,.25);pointer-events:none}
+.ed-drop::before,.ed-drop::after{content:"";position:absolute;top:-5px;width:14px;height:14px;border-radius:50%;background:var(--ed-acc)}
+.ed-drop::before{left:-7px}.ed-drop::after{right:-7px}
+@media (prefers-reduced-motion:no-preference){
+  @keyframes ed-land{from{box-shadow:inset 0 0 0 5px var(--ed-acc)}to{box-shadow:inset 0 0 0 0 rgba(255,181,71,0)}}
+  .ed-on .st-b.ed-landed{animation:ed-land 1s ease-out}
+}
+/* a list in a sheet: each row moves by its « ⠿ » */
+.ed-list-it .ed-hd{touch-action:none;cursor:grab;background:transparent;color:var(--ed-mute)}
+.ed-list-it .ed-hd:focus-visible{outline:2px solid var(--ed-acc)}
+.ed-list-it.ed-moving{position:relative;z-index:3;background:#2a2219;box-shadow:0 10px 26px rgba(0,0,0,.45)}
+.ed-dragging .ed-ins{visibility:hidden}
