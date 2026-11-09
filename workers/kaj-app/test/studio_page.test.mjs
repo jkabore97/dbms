@@ -179,11 +179,56 @@ test("the organiser of a card made in Studio is sent to Studio; « studio=lire �
   assert.ok((await r.text()).includes('<div id="card" class="st-root">'));
 });
 
-test("a card without a document, once the server keeps documents: the classic editor, offering Studio", async () => {
+test("171d: a classic card without a document goes to Studio too; an animated one keeps its editor until Studio draws its scenes", async () => {
   answers.event_public = card({ editor: true });
-  const html = await (await get(`/e/salimata-boukary-ab12?modifier=${TOKEN}`)).text();
-  assert.ok(html.includes('<base href="/cartes/">'));
-  assert.ok(html.includes('"studio":true') && html.includes('"doc":null'));
+  let r = await get(`/e/salimata-boukary-ab12?modifier=${TOKEN}&apercu=f00d`);
+  assert.equal(r.status, 302, "« Modifier la carte » opens Studio for every classic card");
+  assert.equal(r.headers.get("Location"), `/e/salimata-boukary-ab12/studio?modifier=${TOKEN}&apercu=f00d`);
+  // the converter's frame still reads the classic card as it is
+  r = await get(`/e/salimata-boukary-ab12?modifier=${TOKEN}&studio=lire`);
+  assert.equal(r.status, 200);
+  let html = await r.text();
+  assert.ok(html.includes('<base href="/cartes/">') && html.includes('"studio":true') && html.includes('"doc":null'));
+  // an animated card (its layout, or its family): its own editor, offering Studio
+  for (const extra of [{ card: "anime_lettre", family: "anime" }, { card: "anime_lotus_p", family: "classique" }, { card: "come", family: "anime" }]) {
+    answers.event_public = card({ editor: true, ...extra });
+    r = await get(`/e/salimata-boukary-ab12?modifier=${TOKEN}`);
+    assert.equal(r.status, 200, JSON.stringify(extra));
+    html = await r.text();
+    assert.ok(html.includes('"studio":true') && html.includes('"doc":null'), JSON.stringify(extra));
+  }
+  // an animated card already made in Studio: Studio, as before
+  answers.event_public = card({ editor: true, card: "anime_lettre", family: "anime", doc: DOC });
+  r = await get(`/e/salimata-boukary-ab12?modifier=${TOKEN}`);
+  assert.equal(r.status, 302);
+  // the guests of a classic card without a document: its page, never Studio
+  answers.event_public = card({ editor: false });
+  r = await get("/e/salimata-boukary-ab12");
+  assert.equal(r.status, 200);
+  assert.ok((await r.text()).includes('<base href="/cartes/">'));
+});
+
+test("171d: the site's own pages choose no word on a long press; the payment number and the reference are copied with a button", async () => {
+  // the guest's pass
+  answers.event_pass = { name: "Awa", answer: "oui", people: 2, title: "Salimata & Boukary", date_fr: "samedi 17 avril", place: "Tanghin" };
+  let r = await get("/e/salimata-boukary-ab12/invite/0b9f3c2e-1d2a-4c5b-9e8f-7a6b5c4d3e2f");
+  let html = await r.text();
+  assert.ok(html.includes("user-select:none") && html.includes("-webkit-touch-callout:none"), "the pass: " + r.status);
+  // a ticket request waiting for its payment
+  answers.event_ticket_status = {
+    id: "0b9f3c2e-1d2a-4c5b-9e8f-7a6b5c4d3e2f", slug: "salimata-boukary-ab12", status: "pending", title: "Gala", name: "Awa",
+    lines: [{ qty: 2, name: "Standard" }], total: 10000, currency: "XOF", ref: "MK-7Q2P", hold_until: "2027-04-10T10:00:00Z",
+    pay_methods: [{ kind: "orange", number: "+226 70 00 00 00", name: "Awa" }],
+  };
+  r = await get("/e/salimata-boukary-ab12/billets/0b9f3c2e-1d2a-4c5b-9e8f-7a6b5c4d3e2f");
+  html = await r.text();
+  assert.equal(r.status, 200);
+  assert.ok(html.includes("user-select:none"), "the ticket page");
+  assert.ok(html.includes('data-cp="+226 70 00 00 00">Copier le numéro</button>'), "the number has its button");
+  assert.ok(html.includes('data-cp="MK-7Q2P">Copier la référence</button>'), "the reference has its button");
+  assert.ok(html.includes("navigator.clipboard"), "and the button copies");
+  // inputs and the words being written stay choosable
+  assert.ok(html.includes('input,textarea,select,[contenteditable]:not([contenteditable="false"]){-webkit-user-select:text;user-select:text'));
 });
 
 test("Studio's pages are not addresses of their own; its scripts are", async () => {

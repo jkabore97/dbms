@@ -9236,4 +9236,7 @@ const enStrings = <String, String>{
   'Choisir un autre compte': 'Choose another account',
   'Connexion : {ways}': 'Sign-in: {ways}',
   'Comptes fusionnés : {label} est maintenant un seul compte.': 'Accounts merged: {label} is now one account.',
+  // 171d: what a long press used to select is copied by a tap
+  'Copié': 'Copied',
+  'Toucher pour copier': 'Tap to copy',
 };

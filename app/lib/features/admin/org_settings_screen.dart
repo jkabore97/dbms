@@ -32,6 +32,7 @@ import '../../core/nav/app_scope.dart';
 import '../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import '../common/copy_text.dart';
 
 /// The business's own details.
 ///
@@ -2782,7 +2783,7 @@ class _LinkRow extends StatelessWidget {
           const Icon(Icons.link, size: 18),
           const SizedBox(width: 8),
           Expanded(
-            child: SelectableText(url, style: theme.textTheme.bodySmall),
+            child: Text(url, style: theme.textTheme.bodySmall),
           ),
           IconButton(
             tooltip: context.tr('Copier le lien'),
@@ -2825,7 +2826,7 @@ class _ReadOnlyRow extends StatelessWidget {
               ),
             ),
           ),
-          Expanded(child: SelectableText(value)),
+          Expanded(child: CopyText(value)),
         ],
       ),
     );

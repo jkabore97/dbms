@@ -42,7 +42,7 @@
 // ships to every browser.
 
 import { mapsLink } from "./maps.js";
-import { isLegalPath, legalPage } from "./legal.js";
+import { isLegalPath, legalPage, NO_SELECT_CSS } from "./legal.js";
 import { helpPage, supportContacts } from "./help.js";
 import { isProxyPath, proxySupabase } from "./supabase_proxy.js";
 import { downloadPage, isDownloadPath } from "./download.js";
@@ -414,16 +414,26 @@ export async function eventPage(request, env, slug, preview, edit) {
   }
   const editor = data.editor === true && !!edit;
   // A card made in Studio (171): its organiser edits it there — the old
-  // editor would change words the guests no longer see. « studio=lire »
-  // is Studio reading the card it was made from (the converter's frame).
+  // editor would change words the guests no longer see. Since 171d (the
+  // owner's go) a classic card's organiser is sent to Studio too, before
+  // its first save: Studio reads the card as it is, and the guests see
+  // nothing new until « Enregistrer ». An animated card keeps its own editor
+  // until Studio draws its scenes (Phase 2): saved in Studio today, it
+  // would lose its motion. « studio=lire » is Studio reading the card it is
+  // made from (the converter's frame).
   const reading = new URL(request.url).searchParams.get("studio") === "lire";
-  if (editor && hasDoc(data) && !reading) {
+  if (editor && !reading && (hasDoc(data) || ("doc" in data && !isAnimatedCard(data)))) {
     return new Response(null, {
       status: 302,
       headers: { Location: studioHref(slug, edit, preview), "Cache-Control": "no-store" },
     });
   }
   return cardPage(request, env, { slug, data, preview, edit: editor ? edit : null, editor, demo: false, classic: reading });
+}
+
+// An animated card (anime_<layout>, or the animated family).
+function isAnimatedCard(data) {
+  return data.family === "anime" || ANIMATED.test(String(data.card || ""));
 }
 
 // A card with a Studio document (171) — events.doc, as event_public gives it.
@@ -548,7 +558,7 @@ export async function passPage(env, slug, id) {
   const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8">` +
     `<meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">` +
     `<title>Carte d'invité · ${escapeHtml(String(p.title || ""))}</title>` +
-    `<style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f4efe6;color:#1a140c;font-family:Georgia,"Times New Roman",serif}` +
+    `<style>${NO_SELECT_CSS}body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f4efe6;color:#1a140c;font-family:Georgia,"Times New Roman",serif}` +
     `main{max-width:420px;margin:24px;padding:28px 24px;background:#fff;border-radius:20px;box-shadow:0 20px 60px -30px rgba(0,0,0,.4);text-align:center}` +
     `.eye{font:600 11px system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#8a6d3b}h1{font-size:30px;margin:10px 0 4px;font-weight:500}` +
     `.st{display:inline-block;margin:8px 0 18px;padding:6px 14px;border-radius:999px;background:${p.answer === "non" ? "#efe4e4" : "#e6f1e8"};font:600 13px system-ui,sans-serif}` +
@@ -570,7 +580,7 @@ const PAY_KIND = { orange: "Orange Money", moov: "Moov Money", wave: "Wave", aut
 function ticketShell(title, body, script) {
   return `<!doctype html><html lang="fr"><head><meta charset="utf-8">` +
     `<meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">` +
-    `<title>${escapeHtml(title)}</title><style>` +
+    `<title>${escapeHtml(title)}</title><style>${NO_SELECT_CSS}` +
     `*{box-sizing:border-box}body{margin:0;background:#f4efe6;color:#1a140c;font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}` +
     `main{max-width:560px;margin:0 auto;padding:24px 16px 48px}` +
     `.card{background:#fff;border-radius:20px;padding:22px 20px;box-shadow:0 20px 60px -30px rgba(0,0,0,.35);margin-bottom:16px}` +
@@ -589,6 +599,8 @@ function ticketShell(title, body, script) {
     `.ok{background:#e6f1e8;color:#1d5b33}.no{background:#f4e1e1;color:#7a2424}` +
     `.qr{width:220px;height:220px;margin:12px auto}.qr svg{width:100%;height:100%}.ticket{text-align:center;padding:18px 0;border-top:1px dashed #d9d1c3}` +
     `.err{color:#8a1f1f;font-size:14px;margin-top:10px;min-height:1em}.note{font-size:12px;color:#8a7d6b;margin-top:18px;text-align:center}` +
+    `.cp{display:inline-flex;align-items:center;min-height:36px;margin-top:8px;padding:0 14px;border:1px solid #d9d1c3;border-radius:999px;background:#fff;color:#1a140c;font:600 13px system-ui,sans-serif;cursor:pointer}` +
+    `.pay .cp{display:flex}` +
     `</style></head><body><main>${body}<p class="note">Le paiement se fait directement à l’organisateur. Marakaj n’encaisse rien.</p></main>` +
     (script ? `<script>${script}</script>` : "") + `</body></html>`;
 }
@@ -679,13 +691,16 @@ export async function ticketStatusPage(env, slug, id) {
   const orgWa = waDigits(r.pay_whatsapp);
   let body = head;
   if (r.status === "pending") {
+    // A number and the reference are copied with a button: since 171d no
+    // word of the page is chosen by a long press.
+    const copy = (v, label) => (v ? `<button type="button" class="cp" data-cp="${escapeHtml(String(v))}">${label}</button>` : "");
     const pays = (r.pay_methods || []).map((p) => `<div class="pay"><b>${escapeHtml(PAY_KIND[p.kind] || p.kind || "")}</b>` +
-      `${escapeHtml(p.number || "")}${p.name ? ` · ${escapeHtml(p.name)}` : ""}</div>`).join("");
+      `${escapeHtml(p.number || "")}${p.name ? ` · ${escapeHtml(p.name)}` : ""}${copy(p.number, "Copier le numéro")}</div>`).join("");
     const waText = `Bonjour, j’ai demandé des billets pour « ${r.title} » : référence ${r.ref}, ${moneyText(r.total, r.currency)}.${r.txn_ref ? ` Transaction : ${r.txn_ref}.` : ""}`;
     const until = new Date(r.hold_until);
     body += `<div class="card"><span class="tag">En attente du paiement</span>` +
       `<h2 style="margin-top:14px">Payez ${escapeHtml(moneyText(r.total, r.currency))} à l’organisateur</h2>${pays || `<p class="muted">L’organisateur vous indiquera où payer.</p>`}` +
-      `<p>En indiquant la référence :</p><div class="ref">${escapeHtml(r.ref)}</div>` +
+      `<p>En indiquant la référence :</p><div class="ref">${escapeHtml(r.ref)}</div>${copy(r.ref, "Copier la référence")}` +
       `<p class="muted">Vos places sont gardées jusqu’au ${escapeHtml(until.toLocaleString("fr-FR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZone: "Africa/Ouagadougou" }))}. Une fois le paiement vu par l’organisateur, vos billets apparaissent ici.</p>` +
       (orgWa ? `<a class="btn wa" href="https://wa.me/${orgWa}?text=${encodeURIComponent(waText)}" target="_blank" rel="noopener">Écrire à l’organisateur sur WhatsApp</a>` : "") +
       `<form id="tx" novalidate><label for="t">Votre numéro de transaction</label><input id="t" maxlength="40" value="${escapeHtml(r.txn_ref || "")}" placeholder="Celui du SMS de paiement">` +
@@ -707,6 +722,10 @@ export async function ticketStatusPage(env, slug, id) {
   const boot = { id: r.id, slug, api: { url: env.SUPABASE_URL, key: env.SUPABASE_PUBLISHABLE_KEY } };
   const script = `var B=${jsonForScript(boot)};` + `
 try{var s=JSON.parse(localStorage.getItem('mk-billets')||'[]');if(!s.some(function(x){return x.id===B.id;})){s.push({slug:B.slug,id:B.id});localStorage.setItem('mk-billets',JSON.stringify(s.slice(-20)));}}catch(e){}
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-cp]');if(!b)return;var v=b.getAttribute('data-cp'),was=b.textContent;
+function done(ok){b.textContent=ok?'Copié':'Copiez-le à la main';setTimeout(function(){b.textContent=was;},1600);}
+function old(){try{var t=document.createElement('textarea');t.value=v;t.setAttribute('readonly','');t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();var ok=document.execCommand('copy');t.remove();done(ok);}catch(x){done(false);}}
+if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(v).then(function(){done(true);},old);else old();});
 (function(){var boxes=document.querySelectorAll('[data-qr]');if(boxes.length){var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
 s.onload=function(){Array.prototype.forEach.call(boxes,function(b){try{var q=qrcode(0,'M');q.addData(b.dataset.qr);q.make();b.innerHTML=q.createSvgTag({cellSize:4,margin:0,scalable:true});}catch(e){b.textContent='QR';}});};document.head.appendChild(s);}
 var f=document.getElementById('tx');if(!f)return;f.onsubmit=function(e){e.preventDefault();var err=document.getElementById('err'),t=document.getElementById('t').value.trim();if(!t){err.textContent='Le numéro du SMS de paiement.';return;}

@@ -296,6 +296,15 @@ export function legalPage(pathname, { email = DEFAULT_EMAIL, lang = null } = {})
 }
 
 /**
+ * 171d: on every page of the site, a long press chooses no word — no Google
+ * bar, no menu — and a tap leaves no grey flash; only what is typed in can
+ * be chosen. The cards (shared.css, studio.css, the animated page) and the
+ * app's own page carry the same two rules.
+ */
+export const NO_SELECT_CSS = "html{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}" +
+  'input,textarea,select,[contenteditable]:not([contenteditable="false"]){-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}';
+
+/**
  * One plain page of the site (the legal pages, /aide): Mara's band at the
  * top, [main] in the middle, the links every page carries at the foot.
  * [head] is more tags for the <head> (already escaped).
@@ -310,6 +319,7 @@ export function sitePage({ title, description, main, head = "", style = "", lang
 <meta name="description" content="${escape(description)}">
 ${head}<link rel="icon" type="image/png" href="/favicon.png">
 <style>
+  ${NO_SELECT_CSS}
   :root { color-scheme: light; }
   body { margin: 0; background: #F4F2EE; color: #0E0D0C; font: 16px/1.6 system-ui, sans-serif; }
   header { background: #3B3A38; color: #F4F2EE; padding: 18px 20px; }

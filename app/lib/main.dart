@@ -60,6 +60,7 @@ import 'features/auth/welcome_gate.dart';
 import 'core/site/app_download.dart' show AndroidInstallBar;
 import 'core/events/events_repository.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import 'features/common/copy_text.dart';
 
 /// Supplied at build time so no credentials live in the source:
 ///   flutter run --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_PUBLISHABLE_KEY=...
@@ -252,7 +253,7 @@ class StartupErrorApp extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                SelectableText(
+                CopyText(
                   '$error',
                   style: const TextStyle(
                     fontFamily: 'monospace',
@@ -262,7 +263,7 @@ class StartupErrorApp extends StatelessWidget {
                 ),
                 if (stack != null) ...[
                   const SizedBox(height: 16),
-                  SelectableText(
+                  CopyText(
                     '$stack',
                     style: const TextStyle(
                       fontFamily: 'monospace',

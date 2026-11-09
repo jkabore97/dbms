@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../core/auth/models.dart';
 import '../../core/db/local_db.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../common/copy_text.dart';
 
 /// What this phone is still holding.
 ///
@@ -234,7 +235,7 @@ class _FailureTile extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: SelectableText(
+            child: CopyText(
               error,
               style: theme.textTheme.bodySmall?.copyWith(
                 fontFamily: 'monospace',

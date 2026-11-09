@@ -286,7 +286,7 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Flexible(
-            child: SelectableText(
+            child: Text(
               key,
               key: const Key('two-step-secret'),
               textAlign: TextAlign.center,

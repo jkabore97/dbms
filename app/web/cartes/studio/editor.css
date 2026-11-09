@@ -1,5 +1,7 @@
 /* Marakaj Studio — the editor's own furniture (171): the bars, the sheets,
    the selection. The card itself is studio.css. Phone first. */
+/* 171d: no word chosen by a long press, no Google bar, no menu, no grey flash on a tap — only what is typed in can be chosen. */
+html{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}input,textarea,select,[contenteditable]:not([contenteditable="false"]){-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 :root{--ed-bg:#16130f;--ed-fg:#f5efe6;--ed-mute:#b9b0a3;--ed-acc:#ffb547;--ed-line:rgba(255,255,255,.14);--ed-chip:rgba(255,255,255,.1);--ed-font:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
 html,body.ed-body{margin:0;background:#0e0c0a}
 /* the bars are display:flex: « hidden » must still hide them */
@@ -141,6 +143,8 @@ body.ed-body{font-family:var(--ed-font);-webkit-tap-highlight-color:transparent}
 /* moving with a finger: the chosen block's handle, a long press, the landing line */
 .ed-on .st-b{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .ed-on .st-b [data-f]{-webkit-user-select:text;user-select:text}
+/* a finger held on a block (171d): its words are not chosen, it is lifted */
+.ed-pressing .st-b,.ed-pressing .st-b *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
 .ed-grip{position:absolute;top:12px;right:12px;z-index:7;display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 14px 0 10px;border:2px solid #fff;border-radius:999px;background:var(--ed-acc);color:#1b140a;font:700 12px var(--ed-font);box-shadow:0 6px 18px rgba(0,0,0,.3);touch-action:none;cursor:grab}
 .ed-grip:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .ed-dots{width:18px;height:18px;fill:currentColor;stroke:none}

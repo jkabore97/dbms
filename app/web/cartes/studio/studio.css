@@ -1,3 +1,5 @@
+/* 171d: no word chosen by a long press, no Google bar, no menu, no grey flash on a tap — only what is typed in can be chosen. */
+html{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}input,textarea,select,[contenteditable]:not([contenteditable="false"]){-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 /* Marakaj Studio — the card's look (171). Every block draws with the
    theme's six colours (--st-back, --st-paper, --st-ink, --st-accent,
    --st-soft, --st-line), its three fonts (--st-display, --st-body,

@@ -7,6 +7,7 @@ import 'package:kaj_app/core/nav/app_scope.dart';
 import 'package:kaj_app/core/theme/kaj_card.dart';
 import 'package:kaj_app/core/auth/models.dart';
 import 'package:kaj_app/features/help/help_contact.dart';
+import '../common/copy_text.dart';
 
 /// How to reach the people who run Mara (« Aide Mara », 126): the
 /// platform's e-mail, its WhatsApp number and the hours it answers, set in
@@ -247,7 +248,7 @@ class _SupportCardState extends State<SupportCard> {
                 ],
               ),
               const SizedBox(height: 8),
-              SelectableText(c.email,
+              CopyText(c.email,
                   key: const Key('support-address'),
                   style: theme.textTheme.bodySmall
                       ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
