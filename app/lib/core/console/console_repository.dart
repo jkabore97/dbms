@@ -243,6 +243,14 @@ class ConsoleRepository {
     await client.rpc('merge_accounts', params: {'p_keep': keepId, 'p_absorb': absorbId, 'p_confirm': confirm});
   }
 
+  /// Puts an existing account in a business at once, with [role] (169): a
+  /// platform admin's. The server refuses someone already there, an
+  /// archived business, and a full free team, with a sentence.
+  Future<void> addMember({required String orgId, required String userId, required String role}) async {
+    final client = _requireClient();
+    await client.rpc('platform_add_member', params: {'p_org': orgId, 'p_user': userId, 'p_role': role});
+  }
+
   /// The businesses one person belongs to, and their role in each.
   Future<List<PersonOrg>> userOrgs(String userId) async {
     final client = _requireClient();

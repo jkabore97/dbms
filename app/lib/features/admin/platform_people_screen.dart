@@ -16,6 +16,7 @@ import '../../core/phone/country_codes.dart' show displayPhone;
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
+import 'add_to_business_sheet.dart';
 import 'merge_accounts_sheet.dart';
 
 /// The platform admin's global directory of people — the other axis to the
@@ -555,6 +556,20 @@ class _PersonSheetState extends State<PersonSheet> {
     );
   }
 
+  /// 169: an existing account put in a business at once.
+  Future<void> _openAddToBusiness() async {
+    final added = await showMaraSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => AddToBusinessSheet(console: widget.console, person: widget.person),
+    );
+    if (added == true && mounted) {
+      _changed = true;
+      await _loadOrgs();
+    }
+  }
+
   Future<void> _openMerge() async {
     final merged = await showMaraSheet<bool>(
       context: context,
@@ -663,6 +678,15 @@ class _PersonSheetState extends State<PersonSheet> {
                     subtitle: Text(
                         '${roleLabel(o.role)}${o.archived ? context.tr(' · archivée') : ''}'),
                   )),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                key: const Key('person-add-to-business'),
+                onPressed: _busy ? null : _openAddToBusiness,
+                icon: const Icon(Icons.add_business_outlined),
+                label: Text(context.tr('Ajouter à une entreprise…')),
+              ),
+            ),
             const Divider(height: 28),
 
             if (_error != null) ...[
