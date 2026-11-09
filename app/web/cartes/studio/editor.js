@@ -653,9 +653,13 @@
     this.classList.toggle('acc', preview); sel = null; closeSheet(); draw();
     if (preview) toast('Aperçu : la carte comme vos invités la verront.');
   };
+  // Closing opens the card as the guests see it. Not « back »: the page
+  // before Studio is often the old editor's address, which sends here again.
+  var leaving = false;
   document.getElementById('edClose').onclick = function () {
     if (dirty() && !confirm('Quitter sans enregistrer ? Vos changements restent en brouillon sur ce téléphone.')) return;
-    if (history.length > 1) history.back(); else location.href = '/e/' + encodeURIComponent(ctx.slug || '') + (ctx.preview ? '?apercu=' + encodeURIComponent(ctx.preview) : '');
+    leaving = true;
+    location.href = '/e/' + encodeURIComponent(ctx.slug || '') + (ctx.preview ? '?apercu=' + encodeURIComponent(ctx.preview) : '');
   };
   var saving = false;
   document.getElementById('edSave').onclick = function () {
@@ -671,7 +675,7 @@
       stateBar(); toast('Carte enregistrée. Vos invités la voient ainsi.');
     }, function (err) { saving = false; btn.textContent = 'Enregistrer'; toast(err.message || 'La carte n’est pas enregistrée. Réessayez.'); });
   };
-  window.addEventListener('beforeunload', function (e) { if (doc && dirty()) { e.preventDefault(); e.returnValue = ''; } });
+  window.addEventListener('beforeunload', function (e) { if (doc && dirty() && !leaving) { e.preventDefault(); e.returnValue = ''; } });   // asked once, not twice
   document.addEventListener('keydown', function (e) {
     if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z' && !(e.target.closest && e.target.closest('[data-f]'))) { e.preventDefault(); document.getElementById('edUndo').click(); }
     if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'Z'))) { e.preventDefault(); document.getElementById('edRedo').click(); }
