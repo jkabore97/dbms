@@ -128,7 +128,7 @@
   function blend(a, b, t) { var x = rgbOf(a), y = rgbOf(b); return hexOf([x[0] + (y[0] - x[0]) * t, x[1] + (y[1] - x[1]) * t, x[2] + (y[2] - x[2]) * t]); }
   function light(h) { var c = rgbOf(h); return (c[0] * 299 + c[1] * 587 + c[2] * 114) / 255000; }
   function numKeys(re) { return Object.keys(draft).map(function (k) { var m = re.exec(k); return m ? +m[1] : 0; }).filter(Boolean).sort(function (a, b) { return a - b; }); }
-  var PLUS = Math.max.apply(null, [0].concat(numKeys(/^t:plus-(\d+)$/))), PICS = Math.max.apply(null, [0].concat(numKeys(/^p:g(\d+)$/)));
+  var PICS = Math.max.apply(null, [0].concat(numKeys(/^p:g(\d+)$/)));
   var SECTIONS = { word: '[data-role="word-title"]', prog: '[data-prog], [data-role="prog-title"]', rsvp: 'form.rsvp', album: '.album-box' };
   function sectionOf(k) {
     var el = document.querySelector(SECTIONS[k]);
@@ -139,26 +139,119 @@
     Array.prototype.forEach.call(document.querySelectorAll('[data-count]'), function (el) { el.classList.toggle('is-off', off('cd')); });
     Array.prototype.forEach.call(document.querySelectorAll('[data-prog] [data-t]'), function (el) { el.classList.toggle('is-off', off('times')); });
   }
-  // Where a text of the organiser's own goes: under the word, else after
-  // the programme's intro, else before the answer.
-  function plusAnchor() {
-    var w = document.querySelector('[data-role="word-title"]'), ws = w && w.closest('section');
-    if (ws) return { parent: ws, before: null, like: ws.querySelector('p') };
-    var pi = document.querySelector('[data-role="prog-intro"]');
-    if (pi && pi.parentNode) return { parent: pi.parentNode, before: pi.nextSibling, like: pi.tagName === 'P' ? pi : null };
-    var f = document.querySelector('form.rsvp');
-    if (f && f.parentNode) return { parent: f.parentNode, before: f, like: f.parentNode.querySelector('p') };
-    return null;
+  function plusText(k) { var d = document.createElement('div'); d.innerHTML = clean(draft[k]); return d.textContent.replace(/\s+/g, ' ').trim(); }
+  // The organiser's own texts (170c): t:plus-N the words; t:plus-at where
+  // each one stands, in reading order — « N@intro » (under the word or the
+  // welcome), « N@prog » (under the programme), « N@rsvp » (before the
+  // answer). A text written before the list stands under the intro. A place
+  // the card does not have, or has hidden, hands its texts to the next one.
+  var SPOTS = ['intro', 'prog', 'rsvp'], EFF = {}, AVL = [], EDITABLE = !SERVER || !!ORGANISER;
+  function plusList() {
+    var seen = {}, out = [];
+    String(draft['t:plus-at'] || '').split(',').forEach(function (s) {
+      var m = /^(\d{1,3})@(intro|prog|rsvp)$/.exec(s.trim()); if (!m || seen[m[1]]) return;
+      seen[m[1]] = 1; out.push({ n: +m[1], at: m[2] });
+    });
+    numKeys(/^t:plus-(\d+)$/).forEach(function (n) { if (!seen[n] && plusText('t:plus-' + n)) { seen[n] = 1; out.push({ n: n, at: 'intro' }); } });
+    return out;
   }
-  function plusEl(n) {
-    var a = plusAnchor(); if (!a) return null;
-    var p = a.like ? a.like.cloneNode(false) : document.createElement('p');
-    p.removeAttribute('id'); p.removeAttribute('data-role'); p.setAttribute('data-edit', 'plus-' + n); p.className = (p.className ? p.className + ' ' : '') + 'plus';
-    var prev = document.querySelector('[data-edit="plus-' + (n - 1) + '"]');
-    if (prev && prev.parentNode === a.parent) a.parent.insertBefore(p, prev.nextSibling); else a.parent.insertBefore(p, a.before);
+  function setPlusList(l) {
+    // kept in reading order: by place (where each one shows now), then as listed
+    var R = { intro: 0, prog: 1, rsvp: 2, end: 3 };
+    l = l.map(function (e, i) { return { e: e, i: i, r: R[EFF[e.n] || e.at] }; }).sort(function (a, b) { return a.r - b.r || a.i - b.i; }).map(function (x) { return x.e; });
+    if (l.length) draft['t:plus-at'] = l.map(function (e) { return e.n + '@' + e.at; }).join(','); else delete draft['t:plus-at'];
+  }
+  // A paragraph of the card's own to dress a new text like: a body
+  // paragraph, not a title, not an eyebrow.
+  function bodyParas(root) {
+    return Array.prototype.filter.call(root.querySelectorAll('p'), function (x) {
+      return !x.closest('.slot') && !x.hasAttribute('data-role') && !x.classList.contains('eyebrow') && !x.classList.contains('plus');
+    });
+  }
+  function spotOf(a) {
+    var s, l, like, f;
+    if (a === 'intro') {
+      var w = document.querySelector('[data-role="word-title"]');
+      s = (w && w.closest('section')) || document.querySelector('section.word, section.welcome');
+      if (!s || s.classList.contains('is-off')) return null;
+      var paras = bodyParas(s), blocks = paras.concat(Array.prototype.slice.call(s.querySelectorAll('blockquote')));
+      // after the last long paragraph — before a short closing (« Avec amour, ») and the signature
+      var long = blocks.filter(function (x) { return x.textContent.trim().length > 30; });
+      var last = (long.length ? long : blocks).sort(function (x, y) { return x.compareDocumentPosition(y) & 4 ? -1 : 1; }).pop();
+      if (!last) return { parent: s, before: null, like: paras[0] || null };
+      return { parent: last.parentNode, before: last.nextSibling, like: paras[0] || null };
+    }
+    if (a === 'prog') {
+      l = document.querySelector('[data-prog]') || document.querySelector('#programme .moments');
+      if (!l || off('prog') || (l.closest('section') && l.closest('section').classList.contains('is-off'))) return null;
+      like = bodyParas(l.closest('section') || l.parentNode)[0] || null;
+      return { parent: l.parentNode, before: l.nextSibling, like: like };
+    }
+    if (a === 'rsvp') {
+      f = document.querySelector('form.rsvp');
+      if (!f || off('rsvp') || (f.closest('section') && f.closest('section').classList.contains('is-off'))) return null;
+      var at = f.previousElementSibling && f.previousElementSibling.classList.contains('tickets') ? f.previousElementSibling : f;
+      like = document.querySelector('[data-role="rsvp-lead"]');
+      return { parent: at.parentNode, before: at, like: like && like.tagName === 'P' ? like : null };
+    }
+    var foot = document.querySelector('.foot');
+    return foot && foot.parentNode ? { parent: foot.parentNode, before: foot, like: null } : { parent: card || document.body, before: null, like: null };
+  }
+  function makePlus(e, like) {
+    var p = like ? like.cloneNode(false) : document.createElement('p');
+    ['id', 'data-role', 'contenteditable', 'data-x-wrap'].forEach(function (x) { p.removeAttribute(x); });
+    if (!like) p.className = 'lead';
+    p.setAttribute('data-edit', 'plus-' + e.n); p.classList.add('plus');
+    p.innerHTML = draft['t:plus-' + e.n] ? clean(draft['t:plus-' + e.n]) : '';
+    if (document.body.classList.contains('editing')) p.setAttribute('contenteditable', 'true');
     return p;
   }
-  function plusText(k) { var d = document.createElement('div'); d.innerHTML = clean(draft[k]); return d.textContent.replace(/\s+/g, ' ').trim(); }
+  function moveBarEl(e, up, down) {
+    var d = document.createElement('div'); d.className = 'xmove'; d.setAttribute('data-pn', String(e.n));
+    d.innerHTML = '<button type="button" data-pm="up"' + (up ? '' : ' disabled') + '>↑ Monter</button>' +
+      '<button type="button" data-pm="down"' + (down ? '' : ' disabled') + '>↓ Descendre</button><button type="button" data-pm="del">Supprimer</button>';
+    return d;
+  }
+  // Every added text in its place, in its order; under each, for the
+  // organiser, up, down (through the places, top to bottom), take it away.
+  function placePlus() {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-edit^="plus-"], .xmove'), function (el) { if (el.parentNode) el.parentNode.removeChild(el); });
+    var spots = {}, groups = { intro: [], prog: [], rsvp: [], end: [] };
+    var FALL = { intro: ['intro', 'prog', 'rsvp'], prog: ['prog', 'intro', 'rsvp'], rsvp: ['rsvp', 'prog', 'intro'] };
+    SPOTS.forEach(function (a) { spots[a] = spotOf(a); });
+    EFF = {}; AVL = SPOTS.filter(function (a) { return spots[a]; }); if (!AVL.length) AVL = ['end'];
+    plusList().filter(function (e) { return EDITABLE || plusText('t:plus-' + e.n); }).forEach(function (e) {
+      var g = FALL[e.at].filter(function (a) { return spots[a]; })[0] || 'end';
+      EFF[e.n] = g; groups[g].push(e);
+    });
+    if (groups.end.length) spots.end = spotOf('end');
+    ['intro', 'prog', 'rsvp', 'end'].forEach(function (g) {
+      var sp = spots[g], pi = AVL.indexOf(g);
+      groups[g].forEach(function (e, gi) {
+        sp.parent.insertBefore(makePlus(e, sp.like), sp.before);
+        if (EDITABLE) sp.parent.insertBefore(moveBarEl(e, gi > 0 || pi > 0, gi < groups[g].length - 1 || pi < AVL.length - 1), sp.before);
+      });
+    });
+  }
+  function movePlus(n, dir) {
+    var l = plusList(), i = -1, j = -1, k;
+    l.forEach(function (x, m) { if (x.n === n) i = m; });
+    if (i < 0) return;
+    var e = l[i], cur = EFF[n] || e.at;
+    if (dir < 0) { for (k = i - 1; k >= 0; k--) if ((EFF[l[k].n] || l[k].at) === cur) { j = k; break; } }
+    else { for (k = i + 1; k < l.length; k++) if ((EFF[l[k].n] || l[k].at) === cur) { j = k; break; } }
+    if (j >= 0) { l[i] = l[j]; l[j] = e; }
+    else {
+      var si = AVL.indexOf(cur) + dir; if (si < 0 || si >= AVL.length) return;
+      var dest = AVL[si], first = -1, last = -1; e.at = dest; EFF[n] = dest; l.splice(i, 1);
+      l.forEach(function (x, m) { if ((EFF[x.n] || x.at) === dest) { if (first < 0) first = m; last = m; } });
+      // going down, it becomes the first of the next place; going up, the last of the one before
+      l.splice(dir > 0 ? (first < 0 ? l.length : first) : (last < 0 ? l.length : last + 1), 0, e);
+    }
+    setPlusList(l); placePlus(); save();
+    var p = document.querySelector('[data-edit="plus-' + n + '"]');
+    if (p) { p.scrollIntoView({ behavior: 'smooth', block: 'center' }); p.classList.remove('xflash'); void p.offsetWidth; p.classList.add('xflash'); }
+  }
   // The gallery: before the answer, one tile a picture.
   function gallery() {
     var g = document.querySelector('.xpics');
@@ -338,9 +431,9 @@
   applyLook();
   // The organiser's own texts and photos (170): on the organiser's screen,
   // every one begun; on the guests', the written ones only.
-  for (var pn = 1; pn <= PLUS; pn++) if (ORGANISER || !SERVER || plusText('t:plus-' + pn)) plusEl(pn);
   for (var gn = 1; gn <= PICS; gn++) if (ORGANISER || !SERVER || draft['p:g' + gn]) picSlot(gn);
   applyHides();
+  placePlus();
   Object.keys(draft).forEach(function (k) {
     if (k.indexOf('t:') === 0) {
       var el = document.querySelector('[data-edit="' + k.slice(2) + '"]');
@@ -549,12 +642,28 @@
     });
     bar.querySelector('.ed-sw').addEventListener('change', function (e) {
       var t = e.target; if (!t.matches('[data-sw]')) return;
-      setOff(t.dataset.sw, !t.checked); applyHides(); save();
+      setOff(t.dataset.sw, !t.checked); applyHides(); placePlus(); save();
     });
     bar.querySelector('.ed-plus-text').addEventListener('click', function () {
-      var p = plusEl(++PLUS); if (!p) { PLUS--; toast('Pas de place pour un texte sur cette carte.'); return; }
+      // a new text, the last of those under the intro
+      var l = plusList(), n = Math.max.apply(null, [0].concat(l.map(function (x) { return x.n; }), numKeys(/^t:plus-(\d+)$/))) + 1, at = -1;
+      l.forEach(function (x, m) { if ((EFF[x.n] || x.at) === 'intro') at = m; });
+      l.splice(at + 1, 0, { n: n, at: 'intro' }); setPlusList(l); placePlus(); save();
+      var p = document.querySelector('[data-edit="plus-' + n + '"]');
+      if (!p) { toast('Pas de place pour un texte sur cette carte.'); return; }
       p.setAttribute('contenteditable', 'true'); p.scrollIntoView({ behavior: 'smooth', block: 'center' }); p.focus();
-      toast('Écrivez votre texte.');
+      toast('Écrivez votre texte. « Monter » et « Descendre » le déplacent.');
+    });
+    // an added text's buttons: up, down, take it away (170c)
+    document.addEventListener('click', function (ev) {
+      var b = ev.target.closest && ev.target.closest('.xmove button');
+      if (!b || !document.body.classList.contains('editing')) return;
+      ev.preventDefault();
+      var n = +b.parentNode.getAttribute('data-pn'), act = b.getAttribute('data-pm');
+      if (act === 'del') {
+        delete draft['t:plus-' + n]; setPlusList(plusList().filter(function (x) { return x.n !== n; }));
+        placePlus(); save(); toast('Texte retiré.');
+      } else movePlus(n, act === 'up' ? -1 : 1);
     });
     bar.querySelector('.ed-plus-pic').addEventListener('click', function () {
       var s = picSlot(++PICS); if (!s) { PICS--; toast('Pas de place pour une photo sur cette carte.'); return; }
@@ -602,6 +711,7 @@
         editables().forEach(function (el) { el.blur(); });
         // an added text left empty is not kept
         Object.keys(draft).forEach(function (k) { if (/^t:plus-\d+$/.test(k) && !plusText(k)) delete draft[k]; });
+        setPlusList(plusList().filter(function (x) { return plusText('t:plus-' + x.n); }));
         saveBtn.disabled = true; saveBtn.textContent = 'Envoi…';
         fetch(SERVER.api.url.replace(/\/+$/, '') + '/rest/v1/rpc/event_content_save', {
           method: 'POST',
