@@ -114,6 +114,13 @@ body.editing .slot[data-pic]::before{content:"Toucher : remplacer · Glisser : r
 .ed-pal{width:28px;height:28px;border-radius:50%;border:2px solid transparent;padding:0;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}
 .ed-pal[aria-pressed="true"]{border-color:#111}
 .ed-font{min-height:38px;border:1px solid #ccc;border-radius:10px;padding:0 8px;font:500 14px system-ui,sans-serif;background:#fff;color:#111;flex:1 1 140px}
+/* the organiser's panel folds away (170b): « Outils » and « Enregistrer » stay */
+.ed-mini{display:flex;gap:8px;align-items:center;justify-content:center}
+.ed-mini button{font:inherit;font-size:11px;letter-spacing:.2em;text-transform:uppercase;padding:12px 18px;border:0;border-radius:999px;background:#fff;color:#1b1b1b;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.ed-mini .ed-mini-save{background:#1b1b1b;color:#fff}
+.ed-mini .ed-mini-save:disabled{opacity:.6}
+.ed-head{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:11px;letter-spacing:.16em;text-transform:uppercase}
+.ed-head .ed-fold{font:inherit;font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:7px 12px;border:1px solid #cfcfcf;border-radius:999px;background:#fff;color:#1b1b1b;cursor:pointer}
 /* the organiser's own (170): colours, what the card shows, a text or a photo more */
 .ed-colors{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .ed-col{display:inline-flex;align-items:center;gap:6px;font-size:12px}
