@@ -491,7 +491,8 @@
     if (b.type === 'button') h += field('label', 'Texte du bouton') + field('href', 'Lien', 'url', 'https://…');
     if (b.type === 'calendar') h += field('label', 'Texte du bouton');
     if (b.type === 'tickets') h += field('label', 'Texte du bouton');
-    if (b.type === 'place') h += field('href', 'Lien de la carte (facultatif)', 'url', 'https://maps.app.goo.gl/…');
+    if (b.type === 'place') h += field('href', 'Itinéraire : le lien Google Maps du lieu', 'url', 'https://maps.app.goo.gl/…') +
+      '<p class="ed-help">Dans Google Maps, touchez le lieu, « Partager », « Copier le lien », puis collez-le ici. Sans lien, l’itinéraire cherche le nom du lieu.</p>';
     if (b.type === 'countdown') h += field('doneText', 'Le jour venu, écrire', 'text', 'C’est aujourd’hui !');
     if (b.type === 'video') h += field('url', 'Lien YouTube', 'url', 'https://youtu.be/…');
     if (b.type === 'music') h += field('url', 'Lien du fichier audio (https)', 'url', 'https://…/chanson.mp3');
@@ -605,11 +606,13 @@
     var b = blockById(id); if (!b) return;
     photoTarget = { id: id, path: path };
     var ph = photoAt(b, path), src = S.picSrc(ph, ctx, 900), pos = ph && Array.isArray(ph.pos) ? ph.pos : [50, 50];
+    // replace or take away first, right under the photo; the framing after
     var h = (src ? '<div class="ed-crop" id="edCrop"><img src="' + esc(src) + '" alt="" style="object-position:' + pos[0] + '% ' + pos[1] + '%"><i style="left:' + pos[0] + '%;top:' + pos[1] + '%"></i></div>' +
+      '<div class="ed-row" style="margin-top:10px"><button type="button" class="ed-chip" data-up>Remplacer depuis le téléphone</button><button type="button" class="ed-chip danger" data-rmph>Retirer la photo</button></div>' +
       '<p class="ed-lab">Glissez sur la photo pour choisir ce qui reste au centre.</p><label class="ed-field">Zoom<input class="ed-range" type="range" min="100" max="250" id="edZoom" value="' + Math.round(((ph && ph.zoom) || 1) * 100) + '"></label>' +
-      '<p class="ed-lab">Filtre</p>' + chips('flt', [['', 'Aucun'], ['nb', 'Noir et blanc'], ['sepia', 'Sépia'], ['chaud', 'Chaud'], ['doux', 'Doux'], ['vif', 'Vif']], (ph && ph.filter) || '') : '') +
-      '<p class="ed-lab">' + (src ? 'Remplacer' : 'Choisir une photo') + '</p><div class="ed-row"><button type="button" class="ed-chip" data-up>Depuis le téléphone</button>' + (src ? '<button type="button" class="ed-chip danger" data-rmph>Retirer la photo</button>' : '') + '</div>' +
-      '<p class="ed-lab">La banque Marakaj</p><div class="ed-stock">' + S.STOCK.map(function (s) { return '<button type="button" data-stock="' + s + '" style="background-image:url(\'/cartes/img/' + s + '.jpg\')" aria-label="' + s + '"></button>'; }).join('') + '</div>';
+      '<p class="ed-lab">Filtre</p>' + chips('flt', [['', 'Aucun'], ['nb', 'Noir et blanc'], ['sepia', 'Sépia'], ['chaud', 'Chaud'], ['doux', 'Doux'], ['vif', 'Vif']], (ph && ph.filter) || '')
+      : '<p class="ed-lab">Choisir une photo</p><div class="ed-row"><button type="button" class="ed-chip" data-up>Depuis le téléphone</button></div>') +
+      '<p class="ed-lab">' + (src ? 'Ou une photo de la banque Marakaj' : 'La banque Marakaj') + '</p><div class="ed-stock">' + S.STOCK.map(function (s) { return '<button type="button" data-stock="' + s + '" style="background-image:url(\'/cartes/img/' + s + '.jpg\')" aria-label="' + s + '"></button>'; }).join('') + '</div>';
     openSheet('Photo', h, function (box) {
       box.addEventListener('click', function (e) {
         var t = e.target.closest('button'); if (!t) return;

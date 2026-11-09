@@ -134,6 +134,30 @@
   function light(h) { var c = rgbOf(h); return (c[0] * 299 + c[1] * 587 + c[2] * 114) / 255000; }
   function numKeys(re) { return Object.keys(draft).map(function (k) { var m = re.exec(k); return m ? +m[1] : 0; }).filter(Boolean).sort(function (a, b) { return a - b; }); }
   var PICS = Math.max.apply(null, [0].concat(numKeys(/^p:g(\d+)$/)));
+  // The way there (« Itinéraire »): the organiser's own Google Maps link
+  // (t:map), else the event's place searched on the map — never the sample
+  // address a design is drawn with (the owner: « itinéraire has no way to
+  // add direction from map »).
+  function mapLink(v) {
+    v = String(v || '').trim().replace(/^http:\/\//i, 'https://');
+    if (v && !/^https:\/\//i.test(v) && /^[\w-]+(\.[\w-]+)+(\/|$)/.test(v)) v = 'https://' + v;
+    return /^https:\/\/[^\s<>"'`]+$/.test(v) ? v : '';
+  }
+  function mapHref() {
+    var own = mapLink(draft['t:map']);
+    if (own) return own;
+    return SERVER && SERVER.place ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(String(SERVER.place)) : '';
+  }
+  var MAPS = 'a[href^="https://maps.google."], a[href^="https://www.google.com/maps"], a[data-map]';
+  function applyMap() {
+    var h = mapHref(); if (!h) return;   // a design's own sample page keeps its own
+    Array.prototype.forEach.call(document.querySelectorAll(MAPS), function (a) { a.setAttribute('href', h); a.setAttribute('data-map', ''); });
+  }
+  // and checked again on the tap itself, whatever drew the link since
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest(MAPS); if (!a) return;
+    var h = mapHref(); if (h) a.setAttribute('href', h);
+  }, true);
   var SECTIONS = { word: '[data-role="word-title"]', prog: '[data-prog], [data-role="prog-title"]', infos: 'ul.infos', pics: '.pics', rsvp: 'form.rsvp', album: '.album-box', foot: '.foot' };
   function sectionOf(k) {
     var el = document.querySelector(SECTIONS[k]);
@@ -372,7 +396,8 @@
   function picSlot(n) {
     var grid = gallery(); if (!grid) return null;
     var s = document.createElement('div'); s.className = 'slot'; s.setAttribute('data-pic', 'g' + n);
-    s.innerHTML = '<div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div>';
+    s.innerHTML = '<div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div>' +
+      (ORGANISER || !SERVER ? '<button type="button" class="pic-x" aria-label="Retirer cette photo">× Retirer</button>' : '');
     grid.appendChild(s);
     return s;
   }
@@ -567,6 +592,7 @@
     }
   });
   applySizes();
+  applyMap();
 
   // ------------------------------------------------------------ pictures
   function wirePic(slot) {
@@ -694,6 +720,20 @@
     slot.addEventListener('pointerup', up);
     slot.addEventListener('pointercancel', function () { down = null; });
   }
+  // An added photo taken away (the owner: « I have added a picture but I
+  // cannot remove it »): the ones after it move up a place, none left empty.
+  if (ORGANISER || !SERVER) document.addEventListener('click', function (e) {
+    var x = e.target.closest && e.target.closest('.pic-x'); if (!x) return;
+    e.preventDefault(); e.stopPropagation();
+    var slot = x.closest('.slot'), n = +String((slot && slot.getAttribute('data-pic')) || '').slice(1);
+    if (!n) return;
+    for (var k = n; k < PICS; k++) { if (draft['p:g' + (k + 1)]) draft['p:g' + k] = draft['p:g' + (k + 1)]; else delete draft['p:g' + k]; }
+    delete draft['p:g' + PICS]; PICS = Math.max(0, PICS - 1);
+    var grid = document.querySelector('.xpics .grid');
+    if (grid) { grid.innerHTML = ''; for (var g = 1; g <= PICS; g++) { var ns = picSlot(g); if (ns) { wirePic(ns); wireTap(ns); } } }
+    if (!PICS) { var sec = document.querySelector('.xpics'); if (sec && sec.parentNode) sec.parentNode.removeChild(sec); }
+    save(); toast('Photo retirée.');
+  });
 
   // ------------------------------------------------------------- editor
   if (card && (!SERVER || ORGANISER)) {
@@ -720,6 +760,7 @@
       '<div class="ed-selrow" hidden><span>Le texte choisi :</span><button type="button" data-sz="-1">A− plus petit</button><button type="button" data-sz="1">A+ plus grand</button></div>' +
       '<div class="ed-sw" role="group" aria-label="Sur la carte"></div>' +
       '<div class="ed-add"><button type="button" class="ed-plus-text">+ Un texte</button><button type="button" class="ed-plus-pic">+ Une photo</button></div>' +
+      '<label class="ed-map">Itinéraire : le lien Google Maps du lieu<input type="url" inputmode="url" placeholder="https://maps.app.goo.gl/…"><small>Dans Google Maps, touchez le lieu, « Partager », « Copier le lien », puis collez-le ici. Sans lien, l’itinéraire cherche le lieu de l’événement.</small></label>' +
       // Studio (171), once the server keeps documents: the whole card to rewrite.
       (ORGANISER && ORGANISER.studio === true ? '<div class="ed-studio"><button type="button" class="ed-studio-btn"><b>Studio</b> · nouveau<span>Ajoutez, déplacez, stylez chaque bloc, comme sur Canva.</span></button></div>' : '') +
       '<p class="ed-hint">Touchez un texte pour l’écrire, videz-le pour l’enlever ; une photo pour la remplacer, glissez-la pour la recadrer.</p>' +
@@ -829,6 +870,16 @@
       }
       applyHides(); placePlus(); applySizes(); save();
     });
+    var mapIn = bar.querySelector('.ed-map input');
+    mapIn.value = draft['t:map'] || '';
+    mapIn.addEventListener('change', function () {
+      var raw = mapIn.value.trim(), v = mapLink(raw);
+      if (raw && !v) { toast('Collez un lien qui commence par https://'); mapIn.value = draft['t:map'] || ''; return; }
+      if (v) draft['t:map'] = v; else delete draft['t:map'];
+      mapIn.value = v;
+      save(); applyMap();
+      toast(v ? 'Itinéraire : vos invités suivront ce lien.' : 'Itinéraire : le lieu de l’événement, cherché sur la carte.');
+    });
     var studioBtn = bar.querySelector('.ed-studio-btn');
     if (studioBtn) studioBtn.addEventListener('click', function () {
       // Studio starts from the card as saved
@@ -897,7 +948,10 @@
       bar.querySelector('.ed-fold').addEventListener('click', function () { fold(true); });
       bar.querySelector('.ed-unfold').addEventListener('click', function () { fold(false); });
       // The panel gets out of the way: a scroll of the card, or a text taken to write.
-      window.addEventListener('scroll', function () { if (!folded && Math.abs(window.scrollY - foldY) > 48 && Date.now() - foldAt > 500) fold(true); }, { passive: true });
+      window.addEventListener('scroll', function () {
+        var typing = document.activeElement && document.activeElement.closest && document.activeElement.closest('.edbar');   // the keyboard scrolls the page: the panel stays
+        if (!folded && !typing && Math.abs(window.scrollY - foldY) > 48 && Date.now() - foldAt > 500) fold(true);
+      }, { passive: true });
       document.addEventListener('focusin', function (e) { if (!folded && e.target.closest && e.target.closest('[data-edit]')) fold(true); });
       function onSave() {
         editables().forEach(function (el) { el.blur(); });

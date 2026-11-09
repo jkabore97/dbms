@@ -377,7 +377,8 @@
     draw: function (b, ctx) {
       var p = b.props || {}, href = p.href || (p.name || ctx.place ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent((p.address || p.name || ctx.place || '').trim()) : '');
       return (b.variant === 'carte' ? '<div class="st-map" aria-hidden="true">' + icon('pin') + '</div>' : '') + F(b, ctx, 'title', 'p', 'st-kicker', 'Titre') + F(b, ctx, 'name', 'h2', 'st-h2', 'Nom du lieu') + F(b, ctx, 'address', 'p', 'st-body', 'Adresse', true) +
-        F(b, ctx, 'note', 'p', 'st-lead', 'Un mot (parking, repère…)', true) + (href ? '<a class="st-btn" href="' + esc(href) + '" target="_blank" rel="noopener">' + icon('pin') + 'Itinéraire</a>' : '');
+        F(b, ctx, 'note', 'p', 'st-lead', 'Un mot (parking, repère…)', true) + (href ? '<a class="st-btn" href="' + esc(href) + '" target="_blank" rel="noopener">' + icon('pin') + 'Itinéraire</a>' : '') +
+        (ctx.editing && !p.href ? '<p class="st-note">Pour un itinéraire exact : Réglages du bloc, collez le lien Google Maps du lieu.</p>' : '');
     }
   };
   B.calendar = {

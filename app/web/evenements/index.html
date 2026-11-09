@@ -77,6 +77,8 @@ html.organiser #site [data-t]:empty::before{content:attr(data-ph);opacity:.55;fo
 .menu .lab{width:100%;margin-top:2px;font:700 11px var(--f-ui);letter-spacing:.08em;text-transform:uppercase;opacity:.65}
 .menu .row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:100%}
 .menu .row>span{font:600 13px var(--f-ui);min-width:72px;text-align:center}
+.menu .row input[type=url]{flex:1 1 220px;min-width:0;min-height:40px;padding:0 12px;border:1px solid rgba(128,128,128,.4);border-radius:10px;background:transparent;color:var(--ui-fg);font:500 14px var(--f-ui)}
+.menu .hint{width:100%;font:400 12px/1.45 var(--f-ui);opacity:.7}
 .menu label.sw{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:0 12px 0 10px;border-radius:999px;background:rgba(128,128,128,.18);font:500 13px var(--f-ui);cursor:pointer}
 .menu label.sw input[type=checkbox]{margin:0;width:16px;height:16px;accent-color:var(--ui-acc)}
 .menu label.sw input[type=color]{width:26px;height:26px;padding:0;border:1px solid rgba(128,128,128,.5);border-radius:50%;background:none;cursor:pointer;overflow:hidden}
@@ -1066,7 +1068,10 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
     }
     t.prog = steps.length ? steps : [['', '<i data-pg hidden></i>', '']];
     t.place = ed('place', esc(rawPlace));
-    t.map = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(rawPlace);
+    // The way there: the organiser's own Google Maps link (t:map), else the
+    // place searched on the map. Written into the pages' links as text.
+    t.mapUrl = mapOwn() || 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(rawPlace);
+    t.map = esc(t.mapUrl);
     return t;
   }
   // the shared pieces every layout styles its own way
@@ -3643,6 +3648,8 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
     if (sh.length) TX.show = sh.join(','); else delete TX.show;
   }
   function tx(k, dflt) { if (off(k)) return ORG ? dflt : ''; return TX[k] ? esc(TX[k]) : dflt; }
+  // The organiser's own Google Maps link for « Itinéraire » (t:map): https only.
+  function mapOwn() { var v = String(TX.map || '').trim(); return /^https:\/\/[^\s<>"'`]+$/.test(v) ? v : ''; }
   function ed(k, s) {
     if (ORG) return '<span data-t="' + k + '"' + (off(k) ? ' class="off"' : '') + ' data-ph="' + (k.indexOf('plus-') === 0 ? 'Votre texte…' : '…') + '">' + s + '</span>';
     return /^(intro|eye|plus-\d+|prog-\d+-1)$/.test(k) || sizeMap()[k] ? '<span data-k="' + k + '">' + s + '</span>' : s;
@@ -3734,7 +3741,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
     if (off('rsvp')) { var f2 = site.querySelector('#rsvp'), s2 = f2 && f2.closest('section'); if (s2 && s2.parentNode) s2.parentNode.removeChild(s2); }
     if (off('qr') || off('rsvp') || (SERVER && (SERVER.rsvp_on === false || (SERVER.tickets && !SERVER.demo)))) drop('[data-pass]');
     if (off('cd')) drop('[data-cd]');
-    if (off('place')) { var mp = site.querySelector('a[href^="https://www.google.com/maps"]'), msec = mp && mp.closest('section'); if (msec && msec.id !== 'hero' && msec.parentNode) msec.parentNode.removeChild(msec); }
+    if (off('place')) { var mp = Array.prototype.filter.call(site.querySelectorAll('a[href]'), function (a) { return a.getAttribute('href') === w.mapUrl; })[0], msec = mp && mp.closest('section'); if (msec && msec.id !== 'hero' && msec.parentNode) msec.parentNode.removeChild(msec); }
     if (off('foot') && foot) foot.parentNode.removeChild(foot), foot = null;
     if (!ORG && off('eye')) Array.prototype.forEach.call(site.querySelectorAll('[data-k="eye"]'), function (el) { var h = el.parentElement; if (h && h !== site && !h.querySelector('h1, h2, [data-slot]')) h.parentNode.removeChild(h); });
     // The three places an added text can stand: under the intro (in the
@@ -3940,7 +3947,10 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
   // stays out of the way of the menus.
   function drawSelbar() { var b = document.getElementById('selbar'), m = document.getElementById('menu'); if (b) b.hidden = !ORG || !SELK || (m && !m.hidden); }
   // the panel gets out of the way when the card is scrolled (170b)
-  window.addEventListener('scroll', function () { if (MORE && Math.abs(window.scrollY - MORE_Y) > 48 && Date.now() - MORE_AT > 500) showMore(false); }, {passive: true});
+  window.addEventListener('scroll', function () {
+    var typing = document.activeElement && document.activeElement.closest && document.activeElement.closest('#menu');   // the keyboard scrolls the page: the menu stays
+    if (MORE && !typing && Math.abs(window.scrollY - MORE_Y) > 48 && Date.now() - MORE_AT > 500) showMore(false);
+  }, {passive: true});
   function morePanel() {
     var P = lay().pals[S.pal] || lay().pals[0], C = colorsOf() || [P[1], P[2], P[3]], n = progCount();
     function sw(k, label) { return '<label class="sw"><input type="checkbox" data-sw="' + k + '"' + (off(k) ? '' : ' checked') + '> ' + label + '</label>'; }
@@ -3951,6 +3961,8 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
       (colorsOf() ? '<button type="button" data-act="colors-reset">Celles du modèle</button>' : '') + '</div>' +
       '<div class="row xpal">' + XPALS.map(function (p, i) { return '<button type="button" data-xp="' + i + '" title="' + p[0] + '" aria-label="' + p[0] + '" style="background:linear-gradient(135deg,' + p[1] + ' 0 50%,' + p[3] + ' 50% 75%,' + p[2] + ' 75%)"></button>'; }).join('') + '</div>' +
       '<div class="lab">Sur la carte</div><div class="row">' + sw('rsvp', 'Réponse des invités') + sw('qr', 'Carte d\'invité (QR)') + sw('cd', 'Compte à rebours') + sw('times', 'Horaires du programme') + sw('place', 'Le lieu') + sw('foot', 'Pied de page') + '</div>' +
+      '<div class="lab">Itinéraire</div><div class="row"><input type="url" inputmode="url" data-map placeholder="Lien Google Maps du lieu (facultatif)" value="' + esc(TX.map || '') + '"></div>' +
+      '<div class="hint">Dans Google Maps : touchez le lieu, « Partager », « Copier le lien », puis collez-le ici. Sans lien, l’itinéraire cherche le lieu de l’événement.</div>' +
       '<div class="lab">Programme</div><div class="row"><button type="button" data-act="prog-less" aria-label="Une étape de moins"' + (n ? '' : ' disabled') + '>−</button><span>' + (n ? n + (n > 1 ? ' étapes' : ' étape') : 'Sans') + '</span><button type="button" data-act="prog-more" aria-label="Une étape de plus"' + (n < 8 ? '' : ' disabled') + '>+</button></div>' +
       '<div class="lab">Ajouter</div><div class="row"><button type="button" data-act="plus-text">+ Un texte</button><button type="button" data-act="plus-pic">+ Une photo</button><button type="button" data-act="cancel" class="acc">Fermer</button></div>';
   }
@@ -3967,6 +3979,16 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
     saveBtn.disabled = true; saveBtn.onclick = function () { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); saveCard(); };
     document.getElementById('moreBtn').onclick = function () { if (RF) endReframe(); showMore(!MORE); };
     var menuEl = document.getElementById('menu');
+    // « Itinéraire »: the link pasted from Google Maps (« Partager », « Copier le lien »).
+    menuEl.addEventListener('change', function (e) {
+      var m = e.target.closest && e.target.closest('[data-map]'); if (!m) return;
+      var v = m.value.trim().replace(/^http:\/\//i, 'https://');
+      if (v && !/^https:\/\//i.test(v) && /^[\w-]+(\.[\w-]+)+(\/|$)/.test(v)) v = 'https://' + v;
+      if (v && !/^https:\/\/[^\s<>"'`]+$/.test(v)) { say('Collez un lien qui commence par https://'); m.value = TX.map || ''; return; }
+      if (v) TX.map = v; else delete TX.map;
+      keep(); render(); showMore(true);
+      say(v ? 'Itinéraire : vos invités suivront ce lien.' : 'Itinéraire : le lieu de l’événement, cherché sur la carte.');
+    });
     menuEl.onclick = function (e) {
       var b = e.target.closest('button'); if (!b) return;
       var act = b.dataset.act, id = curSlot;

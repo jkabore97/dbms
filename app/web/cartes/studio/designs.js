@@ -157,6 +157,8 @@
     return boot.kind === 'dot' ? has('t:show', 'qr') : true;
   }
   function visible(el) { return el && !el.closest('.is-off, .li-off, [hidden]'); }
+  // The organiser's own Google Maps link for « Itinéraire » (t:map), https only.
+  function mapOf(content) { var v = String((content && content['t:map']) || '').trim(); return /^https:\/\/[^\s<>"'`]+$/.test(v) && v.length <= 600 ? v : ''; }
 
   // A classic card (/cartes/<design>.html, shared.js), its DOM as drawn.
   function harvestClassic(doc, boot) {
@@ -205,7 +207,7 @@
           return { icon: ICON_OF(li.querySelector('use')), title: t(li.querySelector('b')), text: t(li.querySelector('p')), href: a ? a.getAttribute('href') : '', hrefLabel: a ? t(a) : '' };
         }) }, { bg: 'soft' }));
     }
-    blocks.push(blk('place', 'simple', { title: 'Le lieu', name: boot.place || '', address: '', note: '' }));
+    blocks.push(blk('place', 'simple', { title: 'Le lieu', name: boot.place || '', address: '', note: '', href: mapOf(content) }));
     // the answer, the album, the footer
     var form = doc.querySelector('form.rsvp');
     if (form && visible(form)) blocks.push(blk('rsvp', 'carte', { title: t(doc.querySelector('[data-role="rsvp-title"]')) || k.rsvp, lead: t(doc.querySelector('[data-role="rsvp-lead"]')) || k.rsvpLead, yes: 'Je viens', no: 'Je ne peux pas', askPhone: true, pass: passOn(content, boot) }, { bg: 'back' }));
@@ -252,7 +254,7 @@
     var gal = Object.keys(content).filter(function (x) { return /^p:g\d+$/.test(x) && content[x] && content[x].key; }).map(function (x) { return picFrom(content, x.slice(2)); }).filter(Boolean);
     if (gal.length) blocks.push(blk('gallery', 'grille', { title: '', photos: gal }));
     if (!/(^|,)cd(,|$)/.test(content['t:hide'] || '')) blocks.push(blk('countdown', 'grand', { title: 'Plus que', doneText: 'C’est aujourd’hui !' }, { bg: 'accent' }));
-    if (!/(^|,)place(,|$)/.test(content['t:hide'] || '')) blocks.push(blk('place', 'simple', { title: 'Le lieu', name: w('place') || boot.place || '', address: '', note: '' }));
+    if (!/(^|,)place(,|$)/.test(content['t:hide'] || '')) blocks.push(blk('place', 'simple', { title: 'Le lieu', name: w('place') || boot.place || '', address: '', note: '', href: mapOf(content) }));
     if (!/(^|,)rsvp(,|$)/.test(content['t:hide'] || '')) blocks.push(blk('rsvp', 'carte', { title: k.rsvp, lead: k.rsvpLead, yes: 'Je viens', no: 'Je ne peux pas', askPhone: true, pass: passOn(content, boot) }, { bg: 'back' }));
     if (boot.album_on !== false) blocks.push(blk('album', 'grille', { title: k.album, lead: k.albumLead }));
     if (!/(^|,)foot(,|$)/.test(content['t:hide'] || '')) blocks.push(blk('footer', 'simple', { text: names }));
