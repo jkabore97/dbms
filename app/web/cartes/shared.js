@@ -110,6 +110,73 @@
     try { localStorage.setItem(KEY, JSON.stringify(draft)); }
     catch (e) { if (!memoryOnly) { memoryOnly = true; toast('Trop de photos pour les garder : elles restent pour cette visite'); } }
   }
+  // The organiser's choices beyond the words (170), kept like any text:
+  // t:hide — what the card leaves out (word, prog, times, rsvp, qr, album,
+  // cd), a comma list; t:colors — their own fond,papier,texte,accent;
+  // t:plus-N — texts of their own after the word; p:gN — their own photos
+  // in a gallery before the answer.
+  function hideList() { return String(draft['t:hide'] || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean); }
+  function off(k) { return hideList().indexOf(k) >= 0; }
+  function setOff(k, on) {
+    var l = hideList().filter(function (x) { return x !== k; });
+    if (on) l.push(k);
+    if (l.length) draft['t:hide'] = l.join(','); else delete draft['t:hide'];
+  }
+  function colorsOf() { var m = /^(#[0-9a-f]{6}),(#[0-9a-f]{6}),(#[0-9a-f]{6}),(#[0-9a-f]{6})$/i.exec(String(draft['t:colors'] || '')); return m ? [m[1], m[2], m[3], m[4]] : null; }
+  function rgbOf(h) { return [parseInt(h.substr(1, 2), 16), parseInt(h.substr(3, 2), 16), parseInt(h.substr(5, 2), 16)]; }
+  function hexOf(c) { return '#' + c.map(function (v) { return ('0' + Math.round(Math.max(0, Math.min(255, v))).toString(16)).slice(-2); }).join(''); }
+  function blend(a, b, t) { var x = rgbOf(a), y = rgbOf(b); return hexOf([x[0] + (y[0] - x[0]) * t, x[1] + (y[1] - x[1]) * t, x[2] + (y[2] - x[2]) * t]); }
+  function light(h) { var c = rgbOf(h); return (c[0] * 299 + c[1] * 587 + c[2] * 114) / 255000; }
+  function numKeys(re) { return Object.keys(draft).map(function (k) { var m = re.exec(k); return m ? +m[1] : 0; }).filter(Boolean).sort(function (a, b) { return a - b; }); }
+  var PLUS = Math.max.apply(null, [0].concat(numKeys(/^t:plus-(\d+)$/))), PICS = Math.max.apply(null, [0].concat(numKeys(/^p:g(\d+)$/)));
+  var SECTIONS = { word: '[data-role="word-title"]', prog: '[data-prog], [data-role="prog-title"]', rsvp: 'form.rsvp', album: '.album-box' };
+  function sectionOf(k) {
+    var el = document.querySelector(SECTIONS[k]);
+    return el ? (el.closest('section') || el) : null;
+  }
+  function applyHides() {
+    Object.keys(SECTIONS).forEach(function (k) { var s = sectionOf(k); if (s) s.classList.toggle('is-off', off(k)); });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-count]'), function (el) { el.classList.toggle('is-off', off('cd')); });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-prog] [data-t]'), function (el) { el.classList.toggle('is-off', off('times')); });
+  }
+  // Where a text of the organiser's own goes: under the word, else after
+  // the programme's intro, else before the answer.
+  function plusAnchor() {
+    var w = document.querySelector('[data-role="word-title"]'), ws = w && w.closest('section');
+    if (ws) return { parent: ws, before: null, like: ws.querySelector('p') };
+    var pi = document.querySelector('[data-role="prog-intro"]');
+    if (pi && pi.parentNode) return { parent: pi.parentNode, before: pi.nextSibling, like: pi.tagName === 'P' ? pi : null };
+    var f = document.querySelector('form.rsvp');
+    if (f && f.parentNode) return { parent: f.parentNode, before: f, like: f.parentNode.querySelector('p') };
+    return null;
+  }
+  function plusEl(n) {
+    var a = plusAnchor(); if (!a) return null;
+    var p = a.like ? a.like.cloneNode(false) : document.createElement('p');
+    p.removeAttribute('id'); p.removeAttribute('data-role'); p.setAttribute('data-edit', 'plus-' + n); p.className = (p.className ? p.className + ' ' : '') + 'plus';
+    var prev = document.querySelector('[data-edit="plus-' + (n - 1) + '"]');
+    if (prev && prev.parentNode === a.parent) a.parent.insertBefore(p, prev.nextSibling); else a.parent.insertBefore(p, a.before);
+    return p;
+  }
+  function plusText(k) { var d = document.createElement('div'); d.innerHTML = clean(draft[k]); return d.textContent.replace(/\s+/g, ' ').trim(); }
+  // The gallery: before the answer, one tile a picture.
+  function gallery() {
+    var g = document.querySelector('.xpics');
+    if (!g) {
+      var f = document.querySelector('form.rsvp'), fs = f && (f.closest('section') || f);
+      if (!fs || !fs.parentNode) return null;
+      g = document.createElement('section'); g.className = 'xpics'; g.innerHTML = '<div class="grid"></div>';
+      fs.parentNode.insertBefore(g, fs);
+    }
+    return g.querySelector('.grid');
+  }
+  function picSlot(n) {
+    var grid = gallery(); if (!grid) return null;
+    var s = document.createElement('div'); s.className = 'slot'; s.setAttribute('data-pic', 'g' + n);
+    s.innerHTML = '<div class="tag"><svg><use href="#i-camera"/></svg>Votre photo</div>';
+    grid.appendChild(s);
+    return s;
+  }
 
   // ------------------------------------------------------------- presets
   // What changes when the card is turned to another kind of event: the
@@ -251,10 +318,15 @@
     { id: 'joyeuse', name: 'Joyeuse', display: "'Fraunces',serif", body: "'Josefin Sans',sans-serif", script: "'Caveat',cursive", q: 'Fraunces:ital,wght@0,400;0,600;1,400&family=Josefin+Sans:wght@300;400;600&family=Caveat:wght@500' }
   ];
   function applyLook() {
-    var st = document.documentElement.style, p = PALS[+draft.pal || 0];
+    var st = document.documentElement.style, p = PALS[+draft.pal || 0], C = colorsOf();
     ['--back', '--paper', '--ink', '--line', '--accent', '--on-accent'].forEach(function (v, i) {
       if (p && p.length > 1) st.setProperty(v, p[i + 1]); else st.removeProperty(v);
     });
+    // The organiser's own colours (170) over the model's or the set's.
+    if (C) {
+      st.setProperty('--back', C[0]); st.setProperty('--paper', C[1]); st.setProperty('--ink', C[2]); st.setProperty('--accent', C[3]);
+      st.setProperty('--line', blend(C[1], C[2], .25)); st.setProperty('--on-accent', light(C[3]) > .6 ? C[2] : C[1]);
+    }
     var f = FONTS.filter(function (x) { return x.id && x.id === draft.font; })[0];
     ['display', 'body', 'script'].forEach(function (k) { if (f) st.setProperty('--' + k, f[k]); else st.removeProperty('--' + k); });
     if (f && !document.querySelector('link[data-font="' + f.id + '"]')) {
@@ -264,6 +336,11 @@
     }
   }
   applyLook();
+  // The organiser's own texts and photos (170): on the organiser's screen,
+  // every one begun; on the guests', the written ones only.
+  for (var pn = 1; pn <= PLUS; pn++) if (ORGANISER || !SERVER || plusText('t:plus-' + pn)) plusEl(pn);
+  for (var gn = 1; gn <= PICS; gn++) if (ORGANISER || !SERVER || draft['p:g' + gn]) picSlot(gn);
+  applyHides();
   Object.keys(draft).forEach(function (k) {
     if (k.indexOf('t:') === 0) {
       var el = document.querySelector('[data-edit="' + k.slice(2) + '"]');
@@ -355,7 +432,8 @@
   }
 
   // Tap a picture to replace it, drag it to reframe (edit mode only).
-  Array.prototype.forEach.call(document.querySelectorAll('.slot[data-pic]'), function (slot) {
+  Array.prototype.forEach.call(document.querySelectorAll('.slot[data-pic]'), wireTap);
+  function wireTap(slot) {
     var down = null, moved = false, start = null;
     slot.addEventListener('pointerdown', function (e) {
       if (!document.body.classList.contains('editing')) return;
@@ -395,7 +473,7 @@
     }
     slot.addEventListener('pointerup', up);
     slot.addEventListener('pointercancel', function () { down = null; });
-  });
+  }
 
   // ------------------------------------------------------------- editor
   if (card && (!SERVER || ORGANISER)) {
@@ -412,7 +490,10 @@
         return '<button type="button" class="ed-pal" data-p="' + i + '" title="' + p[0] + '" aria-label="' + p[0] + '" style="background:' + bg + '"></button>';
       }).join('') + '</div>' +
       '<select class="ed-font" aria-label="Écriture">' + FONTS.map(function (f) { return '<option value="' + f.id + '">Aa · ' + f.name + '</option>'; }).join('') + '</select></div>' +
-      '<p class="ed-hint">Touchez un texte pour l’écrire, une photo pour la remplacer, glissez-la pour la recadrer.</p>' +
+      '<div class="ed-colors" role="group" aria-label="Vos couleurs"></div>' +
+      '<div class="ed-sw" role="group" aria-label="Sur la carte"></div>' +
+      '<div class="ed-add"><button type="button" class="ed-plus-text">+ Un texte</button><button type="button" class="ed-plus-pic">+ Une photo</button></div>' +
+      '<p class="ed-hint">Touchez un texte pour l’écrire, videz-le pour l’enlever ; une photo pour la remplacer, glissez-la pour la recadrer.</p>' +
       '<div class="ed-row">' +
       (ORGANISER ? '<button type="button" class="ed-done ed-save">Enregistrer</button>'
         : '<button type="button" class="ed-reset">Réinitialiser</button><button type="button" class="ed-done">Terminé</button>') +
@@ -421,13 +502,61 @@
     document.body.classList.add('has-edbar');
     var sel = bar.querySelector('.ed-type select');
     function drawLook() {
-      Array.prototype.forEach.call(bar.querySelectorAll('.ed-pal'), function (b) { b.setAttribute('aria-pressed', String(+b.getAttribute('data-p') === (+draft.pal || 0))); });
+      var C = colorsOf();
+      Array.prototype.forEach.call(bar.querySelectorAll('.ed-pal'), function (b) { b.setAttribute('aria-pressed', String(!C && +b.getAttribute('data-p') === (+draft.pal || 0))); });
       bar.querySelector('.ed-font').value = draft.font || '';
+      // the organiser's own colours: the card's as they stand, to start from
+      var cs = getComputedStyle(document.documentElement), now = C || ['--back', '--paper', '--ink', '--accent'].map(function (v) { return toHex6(cs.getPropertyValue(v)); });
+      bar.querySelector('.ed-colors').innerHTML = [['Fond', 0], ['Papier', 1], ['Texte', 2], ['Accent', 3]].map(function (x) {
+        return '<label class="ed-col"><input type="color" data-c="' + x[1] + '" value="' + now[x[1]] + '"><span>' + x[0] + '</span></label>';
+      }).join('') + (C ? '<button type="button" class="ed-col-reset">Couleurs du modèle</button>' : '');
+      // what the card shows: only what this card has
+      var sws = [['word', 'Le mot'], ['prog', 'Programme'], ['times', 'Horaires'], ['rsvp', 'Réponse des invités'], ['qr', 'Carte d’invité (QR)'], ['album', 'Album'], ['cd', 'Compte à rebours']];
+      bar.querySelector('.ed-sw').innerHTML = sws.filter(function (x) {
+        if (x[0] === 'times') return !!document.querySelector('[data-prog] [data-t]');
+        if (x[0] === 'cd') return !!document.querySelector('[data-count]');
+        if (x[0] === 'qr') return !!SERVER;
+        return !!sectionOf(x[0]);
+      }).map(function (x) { return '<label class="ed-s"><input type="checkbox" data-sw="' + x[0] + '"' + (off(x[0]) ? '' : ' checked') + '> ' + x[1] + '</label>'; }).join('');
+    }
+    function toHex6(v) {
+      v = String(v || '').trim();
+      if (/^#[0-9a-f]{6}$/i.test(v)) return v.toLowerCase();
+      if (/^#[0-9a-f]{3}$/i.test(v)) return ('#' + v[1] + v[1] + v[2] + v[2] + v[3] + v[3]).toLowerCase();
+      var m = v.match(/\d+/g); return m && m.length >= 3 ? hexOf(m.slice(0, 3).map(Number)) : '#888888';
     }
     Array.prototype.forEach.call(bar.querySelectorAll('.ed-pal'), function (b) {
-      b.addEventListener('click', function () { draft.pal = +b.getAttribute('data-p'); applyLook(); drawLook(); save(); });
+      b.addEventListener('click', function () { draft.pal = +b.getAttribute('data-p'); delete draft['t:colors']; applyLook(); drawLook(); save(); });
     });
     bar.querySelector('.ed-font').addEventListener('change', function (e) { draft.font = e.target.value; applyLook(); save(); });
+    // a colour as it is picked, live; kept when the choice is made
+    bar.querySelector('.ed-colors').addEventListener('input', function (e) {
+      var t = e.target; if (!t.matches('[data-c]')) return;
+      document.documentElement.style.setProperty(['--back', '--paper', '--ink', '--accent'][+t.dataset.c], t.value);
+    });
+    bar.querySelector('.ed-colors').addEventListener('change', function (e) {
+      var t = e.target; if (!t.matches('[data-c]')) return;
+      var c = Array.prototype.map.call(bar.querySelectorAll('.ed-colors [data-c]'), function (i) { return String(i.value).toLowerCase(); });
+      draft['t:colors'] = c.join(','); applyLook(); drawLook(); save();
+    });
+    bar.querySelector('.ed-colors').addEventListener('click', function (e) {
+      if (!e.target.closest('.ed-col-reset')) return;
+      delete draft['t:colors']; applyLook(); drawLook(); save();
+    });
+    bar.querySelector('.ed-sw').addEventListener('change', function (e) {
+      var t = e.target; if (!t.matches('[data-sw]')) return;
+      setOff(t.dataset.sw, !t.checked); applyHides(); save();
+    });
+    bar.querySelector('.ed-plus-text').addEventListener('click', function () {
+      var p = plusEl(++PLUS); if (!p) { PLUS--; toast('Pas de place pour un texte sur cette carte.'); return; }
+      p.setAttribute('contenteditable', 'true'); p.scrollIntoView({ behavior: 'smooth', block: 'center' }); p.focus();
+      toast('Écrivez votre texte.');
+    });
+    bar.querySelector('.ed-plus-pic').addEventListener('click', function () {
+      var s = picSlot(++PICS); if (!s) { PICS--; toast('Pas de place pour une photo sur cette carte.'); return; }
+      wirePic(s); wireTap(s); s.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      toast('Touchez le cadre pour choisir la photo.');
+    });
     drawLook();
     var def = card.getAttribute('data-type') || 'mariage';
     sel.value = draft.type || def;
@@ -450,6 +579,8 @@
       markDirty = function () { saveBtn.textContent = 'Enregistrer'; saveBtn.disabled = false; };
       saveBtn.addEventListener('click', function () {
         editables().forEach(function (el) { el.blur(); });
+        // an added text left empty is not kept
+        Object.keys(draft).forEach(function (k) { if (/^t:plus-\d+$/.test(k) && !plusText(k)) delete draft[k]; });
         saveBtn.disabled = true; saveBtn.textContent = 'Envoi…';
         fetch(SERVER.api.url.replace(/\/+$/, '') + '/rest/v1/rpc/event_content_save', {
           method: 'POST',
@@ -507,7 +638,7 @@
     // event — for the door. Nothing on a sample or an answer kept before.
     function drawPass(d) {
       var old = f.querySelector('.pass'); if (old) old.parentNode.removeChild(old);
-      if (!d.pass || !SERVER || SERVER.demo || d.rep === 'non') return;
+      if (!d.pass || !SERVER || SERVER.demo || d.rep === 'non' || off('qr')) return;
       var box = document.createElement('div'); box.className = 'pass';
       box.innerHTML = '<div class="pass-qr" role="img" aria-label="QR code de votre carte d’invité"></div><div><b></b><br><small>Carte d’invité · à présenter à l’entrée</small></div>';
       box.querySelector('b').textContent = d.name || 'Invité';

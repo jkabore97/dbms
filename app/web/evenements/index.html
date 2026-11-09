@@ -69,7 +69,25 @@ html.organiser #site *::before,html.organiser #site *::after,html.organiser .sea
 .bar select{flex:1 1 auto;min-width:0;min-height:40px;border:1px solid rgba(128,128,128,.4);border-radius:10px;background:transparent;color:var(--ui-fg);font:500 13px var(--f-ui);padding:0 8px}
 .bar .save{flex:0 0 auto;min-height:44px;padding:0 18px;border:0;border-radius:999px;background:var(--ui-acc);color:#1a140c;font:700 13px var(--f-ui);cursor:pointer}
 .bar .save:disabled{opacity:.6}
-.ui.menu{position:fixed;left:12px;right:12px;bottom:calc(80px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;border-radius:16px;background:var(--ui-bg);color:var(--ui-fg);box-shadow:0 10px 30px -8px rgba(0,0,0,.5);font:500 13px var(--f-ui)}
+.bar .more{flex:0 0 auto;min-height:40px;padding:0 12px;border:1px solid rgba(128,128,128,.4);border-radius:10px;background:transparent;color:var(--ui-fg);font:600 13px var(--f-ui);cursor:pointer}
+.bar .more[aria-expanded="true"]{background:rgba(128,128,128,.22)}
+/* the organiser's « Plus » (170): a text taken away shows struck through, a tap writes it again; an empty one shows what to do */
+html.organiser #site [data-t].off{opacity:.42;text-decoration:line-through}
+html.organiser #site [data-t]:empty::before{content:attr(data-ph);opacity:.55;font-style:italic}
+.menu .lab{width:100%;margin-top:2px;font:700 11px var(--f-ui);letter-spacing:.08em;text-transform:uppercase;opacity:.65}
+.menu .row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:100%}
+.menu .row>span{font:600 13px var(--f-ui);min-width:72px;text-align:center}
+.menu label.sw{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:0 12px 0 10px;border-radius:999px;background:rgba(128,128,128,.18);font:500 13px var(--f-ui);cursor:pointer}
+.menu label.sw input[type=checkbox]{margin:0;width:16px;height:16px;accent-color:var(--ui-acc)}
+.menu label.sw input[type=color]{width:26px;height:26px;padding:0;border:1px solid rgba(128,128,128,.5);border-radius:50%;background:none;cursor:pointer;overflow:hidden}
+.menu label.sw input[type=color]::-webkit-color-swatch-wrapper{padding:0}
+.menu label.sw input[type=color]::-webkit-color-swatch{border:0;border-radius:50%}
+/* the organiser's own photos (170): a gallery before the answer, one tile per picture */
+.xpics{padding-top:40px;padding-bottom:40px;max-width:980px;margin:0 auto}
+.xpics .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.xpics .slot{aspect-ratio:4/5;border-radius:16px;background-color:var(--soft)}
+.xpics .slot .def{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px;font:500 13px var(--f-ui);color:var(--ink);opacity:.7}
+.ui.menu{position:fixed;left:12px;right:12px;bottom:calc(80px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;border-radius:16px;background:var(--ui-bg);color:var(--ui-fg);box-shadow:0 10px 30px -8px rgba(0,0,0,.5);font:500 13px var(--f-ui);max-height:min(62svh,520px);overflow:auto}
 .menu button{min-height:40px;padding:0 14px;border:0;border-radius:999px;background:rgba(128,128,128,.18);color:inherit;font:600 13px var(--f-ui);cursor:pointer}
 .menu button.acc{background:var(--ui-acc);color:#1a140c}
 
@@ -823,7 +841,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
   <button type="button" id="openInfo">Mes infos</button>
 </div>
 <div class="ui menu" id="menu" hidden></div>
-<div class="ui bar" id="bar" hidden><div class="dots" id="dots"></div><select id="fontSel" aria-label="Écriture"></select><button type="button" id="saveBtn" class="save">Enregistrer</button></div>
+<div class="ui bar" id="bar" hidden><div class="dots" id="dots"></div><select id="fontSel" aria-label="Écriture"></select><button type="button" id="moreBtn" class="more" aria-expanded="false" aria-controls="menu">Plus</button><button type="button" id="saveBtn" class="save">Enregistrer</button></div>
 <div class="ui toast" id="toast" role="status"></div>
 <div class="scrim" id="scrim"></div>
 <div class="ui sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
@@ -1015,7 +1033,19 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
     t.plain = ed('plain', two ? A + ' & ' + B : A);
     t.ini = rawA.trim().charAt(0).toUpperCase() + (two ? rawB.trim().charAt(0).toUpperCase() : '');
     t.eye = ed('eye', tx('eye', t.eye)); t.hero = ed('hero', tx('hero', t.hero)); t.intro = ed('intro', tx('intro', t.intro)); t.kind = ed('kind', tx('kind', t.kind));
-    t.prog = t.prog.map(function (p, i) { var k = 'prog-' + i + '-'; return [TX[k + '0'] || p[0], ed(k + '1', tx(k + '1', p[1])), ed(k + '2', tx(k + '2', p[2]))]; });
+    // The programme (170): as many steps as the organiser wants (t:prog-n,
+    // 0 to 8; the model's three by default), each hour, name and line
+    // theirs to write. An hour taken away is gone for the guests and
+    // struck through for the organiser; « Horaires » off empties them all.
+    // No step at all: one marked step, and the section goes with it.
+    var base = t.prog, n = progCount(), steps = [];
+    for (var i = 0; i < n; i++) {
+      var k = 'prog-' + i + '-', dp = base[i] || ['', 'Nouvelle étape', 'Un mot sur ce moment.'];
+      if (!ORG && i >= base.length && !TX[k + '1'] && !TX[k + '2']) continue;
+      var hour = off('times') ? '' : off(k + '0') ? (ORG ? dp[0] || '— h' : '') : (TX[k + '0'] || dp[0] || (ORG ? '— h' : ''));
+      steps.push([hour, ed(k + '1', tx(k + '1', dp[1])), ed(k + '2', tx(k + '2', dp[2]))]);
+    }
+    t.prog = steps.length ? steps : [['', '<i data-pg hidden></i>', '']];
     t.place = ed('place', esc(rawPlace));
     t.map = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(rawPlace);
     return t;
@@ -1116,7 +1146,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
       '<section class="panel ink"><h2 data-up>Tu viens ?</h2><div style="margin-top:24px">' + rsvpHTML() + '</div>' + passHTML(w, d) + '</section>';
   };
   R.mag = function (w, d) {
-    return '<section class="cover" id="hero"><canvas class="art" data-scene="blobs"></canvas>' + slot('p1', 'star', '') + '<div class="mast" data-split data-fit>' + esc(w.kind.toUpperCase()) + '</div>' +
+    return '<section class="cover" id="hero"><canvas class="art" data-scene="blobs"></canvas>' + slot('p1', 'star', '') + '<div class="mast" data-split data-fit style="text-transform:uppercase">' + w.kind + '</div>' +
       '<div class="issue"><span>N° ' + d.dd + '</span><span>' + d.month + ' ' + d.yyyy + '</span><span>' + w.place + '</span></div>' +
       '<div class="stamp" data-stamp>Numéro<br>unique</div>' +
       '<div class="lines"><div data-cl>Exclusif<em>' + (w.two ? 'Ils disent oui' : 'La fête de l\'année') + '</em></div><div data-cl>Le programme complet<em>page 3</em></div><div data-cl>Où, quand, comment<em>page 4</em></div></div>' +
@@ -1173,7 +1203,24 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
       });
     })(el);
   }
-  function words(el) { if (el) el.innerHTML = el.textContent.split(' ').map(function (x) { return '<span class="w">' + x + '&nbsp;</span>'; }).join(''); }
+  // Word by word, keeping the elements inside (the organiser's editable
+  // span, a line break): only the text is wrapped.
+  function words(el) {
+    if (!el) return;
+    (function walk(node) {
+      Array.prototype.slice.call(node.childNodes).forEach(function (n) {
+        if (n.nodeType === 3) {
+          var f = document.createDocumentFragment();
+          n.textContent.split(/\s+/).forEach(function (x) {
+            if (!x) return;
+            var s = document.createElement('span'); s.className = 'w'; s.textContent = x + ' '; f.appendChild(s);
+          });
+          n.parentNode.replaceChild(f, n);
+        }
+        else if (n.nodeType === 1 && n.tagName !== 'BR') walk(n);
+      });
+    })(el);
+  }
   function draw(p, trig, opt) { var n = p.getTotalLength ? p.getTotalLength() : 600; return gsap.fromTo(p, {strokeDasharray: n, strokeDashoffset: n}, Object.assign({strokeDashoffset: 0, ease: 'none'}, trig ? {scrollTrigger: trig} : {duration: 1.6}, opt || {})); }
   var A = {};
   A.lettre = function (q) {
@@ -1214,7 +1261,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
     q('.const [data-draw]').forEach(function (p) { draw(p, {trigger: '.const', start: 'top 80%', end: 'bottom 45%', scrub: true}); });
     q('[data-orbit]').forEach(function (r) { gsap.to(r, {rotate: 360 * +r.dataset.orbit, ease: 'none', scrollTrigger: {trigger: '.orbits', start: 'top bottom', end: 'bottom top', scrub: true}}); });
     var tr = document.querySelector('[data-htrack]');
-    gsap.to(tr, {x: function () { return -(tr.scrollWidth - window.innerWidth); }, ease: 'none', scrollTrigger: {trigger: '#hours', start: 'top top', end: function () { return '+=' + tr.scrollWidth; }, pin: true, scrub: .5, invalidateOnRefresh: true}});
+    if (tr) gsap.to(tr, {x: function () { return -(tr.scrollWidth - window.innerWidth); }, ease: 'none', scrollTrigger: {trigger: '#hours', start: 'top top', end: function () { return '+=' + tr.scrollWidth; }, pin: true, scrub: .5, invalidateOnRefresh: true}});
     gsap.to('[data-shoot]', {x: window.innerWidth + 320, y: 120, duration: 1.4, ease: 'power2.in', scrollTrigger: {trigger: '[data-shoot]', start: 'top 70%'}});
   };
   A.pagne = function (q) {
@@ -3337,6 +3384,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
   }
   function wire() {
     var y = document.getElementById('rYes'), n = document.getElementById('rNo'), f = document.getElementById('rsvp'), out = document.getElementById('rDone'), ans = null;
+    if (!y || !n || !f || !out) return;   // the organiser took the answers off the card (170)
     function pick(v) { ans = v; y.setAttribute('aria-pressed', v === 'yes'); n.setAttribute('aria-pressed', v === 'no'); }
     y.onclick = function () { pick('yes'); }; n.onclick = function () { pick('no'); };
     if (SERVER && SERVER.tickets && !SERVER.demo) {
@@ -3393,12 +3441,17 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
     stopCinema();
     var L = lay(), P = L.pals[S.pal] || L.pals[0], st = document.documentElement.style;
     ['--bg', '--ink', '--accent', '--soft', '--deep'].forEach(function (v, i) { st.setProperty(v, P[i + 1]); });
+    // The organiser's own colours (170): a background, a text and an accent
+    // over the model's; the soft tone is drawn from them.
+    var C = colorsOf();
+    if (C) { st.setProperty('--bg', C[0]); st.setProperty('--ink', C[1]); st.setProperty('--accent', C[2]); st.setProperty('--deep', C[1]); st.setProperty('--soft', blendHex(C[0], C[2], .22)); }
     document.body.className = 'L-' + L.id + (L.arch ? ' A-' + L.arch + (L.bare ? ' bare' : '') : '') + (L.isPrem ? ' A-lux LX-' + L.lx : '');
     if (L.arch || L.isPrem) { st.setProperty('--fd', L.fd); st.setProperty('--fs', L.fs); st.setProperty('--fb', L.fb); st.setProperty('--htxt', L.htxt || P[5] || '#fff'); st.setProperty('--rad', L.rad || '20px'); st.setProperty('--glass', L.glass || '64%'); }
     var FO = fontOf(); document.body.classList.toggle('F-on', !!FO);
     if (FO) { st.setProperty('--fd', FO.fd); st.setProperty('--fs', FO.fs); st.setProperty('--fb', FO.fb); } else if (!L.arch && !L.isPrem) { st.removeProperty('--fd'); st.removeProperty('--fs'); st.removeProperty('--fb'); }
     var w = W(), d = D();
     document.getElementById('site').innerHTML = (L.isPrem ? premiumHTML(w, d, L) : L.arch ? ARCH[L.arch](w, d, L) : R[L.id](w, d)) + '<footer class="f">' + w.plain + ' · ' + d.dd + '.' + d.mm + '.' + d.yyyy + '<br><br>Créé avec Marakaj</footer>';
+    decorate(w);
     qr('Invité'); wire(); tick(); animate(); attachScenes(); applySlots(); if (L.isPrem) startCinema(L);
     if (ORG) wireEdit();
   }
@@ -3551,8 +3604,71 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
     return c;
   }
   // The words: tx() reads the organiser's, ed() marks one to write in place.
-  function tx(k, dflt) { return TX[k] ? esc(TX[k]) : dflt; }
-  function ed(k, s) { return ORG ? '<span data-t="' + k + '">' + s + '</span>' : s; }
+  // Taken away (170): a word in t:hide is gone for the guests and shown
+  // struck through to the organiser, who writes it back with a tap. For
+  // the guests, the intro, the eyebrow and the added texts keep a mark,
+  // so an emptied one can take its whole line away.
+  function hideList() { return String(TX.hide || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean); }
+  function off(k) { return hideList().indexOf(k) >= 0; }
+  function setOff(k, on) {
+    var l = hideList().filter(function (x) { return x !== k; });
+    if (on) l.push(k);
+    if (l.length) TX.hide = l.join(','); else delete TX.hide;
+  }
+  function tx(k, dflt) { if (off(k)) return ORG ? dflt : ''; return TX[k] ? esc(TX[k]) : dflt; }
+  function ed(k, s) {
+    if (ORG) return '<span data-t="' + k + '"' + (off(k) ? ' class="off"' : '') + ' data-ph="' + (k.indexOf('plus-') === 0 ? 'Votre texte…' : '…') + '">' + s + '</span>';
+    return /^(intro|eye|plus-\d+)$/.test(k) ? '<span data-k="' + k + '">' + s + '</span>' : s;
+  }
+  // The programme's length (t:prog-n), the organiser's own colours
+  // (t:colors = fond,texte,accent), their added texts (t:plus-N) and
+  // photos (p:gN) — PLUS and PICS count the ones on the organiser's
+  // screen, written or not; only the written ones are kept.
+  function progCount() { return /^[0-8]$/.test(String(TX['prog-n'])) ? +TX['prog-n'] : 3; }
+  function colorsOf() { var m = /^(#[0-9a-f]{6}),(#[0-9a-f]{6}),(#[0-9a-f]{6})$/i.exec(String(TX.colors || '')); return m ? [m[1], m[2], m[3]] : null; }
+  function toHex(c) { return '#' + c.map(function (v) { return ('0' + Math.round(Math.max(0, Math.min(255, v))).toString(16)).slice(-2); }).join(''); }
+  function blendHex(a, b, t) { return toHex(mix(hex(a), hex(b), t)); }
+  function numKeys(re, src) { return Object.keys(src).map(function (k) { var m = re.exec(k); return m ? +m[1] : 0; }).filter(Boolean); }
+  var PLUS = Math.max.apply(null, [0].concat(numKeys(/^plus-(\d+)$/, TX))), PICS = Math.max.apply(null, [0].concat(numKeys(/^g(\d+)$/, SL)));
+  function plusKeys() {
+    var ks = [];
+    if (ORG) { for (var i = 1; i <= PLUS; i++) ks.push('plus-' + i); return ks; }
+    return numKeys(/^plus-(\d+)$/, TX).filter(function (n) { return TX['plus-' + n]; }).sort(function (a, b) { return a - b; }).map(function (n) { return 'plus-' + n; });
+  }
+  function picIds() {
+    if (ORG) { var ids = []; for (var i = 1; i <= PICS; i++) ids.push('g' + i); return ids; }
+    return numKeys(/^g(\d+)$/, SL).sort(function (a, b) { return a - b; }).map(function (n) { return 'g' + n; });
+  }
+  // After the model drew the card (170): the added texts follow the
+  // intro, in its own clothes; the gallery sits before the answer; then
+  // what was taken away goes — the programme without a step, the
+  // answers, the guest's card (also when the answers are closed or the
+  // event is on tickets: no answer, no card), the countdown.
+  function decorate(w) {
+    var site = document.getElementById('site');
+    function drop(sel) { Array.prototype.forEach.call(site.querySelectorAll(sel), function (el) { if (el.parentNode) el.parentNode.removeChild(el); }); }
+    var anchor = site.querySelector('[data-t="intro"], [data-k="intro"]'), host = anchor && (anchor.closest('p') || anchor.parentElement);
+    if (host && host !== site) {
+      var after = host;
+      plusKeys().forEach(function (k) {
+        var np = host.cloneNode(false); np.removeAttribute('id'); np.innerHTML = ed(k, tx(k, ''));
+        host.parentNode.insertBefore(np, after.nextSibling); after = np;
+      });
+      if (!ORG && off('intro')) host.parentNode.removeChild(host);
+    }
+    if (!ORG && off('eye')) Array.prototype.forEach.call(site.querySelectorAll('[data-k="eye"]'), function (el) { var h = el.parentElement; if (h && h !== site && !h.querySelector('h1, h2, [data-slot]')) h.parentNode.removeChild(h); });
+    var ids = picIds();
+    if (ids.length) {
+      var gal = document.createElement('section'); gal.className = 'g xpics';
+      gal.innerHTML = '<div class="grid">' + ids.map(function (id) { return slot(id, 'xpic', ORG ? 'Touchez pour ajouter une photo' : ''); }).join('') + '</div>';
+      var form = site.querySelector('#rsvp'), fs = form && form.closest('section');
+      if (fs && fs.parentNode === site) site.insertBefore(gal, fs); else site.insertBefore(gal, site.querySelector('footer.f'));
+    }
+    var pg = site.querySelector('[data-pg]'), ps = pg && pg.closest('section'); if (ps && ps.parentNode) ps.parentNode.removeChild(ps);
+    if (off('rsvp')) { var f2 = site.querySelector('#rsvp'), s2 = f2 && f2.closest('section'); if (s2 && s2.parentNode) s2.parentNode.removeChild(s2); }
+    if (off('qr') || off('rsvp') || (SERVER && (SERVER.rsvp_on === false || (SERVER.tickets && !SERVER.demo)))) drop('[data-pass]');
+    if (off('cd')) drop('[data-cd]');
+  }
   function setPos(el, p) {
     var v = p ? p[0] + '% ' + p[1] + '%' : '';
     if (el.classList.contains('slot-bg')) { if (v) el.style.setProperty('--php', v); else el.style.removeProperty('--php'); }
@@ -3572,19 +3688,27 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
       var m = /^prog-(\d+)-1$/.exec(k);
       if (!m) return;
       var want = String((w.prog[+m[1]] || [])[0] || '').trim().toLowerCase(), host = el.parentElement;
+      if (!want) return;   // no hour to write: the organiser took the hours off
       for (var n = 0; host && host !== site && n < 4; n++, host = host.parentElement) {
-        var b = Array.prototype.filter.call(host.querySelectorAll('b'), function (x) { return !x.hasAttribute('data-t') && x.textContent.trim().toLowerCase() === want; })[0];
-        if (b) { b.setAttribute('data-t', 'prog-' + m[1] + '-0'); break; }
+        var b = Array.prototype.filter.call(host.querySelectorAll('b, .t'), function (x) { return !x.hasAttribute('data-t') && x.textContent.trim().toLowerCase() === want; })[0];
+        if (b) { b.setAttribute('data-t', 'prog-' + m[1] + '-0'); if (off('prog-' + m[1] + '-0')) b.classList.add('off'); break; }
       }
     });
     Array.prototype.forEach.call(site.querySelectorAll('[data-t]'), function (el) {
       var k = el.getAttribute('data-t'), a = el.closest('a');
       el.setAttribute('contenteditable', 'true'); el.setAttribute('spellcheck', 'false');
       if (a) a.onclick = function (e) { e.preventDefault(); };
-      el.addEventListener('focus', function () { if (el.querySelector('.word, .char')) el.textContent = el.textContent; });
+      el.addEventListener('focus', function () {
+        if (el.querySelector('.word, .char, .w')) el.textContent = el.textContent;
+        // a struck-through word: the tap clears it, what is typed takes its place
+        if (el.classList.contains('off')) { el.classList.remove('off'); el.textContent = ''; }
+      });
       el.addEventListener('input', function () {
         var v = el.textContent.replace(/\s+/g, ' ').trim().slice(0, 4000);
         if (v || k === 'b') TX[k] = v; else delete TX[k];
+        // Emptied (170): the model's word must not come back — the field
+        // is taken away for the guests (the names and the place stay the event's).
+        if (/^(intro|eye|hero|kind|prog-\d+-[012])$/.test(k)) setOff(k, !v);
         if (k === 'plain') { delete TX.a; delete TX.b; } else if (k === 'a' || k === 'b') delete TX.plain;
         Array.prototype.forEach.call(site.querySelectorAll('[data-t="' + k + '"]'), function (o) { if (o !== el) o.textContent = v; });
         if (el.closest('[data-fit]')) fitAll();
@@ -3601,7 +3725,11 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
   // a filled one, a menu — change, reframe (drag), remove.
   var RF = null;
   function slotEl(id) { return document.querySelector('#site [data-slot="' + id + '"]'); }
-  function menu(h) { var m = document.getElementById('menu'); if (!m) return; m.hidden = !h; m.innerHTML = h || ''; }
+  function menu(h) {
+    var m = document.getElementById('menu'); if (!m) return;
+    m.hidden = !h; m.innerHTML = h || '';
+    if (!h || !m.querySelector('[data-sw]')) { MORE = false; var mb = document.getElementById('moreBtn'); if (mb) mb.setAttribute('aria-expanded', 'false'); }
+  }
   function pick(id) { curSlot = id; menu(null); document.getElementById('fUp').click(); }
   function slotTap(id) {
     if (RF) return;
@@ -3646,20 +3774,42 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
     document.getElementById('dots').innerHTML = L.pals.map(function (p, i) {
       return '<button type="button" data-p="' + i + '" aria-pressed="' + (i === S.pal) + '" aria-label="' + esc(p[0]) + '" title="' + esc(p[0]) + '" style="background:linear-gradient(135deg,' + p[1] + ' 50%,' + p[3] + ' 50%)"></button>';
     }).join('');
-    Array.prototype.forEach.call(document.querySelectorAll('#dots button'), function (b) { b.onclick = function () { S.pal = +b.dataset.p; keep(); drawBar(); render(); }; });
+    Array.prototype.forEach.call(document.querySelectorAll('#dots button'), function (b) { b.onclick = function () { S.pal = +b.dataset.p; delete TX.colors; keep(); drawBar(); render(); }; });
+    if (colorsOf()) Array.prototype.forEach.call(document.querySelectorAll('#dots button'), function (b) { b.setAttribute('aria-pressed', 'false'); });
     if (!sel.options.length) {
       sel.innerHTML = FONTS.map(function (f) { return '<option value="' + f.id + '">' + 'Aa · ' + (f.id ? f.name : 'Du modèle') + '</option>'; }).join('');
       sel.onchange = function () { S.font = sel.value; keep(); render(); };
     }
     sel.value = S.font || '';
   }
+  // « Plus » (170): the organiser's own colours, what the card shows
+  // (answers, guest's card, countdown, hours), the programme's length,
+  // a text or a photo more — in the menu above the bar.
+  var MORE = false;
+  function morePanel() {
+    var P = lay().pals[S.pal] || lay().pals[0], C = colorsOf() || [P[1], P[2], P[3]], n = progCount();
+    function sw(k, label) { return '<label class="sw"><input type="checkbox" data-sw="' + k + '"' + (off(k) ? '' : ' checked') + '> ' + label + '</label>'; }
+    function col(i, label) { return '<label class="sw"><input type="color" data-c="' + i + '" value="' + C[i] + '"> ' + label + '</label>'; }
+    return '<div class="lab">Couleurs</div><div class="row">' + col(0, 'Fond') + col(1, 'Texte') + col(2, 'Accent') +
+      (colorsOf() ? '<button type="button" data-act="colors-reset">Celles du modèle</button>' : '') + '</div>' +
+      '<div class="lab">Sur la carte</div><div class="row">' + sw('rsvp', 'Réponse des invités') + sw('qr', 'Carte d\'invité (QR)') + sw('cd', 'Compte à rebours') + sw('times', 'Horaires du programme') + '</div>' +
+      '<div class="lab">Programme</div><div class="row"><button type="button" data-act="prog-less" aria-label="Une étape de moins"' + (n ? '' : ' disabled') + '>−</button><span>' + (n ? n + (n > 1 ? ' étapes' : ' étape') : 'Sans') + '</span><button type="button" data-act="prog-more" aria-label="Une étape de plus"' + (n < 8 ? '' : ' disabled') + '>+</button></div>' +
+      '<div class="lab">Ajouter</div><div class="row"><button type="button" data-act="plus-text">+ Un texte</button><button type="button" data-act="plus-pic">+ Une photo</button><button type="button" data-act="cancel" class="acc">Fermer</button></div>';
+  }
+  function showMore(on) {
+    MORE = on; var mb = document.getElementById('moreBtn'); if (mb) mb.setAttribute('aria-expanded', String(on));
+    if (on) { curSlot = null; menu(morePanel()); } else menu(null);
+  }
+  function setColors(c) { TX.colors = c.join(','); keep(); drawBar(); render(); showMore(true); }
   if (ORG) {
     document.getElementById('bar').hidden = false;
     document.getElementById('fUp').removeAttribute('multiple');
     drawBar();
     var saveBtn = document.getElementById('saveBtn');
     saveBtn.disabled = true; saveBtn.onclick = function () { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); saveCard(); };
-    document.getElementById('menu').onclick = function (e) {
+    document.getElementById('moreBtn').onclick = function () { if (RF) endReframe(); showMore(!MORE); };
+    var menuEl = document.getElementById('menu');
+    menuEl.onclick = function (e) {
       var b = e.target.closest('button'); if (!b) return;
       var act = b.dataset.act, id = curSlot;
       if (act === 'change') pick(id);
@@ -3672,9 +3822,40 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
         }
         applySlots(); keep(); menu(null); curSlot = null;
       }
-      else { menu(null); curSlot = null; }
+      else if (act === 'colors-reset') { delete TX.colors; keep(); drawBar(); render(); showMore(true); }
+      else if (act === 'prog-less' || act === 'prog-more') {
+        var pn = Math.max(0, Math.min(8, progCount() + (act === 'prog-more' ? 1 : -1)));
+        if (pn === 3) delete TX['prog-n']; else TX['prog-n'] = String(pn);
+        keep(); render(); showMore(true);
+      }
+      else if (act === 'plus-text') {
+        PLUS++; showMore(false); render();
+        var el = document.querySelector('#site [data-t="plus-' + PLUS + '"]');
+        if (el) { el.scrollIntoView({block: 'center'}); el.focus(); }
+        say('Écrivez votre texte, sous l\'introduction.');
+      }
+      else if (act === 'plus-pic') {
+        PICS++; showMore(false); render();
+        var sl = slotEl('g' + PICS);
+        if (sl) { sl.scrollIntoView({block: 'center'}); say('Touchez le cadre pour choisir la photo.'); }
+      }
+      else { showMore(false); curSlot = null; }
     };
-    setTimeout(function () { say('Touchez un texte pour l\'écrire, une photo pour la changer.'); }, 900);
+    menuEl.addEventListener('change', function (e) {
+      var t = e.target;
+      if (t.matches('[data-sw]')) { setOff(t.dataset.sw, !t.checked); keep(); render(); showMore(true); }
+      else if (t.matches('[data-c]')) {
+        var P = lay().pals[S.pal] || lay().pals[0], c = colorsOf() || [P[1], P[2], P[3]];
+        c[+t.dataset.c] = String(t.value).toLowerCase(); setColors(c);
+      }
+    });
+    // the colour as it is picked, live on the card; the card redraws when the choice is made
+    menuEl.addEventListener('input', function (e) {
+      var t = e.target; if (!t.matches('[data-c]')) return;
+      var st = document.documentElement.style, v = String(t.value), i = +t.dataset.c;
+      st.setProperty(['--bg', '--ink', '--accent'][i], v); if (i === 1) st.setProperty('--deep', v);
+    });
+    setTimeout(function () { say('Touchez un texte pour l\'écrire, une photo pour la changer. « Plus » : couleurs, sections, textes et photos en plus.'); }, 900);
     window.addEventListener('beforeunload', function (e) { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
   }
 

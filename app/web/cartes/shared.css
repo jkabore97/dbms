@@ -114,6 +114,23 @@ body.editing .slot[data-pic]::before{content:"Toucher : remplacer · Glisser : r
 .ed-pal{width:28px;height:28px;border-radius:50%;border:2px solid transparent;padding:0;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}
 .ed-pal[aria-pressed="true"]{border-color:#111}
 .ed-font{min-height:38px;border:1px solid #ccc;border-radius:10px;padding:0 8px;font:500 14px system-ui,sans-serif;background:#fff;color:#111;flex:1 1 140px}
+/* the organiser's own (170): colours, what the card shows, a text or a photo more */
+.ed-colors{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.ed-col{display:inline-flex;align-items:center;gap:6px;font-size:12px}
+.ed-col input{width:28px;height:28px;padding:0;border:1px solid #cfcfcf;border-radius:50%;background:none;cursor:pointer;overflow:hidden}
+.ed-col input::-webkit-color-swatch-wrapper{padding:0}
+.ed-col input::-webkit-color-swatch{border:0;border-radius:50%}
+.ed-col-reset,.ed-add button{font:inherit;font-size:12px;padding:7px 12px;border-radius:999px;border:1px solid #cfcfcf;background:#fff;color:#1b1b1b;cursor:pointer}
+.ed-sw{display:flex;gap:6px;flex-wrap:wrap}
+.ed-s{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 10px;border-radius:999px;background:#f1efe9;font-size:12px;cursor:pointer}
+.ed-s input{margin:0;width:15px;height:15px;accent-color:#1b1b1b}
+.ed-add{display:flex;gap:8px;flex-wrap:wrap}
+.is-off{display:none!important}
+body.editing [data-edit]:empty::before{content:"…";opacity:.5;font-style:italic}
+body.editing [data-edit^="plus-"]:empty::before{content:"Votre texte…"}
+.xpics{padding:24px 24px 8px}
+.xpics .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.xpics .slot{aspect-ratio:4/5;border-radius:10px}
 /* the models' ornaments let the organiser's taps through to the words */
 body.editing .card *::before,body.editing .card *::after{pointer-events:none}
 /* a card that sells tickets (161) */
