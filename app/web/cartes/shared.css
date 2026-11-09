@@ -162,6 +162,11 @@ body.editing .xmove{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;m
 .ed-s{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 10px;border-radius:999px;background:#f1efe9;font-size:12px;cursor:pointer}
 .ed-s input{margin:0;width:15px;height:15px;accent-color:#1b1b1b}
 .ed-add{display:flex;gap:8px;flex-wrap:wrap}
+.slot .pic-x{display:none;position:absolute;top:8px;right:8px;z-index:6;align-items:center;min-height:32px;padding:0 12px;border:0;border-radius:999px;background:rgba(20,18,16,.8);color:#fff;font:600 12px/1 system-ui,sans-serif;cursor:pointer}
+body.editing .slot .pic-x{display:inline-flex}
+.ed-map{display:grid;gap:6px;font-size:12px;font-weight:600}
+.ed-map input{font:inherit;font-weight:400;font-size:14px;padding:9px 12px;border:1px solid #cfcfcf;border-radius:10px;background:#fff;color:#1b1b1b}
+.ed-map small{font-weight:400;opacity:.7;line-height:1.4}
 .ed-studio-btn{display:block;width:100%;text-align:left;font:inherit;font-size:13px;padding:10px 14px;border-radius:14px;border:0;background:#1b1b1b;color:#fff;cursor:pointer}
 .ed-studio-btn b{color:#ffb547}
 .ed-studio-btn span{display:block;margin-top:2px;font-size:12px;opacity:.75}

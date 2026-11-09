@@ -131,6 +131,7 @@ body.ed-body{font-family:var(--ed-font);-webkit-tap-highlight-color:transparent}
 .ed-plain h1{font:700 22px/1.25 var(--ed-font);margin:0 0 10px}
 .ed-plain a{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;margin-top:14px;border-radius:999px;background:var(--ed-acc);color:#1b140a;font-weight:700;text-decoration:none}
 .ed-scrim.clear{background:transparent}
+.ed-help{margin:-4px 0 12px;font:400 12px/1.45 var(--ed-font);color:var(--ed-mute)}
 /* a computer: the card moves aside for the panel; the bars keep to the middle */
 @media (min-width:900px){
   .ed-sheet-on #canvas{padding-right:412px}
