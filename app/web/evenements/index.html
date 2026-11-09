@@ -93,6 +93,13 @@ html.organiser .xmove{display:flex;flex-wrap:wrap;justify-content:center;gap:6px
 .xmove button[data-pm="del"]{background:rgba(150,32,32,.88)}
 .xflash{animation:xflash 1.4s ease-out}
 @keyframes xflash{0%{background:rgba(255,140,40,.45)}100%{background:transparent}}
+/* the chosen text and its size (170d) */
+html.organiser #site [data-t].is-sel{outline:2px solid #ff8c28;outline-offset:3px}
+.ui.selbar{position:fixed;right:12px;bottom:calc(78px + env(safe-area-inset-bottom,0px));z-index:55;display:flex;gap:6px;align-items:center;padding:6px 8px 6px 12px;border-radius:999px;background:var(--ui-bg);color:var(--ui-fg);box-shadow:0 10px 30px -8px rgba(0,0,0,.5);font:600 12px var(--f-ui)}
+.selbar button{min-height:36px;padding:0 12px;border:0;border-radius:999px;background:rgba(128,128,128,.22);color:inherit;font:700 13px var(--f-ui);cursor:pointer}
+/* 24 more palettes (170d), in the « Plus » menu */
+.menu .row.xpal{gap:6px}
+.menu .xpal button{width:28px;height:28px;min-height:0;padding:0;border-radius:50%;border:1px solid rgba(128,128,128,.5)}
 /* the organiser's own photos (170): a gallery before the answer, one tile per picture */
 .xpics{position:relative;z-index:2;padding-top:40px;padding-bottom:40px;max-width:980px;margin:0 auto}
 .xpics .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
@@ -852,6 +859,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
   <button type="button" id="openInfo">Mes infos</button>
 </div>
 <div class="ui menu" id="menu" hidden></div>
+<div class="ui selbar" id="selbar" hidden><span>Texte choisi</span><button type="button" data-sz="-1" aria-label="Texte plus petit">A−</button><button type="button" data-sz="1" aria-label="Texte plus grand">A+</button></div>
 <div class="ui bar" id="bar" hidden><div class="dots" id="dots"></div><select id="fontSel" aria-label="Écriture"></select><button type="button" id="moreBtn" class="more" aria-expanded="false" aria-controls="menu">Plus</button><button type="button" id="saveBtn" class="save">Enregistrer</button></div>
 <div class="ui toast" id="toast" role="status"></div>
 <div class="scrim" id="scrim"></div>
@@ -3623,22 +3631,38 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
   // the guests, the intro, the eyebrow and the added texts keep a mark,
   // so an emptied one can take its whole line away.
   function hideList() { return String(TX.hide || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean); }
-  function off(k) { return hideList().indexOf(k) >= 0; }
+  function showList() { return String(TX.show || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean); }
+  // Off by default (170d): the guest's card on a fiançailles (dot) card —
+  // shown only once the organiser switches it on (t:show).
+  function offByDefault(k) { return k === 'qr' && S.type === 'dot'; }
+  function off(k) { return hideList().indexOf(k) >= 0 || (offByDefault(k) && showList().indexOf(k) < 0); }
   function setOff(k, on) {
-    var l = hideList().filter(function (x) { return x !== k; });
-    if (on) l.push(k);
+    var l = hideList().filter(function (x) { return x !== k; }), sh = showList().filter(function (x) { return x !== k; });
+    if (on) l.push(k); else if (offByDefault(k)) sh.push(k);
     if (l.length) TX.hide = l.join(','); else delete TX.hide;
+    if (sh.length) TX.show = sh.join(','); else delete TX.show;
   }
   function tx(k, dflt) { if (off(k)) return ORG ? dflt : ''; return TX[k] ? esc(TX[k]) : dflt; }
   function ed(k, s) {
     if (ORG) return '<span data-t="' + k + '"' + (off(k) ? ' class="off"' : '') + ' data-ph="' + (k.indexOf('plus-') === 0 ? 'Votre texte…' : '…') + '">' + s + '</span>';
-    return /^(intro|eye|plus-\d+|prog-\d+-1)$/.test(k) ? '<span data-k="' + k + '">' + s + '</span>' : s;
+    return /^(intro|eye|plus-\d+|prog-\d+-1)$/.test(k) || sizeMap()[k] ? '<span data-k="' + k + '">' + s + '</span>' : s;
   }
   // The programme's length (t:prog-n), the organiser's own colours
   // (t:colors = fond,texte,accent), their added texts (t:plus-N) and
   // photos (p:gN) — PLUS and PICS count the ones on the organiser's
   // screen, written or not; only the written ones are kept.
   function progCount() { return /^[0-8]$/.test(String(TX['prog-n'])) ? +TX['prog-n'] : 3; }
+  // 24 more (170d): ready-made sets of the organiser's three colours (fond, texte, accent).
+  var XPALS = [
+    ['Ivoire et or', '#fbf6ec', '#2b2118', '#b8893b'], ['Blanc et sauge', '#f7f6f1', '#2e3a2c', '#7a9a6e'], ['Émeraude et or', '#0b3d2e', '#f3ead2', '#d1ac5e'],
+    ['Bordeaux et crème', '#f8f1e7', '#2b1418', '#8e2a3b'], ['Nuit et argent', '#0f1a2e', '#e6ebf3', '#a9b9d3'], ['Rose poudré', '#fcf5f3', '#4a3533', '#c0716c'],
+    ['Terracotta', '#fbf1e8', '#3a2016', '#c9643a'], ['Lavande', '#f7f4fa', '#362e46', '#8c79b8'], ['Moutarde et noir', '#1b1a17', '#f6efd9', '#e0ab2a'],
+    ['Turquoise et corail', '#f3faf9', '#163a3d', '#e0664c'], ['Bogolan', '#efe3cf', '#2f2014', '#9a6a3b'], ['Faso Dan Fani', '#f8f3e6', '#13284d', '#d9a52c'],
+    ['Kente', '#fbf3dc', '#1c2a1f', '#c8372a'], ['Wax fuchsia', '#fdf2f7', '#3d0b28', '#d2468e'], ['Indigo', '#1e2a5a', '#eef0fb', '#c8b46a'],
+    ['Olive et crème', '#f7f4e6', '#2f2f18', '#7d7d32'], ['Pêche', '#fff6f1', '#4a2c22', '#d46e4a'], ['Menthe', '#f2faf6', '#1f3a30', '#2f8f68'],
+    ['Prune et or', '#2a1023', '#f3e6ee', '#d0a35c'], ['Noir et blanc', '#ffffff', '#111111', '#111111'], ['Ciel', '#f3f8fd', '#1c3046', '#2f7fcf'],
+    ['Sable et cuivre', '#f8efe2', '#3a2a1a', '#a85f26'], ['Sapin et rouge', '#123524', '#f1ebdd', '#d9483f'], ['Champagne', '#fbf7ef', '#3b3226', '#a88a4f']
+  ];
   function colorsOf() { var m = /^(#[0-9a-f]{6}),(#[0-9a-f]{6}),(#[0-9a-f]{6})$/i.exec(String(TX.colors || '')); return m ? [m[1], m[2], m[3]] : null; }
   function toHex(c) { return '#' + c.map(function (v) { return ('0' + Math.round(Math.max(0, Math.min(255, v))).toString(16)).slice(-2); }).join(''); }
   function blendHex(a, b, t) { return toHex(mix(hex(a), hex(b), t)); }
@@ -3710,6 +3734,8 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
     if (off('rsvp')) { var f2 = site.querySelector('#rsvp'), s2 = f2 && f2.closest('section'); if (s2 && s2.parentNode) s2.parentNode.removeChild(s2); }
     if (off('qr') || off('rsvp') || (SERVER && (SERVER.rsvp_on === false || (SERVER.tickets && !SERVER.demo)))) drop('[data-pass]');
     if (off('cd')) drop('[data-cd]');
+    if (off('place')) { var mp = site.querySelector('a[href^="https://www.google.com/maps"]'), msec = mp && mp.closest('section'); if (msec && msec.id !== 'hero' && msec.parentNode) msec.parentNode.removeChild(msec); }
+    if (off('foot') && foot) foot.parentNode.removeChild(foot), foot = null;
     if (!ORG && off('eye')) Array.prototype.forEach.call(site.querySelectorAll('[data-k="eye"]'), function (el) { var h = el.parentElement; if (h && h !== site && !h.querySelector('h1, h2, [data-slot]')) h.parentNode.removeChild(h); });
     // The three places an added text can stand: under the intro (in the
     // intro's own clothes), after the programme's section, before the
@@ -3764,6 +3790,30 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
     if (groups.rsvp.length) fs.parentNode.insertBefore(block('rsvp'), fs);
     if (groups.end.length) site.insertBefore(block('end'), foot);
     if (!ORG && off('intro') && spot.intro) host.parentNode.removeChild(host);
+    applySizes();
+  }
+  // Text sizes (170d): t:sizes « key:L,key:S » — S, L, XL around the
+  // model's own size for that text (measured, so a title grows as a title).
+  var SIZES = {S: .82, L: 1.22, XL: 1.5}, STEPS = ['S', 'M', 'L', 'XL'];
+  function sizeMap() {
+    var m = {};
+    String(TX.sizes || '').split(',').forEach(function (x) { var r = /^([a-z0-9-]{1,40}):(S|L|XL)$/.exec(x.trim()); if (r) m[r[1]] = r[2]; });
+    return m;
+  }
+  function setSize(key, sz) {
+    var m = sizeMap(); if (sz && sz !== 'M') m[key] = sz; else delete m[key];
+    var l = Object.keys(m).map(function (k) { return k + ':' + m[k]; });
+    if (l.length) TX.sizes = l.join(','); else delete TX.sizes;
+  }
+  function applySizes() {
+    var m = sizeMap();
+    Array.prototype.forEach.call(document.querySelectorAll('#site [data-fs]'), function (el) { el.style.removeProperty('font-size'); el.removeAttribute('data-fs'); });
+    Object.keys(m).forEach(function (k) {
+      Array.prototype.forEach.call(document.querySelectorAll('#site [data-t="' + k + '"], #site [data-k="' + k + '"]'), function (el) {
+        var base = parseFloat(getComputedStyle(el).fontSize) || 16;
+        el.style.fontSize = (base * SIZES[m[k]]).toFixed(1) + 'px'; el.setAttribute('data-fs', m[k]);
+      });
+    });
   }
   function setPos(el, p) {
     var v = p ? p[0] + '% ' + p[1] + '%' : '';
@@ -3794,7 +3844,11 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
       var k = el.getAttribute('data-t'), a = el.closest('a');
       el.setAttribute('contenteditable', 'true'); el.setAttribute('spellcheck', 'false');
       if (a) a.onclick = function (e) { e.preventDefault(); };
+      if (k === SELK) el.classList.add('is-sel');
       el.addEventListener('focus', function () {
+        if (SELK !== k) { Array.prototype.forEach.call(site.querySelectorAll('.is-sel'), function (x) { x.classList.remove('is-sel'); }); SELK = k; }
+        Array.prototype.forEach.call(site.querySelectorAll('[data-t="' + k + '"]'), function (x) { x.classList.add('is-sel'); });
+        drawSelbar();
         if (el.querySelector('.word, .char, .w')) el.textContent = el.textContent;
         // a struck-through word: the tap clears it, what is typed takes its place
         if (el.classList.contains('off')) { el.classList.remove('off'); el.textContent = ''; }
@@ -3823,7 +3877,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
   function slotEl(id) { return document.querySelector('#site [data-slot="' + id + '"]'); }
   function menu(h) {
     var m = document.getElementById('menu'); if (!m) return;
-    m.hidden = !h; m.innerHTML = h || '';
+    m.hidden = !h; m.innerHTML = h || ''; if (typeof drawSelbar === 'function') drawSelbar();
     if (!h || !m.querySelector('[data-sw]')) { MORE = false; var mb = document.getElementById('moreBtn'); if (mb) mb.setAttribute('aria-expanded', 'false'); }
   }
   function pick(id) { curSlot = id; menu(null); document.getElementById('fUp').click(); }
@@ -3881,7 +3935,10 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
   // « Plus » (170): the organiser's own colours, what the card shows
   // (answers, guest's card, countdown, hours), the programme's length,
   // a text or a photo more — in the menu above the bar.
-  var MORE = false, MORE_Y = 0, MORE_AT = 0;
+  var MORE = false, MORE_Y = 0, MORE_AT = 0, SELK = null;
+  // The chosen text (170d): the last one tapped; A− / A+ size it. The bar
+  // stays out of the way of the menus.
+  function drawSelbar() { var b = document.getElementById('selbar'), m = document.getElementById('menu'); if (b) b.hidden = !ORG || !SELK || (m && !m.hidden); }
   // the panel gets out of the way when the card is scrolled (170b)
   window.addEventListener('scroll', function () { if (MORE && Math.abs(window.scrollY - MORE_Y) > 48 && Date.now() - MORE_AT > 500) showMore(false); }, {passive: true});
   function morePanel() {
@@ -3890,7 +3947,8 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
     function col(i, label) { return '<label class="sw"><input type="color" data-c="' + i + '" value="' + C[i] + '"> ' + label + '</label>'; }
     return '<div class="lab">Couleurs</div><div class="row">' + col(0, 'Fond') + col(1, 'Texte') + col(2, 'Accent') +
       (colorsOf() ? '<button type="button" data-act="colors-reset">Celles du modèle</button>' : '') + '</div>' +
-      '<div class="lab">Sur la carte</div><div class="row">' + sw('rsvp', 'Réponse des invités') + sw('qr', 'Carte d\'invité (QR)') + sw('cd', 'Compte à rebours') + sw('times', 'Horaires du programme') + '</div>' +
+      '<div class="row xpal">' + XPALS.map(function (p, i) { return '<button type="button" data-xp="' + i + '" title="' + p[0] + '" aria-label="' + p[0] + '" style="background:linear-gradient(135deg,' + p[1] + ' 0 50%,' + p[3] + ' 50% 75%,' + p[2] + ' 75%)"></button>'; }).join('') + '</div>' +
+      '<div class="lab">Sur la carte</div><div class="row">' + sw('rsvp', 'Réponse des invités') + sw('qr', 'Carte d\'invité (QR)') + sw('cd', 'Compte à rebours') + sw('times', 'Horaires du programme') + sw('place', 'Le lieu') + sw('foot', 'Pied de page') + '</div>' +
       '<div class="lab">Programme</div><div class="row"><button type="button" data-act="prog-less" aria-label="Une étape de moins"' + (n ? '' : ' disabled') + '>−</button><span>' + (n ? n + (n > 1 ? ' étapes' : ' étape') : 'Sans') + '</span><button type="button" data-act="prog-more" aria-label="Une étape de plus"' + (n < 8 ? '' : ' disabled') + '>+</button></div>' +
       '<div class="lab">Ajouter</div><div class="row"><button type="button" data-act="plus-text">+ Un texte</button><button type="button" data-act="plus-pic">+ Une photo</button><button type="button" data-act="cancel" class="acc">Fermer</button></div>';
   }
@@ -3919,6 +3977,10 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
           PH.splice(i, 1); KEYS.splice(i, 1); Object.keys(SL).forEach(function (k) { if (SL[k] > i) SL[k]--; });
         }
         applySlots(); keep(); menu(null); curSlot = null;
+      }
+      else if (b.hasAttribute('data-xp')) {
+        var xp = XPALS[+b.getAttribute('data-xp')]; TX.colors = [xp[1], xp[2], xp[3]].join(',');
+        keep(); drawBar(); render(); showMore(true); say('Couleurs : ' + xp[0]);
       }
       else if (act === 'colors-reset') { delete TX.colors; keep(); drawBar(); render(); showMore(true); }
       else if (act === 'prog-less' || act === 'prog-more') {
@@ -3950,6 +4012,13 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
         var P = lay().pals[S.pal] || lay().pals[0], c = colorsOf() || [P[1], P[2], P[3]];
         c[+t.dataset.c] = String(t.value).toLowerCase(); setColors(c);
       }
+    });
+    document.getElementById('selbar').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-sz]'); if (!b || !SELK) return;
+      var cur = sizeMap()[SELK] || 'M', next = STEPS[Math.max(0, Math.min(STEPS.length - 1, STEPS.indexOf(cur) + (+b.getAttribute('data-sz'))))];
+      if (next === cur) { say(next === 'XL' ? 'C\'est la plus grande taille.' : 'C\'est la plus petite taille.'); return; }
+      setSize(SELK, next); keep(); applySizes();
+      say({S: 'Petit', M: 'Taille du modèle', L: 'Grand', XL: 'Très grand'}[next]);
     });
     // an added text's buttons: up, down, take it away (170c)
     document.getElementById('site').addEventListener('click', function (e) {

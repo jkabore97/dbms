@@ -114,6 +114,28 @@ body.editing .slot[data-pic]::before{content:"Toucher : remplacer · Glisser : r
 .ed-pal{width:28px;height:28px;border-radius:50%;border:2px solid transparent;padding:0;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}
 .ed-pal[aria-pressed="true"]{border-color:#111}
 .ed-font{min-height:38px;border:1px solid #ccc;border-radius:10px;padding:0 8px;font:500 14px system-ui,sans-serif;background:#fff;color:#111;flex:1 1 140px}
+/* the lists (170d): under the programme and « Bon à savoir », in edit mode, a chip per item — take it away, put it back — and « + Une étape » */
+.li-ed{display:none}
+body.editing .li-ed{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:12px 0 4px;padding:10px;border:1px dashed rgba(255,120,40,.8);border-radius:12px;background:rgba(255,255,255,.85);color:#1b1b1b;font:500 12px 'Jost','Helvetica Neue',Arial,sans-serif;letter-spacing:0;text-transform:none;text-align:left;position:relative;z-index:3}
+.li-ed .li-lab{width:100%;font-weight:600;font-size:12px}
+.li-ed button{font:500 12px 'Jost','Helvetica Neue',Arial,sans-serif;letter-spacing:0;text-transform:none;min-height:32px;padding:0 11px;border-radius:999px;border:1px solid #cfcfcf;background:#fff;color:#1b1b1b;cursor:pointer}
+.li-ed button[aria-pressed="false"]{background:#eee;color:#888;text-decoration:line-through}
+.li-ed .li-add{background:#1b1b1b;color:#fff;border-color:#1b1b1b}
+body.editing li.li-off{opacity:.35;text-decoration:line-through}
+.is-blank{visibility:hidden!important}
+/* the chosen text and its size (170d) */
+body.editing [data-edit].is-sel{outline:2px solid #ff7828!important;outline-offset:3px}
+.ed-mini .ed-sizes{display:inline-flex;gap:6px}
+.ed-mini .ed-sizes[hidden]{display:none}
+.ed-mini .ed-sizes button{background:#fff;color:#1b1b1b;padding:12px 14px;letter-spacing:0}
+.ed-selrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12px}
+.ed-selrow[hidden]{display:none}
+.ed-selrow button{font:inherit;font-size:12px;padding:7px 12px;border-radius:999px;border:1px solid #cfcfcf;background:#fff;color:#1b1b1b;cursor:pointer}
+/* 24 more palettes (170d) */
+.ed-palx-btn{font:inherit;font-size:12px;padding:7px 12px;border-radius:999px;border:1px solid #cfcfcf;background:#fff;color:#1b1b1b;cursor:pointer}
+.ed-palx{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:8px}
+.ed-palx[hidden]{display:none}
+.ed-palx button{aspect-ratio:1;border-radius:50%;border:1px solid rgba(0,0,0,.2);padding:0;cursor:pointer}
 /* an added text's buttons (170c): up, down, take it away — in edit mode only */
 .xmove{display:none}
 body.editing .xmove{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:6px auto 14px;position:relative;z-index:3}
