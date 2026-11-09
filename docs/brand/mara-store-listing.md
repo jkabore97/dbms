@@ -1,6 +1,9 @@
 # Marakaj — textes pour les stores et YouTube
 
 Brouillon à relire. Ne citez que des fonctions déjà disponibles dans l'app.
+Les lignes sur les événements valent une fois l'Événementiel ouvert à tous (console)
+et Studio en ligne (171). La billetterie n'y est pas : elle a son propre interrupteur
+(`events_tickets`), à citer seulement une fois ouvert.
 
 **Slogan** : Au Service du Peuple
 
@@ -10,10 +13,10 @@ Brouillon à relire. Ne citez que des fonctions déjà disponibles dans l'app.
 Marakaj – Boutiques proches
 
 **Description courte (80 car. max)**
-Les boutiques de votre quartier : articles, prix, commande et livraison.
+Boutiques près de chez vous, caisse et stock, cartes d'invitation en ligne.
 
 **Description complète**
-Marakaj rapproche les boutiques de leurs clients.
+Marakaj rapproche les boutiques de leurs clients, et les organisateurs de leurs invités.
 
 Pour les clients :
 • Découvrez les boutiques près de chez vous et leurs vitrines en ligne
@@ -25,18 +28,32 @@ Pour les commerçants :
 • La gestion de votre stock
 • Une vitrine en ligne, mise à jour avec votre stock
 
-Marakaj est conçue pour l'Afrique de l'Ouest : en français, sur téléphone, adaptée au commerce de quartier.
+Pour les organisateurs d'événements (mariage, dot, baptême, anniversaire, gala, concert…) :
+• Des cartes d'invitation en ligne, classiques ou animées, envoyées par un simple lien
+• Studio : composez votre carte au doigt, bloc par bloc — textes, couleurs, polices, photos
+• Les réponses de vos invités au fur et à mesure, et la veille un rappel sur WhatsApp en un geste
+• Une carte d'invité avec QR code, à présenter à l'entrée
+• L'album de la fête, où vos invités ajoutent leurs photos
+
+Marakaj est conçue pour l'Afrique de l'Ouest : en français, sur téléphone, pour le commerce de quartier comme pour les grands jours.
 
 **Catégorie** Shopping (ou Entreprise)
 
 ## App Store
 
 **Nom (30 car. max)** Marakaj
-**Sous-titre (30 car. max)** Boutiques, caisse et stock
-**Mots-clés (100 car. max)**
-boutique,commerce,caisse,stock,livraison,vitrine,commande,marché,Ouagadougou,Burkina,FCFA
-**Texte promotionnel** Au Service du Peuple : les boutiques près de vous, dans votre poche.
+**Sous-titre (30 car. max)** Boutiques, caisse, événements
+**Mots-clés (100 car. max, sans accent pour tenir aussi en octets)**
+boutique,commerce,caisse,stock,livraison,vitrine,commande,invitation,mariage,evenement,Burkina,FCFA
+**Texte promotionnel (170 car. max)** Au Service du Peuple : les boutiques près de vous, et des cartes d'invitation que vous composez au doigt avec Studio.
 **Description** : reprendre la description complète Google Play.
+**Nouveautés de la version 1.0.1**
+Nouveau : l'Événementiel.
+• Créez vos cartes d'invitation en ligne et envoyez-les par un simple lien.
+• Studio : composez votre carte au doigt. Déplacez, ajoutez, masquez chaque bloc ; changez textes, couleurs et photos.
+• Suivez les réponses de vos invités et rappelez-les la veille sur WhatsApp.
+• Accueillez-les avec leur carte d'invité et son QR code.
+Et des améliorations dans toute l'app.
 
 ## YouTube
 
