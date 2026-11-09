@@ -18,7 +18,10 @@
 --      document read back; restored (itself a new version, « restore »);
 --      another card's version refused;
 --   5. cleared: back to the model's card, the versions kept;
---   6. the doors: anon may call the five; the checks are nobody's door.
+--   6. the doors: anon may call the five; the checks are nobody's door;
+--      the versions' table has row security, no policy and no grant;
+--   7. read straight, the versions answer nothing — to anon, to the
+--      business's owner signed in.
 -- Wrapped in one transaction rolled back.
 -- ============================================================
 \set ON_ERROR_STOP on
@@ -240,8 +243,31 @@ begin
     foreach f in array array['studio_doc_check(uuid, jsonb)', 'studio_value_problem(jsonb, integer)'] loop
         assert not has_function_privilege('anon', f, 'execute') and not has_function_privilege('authenticated', f, 'execute'), f || ' is nobody''s door';
     end loop;
-    assert not has_table_privilege('anon', 'event_doc_versions', 'select'), 'the versions are not the street''s';
-    raise notice 'PASS: the five doors open to the editor, the checks to nobody';
+    assert (select relrowsecurity from pg_class where oid = 'event_doc_versions'::regclass), 'row security on the versions';
+    assert not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'event_doc_versions'), 'no policy on the versions';
+    assert not has_table_privilege('anon', 'event_doc_versions', 'select') and not has_table_privilege('authenticated', 'event_doc_versions', 'select'),
+        'the versions are granted to nobody';
+    raise notice 'PASS: the five doors open to the editor, the checks to nobody, the versions to nobody';
+end $$;
+
+-- 7. the versions, read straight: nothing, whatever the grants
+do $$
+declare
+    n int;
+begin
+    assert (select count(*) from event_doc_versions) > 0, 'versions exist to be hidden';
+    set local role anon;
+    begin select count(*) into n from event_doc_versions;
+    exception when insufficient_privilege then n := 0; end;
+    reset role;
+    assert n = 0, 'anon reads no version: ' || n;
+    set local role authenticated;
+    perform set_config('request.jwt.claim.sub', '17117117-0000-0000-0000-000000000001', true);
+    begin select count(*) into n from event_doc_versions;
+    exception when insufficient_privilege then n := 0; end;
+    reset role;
+    assert n = 0, 'not even the business''s owner, signed in: ' || n;
+    raise notice 'PASS: a version is read through its door only — not by anon, not by the owner signed in';
 end $$;
 
 rollback;

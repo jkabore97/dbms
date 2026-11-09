@@ -52,8 +52,18 @@ create table if not exists event_doc_versions (
 );
 create index if not exists event_doc_versions_event_idx on event_doc_versions (event_id, saved_at desc);
 -- Read and written only through the functions below (the edit token is
--- the key, as for the card itself): no policy, nobody reads it directly.
+-- the key, as for the card itself): no policy, nobody reads it directly —
+-- and no grant either (Supabase grants a new table to anon and
+-- authenticated by default; row security alone would then be the only wall).
 alter table event_doc_versions enable row level security;
+do $$ begin
+    if exists (select 1 from pg_roles where rolname = 'anon') then
+        revoke all on event_doc_versions from anon;
+    end if;
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+        revoke all on event_doc_versions from authenticated;
+    end if;
+end $$;
 
 -- A value inside a block, checked all the way down.
 create or replace function studio_value_problem(p_v jsonb, p_depth int)
