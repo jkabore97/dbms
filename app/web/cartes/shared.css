@@ -162,6 +162,9 @@ body.editing .xmove{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;m
 .ed-s{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 10px;border-radius:999px;background:#f1efe9;font-size:12px;cursor:pointer}
 .ed-s input{margin:0;width:15px;height:15px;accent-color:#1b1b1b}
 .ed-add{display:flex;gap:8px;flex-wrap:wrap}
+.ed-studio-btn{display:block;width:100%;text-align:left;font:inherit;font-size:13px;padding:10px 14px;border-radius:14px;border:0;background:#1b1b1b;color:#fff;cursor:pointer}
+.ed-studio-btn b{color:#ffb547}
+.ed-studio-btn span{display:block;margin-top:2px;font-size:12px;opacity:.75}
 .is-off{display:none!important}
 body.editing [data-edit]:empty::before{content:"…";opacity:.5;font-style:italic}
 body.editing [data-edit^="plus-"]:empty::before{content:"Votre texte…"}

@@ -3945,7 +3945,9 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
     var P = lay().pals[S.pal] || lay().pals[0], C = colorsOf() || [P[1], P[2], P[3]], n = progCount();
     function sw(k, label) { return '<label class="sw"><input type="checkbox" data-sw="' + k + '"' + (off(k) ? '' : ' checked') + '> ' + label + '</label>'; }
     function col(i, label) { return '<label class="sw"><input type="color" data-c="' + i + '" value="' + C[i] + '"> ' + label + '</label>'; }
-    return '<div class="lab">Couleurs</div><div class="row">' + col(0, 'Fond') + col(1, 'Texte') + col(2, 'Accent') +
+    // Studio (171), once the server keeps documents: the whole card to rewrite.
+    return (ORG && ORG.studio === true ? '<div class="lab">Studio · nouveau</div><div class="row"><button type="button" data-act="studio" class="acc">Ouvrir Studio : chaque bloc à ajouter, déplacer, styler</button></div>' : '') +
+      '<div class="lab">Couleurs</div><div class="row">' + col(0, 'Fond') + col(1, 'Texte') + col(2, 'Accent') +
       (colorsOf() ? '<button type="button" data-act="colors-reset">Celles du modèle</button>' : '') + '</div>' +
       '<div class="row xpal">' + XPALS.map(function (p, i) { return '<button type="button" data-xp="' + i + '" title="' + p[0] + '" aria-label="' + p[0] + '" style="background:linear-gradient(135deg,' + p[1] + ' 0 50%,' + p[3] + ' 50% 75%,' + p[2] + ' 75%)"></button>'; }).join('') + '</div>' +
       '<div class="lab">Sur la carte</div><div class="row">' + sw('rsvp', 'Réponse des invités') + sw('qr', 'Carte d\'invité (QR)') + sw('cd', 'Compte à rebours') + sw('times', 'Horaires du programme') + sw('place', 'Le lieu') + sw('foot', 'Pied de page') + '</div>' +
@@ -3983,6 +3985,12 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
         keep(); drawBar(); render(); showMore(true); say('Couleurs : ' + xp[0]);
       }
       else if (act === 'colors-reset') { delete TX.colors; keep(); drawBar(); render(); showMore(true); }
+      else if (act === 'studio') {
+        // Studio starts from the card as saved
+        if (dirty && !confirm('Vos derniers changements ne sont pas enregistrés. Studio part de la carte enregistrée : continuer quand même ?')) return;
+        dirty = false;
+        location.href = '/e/' + encodeURIComponent(ORG.slug) + '/studio?modifier=' + encodeURIComponent(ORG.edit) + (ORG.preview ? '&apercu=' + encodeURIComponent(ORG.preview) : '');
+      }
       else if (act === 'prog-less' || act === 'prog-more') {
         var pn = Math.max(0, Math.min(8, progCount() + (act === 'prog-more' ? 1 : -1)));
         if (pn === 3) delete TX['prog-n']; else TX['prog-n'] = String(pn);
