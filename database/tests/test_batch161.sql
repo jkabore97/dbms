@@ -98,19 +98,26 @@ begin
     assert (o -> 'types' -> 0 ->> 'left')::int = 3 and o -> 'types' -> 1 -> 'left' = 'null'::jsonb, 'places left, no limit on VIP';
     assert o -> 'pay_methods' -> 0 ->> 'number' = '70 00 00 01', 'where to pay';
     assert event_ticket_offer('fete-bob-161') ->> 'on' = 'false', 'Bob sells nothing';
+    -- 172: a buyer is signed in (Fan), one name per ticket
+    reset role;
+    set local role authenticated;
+    perform set_config('request.jwt.claim.sub', '16116116-0000-0000-0000-000000000003', true);
     j := event_ticket_request('concert-fatim-161', null, 'Tanti Rose', '+226 70 12 34 56',
-                              '[{"type": "16116116-3333-0000-0000-000000000001", "qty": 2}, {"type": "16116116-3333-0000-0000-000000000002", "qty": 1}]');
+                              '[{"type": "16116116-3333-0000-0000-000000000001", "qty": 2}, {"type": "16116116-3333-0000-0000-000000000002", "qty": 1}]', null,
+                              '[{"type": "16116116-3333-0000-0000-000000000001", "name": "Tanti Rose"}, {"type": "16116116-3333-0000-0000-000000000001", "name": "Awa Fille"}, {"type": "16116116-3333-0000-0000-000000000002", "name": "Moussa"}]');
     assert j ->> 'ref' ~ '^MK-[0-9A-F]{5}$' and (j ->> 'total')::numeric = 9000, 'a reference and the total: ' || j::text;
     insert into t161 values ('rose', j ->> 'id');
     assert (event_ticket_offer('concert-fatim-161') -> 'types' -> 0 ->> 'left')::int = 1, 'two Standard places held';
     begin
-        perform event_ticket_request('concert-fatim-161', null, 'Oncle Sam', '70000002', '[{"type": "16116116-3333-0000-0000-000000000001", "qty": 2}]');
+        perform event_ticket_request('concert-fatim-161', null, 'Oncle Sam', '70000002', '[{"type": "16116116-3333-0000-0000-000000000001", "qty": 2}]', null,
+                                     '[{"type": "16116116-3333-0000-0000-000000000001", "name": "Oncle Sam"}, {"type": "16116116-3333-0000-0000-000000000001", "name": "Tata"}]');
         raise exception 'sold beyond the places';
     exception when others then
         get stacked diagnostics v_err = message_text;
         assert v_err like 'Plus assez de places en « Standard » : il en reste 1.%', 'sold out said plainly: ' || v_err;
     end;
-    j := event_ticket_request('concert-fatim-161', null, 'Oncle Sam', '70000002', '[{"type": "16116116-3333-0000-0000-000000000001", "qty": 1}]', 'PP2611.0101');
+    j := event_ticket_request('concert-fatim-161', null, 'Oncle Sam', '70000002', '[{"type": "16116116-3333-0000-0000-000000000001", "qty": 1}]', 'PP2611.0101',
+                              '[{"type": "16116116-3333-0000-0000-000000000001", "name": "Oncle Sam"}]');
     insert into t161 values ('sam', j ->> 'id');
     assert event_ticket_status((j ->> 'id')::uuid) ->> 'txn_ref' = 'PP2611.0101', 'the transaction number kept';
     assert event_ticket_status((j ->> 'id')::uuid) ->> 'status' = 'pending', 'pending';

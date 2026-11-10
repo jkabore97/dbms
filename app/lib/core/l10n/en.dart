@@ -9239,4 +9239,21 @@ const enStrings = <String, String>{
   // 171d: what a long press used to select is copied by a tap
   'Copié': 'Copied',
   'Toucher pour copier': 'Tap to copy',
+  // 172: buying tickets with an account
+  'Acheter mes billets': 'Buy my tickets',
+  'Cet événement ne vend pas de billets.': 'This event does not sell tickets.',
+  'Chaque billet est pour une personne différente : « {name} » est écrit deux fois.': 'Each ticket is for a different person: “{name}” is written twice.',
+  'Choisissez au moins un billet.': 'Choose at least one ticket.',
+  'Demander mes billets': 'Request my tickets',
+  'La billetterie n’est pas disponible.': 'Ticket sales are not available.',
+  'La vente des billets est terminée.': 'Ticket sales are over.',
+  'Nom de la personne · billet {n}': 'Name of the person · ticket {n}',
+  'Numéro de transaction (si vous avez déjà payé)': 'Transaction number (if you have already paid)',
+  'Pas de réseau : réessayez.': 'No network: try again.',
+  'Un de moins': 'One fewer',
+  'Un de plus': 'One more',
+  'Un nom par billet : chaque personne a le sien.': 'One name per ticket: each person has their own.',
+  'Vos places sont gardées {h} heures, le temps de payer l’organisateur. Vos billets s’affichent en haut de votre accueil et s’ouvrent même sans connexion.': 'Your places are held for {h} hours while you pay the organiser. Your tickets show at the top of your home and open even with no connection.',
+  'Votre WhatsApp': 'Your WhatsApp',
+  'Votre numéro WhatsApp, pour que l’organisateur vous réponde.': 'Your WhatsApp number, so the organiser can reply.',
 };

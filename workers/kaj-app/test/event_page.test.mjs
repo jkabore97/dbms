@@ -301,6 +301,11 @@ test("the ticket pages (161): the offer, the buyer's request, one ticket; never 
   assert.ok(html.includes("Concert Fatim") && html.includes("Standard") && html.includes("2 000 FCFA") && html.includes("Plus que 3 places"), "the types and their prices");
   assert.ok(html.includes("Complet"), "a sold-out type says so");
   assert.ok(html.includes("gardées 72 heures") && html.includes("Marakaj n’encaisse rien"), "the hold and the notice");
+  // 172: bought with a Marakaj account, a name per ticket — the app's page, no form here
+  assert.ok(html.includes('href="/achat-billets/concert-fatim"') && html.includes("Acheter mes billets avec Marakaj"), "sent to Marakaj to buy");
+  assert.ok(html.includes("Un nom par billet") && !html.includes("<form") && !html.includes("event_ticket_request"), "no anonymous form left");
+  answer = { ...answer };
+  assert.ok((await (await get("/e/concert-fatim/billets?apercu=f00d")).text()).includes('href="/achat-billets/concert-fatim?apercu=f00d"'), "the preview token carried");
   assert.equal(new URL(asked[0]).pathname, "/rest/v1/rpc/event_ticket_offer");
   answer = { on: false };
   assert.equal((await get("/e/concert-fatim/billets")).status, 404, "no sale, no page");

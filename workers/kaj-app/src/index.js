@@ -625,8 +625,14 @@ function jsonForScript(value) {
   return JSON.stringify(value).replace(/</g, "\\u003c").replace(/[\u2028\u2029]/g, "");
 }
 
-// /e/<slug>/billets — the ticket types, how many of each, a name and a
-// WhatsApp, the request sent to event_ticket_request.
+// /e/<slug>/billets — the event's tickets and prices, and the way to buy
+// them: since 172 a buyer signs in to Marakaj (the owner: « every person
+// buying a ticket should create an account »), so the tickets wait on their
+// home, their QR codes open with no signal, and each ticket bears its own
+// person's name. The purchase itself is the app's /achat-billets/<slug>.
+export function buyHref(slug, preview) {
+  return `/achat-billets/${encodeURIComponent(slug)}` + (preview ? `?apercu=${encodeURIComponent(preview)}` : "");
+}
 export async function ticketsPage(env, slug, preview) {
   if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) return ticketResponse(ticketShell("Billets", `<div class="card"><h2>La billetterie n’est pas disponible.</h2></div>`), 404);
   let o = null;
@@ -635,11 +641,9 @@ export async function ticketsPage(env, slug, preview) {
   const types = Array.isArray(o.types) ? o.types : [];
   const rows = types.map((t) => {
     const out = t.left === 0;
-    return `<div class="row" data-type="${escapeHtml(t.id)}" data-price="${Number(t.price) || 0}" data-left="${t.left == null ? "" : t.left}">` +
-      `<div><b>${escapeHtml(t.name)}</b><div class="muted">${escapeHtml(moneyText(t.price, o.currency))}` +
-      `${t.left == null ? "" : out ? " · Complet" : t.left <= 20 ? ` · Plus que ${t.left} place${t.left > 1 ? "s" : ""}` : ""}</div></div>` +
-      (out ? `<span class="tag no">Complet</span>` : `<div class="qty"><button type="button" data-d="-1" aria-label="Un de moins">−</button><b>0</b><button type="button" data-d="1" aria-label="Un de plus">+</button></div>`) +
-      `</div>`;
+    return `<div class="row"><div><b>${escapeHtml(t.name)}</b>` +
+      `${t.left == null || out ? "" : t.left <= 20 ? `<div class="muted">Plus que ${t.left} place${t.left > 1 ? "s" : ""}</div>` : ""}</div>` +
+      (out ? `<span class="tag no">Complet</span>` : `<span class="price">${escapeHtml(moneyText(t.price, o.currency))}</span>`) + `</div>`;
   }).join("");
   const body =
     `<div class="card"><div class="eye">Billetterie</div><h1>${escapeHtml(o.title || "")}</h1>` +
@@ -647,32 +651,12 @@ export async function ticketsPage(env, slug, preview) {
     (o.org_name ? `<div class="muted">Organisé par ${escapeHtml(o.org_name)}</div>` : "") + `</div>` +
     (o.open === false
       ? `<div class="card"><h2>La vente des billets est terminée.</h2></div>`
-      : `<form class="card" id="f" novalidate><h2>Vos billets</h2>${rows || `<p class="muted">Aucun billet en vente pour le moment.</p>`}` +
-        `<div class="row"><b>Total</b><span class="price big" id="total">${escapeHtml(moneyText(0, o.currency))}</span></div>` +
-        `<label for="n">Votre nom</label><input id="n" autocomplete="name" maxlength="80" required>` +
-        `<label for="w">Votre WhatsApp</label><input id="w" inputmode="tel" autocomplete="tel" maxlength="24" placeholder="+226 70 00 00 00" required>` +
-        `<label for="t">Numéro de transaction (si vous avez déjà payé)</label><input id="t" maxlength="40" placeholder="Facultatif">` +
-        `<button class="btn" type="submit" id="go">Demander mes billets</button><div class="err" id="err" role="alert"></div>` +
-        `<p class="muted">Vos places sont gardées ${o.hold_hours} heures, le temps de payer l’organisateur.</p></form>`);
-  const boot = { slug, preview: preview || null, currency: o.currency, api: { url: env.SUPABASE_URL, key: env.SUPABASE_PUBLISHABLE_KEY } };
-  const script = `var B=${jsonForScript(boot)};` + `
-(function(){var f=document.getElementById('f');if(!f)return;var q={};
-function money(n){return String(Math.round(n)).replace(/\\B(?=(\\d{3})+(?!\\d))/g,'\\u202f')+' '+(B.currency==='XOF'||B.currency==='XAF'?'FCFA':B.currency);}
-function sum(){var t=0;Array.prototype.forEach.call(f.querySelectorAll('[data-type]'),function(r){t+=(q[r.dataset.type]||0)*(+r.dataset.price||0);});document.getElementById('total').textContent=money(t);}
-Array.prototype.forEach.call(f.querySelectorAll('[data-type]'),function(r){Array.prototype.forEach.call(r.querySelectorAll('button[data-d]'),function(b){b.onclick=function(){var id=r.dataset.type,left=r.dataset.left===''?20:Math.min(20,+r.dataset.left),v=Math.max(0,Math.min(left,(q[id]||0)+(+b.dataset.d)));q[id]=v;r.querySelector('.qty b').textContent=v;sum();};});});
-f.onsubmit=function(e){e.preventDefault();var err=document.getElementById('err'),go=document.getElementById('go');err.textContent='';
-var lines=Object.keys(q).filter(function(k){return q[k]>0;}).map(function(k){return {type:k,qty:q[k]};});
-if(!lines.length){err.textContent='Choisissez au moins un billet.';return;}
-var n=document.getElementById('n').value.trim(),w=document.getElementById('w').value.trim(),t=document.getElementById('t').value.trim();
-if(!n){err.textContent='Votre nom, s’il vous plaît.';return;}if(w.replace(/\\D/g,'').length<6){err.textContent='Votre numéro WhatsApp, pour que l’organisateur vous réponde.';return;}
-go.disabled=true;go.textContent='Envoi…';
-fetch(B.api.url.replace(/\\/+$/,'')+'/rest/v1/rpc/event_ticket_request',{method:'POST',headers:{'Content-Type':'application/json',apikey:B.api.key,Authorization:'Bearer '+B.api.key},
-body:JSON.stringify({p_slug:B.slug,p_preview:B.preview,p_name:n,p_whatsapp:w,p_lines:lines,p_txn:t||null})}).then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
-.then(function(x){if(!x.ok||!x.j||!x.j.id){throw new Error((x.j&&(x.j.message||x.j.hint))||'La demande n’est pas passée.');}
-try{var s=JSON.parse(localStorage.getItem('mk-billets')||'[]');s.push({slug:B.slug,id:x.j.id});localStorage.setItem('mk-billets',JSON.stringify(s.slice(-20)));}catch(e2){}
-location.href='/e/'+encodeURIComponent(B.slug)+'/billets/'+x.j.id;})
-.catch(function(e3){err.textContent=e3.message||'Pas de réseau : réessayez.';go.disabled=false;go.textContent='Demander mes billets';});};})();`;
-  return ticketResponse(ticketShell(`Billets · ${o.title || ""}`, body, script));
+      : `<div class="card"><h2>Les billets</h2>${rows || `<p class="muted">Aucun billet en vente pour le moment.</p>`}` +
+        (rows ? `<a class="btn" id="go" href="${escapeHtml(buyHref(slug, preview))}">Acheter mes billets avec Marakaj</a>` +
+          `<p class="muted">Un compte Marakaj gratuit suffit : vos billets s’affichent en haut de votre accueil et leurs QR codes s’ouvrent même sans connexion. ` +
+          `Un nom par billet : chaque personne a le sien.</p>` +
+          `<p class="muted">Vos places sont gardées ${o.hold_hours} heures, le temps de payer l’organisateur.</p>` : "") + `</div>`);
+  return ticketResponse(ticketShell(`Billets · ${o.title || ""}`, body, ""));
 }
 
 // /e/<slug>/billets/<id> — the buyer's request: where to pay and the

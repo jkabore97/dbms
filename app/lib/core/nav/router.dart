@@ -23,6 +23,7 @@ import '../../features/auth/pin_screen.dart';
 import '../../features/auth/profile_form_screen.dart';
 import '../../features/storefront/directory_screen.dart';
 import '../../features/storefront/my_tickets_screens.dart';
+import '../../features/events/buy_tickets_screen.dart';
 import '../../features/storefront/storefront_screen.dart';
 import '../../features/notify/notifications_screen.dart' show NotificationsScreen;
 import '../../features/notify/push_prompt.dart' show PushPromptQuiet;
@@ -716,6 +717,22 @@ GoRouter buildRouter(SessionController session) {
             },
           ),
         ],
+      ),
+      // Buying tickets (172): signed in — the redirect sends a stranger
+      // through sign-in (or a new account) and back here; the tickets are
+      // the account's from the start, on the home's bar.
+      GoRoute(
+        path: '/achat-billets/:slug',
+        builder: (context, state) {
+          final scope = AppScope.of(context);
+          final slug = state.pathParameters['slug']!;
+          return BuyTicketsScreen(
+            client: scope.auth.client,
+            slug: RegExp(r'^[a-z0-9-]{1,80}$').hasMatch(slug) ? slug : '-',
+            preview: state.uri.queryParameters['apercu'],
+            store: MyTicketsStore(scope.auth.client, scope.db),
+          );
+        },
       ),
       // « Vitrines masquées » (150): public like the street — the hiding is
       // the device's and needs no account.
