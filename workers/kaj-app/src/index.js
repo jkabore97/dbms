@@ -124,6 +124,15 @@ async function serve(request, env, ctx) {
       return downloadPage(request, env);
     }
 
+    // The iPhone app opens these addresses itself (173c, Universal Links):
+    // buying tickets and « Mes billets ». Apple reads this file once when
+    // the app is installed; the app declares applinks:marakaj.com.
+    if (url.pathname === "/.well-known/apple-app-site-association" || url.pathname === "/apple-app-site-association") {
+      return new Response(JSON.stringify(APPLE_APP_LINKS), {
+        headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=3600" },
+      });
+    }
+
     // Studio's writing assistant (173, Marakaj Pro; assistant.js).
     if (url.pathname === "/api/assistant") {
       return assistant(request, env);
@@ -458,6 +467,21 @@ export async function eventPage(request, env, slug, preview, edit, ctx) {
   }
   return page;
 }
+
+// Apple’s list (173c): the app (team 9K236BL7SX, bf.kaj.app) and the
+// paths it opens — the cards (/e/…) stay web pages, for every guest.
+export const APPLE_APP_LINKS = {
+  applinks: {
+    details: [{
+      appIDs: ["9K236BL7SX.bf.kaj.app"],
+      components: [
+        { "/": "/achat-billets/*", comment: "buying tickets (172)" },
+        { "/": "/billets", comment: "my tickets" },
+        { "/": "/billets/*", comment: "one request of my tickets" },
+      ],
+    }],
+  },
+};
 
 // Link previews and crawlers: not people opening the card.
 const ROBOT = /bot|crawl|spider|slurp|facebookexternalhit|facebookcatalog|whatsapp|telegram|discord|skype|preview|headless|lighthouse|curl|wget|python|okhttp/i;

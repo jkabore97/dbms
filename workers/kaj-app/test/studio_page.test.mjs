@@ -297,3 +297,17 @@ test("173: a shared card's link shows its own photo (og:image)", async () => {
   assert.equal(await og(card({ doc: DOC })), null, "no photo: no og:image");
   assert.equal(await og(card({ doc: { ...DOC, blocks: [{ id: "b1", type: "photo", props: { photo: { key: "../../etc" } } }] } })), null, "a key that is not one: nothing");
 });
+
+test("173c: the iPhone app's links — Apple's file, JSON, the buying and ticket paths only", async () => {
+  for (const path of ["/.well-known/apple-app-site-association", "/apple-app-site-association"]) {
+    const r = await get(path);
+    assert.equal(r.status, 200, path);
+    assert.equal(r.headers.get("Content-Type"), "application/json");
+    const j = await r.json();
+    const d = j.applinks.details[0];
+    assert.deepEqual(d.appIDs, ["9K236BL7SX.bf.kaj.app"]);
+    const paths = d.components.map((c) => c["/"]);
+    assert.deepEqual(paths, ["/achat-billets/*", "/billets", "/billets/*"]);
+    assert.ok(!paths.some((p) => p.startsWith("/e/")), "the cards stay web pages");
+  }
+});
