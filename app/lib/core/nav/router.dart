@@ -182,7 +182,7 @@ abstract final class Routes {
   /// The buyer's tickets on this phone (ticket sales, part 4).
   static const myTickets = '/billets';
 
-  /// Buying tickets (172), signed in: /achat-billets/<slug>.
+  /// Buying tickets (172), signed in: `/achat-billets/<slug>`.
   static const buyTickets = '/achat-billets';
 
   /// « Vitrines masquées » (batch 150): the vitrines hidden on this device,
