@@ -9256,4 +9256,12 @@ const enStrings = <String, String>{
   'Vos places sont gardées {h} heures, le temps de payer l’organisateur. Vos billets s’affichent en haut de votre accueil et s’ouvrent même sans connexion.': 'Your places are held for {h} hours while you pay the organiser. Your tickets show at the top of your home and open even with no connection.',
   'Votre WhatsApp': 'Your WhatsApp',
   'Votre numéro WhatsApp, pour que l’organisateur vous réponde.': 'Your WhatsApp number, so the organiser can reply.',
+  'Réponse {n}': 'Answer {n}',
+  'Tableau de bord': 'Dashboard',
+  'Ouvertures': 'Opened',
+  'Partages': 'Shared',
+  'Personnes attendues': 'People expected',
+  'Ouvertures des quatorze derniers jours': 'Openings over the last fourteen days',
+  '{yes} oui · {no} non · {words} mots. Une personne compte une fois par jour ; les aperçus de liens ne comptent pas.': '{yes} yes · {no} no · {words} notes. A person counts once a day; link previews do not count.',
+  'Les ouvertures se comptent une fois la carte publiée.': 'Openings are counted once the card is published.',
 };

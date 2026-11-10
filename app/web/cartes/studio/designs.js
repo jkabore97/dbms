@@ -89,6 +89,50 @@
     return { id: d[0], name: d[1], theme: { preset: d[0], colors: { back: d[2], paper: d[3], ink: d[4], accent: d[5], line: d[6] }, fonts: { display: d[7], body: d[8], script: d[9] },
       motif: d[12] ? { id: d[12], opacity: 0.1 } : null, motion: 'douce', corners: 'doux' }, cover: d[10], photo: d[11], kinds: d[13].split(' ') };
   });
+  // [key, name, what, paper, ink, accent, soft, back, display, body, script, scene, premium] — the animated cards of /evenements/, now Studio designs (173): their living picture behind the cover, the motion « vivante »; the « lx- » ones are Premium
+  var A = [
+    ["anime_lettre", "La Lettre", "Une enveloppe qui s'ouvre", "#f6f1e9", "#4b4238", "#b98d48", "#e9dcc6", "#2e2620", "cormorant", "cormorant", "great-vibes", "silk", 0],
+    ["anime_jardin", "Le Jardin", "Une arche fleurie qui pousse", "#f2f3ee", "#3a4a3e", "#6f8f76", "#dfe7dc", "#26332a", "parisienne", "cormorant", "parisienne", "garden", 0],
+    ["anime_nuit", "La Nuit", "Du coucher de soleil aux étoiles", "#0b241b", "#e8dcc0", "#d1ac5e", "#f2a86b", "#f5ebd2", "italiana", "eb-garamond", "pinyon", "sky", 0],
+    ["anime_pagne", "Le Pagne", "Couleurs tissées du Faso", "#f4ecdc", "#1d3a6b", "#e2b13c", "#f8f2e6", "#13284d", "anton", "montserrat", "dancing", "loom", 0],
+    ["anime_mag", "Le Magazine", "Une couverture et des pages", "#f3e4dc", "#3a2620", "#c86b4f", "#e9c8b8", "#2a1a15", "dm-serif", "montserrat", "great-vibes", "blobs", 0],
+    ["anime_blason", "Le Blason", "Un monogramme royal", "#f7f2e8", "#3b3226", "#b08a3e", "#ece1c8", "#2a2117", "cinzel", "cormorant", "parisienne", "velvet", 0],
+    ["anime_carnet", "Le Carnet", "Polaroïds et petits mots", "#fbf6ef", "#3a2f2a", "#e86f51", "#f6dcc7", "#2b2420", "caveat", "lora", "homemade", "party", 0],
+    ["anime_sahel", "Sahel", "Acacias, girafe, coucher de soleil", "#f6ead4", "#4a3420", "#c9822e", "#efdcbc", "#3a2412", "tenor", "raleway", "alex-brush", "sahel", 0],
+    ["anime_lotus", "Le Lotus", "Un étang, des carpes koï, des lotus", "#f7f1f0", "#3b3a3c", "#e0739b", "#e3efe8", "#24403a", "fraunces", "lora", "sacramento", "lotus", 0],
+    ["anime_foret", "La Forêt", "Brume, rayons de lumière, fougères", "#eef2ea", "#2c3a2e", "#7a8f4e", "#dfe8dc", "#1b2a1e", "italiana", "eb-garamond", "parisienne", "forest", 0],
+    ["anime_cerisiers", "Les Cerisiers", "Une branche en fleurs, des pétales au vent", "#fbf3f4", "#4a3a3e", "#e48aa2", "#f6dfe4", "#3a2329", "shippori", "shippori", "mrs-saint", "sakura", 0],
+    ["anime_tournesols", "Les Tournesols", "Des fleurs qui suivent le soleil", "#fffaf0", "#3a3018", "#e6a417", "#f7ecc8", "#2b2208", "abril", "josefin", "dancing", "sunflowers", 0],
+    ["anime_lanternes", "Les Lanternes", "Des lanternes qui s'envolent sur l'eau", "#1a1630", "#efe4d2", "#f0a35a", "#2c2650", "#fff4e2", "yeseva", "eb-garamond", "petit-formal", "lanterns", 0],
+    ["anime_roseraie", "La Roseraie", "Des rosiers grimpants qui fleurissent", "#fbf4f1", "#45302c", "#c0303f", "#f1ddd6", "#3a1a1c", "playfair", "lora", "great-vibes", "roses", 0],
+    ["anime_desert", "Le Désert", "Une bande-annonce dans les dunes", "#f4e6cf", "#3a2a18", "#d6a04e", "#e8d2a8", "#2a1c0e", "julius", "montserrat", "cormorant", "desert", 0],
+    ["anime_ocean", "L'Océan", "Des cartes postales du bord de mer", "#f6efe8", "#33302e", "#e07a5f", "#f0dcd0", "#22303e", "marcellus", "montserrat", "dancing", "ocean", 0],
+    ["anime_champagne", "Champagne", "Bulles, paillettes et lumières", "#1a1712", "#efe4cc", "#d9b56a", "#2e2a22", "#fbf3e0", "limelight", "raleway", "poiret", "champagne", 0],
+    ["anime_papillons", "Les Papillons", "Un nuage de papillons qui dessine un cœur", "#fdf8f2", "#3e3026", "#e8892f", "#f5e6d2", "#2a1e14", "cormorant", "eb-garamond", "homemade", "butterflies", 0],
+    ["anime_hiver", "Boule à neige", "Un village d'hiver qu'on secoue", "#e9eef6", "#26324a", "#b89650", "#d6deec", "#16223a", "cinzel", "raleway", "parisienne", "globe", 0],
+    ["anime_feux", "Feux d'artifice", "Une ville en fête, de plus en plus de feux", "#0c0b18", "#e8e4f4", "#f2c14e", "#1c1a30", "#ffffff", "dm-serif", "montserrat", "great-vibes", "fireworks", 0],
+    ["anime_aurore", "L'Aurore", "Des aurores boréales sur un lac", "#0a1220", "#dfeef4", "#6fe0b8", "#14223a", "#ffffff", "poiret", "tenor", "pinyon", "aurora", 0],
+    ["anime_sahel_p", "Savane d'or", "Soleil couchant, acacias, un horizon d'or", "#f6ead4", "#4a3420", "#c9822e", "#efdcbc", "#3a2412", "marcellus", "cormorant", "alex-brush", "lx-savane", 1],
+    ["anime_lotus_p", "Étang de lotus", "Eau vivante, carpes koï, médaillon de verre", "#f7f1f0", "#3b3a3c", "#e0739b", "#e3efe8", "#24403a", "tenor", "lora", "sacramento", "lx-lotus", 1],
+    ["anime_foret_p", "Forêt enchantée", "Brume, rayons de lumière, lucioles", "#eef2ea", "#2c3a2e", "#7a8f4e", "#dfe8dc", "#1b2a1e", "fraunces", "fraunces", "parisienne", "lx-foret", 1],
+    ["anime_cerisiers_p", "Paravent de cerisiers", "Panneaux d'or, papiers, sceau rouge", "#fbf3f4", "#4a3a3e", "#e48aa2", "#f6dfe4", "#3a2329", "shippori", "shippori", "mrs-saint", "lx-cerisiers", 1],
+    ["anime_tournesols_p", "Champ d'or", "Affiche audacieuse, tournesols au soleil", "#fffaf0", "#3a3018", "#e6a417", "#f7ecc8", "#2b2208", "abril", "josefin", "dancing", "lx-tournesols", 1],
+    ["anime_lanternes_p", "Nuit des lanternes", "Chaque chapitre est une lanterne", "#1a1630", "#efe4d2", "#f0a35a", "#2c2650", "#fff4e2", "yeseva", "eb-garamond", "petit-formal", "lx-lanternes", 1],
+    ["anime_roseraie_p", "Velours & roses", "Roses épanouies, cartes ivoire, sceau de cire", "#fbf4f1", "#45302c", "#c0303f", "#f1ddd6", "#3a1a1c", "bodoni", "cormorant", "great-vibes", "lx-roseraie", 1],
+    ["anime_desert_p", "Caravane des dunes", "Dunes éclairées, piste d'étape en étape", "#f4e6cf", "#3a2a18", "#d6a04e", "#e8d2a8", "#2a1c0e", "julius", "tenor", "cormorant", "lx-dunes", 1],
+    ["anime_ocean_p", "Carte du rivage", "Vagues réelles, rose des vents, écume", "#f6efe8", "#33302e", "#e07a5f", "#f0dcd0", "#22303e", "playfair", "montserrat", "dancing", "lx-rivage", 1],
+    ["anime_champagne_p", "Champagne Gatsby", "Bulles, or et cadres Art déco", "#1a1712", "#efe4cc", "#d9b56a", "#2e2a22", "#fbf3e0", "limelight", "raleway", "poiret", "lx-champagne", 1],
+    ["anime_papillons_p", "Herbier aux papillons", "Vieux papier, planches, papillons vrais", "#fdf8f2", "#3e3026", "#e8892f", "#f5e6d2", "#2a1e14", "cormorant", "eb-garamond", "homemade", "lx-herbier", 1],
+    ["anime_hiver_p", "Fenêtre givrée", "Le givre gagne la vitre en défilant", "#e9eef6", "#26324a", "#b89650", "#d6deec", "#16223a", "cinzel", "raleway", "parisienne", "lx-givre", 1],
+    ["anime_feux_p", "Grand soir", "Vos prénoms écrits par les étincelles", "#0c0b18", "#e8e4f4", "#f2c14e", "#1c1a30", "#ffffff", "dm-serif", "montserrat", "great-vibes", "lx-feux", 1],
+    ["anime_aurore_p", "Boréale", "Aurores sur le lac, une constellation", "#0a1220", "#dfeef4", "#6fe0b8", "#14223a", "#ffffff", "italiana", "tenor", "pinyon", "lx-aurore", 1]
+  ];
+  A.forEach(function (a) {
+    DESIGNS.push({ id: a[0], name: a[1], what: a[2], animated: true, premium: !!a[12], scene: a[11],
+      theme: { preset: a[0], colors: { back: a[7], paper: a[3], ink: a[4], accent: a[5], soft: a[6], line: a[6] }, fonts: { display: a[8], body: a[9], script: a[10] },
+        motif: null, motion: 'vivante', corners: 'doux', scene: a[11] },
+      cover: 'typo', photo: '', kinds: Object.keys(KINDS) });
+  });
   S.DESIGNS = DESIGNS;
   function design(id) { return DESIGNS.filter(function (d) { return d.id === id; })[0] || null; }
   S.design = design;
@@ -97,27 +141,30 @@
     foret: 'come', cerisiers: 'champagne', tournesols: 'anniv', lanternes: 'minuit', roseraie: 'jardin', desert: 'sahel', ocean: 'bapteme', champagne: 'champagne',
     papillons: 'corail', hiver: 'bapteme', feux: 'gala', aurore: 'minuit' };
   function designFor(card, kind) {
+    if (design(card)) return design(card);
     var m = /^anime_([a-z]+?)(_p)?$/.exec(String(card || ''));
     if (m && ANIM[m[1]]) return design(ANIM[m[1]]);
-    if (design(card)) return design(card);
     return DESIGNS.filter(function (d) { return d.kinds.indexOf(kind) >= 0; })[0] || design('come');
   }
   S.designFor = designFor;
 
   // ----------------------------------------------------- a starting document
+  // an animated design: its living picture behind the cover (and the answer)
+  function sceneStyle(d) { return d && d.scene ? { bg: 'scene', scene: d.scene } : null; }
+  S.sceneStyle = sceneStyle;
   function blk(type, variant, props, style) { var b = { id: uid(), type: type, variant: variant, props: props || {} }; if (style) b.style = style; return b; }
   S.starter = function (designId, ctx) {
     var d = design(designId) || designFor(ctx.card, ctx.kind), k = kindOf(ctx.kind), title = ctx.title || 'Vos prénoms';
     var two = title.split(/\s*(?:&|\bet\b)\s*/);
     var blocks = [
-      blk('cover', d.cover, { kicker: k.kicker, names: title, sub: '', photo: d.photo ? { stock: d.photo, pos: [50, 40] } : null, showDate: true, showPlace: true }),
+      blk('cover', d.cover, { kicker: k.kicker, names: title, sub: '', photo: d.photo ? { stock: d.photo, pos: [50, 40] } : null, showDate: true, showPlace: true }, sceneStyle(d)),
       blk('text', 'simple', { kicker: '', title: k.word, body: k.body, sign: two.length > 1 ? two.join(' & ') : '' }, { sep: 'fleur' })
     ];
     if (k.families) blocks.push(blk('families', 'cote', { title: 'Les familles', left: 'Famille ' + (two[0] || ''), leftNote: '', right: 'Famille ' + (two[1] || ''), rightNote: '', joiner: '&' }, { bg: 'soft' }));
     blocks.push(blk('programme', 'timeline', { title: k.prog, intro: k.progIntro, showTimes: true, items: JSON.parse(JSON.stringify(k.items)) }));
     blocks.push(blk('countdown', 'grand', { title: 'Plus que', doneText: 'C’est aujourd’hui !' }, { bg: 'accent' }));
     blocks.push(blk('place', 'simple', { title: 'Le lieu', name: ctx.place || 'Le lieu', address: '', note: '' }));
-    blocks.push(blk('rsvp', 'carte', { title: k.rsvp, lead: k.rsvpLead, yes: 'Je viens', no: 'Je ne peux pas', askPhone: true, pass: false }, { bg: 'back' }));
+    blocks.push(blk('rsvp', 'carte', { title: k.rsvp, lead: k.rsvpLead, yes: 'Je viens', no: 'Je ne peux pas', askPhone: true, pass: false }, sceneStyle(d) || { bg: 'back' }));
     blocks.push(blk('album', 'grille', { title: k.album, lead: k.albumLead }));
     blocks.push(blk('footer', 'simple', { text: title }));
     return { v: 2, theme: JSON.parse(JSON.stringify(d.theme)), blocks: blocks, meta: { from: d.id } };
@@ -127,6 +174,16 @@
   // A card made before Studio, read as the organiser sees it (the page in a
   // hidden frame), into a document.
   function t(el) { return el ? el.textContent.replace(/[ \t]+/g, ' ').replace(/\s*\n\s*/g, '\n').trim() : ''; }
+  // the names as they read (173): « Inès<span class="et">et</span>Thomas »
+  // draws « et » on a line of its own — read plainly, it was « InèsetThomas »
+  // (Côme, Cimbrone, Jardin, Ravello, Rivage, Sahel)
+  function spaced(el) {
+    if (!el) return '';
+    var c = el.cloneNode(true);
+    Array.prototype.forEach.call(c.querySelectorAll('*'), function (x) { x.before(' '); x.after(' '); });
+    return t(c).replace(/\s+/g, ' ').trim();
+  }
+  S.spacedText = spaced;
   function stockOf(src) { var m = /\/img\/([a-z0-9-]+)\.jpg/.exec(src || ''); return m && S.STOCK.indexOf(m[1]) >= 0 ? m[1] : null; }
   function picFrom(content, key, img) {
     var c = content && content['p:' + key];
@@ -170,7 +227,7 @@
     if (fd) theme.fonts.display = fd; if (fb) theme.fonts.body = fb; if (fs) theme.fonts.script = fs;
     var blocks = [], k = kindOf(boot.kind);
     // the cover
-    var names = t(doc.querySelector('[data-edit="names"]')) || boot.title || '';
+    var names = spaced(doc.querySelector('[data-edit="names"]')) || boot.title || '';
     var heroSlot = doc.querySelector('[data-pic="hero"]');
     blocks.push(blk('cover', base.cover, { kicker: t(doc.querySelector('[data-edit="kicker"]')) || k.kicker, names: names, sub: t(doc.querySelector('[data-edit="sub"]')),
       photo: picFrom(content, 'hero', heroSlot && heroSlot.querySelector('img')) || (base.photo ? { stock: base.photo, pos: [50, 40] } : null), showDate: true, showPlace: true }));
@@ -242,7 +299,8 @@
     var names = w('plain') || [w('a'), w('b')].filter(Boolean).join(' & ') || boot.title || '';
     var k = kindOf(boot.kind), blocks = [];
     var p1 = content['p:p1'] && content['p:p1'].key ? picFrom(content, 'p1') : (base.photo ? { stock: base.photo, pos: [50, 40] } : null);
-    blocks.push(blk('cover', base.cover, { kicker: w('eye') || k.kicker, names: names, sub: '', photo: p1, showDate: true, showPlace: true }));
+    // its living picture kept (173): behind the cover and the answer, as on its page
+    blocks.push(blk('cover', base.animated && p1 && p1.key ? 'cadre' : base.cover, { kicker: w('eye') || k.kicker, names: names, sub: '', photo: p1, showDate: true, showPlace: true }, sceneStyle(base)));
     var intro = w('intro');
     if (intro) blocks.push(blk('text', 'simple', { kicker: '', title: '', body: intro, sign: '' }, { sep: 'fleur' }));
     var items = [];
@@ -255,7 +313,7 @@
     if (gal.length) blocks.push(blk('gallery', 'grille', { title: '', photos: gal }));
     if (!/(^|,)cd(,|$)/.test(content['t:hide'] || '')) blocks.push(blk('countdown', 'grand', { title: 'Plus que', doneText: 'C’est aujourd’hui !' }, { bg: 'accent' }));
     if (!/(^|,)place(,|$)/.test(content['t:hide'] || '')) blocks.push(blk('place', 'simple', { title: 'Le lieu', name: w('place') || boot.place || '', address: '', note: '', href: mapOf(content) }));
-    if (!/(^|,)rsvp(,|$)/.test(content['t:hide'] || '')) blocks.push(blk('rsvp', 'carte', { title: k.rsvp, lead: k.rsvpLead, yes: 'Je viens', no: 'Je ne peux pas', askPhone: true, pass: passOn(content, boot) }, { bg: 'back' }));
+    if (!/(^|,)rsvp(,|$)/.test(content['t:hide'] || '')) blocks.push(blk('rsvp', 'carte', { title: k.rsvp, lead: k.rsvpLead, yes: 'Je viens', no: 'Je ne peux pas', askPhone: true, pass: passOn(content, boot) }, sceneStyle(base) || { bg: 'back' }));
     if (boot.album_on !== false) blocks.push(blk('album', 'grille', { title: k.album, lead: k.albumLead }));
     if (!/(^|,)foot(,|$)/.test(content['t:hide'] || '')) blocks.push(blk('footer', 'simple', { text: names }));
     addPlus(blocks, content, 't:');

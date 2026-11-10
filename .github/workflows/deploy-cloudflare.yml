@@ -193,6 +193,9 @@ jobs:
 
       - name: Deploy
         run: |
+          # Its one dependency (173): the Anthropic SDK for Studio's
+          # assistant, from the lockfile; wrangler bundles it.
+          npm ci --prefix workers/kaj-app
           npx --yes wrangler@4 deploy --config workers/kaj-app/wrangler.toml \
             --var "SUPABASE_URL:$SUPABASE_URL" \
             --var "SUPABASE_PUBLISHABLE_KEY:$SUPABASE_PUBLISHABLE_KEY" \

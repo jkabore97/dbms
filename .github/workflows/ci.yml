@@ -1167,6 +1167,8 @@ jobs:
       - run: node --test workers/uploads/test/*.test.mjs
       # The site Worker: a build's folders kept a year, the page and the
       # workers asked about every time, a gone build's folder a 404.
+      # Its one dependency (173): the Anthropic SDK for Studio's assistant.
+      - run: npm ci --prefix workers/kaj-app
       - run: node --check workers/kaj-app/src/index.js
       - run: node --test workers/kaj-app/test/*.test.mjs
       # The deploy's fingerprinting: folders named after their content, the

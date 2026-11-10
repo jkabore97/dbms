@@ -163,3 +163,17 @@ body.ed-body{font-family:var(--ed-font);-webkit-tap-highlight-color:transparent}
 .ed-list-it .ed-hd:focus-visible{outline:2px solid var(--ed-acc)}
 .ed-list-it.ed-moving{position:relative;z-index:3;background:#2a2219;box-shadow:0 10px 26px rgba(0,0,0,.45)}
 .ed-dragging .ed-ins{visibility:hidden}
+.ed-chip.ed-locked{opacity:.62}
+/* the helpers (173): phrases, the check, the print */
+.ed-phrases{display:grid;gap:6px}
+.ed-phrase{text-align:left;padding:10px 12px;border:1px solid var(--ed-line);border-radius:12px;background:transparent;color:var(--ed-fg);font:400 13px/1.4 var(--ed-font);cursor:pointer}
+.ed-checks .ed-list-it span{white-space:normal;font:400 13px/1.4 var(--ed-font)}
+@media print{
+  body.ed-body{background:#fff!important}
+  .ed-top,.ed-nav,.ed-sheet,.ed-scrim,.st-toast,.ed-ins,.ed-tools,.ed-handle{display:none!important}
+  #canvas{box-shadow:none!important;margin:0!important;max-width:none!important;width:100%!important}
+  .st-b{break-inside:avoid;page-break-inside:avoid}
+  .st-rsvp,.st-album,[data-share]{display:none!important}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+.ed-on .st-stk{pointer-events:auto;cursor:grab;touch-action:none}

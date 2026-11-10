@@ -9,7 +9,9 @@
   var ctx = {
     slug: BOOT.slug, title: BOOT.title || '', kind: BOOT.kind || 'autre', card: BOOT.card, family: BOOT.family || 'classique', date: BOOT.date, time: BOOT.time, place: BOOT.place || '',
     rsvp_on: BOOT.rsvp_on !== false, album_on: BOOT.album_on !== false, tickets: BOOT.tickets === true, preview: BOOT.preview || null,
-    api: BOOT.api || {}, uploads: BOOT.uploads || null, edit: BOOT.edit, content: BOOT.content || {}, editing: true, demo: false
+    api: BOOT.api || {}, uploads: BOOT.uploads || null, edit: BOOT.edit, content: BOOT.content || {}, editing: true, demo: false,
+    // Marakaj Pro (172): true or false once the server says; unknown before (the save decides)
+    pro: BOOT.pro === true ? true : BOOT.pro === false ? false : null
   };
   var DRAFT = 'studio-' + (ctx.slug || 'demo');
   var doc = null, savedJson = '', savedAt = BOOT.doc_saved_at || null, converted = false;
@@ -105,7 +107,7 @@
       // the guests' page: drawn as theirs, its buttons alive, nothing sent
       var look = Object.assign({}, ctx, { editing: false, demo: true, look: true });
       canvas.innerHTML = '<main class="st-card">' + S.render(doc, look) + '</main>';
-      wired = canvas.firstChild; S.wire(wired, look, doc); S.motion(canvas);
+      wired = canvas.firstChild; S.wire(wired, look, doc); S.scenes(canvas, doc.theme); S.motion(canvas);
       return;
     }
     list.forEach(function (b, i) {
@@ -118,7 +120,7 @@
       if (el.closest('button, a')) return;   // a button's label: in the block's settings
       el.setAttribute('contenteditable', 'true'); el.setAttribute('spellcheck', 'true');
     });
-    wired = canvas; S.wire(canvas, ctx, doc);
+    wired = canvas; S.wire(canvas, ctx, doc); S.scenes(canvas, doc.theme);
     if (sel && !blockById(sel)) sel = null;
     markSel();
     if (!keepText) closeText();
@@ -195,6 +197,28 @@
   // 380 ms: before Android's own long press (400), well after a tap.
   var drag = null, press = null, justDragged = false, LONG = 380;
   function blockEls() { return Array.prototype.slice.call(canvas.querySelectorAll('.st-b[data-bid]')); }
+  // a sticker (173): dragged on its cover, the place kept in % of the cover
+  var stk = null;
+  canvas.addEventListener('pointerdown', function (e) {
+    var el = e.target.closest('.st-stk'); if (preview || !el) return;
+    var bl = el.closest('.st-b[data-bid]'), r = bl.getBoundingClientRect();
+    e.preventDefault(); e.stopImmediatePropagation();
+    stk = { id: bl.getAttribute('data-bid'), i: +el.getAttribute('data-stk'), el: el, r: r, x: null, y: null };
+    try { el.setPointerCapture(e.pointerId); } catch (x) {}
+  }, true);
+  canvas.addEventListener('pointermove', function (e) {
+    if (!stk) return;
+    stk.x = Math.max(2, Math.min(98, (e.clientX - stk.r.left) / stk.r.width * 100)); stk.y = Math.max(2, Math.min(98, (e.clientY - stk.r.top) / stk.r.height * 100));
+    stk.el.style.left = stk.x + '%'; stk.el.style.top = stk.y + '%';
+  });
+  ['pointerup', 'pointercancel'].forEach(function (ev) {
+    canvas.addEventListener(ev, function () {
+      if (!stk) return; var s0 = stk; stk = null; justDragged = true;
+      if (s0.x == null) return;
+      var b0 = blockById(s0.id); if (!b0 || !b0.props.stickers || !b0.props.stickers[s0.i]) return;
+      commit(function () { b0.props.stickers[s0.i].x = Math.round(s0.x); b0.props.stickers[s0.i].y = Math.round(s0.y); });
+    });
+  });
   canvas.addEventListener('pointerdown', function (e) {
     if (preview || drag || (e.pointerType === 'mouse' && e.button !== 0)) return;
     var bl = e.target.closest('.st-b[data-bid]'); if (!bl) return;
@@ -446,6 +470,10 @@
   function openSheet(title, html, wire, onClose, half) {
     var top = sheet.classList.contains('open') ? sheetB.scrollTop : 0, same = document.getElementById('edSheetT').textContent === title;
     document.getElementById('edSheetT').textContent = title;
+    // a fresh body each time (173): the listeners of the sheet before go with
+    // it — they used to pile up, and a choice in one block's sheet changed
+    // every block whose sheet had been opened before
+    var fresh = sheetB.cloneNode(false); sheetB.parentNode.replaceChild(fresh, sheetB); sheetB = fresh;
     sheetB.innerHTML = html; sheet.classList.add('open'); scrim.classList.add('on'); document.body.classList.add('ed-sheet-on');
     // half the screen: the card stays in view above, without the scrim
     sheet.classList.toggle('half', !!half); document.body.classList.toggle('ed-half', !!half); scrim.classList.toggle('clear', !!half);
@@ -454,6 +482,7 @@
     if (wire) wire(sheetB);
   }
   function closeSheet() {
+    if (openSettings._audio) openSettings._audio.pause();   // a music heard before choosing stops with its sheet
     sheet.classList.remove('open', 'half'); scrim.classList.remove('on', 'clear'); document.body.classList.remove('ed-half', 'ed-sheet-on');
     document.getElementById('edSheetT').textContent = '';
     if (sheetClose) { var f = sheetClose; sheetClose = null; f(); }
@@ -493,6 +522,23 @@
   var ICON_NAMES = { star: 'Étoile', heart: 'Cœur', rings: 'Alliances', glass: 'Verre', food: 'Repas', cake: 'Gâteau', party: 'Fête', music: 'Musique', mic: 'Micro', camera: 'Photo', pin: 'Lieu', clock: 'Heure', calendar: 'Date', dress: 'Tenue', gift: 'Cadeau', car: 'Voiture', bed: 'Hébergement', child: 'Enfants', phone: 'Téléphone', dove: 'Colombe', money: 'Argent', leaf: 'Feuille', info: 'Info' };
   function iconSelect(cur, attr) { return '<select ' + attr + '>' + ICON_LIST.map(function (i) { return '<option value="' + i + '"' + (i === cur ? ' selected' : '') + '>' + ICON_NAMES[i] + '</option>'; }).join('') + '</select>'; }
   var LISTS = { programme: ['items', 'title', true], infos: ['items', 'title', true], contribution: ['lines', 'label'], faq: ['items', 'q'], menu: ['items', 'title'], story: ['items', 'title'], gallery: ['photos', null] };
+  // « Animé… » (172): the animated cards' living pictures behind the block,
+  // the Premium ones (painted by the graphics chip) for Marakaj Pro; a veil
+  // keeps the words readable.
+  function scenePicker(st) {
+    var v = S.sceneVeil(st), locked = ctx.pro === false;
+    var row = function (list) {
+      return '<div class="ed-row ed-scenes">' + list.map(function (x) {
+        var off = x.premium && locked;
+        return '<button type="button" class="ed-chip' + (st.scene === x.id ? ' on' : '') + '" data-scene="' + x.id + '" aria-pressed="' + (st.scene === x.id) + '"' + (off ? ' data-locked' : '') + '>' + esc(x.name) + (x.premium ? ' <small>' + (off ? '🔒 Pro' : 'Pro') + '</small>' : '') + '</button>';
+      }).join('') + '</div>';
+    };
+    return '<p class="ed-lab">Le fond animé</p>' + row(S.SCENES.filter(function (x) { return !x.premium; })) +
+      '<p class="ed-lab">Premium : peints par le téléphone</p>' + row(S.SCENES.filter(function (x) { return x.premium; })) +
+      (locked ? '<p class="ed-help">Les fonds Premium font partie de Marakaj Pro.</p>' : '') +
+      '<p class="ed-lab">Le voile, pour lire les mots</p>' + chips('veil', [['', 'Selon le fond'], ['light', 'Clair'], ['dark', 'Sombre']], st.veil || '') +
+      '<label class="ed-field">Force du voile<input class="ed-range" type="range" min="0" max="85" data-dim value="' + Math.round(v.dim * 100) + '"></label>';
+  }
   function openSettings(id) {
     var b = blockById(id); if (!b) return;
     var d = S.BLOCKS[b.type], p = b.props || {}, st = b.style || {}, h = '';
@@ -503,6 +549,11 @@
     var photoBtn = function (path, label) { return '<button type="button" class="ed-chip" data-photo="' + path + '">' + esc(label) + '</button>'; };
     if (b.type === 'cover') h += '<p class="ed-lab">La photo et la date</p><div class="ed-row">' + photoBtn('photo', 'Changer la photo') + '</div>' + check('showDate', 'Afficher la date et l’heure', true) + check('showPlace', 'Afficher le lieu', true) +
       field('dateText', 'Date écrite autrement (facultatif)', 'text', 'Ex. : Le premier samedi de mai') + field('placeText', 'Lieu écrit autrement (facultatif)', 'text', ctx.place);
+    // the stickers (173): touched to add, dragged on the cover to place
+    if (b.type === 'cover') h += '<p class="ed-lab">Autocollants · glissez-les sur la couverture</p><div class="ed-row ed-stk-add">' + S.STICKERS.map(function (e) { return '<button type="button" class="ed-chip" data-addstk="' + e + '">' + e + '</button>'; }).join('') + '</div>' +
+      ((p.stickers || []).length ? '<div class="ed-list" style="margin-top:8px">' + p.stickers.map(function (x, i) {
+        return '<div class="ed-list-it"><span style="font-size:22px">' + x.e + '</span><input class="ed-range" type="range" min="6" max="40" data-stksize="' + i + '" value="' + Math.round((+x.s || 2.6) * 10) + '" aria-label="Taille"><button type="button" data-stkdel="' + i + '" aria-label="Retirer">✕</button></div>';
+      }).join('') + '</div>' : '');
     if (b.type === 'photo' || b.type === 'free') h += '<p class="ed-lab">La photo</p><div class="ed-row">' + photoBtn('photo', 'Changer la photo') + '</div>';
     if (b.type === 'free') h += field('button', 'Texte du bouton (facultatif)', 'text', 'Voir le plan') + field('href', 'Lien du bouton', 'url', 'https://…');
     if (b.type === 'button') h += field('label', 'Texte du bouton') + field('href', 'Lien', 'url', 'https://…');
@@ -510,12 +561,29 @@
     if (b.type === 'tickets') h += field('label', 'Texte du bouton');
     if (b.type === 'place') h += field('href', 'Itinéraire : le lien Google Maps du lieu', 'url', 'https://maps.app.goo.gl/…') +
       '<p class="ed-help">Dans Google Maps, touchez le lieu, « Partager », « Copier le lien », puis collez-le ici. Sans lien, l’itinéraire cherche le nom du lieu.</p>';
+    // the writing assistant (173, Marakaj Pro): the block's main words, written or rewritten
+    if (ASSIST[b.type]) h += '<p class="ed-lab">L’assistant d’écriture' + (ctx.pro === false ? ' · 🔒 Pro' : '') + '</p><div class="ed-row">' +
+      [['ecrire', 'Écrire pour moi'], ['raccourcir', 'Plus court'], ['chaleureux', 'Plus chaleureux'], ['solennel', 'Plus solennel'], ['corriger', 'Corriger']].map(function (x) {
+        return '<button type="button" class="ed-chip' + (ctx.pro === false ? ' ed-locked' : '') + '" data-assist="' + x[0] + '">' + x[1] + '</button>';
+      }).join('') + '</div>';
+    if (b.type === 'text') h += '<p class="ed-lab">Des phrases toutes prêtes</p><div class="ed-list ed-phrases">' + S.phrasesFor(ctx.kind).map(function (x, i) { return '<button type="button" class="ed-phrase" data-phrase="' + i + '">' + esc(x) + '</button>'; }).join('') + '</div>';
+    if (b.type === 'footer') h += check('share', 'Bouton « Partager la carte » pour vos invités', true);
     if (b.type === 'countdown') h += field('doneText', 'Le jour venu, écrire', 'text', 'C’est aujourd’hui !');
     if (b.type === 'video') h += field('url', 'Lien YouTube', 'url', 'https://youtu.be/…');
-    if (b.type === 'music') h += field('url', 'Lien du fichier audio (https)', 'url', 'https://…/chanson.mp3');
+    // the music library (173): a piece free of rights, heard before choosing; or a link of one's own
+    if (b.type === 'music') h += '<p class="ed-lab">Les musiques Marakaj (libres de droits)</p><div class="ed-list ed-tracks">' + S.TRACKS.map(function (x) {
+        return '<div class="ed-list-it' + (p.track === x.id ? ' on' : '') + '"><button type="button" data-listen="' + x.id + '" aria-label="Écouter" style="width:42px">▶</button><span>' + esc(x.name) + '<small>' + esc(x.mood) + '</small></span>' +
+          '<button type="button" data-track="' + x.id + '" style="width:auto;padding:0 10px">' + (p.track === x.id ? 'Choisie ✓' : 'Choisir') + '</button></div>';
+      }).join('') + '</div>' + field('url', 'Ou le lien de votre fichier audio (https)', 'url', 'https://…/chanson.mp3');
     if (b.type === 'programme') h += check('showTimes', 'Afficher les horaires', true);
     if (b.type === 'rsvp') h += field('yes', 'Bouton « oui »', 'text', 'Je viens') + field('no', 'Bouton « non »', 'text', 'Je ne peux pas') + check('askPhone', 'Demander le WhatsApp pour le rappel de la veille', true) + check('pass', 'Carte d’invité (QR) après « Je viens »', false) +
-      (ctx.rsvp_on === false ? '<p class="ed-lab">Les réponses sont fermées dans Marakaj : vos invités voient « Les réponses sont fermées ».</p>' : '');
+      // the organiser's questions and the closing day (173), held by the server too
+      '<p class="ed-lab">Vos questions aux invités (facultatif, trois au plus)</p>' + [0, 1, 2].map(function (i) {
+        var q = (p.questions || [])[i]; return '<label class="ed-field">Question ' + (i + 1) + '<input data-q="' + i + '" type="text" maxlength="140" value="' + esc((q && q.q) || '') + '" placeholder="' + esc(['Ex. : Votre plat préféré ?', 'Ex. : Une allergie ?', 'Ex. : Votre chanson pour danser ?'][i]) + '"></label>';
+      }).join('') +
+      field('closes', 'Répondre au plus tard le (facultatif)', 'date', '') +
+      '<p class="ed-help">Ce jour passé, le formulaire se ferme tout seul et vos invités le lisent.</p>' +
+(ctx.rsvp_on === false ? '<p class="ed-lab">Les réponses sont fermées dans Marakaj : vos invités voient « Les réponses sont fermées ».</p>' : '');
     if (b.type === 'dresscode') h += '<p class="ed-lab">Les couleurs</p><div class="ed-row">' + (p.colors || []).map(function (c, i) { return '<input type="color" data-dc="' + i + '" value="' + esc(c) + '"><button type="button" class="ed-chip" data-dcdel="' + i + '">✕</button>'; }).join('') + '<button type="button" class="ed-chip" data-dcadd>+ Une couleur</button></div>';
     var L = LISTS[b.type];
     if (L) {
@@ -529,10 +597,11 @@
       if (b.type === 'infos') h += '<p class="ed-lab">Un lien sur un élément (facultatif)</p>' + arr.map(function (it, i) { return '<label class="ed-field">' + esc((it && it.title) || 'Élément ' + (i + 1)) + '<input data-ihref="' + i + '" type="url" placeholder="https://…" value="' + esc((it && it.href) || '') + '"></label>'; }).join('');
     }
     // the look of the block
-    var bg = st.bg || '', bgs = [['', 'Du modèle'], ['paper', 'Papier'], ['soft', 'Doux'], ['accent', 'Accent'], ['back', 'Fond de page'], ['ink', 'Sombre'], ['none', 'Transparent'], ['custom', 'Couleur…'], ['photo', 'Photo…']];
+    var bg = st.bg || '', bgs = [['', 'Du modèle'], ['paper', 'Papier'], ['soft', 'Doux'], ['accent', 'Accent'], ['back', 'Fond de page'], ['ink', 'Sombre'], ['none', 'Transparent'], ['custom', 'Couleur…'], ['photo', 'Photo…'], ['scene', 'Animé…']];
     h += '<p class="ed-lab">Fond du bloc</p>' + chips('bg', bgs, U.isHex(bg) ? 'custom' : bg) +
       (U.isHex(bg) ? '<div class="ed-row" style="margin-top:8px"><input type="color" data-bgc value="' + bg + '"></div>' : '') +
-      (bg === 'photo' ? '<div class="ed-row" style="margin-top:8px">' + photoBtn('style.bgPhoto', 'Choisir la photo de fond') + '</div><label class="ed-field">Voile sur la photo<input class="ed-range" type="range" min="0" max="85" data-dim value="' + Math.round((st.dim != null ? st.dim : 0.45) * 100) + '"></label>' : '');
+      (bg === 'photo' ? '<div class="ed-row" style="margin-top:8px">' + photoBtn('style.bgPhoto', 'Choisir la photo de fond') + '</div><label class="ed-field">Voile sur la photo<input class="ed-range" type="range" min="0" max="85" data-dim value="' + Math.round((st.dim != null ? st.dim : 0.45) * 100) + '"></label>' : '') +
+      (bg === 'scene' ? scenePicker(st) : '');
     h += '<p class="ed-lab">Alignement</p>' + chips('al', [['', 'Du modèle'], ['left', 'À gauche'], ['center', 'Centré'], ['right', 'À droite']], st.align || '') +
       '<p class="ed-lab">Espace autour</p>' + chips('pad', [['S', 'Serré'], ['', 'Normal'], ['L', 'Large']], st.pad || '') +
       '<p class="ed-lab">Taille des textes</p>' + chips('size', [['S', 'Petite'], ['', 'Normale'], ['L', 'Grande'], ['XL', 'Très grande']], st.size || '') +
@@ -567,11 +636,38 @@
       var bb = b(); if (!bb) return;
       if (t.hasAttribute('data-var')) { commit(function () { bb.variant = t.getAttribute('data-var'); }); re(); return; }
       if (t.hasAttribute('data-photo')) { openPhoto(id, t.getAttribute('data-photo')); return; }
+      if (t.hasAttribute('data-assist')) { assist(bb, t.getAttribute('data-assist'), t); return; }
+      if (t.hasAttribute('data-listen')) {
+        var au = openSettings._audio || (openSettings._audio = new Audio()), src = '/cartes/musique/' + t.getAttribute('data-listen') + '.mp3';
+        if (!au.paused && au.src.indexOf(src) >= 0) { au.pause(); t.textContent = '▶'; return; }
+        Array.prototype.forEach.call(document.querySelectorAll('[data-listen]'), function (x) { x.textContent = '▶'; });
+        au.src = src; au.play().catch(function () {}); t.textContent = '❚❚'; return;
+      }
+      if (t.hasAttribute('data-track')) { var tr = t.getAttribute('data-track'); if (openSettings._audio) openSettings._audio.pause(); commit(function () { bb.props.track = tr; delete bb.props.url; }); re(); return; }
+      if (t.hasAttribute('data-addstk')) {
+        if ((bb.props.stickers || []).length >= 12) { toast('Douze autocollants au plus.'); return; }
+        var n = (bb.props.stickers || []).length;
+        commit(function () { bb.props.stickers = (bb.props.stickers || []).concat([{ e: t.getAttribute('data-addstk'), x: 25 + (n * 17) % 50, y: 38 + (n * 23) % 40, s: 2.6 }]); }); re(); return;
+      }
+      if (t.hasAttribute('data-stkdel')) { var di = +t.getAttribute('data-stkdel'); commit(function () { bb.props.stickers.splice(di, 1); if (!bb.props.stickers.length) delete bb.props.stickers; }); re(); return; }
+      if (t.hasAttribute('data-phrase')) { var ph = S.phrasesFor(ctx.kind)[+t.getAttribute('data-phrase')]; commit(function () { bb.props.body = ph; }); toast('Phrase posée : touchez-la sur la carte pour l’écrire à votre façon.'); return; }
       if (t.hasAttribute('data-bg')) {
         var v = t.getAttribute('data-bg');
-        commit(function () { bb.style = bb.style || {}; if (v === 'custom') bb.style.bg = U.isHex(bb.style.bg) ? bb.style.bg : '#c2185b'; else if (v) bb.style.bg = v; else delete bb.style.bg; });
+        commit(function () {
+          bb.style = bb.style || {};
+          if (v === 'custom') bb.style.bg = U.isHex(bb.style.bg) ? bb.style.bg : '#c2185b'; else if (v) bb.style.bg = v; else delete bb.style.bg;
+          // a scene to start with: the card's own (its design's), else the garden
+          if (v === 'scene' && !(bb.style.scene && S.SCENE[bb.style.scene])) bb.style.scene = (doc.theme && doc.theme.scene && S.SCENE[doc.theme.scene] && !(S.SCENE[doc.theme.scene].premium && ctx.pro === false)) ? doc.theme.scene : 'garden';
+        });
         re(); if (v === 'photo' && !(bb.style && bb.style.bgPhoto)) openPhoto(id, 'style.bgPhoto'); return;
       }
+      if (t.hasAttribute('data-scene')) {
+        if (t.hasAttribute('data-locked')) { toast('Ce fond animé fait partie de Marakaj Pro.'); return; }
+        var sc = t.getAttribute('data-scene');
+        commit(function () { bb.style = bb.style || {}; bb.style.bg = 'scene'; bb.style.scene = sc; });
+        re(); return;
+      }
+      if (t.hasAttribute('data-veil')) { var vv = t.getAttribute('data-veil'); commit(function () { bb.style = bb.style || {}; if (vv) bb.style.veil = vv; else delete bb.style.veil; }); re(); return; }
       ['al:align', 'pad:pad', 'size:size', 'sep:sep'].forEach(function (x) {
         var a = x.split(':');
         if (t.hasAttribute('data-' + a[0])) { var v2 = t.getAttribute('data-' + a[0]); commit(function () { bb.style = bb.style || {}; if (v2) bb.style[a[1]] = v2; else delete bb.style[a[1]]; }); re(); }
@@ -594,7 +690,17 @@
         return;
       }
       if (t.hasAttribute('data-bool')) { commit(function () { bb.props[t.getAttribute('data-bool')] = t.checked; }); return; }
+      if (t.hasAttribute('data-stksize')) { var si = +t.getAttribute('data-stksize'); commit(function () { bb.props.stickers[si].s = (+t.value) / 10; }); return; }
       if (t.hasAttribute('data-icon')) { commit(function () { bb.props[LISTS[bb.type][0]][+t.getAttribute('data-icon')].icon = t.value; }); return; }
+      if (t.hasAttribute('data-q')) {
+        var qi = +t.getAttribute('data-q'), qv = t.value.trim().slice(0, 140);
+        commit(function () {
+          var qs = (bb.props.questions || []).slice(0, 3); while (qs.length < 3) qs.push(null);
+          qs[qi] = qv ? { q: qv } : null;
+          qs = qs.filter(Boolean); if (qs.length) bb.props.questions = qs; else delete bb.props.questions;
+        });
+        return;
+      }
       if (t.hasAttribute('data-ihref')) {
         var hv = link(t.value);
         if (hv === null) { toast('Ce lien ne peut pas servir : il commence par https://'); return; }
@@ -619,6 +725,12 @@
     if (m) { b.props.photos = b.props.photos || []; b.props.photos[+m[1]] = v; return; }
     setPath(b.props, path, v);
   }
+  // the business's pictures (173: event_library), asked once per opening of Studio and after an upload
+  var libP = null;
+  function library() {
+    if (!libP) libP = S.api(ctx, 'event_library', { p_slug: ctx.slug, p_edit: ctx.edit }).then(function (l) { return Array.isArray(l) ? l : []; }, function () { libP = null; return []; });
+    return libP;
+  }
   function openPhoto(id, path) {
     var b = blockById(id); if (!b) return;
     photoTarget = { id: id, path: path };
@@ -629,6 +741,8 @@
       '<p class="ed-lab">Glissez sur la photo pour choisir ce qui reste au centre.</p><label class="ed-field">Zoom<input class="ed-range" type="range" min="100" max="250" id="edZoom" value="' + Math.round(((ph && ph.zoom) || 1) * 100) + '"></label>' +
       '<p class="ed-lab">Filtre</p>' + chips('flt', [['', 'Aucun'], ['nb', 'Noir et blanc'], ['sepia', 'Sépia'], ['chaud', 'Chaud'], ['doux', 'Doux'], ['vif', 'Vif']], (ph && ph.filter) || '')
       : '<p class="ed-lab">Choisir une photo</p><div class="ed-row"><button type="button" class="ed-chip" data-up>Depuis le téléphone</button></div>') +
+      // « Mes photos » (173): every picture of the business's cards, filled in once the server answers
+      '<div id="edLib" hidden><p class="ed-lab">Mes photos</p><div class="ed-stock ed-lib"></div></div>' +
       '<p class="ed-lab">' + (src ? 'Ou une photo de la banque Marakaj' : 'La banque Marakaj') + '</p><div class="ed-stock">' + S.STOCK.map(function (s) { return '<button type="button" data-stock="' + s + '" style="background-image:url(\'/cartes/img/' + s + '.jpg\')" aria-label="' + s + '"></button>'; }).join('') + '</div>';
     openSheet('Photo', h, function (box) {
       box.addEventListener('click', function (e) {
@@ -637,7 +751,15 @@
         if (t.hasAttribute('data-up')) { document.getElementById('edFile').click(); return; }
         if (t.hasAttribute('data-rmph')) { commit(function () { setPhoto(bb, path, null); }); closeSheet(); return; }
         if (t.hasAttribute('data-stock')) { commit(function () { setPhoto(bb, path, { stock: t.getAttribute('data-stock'), pos: [50, 50] }); }); openPhoto(id, path); return; }
+        if (t.hasAttribute('data-libkey')) { commit(function () { setPhoto(bb, path, { key: t.getAttribute('data-libkey'), pos: [50, 50] }); }); openPhoto(id, path); return; }
         if (t.hasAttribute('data-flt')) { var v = t.getAttribute('data-flt'); commit(function () { var p2 = photoAt(bb, path); if (v) p2.filter = v; else delete p2.filter; }); openPhoto(id, path); }
+      });
+      library().then(function (l) {
+        var lib = box.querySelector('#edLib'); if (!lib || !l.length) return;
+        lib.querySelector('.ed-lib').innerHTML = l.map(function (x) {
+          return '<button type="button" data-libkey="' + esc(x.key) + '" style="background-image:url(\'' + esc(S.picSrc({ key: x.key }, ctx, 300)) + '\')" aria-label="' + esc(x.mine ? 'Photo de cette carte' : 'Photo de « ' + (x.title || '') + ' »') + '"></button>';
+        }).join('');
+        lib.hidden = false;
       });
       var crop = box.querySelector('#edCrop');
       if (crop) {
@@ -668,7 +790,7 @@
         .then(function (r) { return r.json().then(function (j) { if (!r.ok || !j || !j.key) throw new Error(j && j.error ? j.error : 'La photo n’est pas passée. Réessayez.'); return j; }, function () { throw new Error('La photo n’est pas passée. Réessayez.'); }); })
         .then(function (j) {
           var b1 = blockById(tg.id), p1 = b1 && photoAt(b1, tg.path);
-          if (p1 && p1.local === local) { delete p1.local; p1.key = j.key; changed(); draw(); }
+          libP = null; if (p1 && p1.local === local) { delete p1.local; p1.key = j.key; changed(); draw(); }
           toast('Photo ajoutée. Touchez-la pour la recadrer.');
         }, function (err) {
           var b1 = blockById(tg.id), p1 = b1 && photoAt(b1, tg.path);
@@ -699,7 +821,13 @@
       (th.motif && th.motif.id ? '<label class="ed-field">Intensité<input class="ed-range" type="range" min="4" max="40" data-mo value="' + Math.round((th.motif.opacity != null ? th.motif.opacity : 0.12) * 100) + '"></label><label class="ed-check"><input type="checkbox" data-moall' + (th.motif.all ? ' checked' : '') + '>Sur toute la carte</label>' : '') +
       '<p class="ed-lab">Mouvement</p>' + chips('motion', [['aucune', 'Aucun'], ['douce', 'Doux'], ['vivante', 'Vivant']], th.motion || 'douce') +
       '<p class="ed-lab">Coins</p>' + chips('corners', [['droit', 'Droits'], ['doux', 'Doux'], ['rond', 'Ronds']], th.corners || 'doux') +
-      '<p class="ed-lab">Repartir d’un modèle</p><div class="ed-row">' + S.DESIGNS.map(function (d) { return '<button type="button" class="ed-chip" data-design="' + d.id + '">' + esc(d.name) + '</button>'; }).join('') + '</div>';
+      // the designs (173): the classic ones, the animated ones, the Premium ones (locked off Pro)
+      [['Repartir d’un modèle', function (d) { return !d.animated; }], ['Modèles animés', function (d) { return d.animated && !d.premium; }], ['Modèles animés Premium', function (d) { return d.premium; }]].map(function (g) {
+        return '<p class="ed-lab">' + g[0] + '</p><div class="ed-row">' + S.DESIGNS.filter(g[1]).map(function (d) {
+          var lock = d.premium && ctx.pro === false;
+          return '<button type="button" class="ed-chip' + (lock ? ' ed-locked' : '') + '" data-design="' + d.id + '"' + (lock ? ' data-locked' : '') + (d.what ? ' title="' + esc(d.what) + '"' : '') + '>' + esc(d.name) + (lock ? ' · 🔒 Pro' : '') + '</button>';
+        }).join('') + '</div>';
+      }).join('');
     openSheet('Thème', h, function (box) {
       box.addEventListener('click', function (e) {
         var t = e.target.closest('button'); if (!t) return;
@@ -711,7 +839,8 @@
         if (t.hasAttribute('data-corners')) { commit(function () { th.corners = t.getAttribute('data-corners'); }); openTheme(); return; }
         if (t.hasAttribute('data-fromphoto')) { fromPhoto(); return; }
         if (t.hasAttribute('data-design')) {
-          if (!confirm('Repartir du modèle « ' + t.textContent + ' » ? Vos textes et vos photos de ce modèle remplacent la carte (« Annuler » la remet).')) return;
+          if (t.hasAttribute('data-locked')) { toast('Modèle Premium : passez à Marakaj Pro pour l’utiliser.'); return; }
+          if (!confirm('Repartir du modèle « ' + (S.design(t.getAttribute('data-design')) || {}).name + ' » ? Vos textes et vos photos de ce modèle remplacent la carte (« Annuler » la remet).')) return;
           var nd = S.starter(t.getAttribute('data-design'), ctx);
           commit(function () { doc = nd; }); closeSheet(); toast('Modèle appliqué. « Annuler » remet votre carte.');
         }
@@ -773,16 +902,79 @@
     });
   }
 
+  // the writing assistant (173): /api/assistant, the card's edit token as the key
+  var ASSIST = { text: 'body', story: 'body', quote: 'text', rsvp: 'lead', footer: 'text' };
+  function assist(bb, what, btn) {
+    if (ctx.pro === false) { toast('L’assistant d’écriture fait partie de Marakaj Pro.'); return; }
+    var key = ASSIST[bb.type], before = S.plainText((bb.props || {})[key] || '');
+    if (what !== 'ecrire' && !before) { toast('Écrivez d’abord un texte : l’assistant le reprendra.'); return; }
+    var f = S.facts(ctx); btn.disabled = true; var label = btn.textContent; btn.textContent = 'L’assistant écrit…';
+    fetch('/api/assistant', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+      slug: ctx.slug, edit: ctx.edit, kind: ctx.kind, title: ctx.title, place: ctx.place, date: f.has ? f.long + (f.time ? ', ' + f.time : '') : '', block: bb.type, what: what, text: before
+    }) }).then(function (r) { return r.json().then(function (j) { if (!r.ok || !j.text) throw new Error((j && j.error) || 'L’assistant ne répond pas. Réessayez.'); return j; }); })
+      .then(function (j) {
+        var b2 = blockById(bb.id); if (!b2) return;
+        commit(function () { b2.props[key] = j.text; });
+        toast('Texte écrit. « Annuler » remet le vôtre.' + (j.left != null && j.left < 6 ? ' (' + j.left + ' encore aujourd’hui)' : ''));
+      }, function (err) { toast(err.message || 'Pas de réseau : réessayez.'); })
+      .then(function () { if (btn.isConnected) { btn.disabled = false; btn.textContent = label; } });
+  }
+
+  // the poster (173): drawn from the card, downloaded or shared as a picture
+  function makePoster(shape) {
+    toast('L’affiche se prépare…');
+    S.poster(doc, ctx, canvas, shape).then(function (blob) {
+      if (!blob) { toast('L’affiche ne s’est pas faite. Réessayez.'); return; }
+      var name = 'affiche-' + (ctx.slug || 'carte') + (shape === 'carre' ? '-carree' : '') + '.jpg';
+      var file = null; try { file = new File([blob], name, { type: 'image/jpeg' }); } catch (e) { file = null; }
+      if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: ctx.title || 'Invitation' }).catch(function () {});
+        return;
+      }
+      var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+      document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+      toast('Affiche enregistrée dans vos téléchargements.');
+    }, function () { toast('L’affiche ne s’est pas faite. Réessayez.'); });
+  }
+  S._makePoster = makePoster;
+  // « Vérifier ma carte » (173): what a guest would trip on, each line opening its block
+  function openCheck() {
+    var l = S.checkCard(doc, ctx);
+    var h = l.length ? '<div class="ed-list ed-checks">' + l.map(function (x) {
+      return '<div class="ed-list-it ed-check-' + x.level + '"><span>' + (x.level === 'warn' ? '⚠️ ' : '💡 ') + esc(x.text) + '</span>' + (x.id ? '<button type="button" data-goto="' + esc(x.id) + '" style="width:auto;padding:0 10px">Voir</button>' : '') + '</div>';
+    }).join('') + '</div>' : '<p class="ed-lab">✅ Tout est prêt : votre carte peut partir.</p>';
+    openSheet('Vérifier ma carte', h, function (box) {
+      box.addEventListener('click', function (e) {
+        var t = e.target.closest('[data-goto]'); if (!t) return;
+        var id = t.getAttribute('data-goto'); closeSheet(); select(id, true); openSettings(id);
+      });
+    });
+  }
+  S._openCheck = openCheck;
+
   // more: versions, sharing, the classic card
   function openMore() {
     var link = location.origin + '/e/' + encodeURIComponent(ctx.slug || '');
     var h = '<p class="ed-lab">Partager</p><div class="ed-row"><button type="button" class="ed-chip" data-share="copy">Copier le lien</button><a class="ed-chip" style="display:inline-flex;align-items:center;text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent((ctx.title || 'Invitation') + ' : ' + link) + '">WhatsApp</a></div>' +
+      // the helpers (173): the poster, the check, the print
+      '<p class="ed-lab">Une affiche à partager</p><div class="ed-row"><button type="button" class="ed-chip" data-poster="story">Statut WhatsApp (vertical)</button><button type="button" class="ed-chip" data-poster="carre">Publication (carrée)</button></div>' +
+      '<p class="ed-lab">Avant d’envoyer</p><div class="ed-row"><button type="button" class="ed-chip" data-check>Vérifier ma carte</button><button type="button" class="ed-chip" data-print>Imprimer · PDF' + (ctx.pro === false ? ' · 🔒 Pro' : '') + '</button></div>' +
+      (window.matchMedia && window.matchMedia('(pointer: fine)').matches ? '<p class="ed-help">Au clavier : Ctrl+S enregistre, Ctrl+Z annule, Suppr retire le bloc choisi, Alt+↑ / Alt+↓ le déplace, Alt+D le duplique, Échap ferme.</p>' : '') +
       '<p class="ed-lab">Versions enregistrées</p><div class="ed-list ed-vers" id="edVers"><p class="ed-lab">Chargement…</p></div>' +
       '<p class="ed-lab">La carte classique</p><p style="margin:0 0 10px;font:400 13px/1.45 var(--ed-font);color:var(--ed-mute)">Votre carte d’avant Studio est gardée. Y revenir remet l’ancienne carte pour vos invités ; vos versions Studio restent ici.</p>' +
       '<div class="ed-row"><button type="button" class="ed-chip danger" data-classic>Revenir à la carte classique</button></div>';
     openSheet('Plus', h, function (box) {
       box.addEventListener('click', function (e) {
         var t = e.target.closest('button'); if (!t) return;
+        if (t.hasAttribute('data-poster')) { makePoster(t.getAttribute('data-poster')); return; }
+        if (t.hasAttribute('data-check')) { openCheck(); return; }
+        if (t.hasAttribute('data-print')) {
+          if (ctx.pro === false) { toast('L’impression de la carte fait partie de Marakaj Pro.'); return; }
+          closeSheet(); sel = null; draw();
+          document.body.classList.add('ed-printing');
+          setTimeout(function () { window.print(); document.body.classList.remove('ed-printing'); }, 400);
+          return;
+        }
         if (t.getAttribute('data-share') === 'copy') { (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject()).then(function () { toast('Lien copié.'); }, function () { toast(link); }); return; }
         if (t.hasAttribute('data-restore')) {
           if (!confirm('Remettre cette version ? Elle devient la carte de vos invités.')) return;
@@ -855,7 +1047,15 @@
   document.addEventListener('keydown', function (e) {
     if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z' && !(e.target.closest && e.target.closest('[data-f]'))) { e.preventDefault(); document.getElementById('edUndo').click(); }
     if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'Z'))) { e.preventDefault(); document.getElementById('edRedo').click(); }
-    if (e.key === 'Escape') { closeSheet(); }
+    // a computer's keys (173): save, print, and the chosen block moved, copied or taken away
+    var typing = e.target.closest && e.target.closest('[data-f], input, textarea, select, [contenteditable="true"]');
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); document.getElementById('edSave').click(); return; }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'p') { e.preventDefault(); if (ctx.pro === false) toast('L’impression de la carte fait partie de Marakaj Pro.'); else { closeSheet(); sel = null; draw(); setTimeout(function () { window.print(); }, 300); } return; }
+    if (e.key === 'Escape') { if (sheet.classList.contains('open')) closeSheet(); else if (sel && !typing) { var bc = blockBar.querySelector('[data-bb="close"]'); if (bc) bc.click(); } return; }
+    if (!sel || typing || preview || e.ctrlKey || e.metaKey) return;
+    var key = { Delete: 'del', Backspace: 'del', ArrowUp: e.altKey ? 'up' : null, ArrowDown: e.altKey ? 'down' : null, d: e.altKey ? 'dup' : null }[e.key];
+    var btn = key && blockBar.querySelector('[data-bb="' + key + '"]');
+    if (btn && !btn.disabled) { e.preventDefault(); btn.click(); }
   });
 
   // ------------------------------------------------------------- opening

@@ -531,6 +531,9 @@ class _EventScreenState extends State<EventScreen> {
   EventSummary? _event;
   List<EventRsvp> _rsvps = const [];
 
+  /// The card's « Tableau de bord » (173); null before 173.
+  EventStats? _stats;
+
   /// The guests' album (155): their pictures, newest first.
   List<EventPicture> _pictures = const [];
 
@@ -565,10 +568,21 @@ class _EventScreenState extends State<EventScreen> {
         }
       }
       final sell = e == null ? false : await widget.events.tickets.allowed(e.orgId);
+      // The « Tableau de bord » (173), read apart: a database before 173
+      // has none, and the card's page must still open.
+      EventStats? st;
+      if (e != null) {
+        try {
+          st = await widget.events.stats(e.id);
+        } catch (_) {
+          st = null;
+        }
+      }
       if (!mounted) return;
       setState(() {
         _event = e;
         _rsvps = r;
+        _stats = st;
         _pictures = p;
         _canSell = sell;
         _loading = false;
@@ -820,6 +834,10 @@ class _EventScreenState extends State<EventScreen> {
                       ]),
                     ),
                   ),
+                  if (_stats != null) ...[
+                    const SizedBox(height: 12),
+                    EventDashboard(stats: _stats!, published: e.published),
+                  ],
                   const SizedBox(height: 12),
                   KajCard(
                     child: Column(children: [
@@ -1043,7 +1061,11 @@ class RsvpTile extends StatelessWidget {
       },
       if (r.message != null && r.message!.isNotEmpty) r.message!,
       for (final x in r.extra.entries)
-        if ('${x.value}'.isNotEmpty) '${x.key == 'whatsapp' ? 'WhatsApp' : x.key} : ${x.value}',
+        if (x.key != 'answers' && '${x.value}'.isNotEmpty) '${x.key == 'whatsapp' ? 'WhatsApp' : x.key} : ${x.value}',
+      // the answers to the card's questions (173), in their order
+      if (r.extra['answers'] is List)
+        for (final (i, a) in (r.extra['answers'] as List).indexed)
+          if ('${a ?? ''}'.trim().isNotEmpty) '${context.tr('Réponse {n}', {'n': i + 1})} : $a',
       if (r.arrivedAt != null) context.tr('Arrivé à {time}', {'time': DateFormat('HH:mm').format(r.arrivedAt!)}),
     ];
     final arrival = r.answer == 'oui' && onArrived != null;
@@ -1257,6 +1279,77 @@ class _GuestsScreenState extends State<GuestsScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(context.tr('Invités')), actions: const [bellRoom]),
       body: body,
+    );
+  }
+}
+
+/// The card's « Tableau de bord » (173): how many people opened it (one a
+/// day each, robots left out), shared it from the card, and answered — the
+/// last fourteen days drawn as bars.
+class EventDashboard extends StatelessWidget {
+  const EventDashboard({super.key, required this.stats, required this.published});
+
+  final EventStats stats;
+  final bool published;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final today = DateTime.now();
+    final start = DateTime(today.year, today.month, today.day).subtract(const Duration(days: 13));
+    final byDay = {for (final d in stats.days) DateTime(d.day.year, d.day.month, d.day.day): d.views};
+    final bars = [for (var i = 0; i < 14; i++) byDay[start.add(Duration(days: i))] ?? 0];
+    final top = bars.fold<int>(1, (a, b) => b > a ? b : a);
+    Widget figure(String key, int n, String label) => Expanded(
+          child: Column(children: [
+            Text('$n', key: Key(key), style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+            Text(label, textAlign: TextAlign.center, style: theme.textTheme.bodySmall),
+          ]),
+        );
+    return KajCard(
+      key: const Key('event-dashboard'),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Text(context.tr('Tableau de bord'), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 12),
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            figure('dash-views', stats.views, context.tr('Ouvertures')),
+            figure('dash-shares', stats.shares, context.tr('Partages')),
+            figure('dash-people', stats.people, context.tr('Personnes attendues')),
+          ]),
+          const SizedBox(height: 14),
+          Semantics(
+            label: context.tr('Ouvertures des quatorze derniers jours'),
+            child: SizedBox(
+              height: 56,
+              child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                for (final v in bars)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: Container(
+                        height: v == 0 ? 3 : 6 + 50 * v / top,
+                        decoration: BoxDecoration(
+                          color: v == 0 ? theme.colorScheme.outlineVariant : theme.colorScheme.primary,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+                    ),
+                  ),
+              ]),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            published
+                ? context.tr('{yes} oui · {no} non · {words} mots. Une personne compte une fois par jour ; les aperçus de liens ne comptent pas.',
+                    {'yes': stats.yes, 'no': stats.no, 'words': stats.words})
+                : context.tr('Les ouvertures se comptent une fois la carte publiée.'),
+            style: theme.textTheme.bodySmall,
+          ),
+        ]),
+      ),
     );
   }
 }
