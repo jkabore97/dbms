@@ -41,6 +41,7 @@
 // never from this file. The publishable key is the one the web app already
 // ships to every browser.
 
+import { assistant } from "./assistant.js";
 import { mapsLink } from "./maps.js";
 import { isLegalPath, legalPage, NO_SELECT_CSS } from "./legal.js";
 import { helpPage, supportContacts } from "./help.js";
@@ -50,14 +51,14 @@ import { downloadPage, isDownloadPath } from "./download.js";
 const SITE = "https://marakaj.com";
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     // The project's answer goes back exactly as it came: none of the
     // site's own headers are added to it.
     if (isProxyPath(url.pathname) && !url.hostname.endsWith(".workers.dev")) {
       return proxySupabase(request, env);
     }
-    return secure(await serve(request, env));
+    return secure(await serve(request, env, ctx));
   },
 };
 
@@ -91,7 +92,7 @@ export function secure(response) {
   return out;
 }
 
-async function serve(request, env) {
+async function serve(request, env, ctx) {
   {
     const url = new URL(request.url);
 
@@ -123,6 +124,11 @@ async function serve(request, env) {
       return downloadPage(request, env);
     }
 
+    // Studio's writing assistant (173, Marakaj Pro; assistant.js).
+    if (url.pathname === "/api/assistant") {
+      return assistant(request, env);
+    }
+
     // A short Google Maps link's position (maps.js).
     if (url.pathname === "/api/maps-link" && request.method === "GET") {
       return mapsLink(request);
@@ -134,7 +140,14 @@ async function serve(request, env) {
     // module to everyone; the server (event_public) decides either way.
     const event = url.pathname.match(/^\/e\/([a-z0-9-]+)\/?$/);
     if (event && request.method === "GET") {
-      return eventPage(request, env, event[1], url.searchParams.get("apercu"), url.searchParams.get("modifier"));
+      return eventPage(request, env, event[1], url.searchParams.get("apercu"), url.searchParams.get("modifier"), ctx);
+    }
+    // A guest shared the card (173): counted for the organiser's « Tableau
+    // de bord » (event_count, published cards only; robots left out).
+    const shared = url.pathname.match(/^\/e\/([a-z0-9-]+)\/partage\/?$/);
+    if (shared && request.method === "POST") {
+      if (!isRobot(request)) await countEvent(env, shared[1], "share");
+      return new Response(null, { status: 204, headers: { "Cache-Control": "no-store" } });
     }
     // /e/<slug>/studio?modifier=<edit token> — the card in Studio (171),
     // the organiser's editor that works like Canva.
@@ -391,7 +404,7 @@ function localParts(iso, tz) {
 // With « modifier » (the edit token, 154) the page is the organiser's
 // editor: the server says « editor », the page shows its bar, saves to
 // the server and uploads its pictures through the uploads Worker.
-export async function eventPage(request, env, slug, preview, edit) {
+export async function eventPage(request, env, slug, preview, edit, ctx) {
   const gone = () => new Response("Cette carte n'est pas ouverte.", {
     status: 404,
     headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
@@ -417,18 +430,58 @@ export async function eventPage(request, env, slug, preview, edit) {
   // editor would change words the guests no longer see. Since 171d (the
   // owner's go) a classic card's organiser is sent to Studio too, before
   // its first save: Studio reads the card as it is, and the guests see
-  // nothing new until « Enregistrer ». An animated card keeps its own editor
-  // until Studio draws its scenes (Phase 2): saved in Studio today, it
-  // would lose its motion. « studio=lire » is Studio reading the card it is
-  // made from (the converter's frame).
+  // nothing new until « Enregistrer ». An animated card goes there too once
+  // Studio draws its living pictures (173: event_public answers « pro »,
+  // so the scenes and their Premium rule are live); before, it keeps its own
+  // editor — saved in Studio it would have lost its motion. « studio=lire »
+  // is Studio reading the card it is made from (the converter's frame).
   const reading = new URL(request.url).searchParams.get("studio") === "lire";
-  if (editor && !reading && (hasDoc(data) || ("doc" in data && !isAnimatedCard(data)))) {
+  if (editor && !reading && (hasDoc(data) || ("doc" in data && (!isAnimatedCard(data) || "pro" in data)))) {
     return new Response(null, {
       status: 302,
       headers: { Location: studioHref(slug, edit, preview), "Cache-Control": "no-store" },
     });
   }
-  return cardPage(request, env, { slug, data, preview, edit: editor ? edit : null, editor, demo: false, classic: reading });
+  const page = await cardPage(request, env, { slug, data, preview, edit: editor ? edit : null, editor, demo: false, classic: reading });
+  // A guest's opening, counted (173): once a day per browser (a cookie for
+  // this card until midnight), never the organiser, Studio's frame or a
+  // robot (WhatsApp's or Facebook's link preview, a crawler).
+  const seen = `mkv_${slug.replace(/-/g, "_").slice(0, 60)}`;
+  if (!editor && !reading && page.status === 200 && data.published === true && !isRobot(request) &&
+      !(request.headers.get("Cookie") || "").split(/;\s*/).some((c) => c.startsWith(`${seen}=`))) {
+    const counted = countEvent(env, slug, "view");
+    if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(counted); else await counted;
+    const headers = new Headers(page.headers);
+    const left = 86400 - (Math.floor(Date.now() / 1000) % 86400);
+    headers.append("Set-Cookie", `${seen}=1; Max-Age=${left}; Path=/e/${slug}; Secure; HttpOnly; SameSite=Lax`);
+    return new Response(page.body, { status: page.status, headers });
+  }
+  return page;
+}
+
+// Link previews and crawlers: not people opening the card.
+const ROBOT = /bot|crawl|spider|slurp|facebookexternalhit|facebookcatalog|whatsapp|telegram|discord|skype|preview|headless|lighthouse|curl|wget|python|okhttp/i;
+function isRobot(request) {
+  const ua = request.headers.get("User-Agent") || "";
+  return !ua || ROBOT.test(ua);
+}
+
+// event_count (173): a POST (it writes); a database without it, nothing.
+async function countEvent(env, slug, what) {
+  if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) return;
+  try {
+    await fetch(`${env.SUPABASE_URL.replace(/\/$/, "")}/rest/v1/rpc/event_count`, {
+      method: "POST",
+      headers: {
+        apikey: env.SUPABASE_PUBLISHABLE_KEY,
+        Authorization: `Bearer ${env.SUPABASE_PUBLISHABLE_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ p_slug: slug, p_what: what }),
+    });
+  } catch (_) {
+    // a count lost is no page lost
+  }
 }
 
 // An animated card (anime_<layout>, or the animated family).
@@ -505,6 +558,8 @@ export async function studioPage(request, env, slug, preview, edit) {
     preview: preview || null,
     editor: true,
     edit,
+    // Premium open to this business (173): true, false, or null before 173
+    pro: data.pro === true ? true : data.pro === false ? false : null,
     uploads: env.UPLOADS_URL ? env.UPLOADS_URL.replace(/\/$/, "") : null,
     api: { url: env.SUPABASE_URL || null, key: env.SUPABASE_PUBLISHABLE_KEY || null },
   };
@@ -841,6 +896,8 @@ async function cardPage(request, env, { slug, data, preview, edit, editor, demo,
     data.org_name ? `Une invitation de ${data.org_name}` : "Une invitation sur Marakaj",
   ].filter(Boolean).join(" · "), 160);
 
+  // The picture a shared link shows (173): the card's own first photo.
+  const image = cardImage(env, studio ? data.doc : null, boot.content);
   const rewritten = new HTMLRewriter()
     .on("title", { element(e) { e.setInnerContent(title); } })
     .on("head", {
@@ -853,6 +910,7 @@ async function cardPage(request, env, { slug, data, preview, edit, editor, demo,
           `<meta property="og:description" content="${escapeHtml(description)}">` +
           `<meta property="og:url" content="${SITE}/${demo ? `modele/${escapeHtml(data.card)}` : `e/${escapeHtml(slug)}`}">` +
           `<meta property="og:type" content="website">` +
+          (image ? `<meta property="og:image" content="${escapeHtml(image)}"><meta name="twitter:card" content="summary_large_image">` : "") +
           `<meta name="robots" content="noindex">` +
           `<script>window.CARTE=${json}</script>`,
           { html: true },
@@ -864,6 +922,41 @@ async function cardPage(request, env, { slug, data, preview, edit, editor, demo,
   headers.set("Cache-Control", demo ? "public, max-age=3600" : "no-store");
   headers.set("Content-Type", "text/html; charset=utf-8");
   return new Response(rewritten.body, { status: 200, headers });
+}
+
+// The picture WhatsApp and the rest show under a shared card's link (173):
+// the cover's photo, else the card's first photo (a document's, 171, or the
+// classic card's p:<key>, 154) — an uploaded picture at 1200 pixels wide, or
+// a photo of the bank. None: the platform's own picture stays.
+export function cardImage(env, doc, content) {
+  const uploads = env.UPLOADS_URL ? env.UPLOADS_URL.replace(/\/$/, "") : null;
+  const of = (ph) => {
+    if (!ph || typeof ph !== "object") return null;
+    if (typeof ph.key === "string" && /^events\/[0-9a-f-]{36}\/[0-9a-f]{32}\.(jpg|png|webp)$/.test(ph.key) && uploads) {
+      return `${uploads}/v1/public/objects/${encodeURIComponent(ph.key)}?w=1200`;
+    }
+    if (typeof ph.stock === "string" && /^[a-z0-9-]{1,40}$/.test(ph.stock)) return `${SITE}/cartes/img/${ph.stock}.jpg`;
+    return null;
+  };
+  if (doc && Array.isArray(doc.blocks)) {
+    const seen = [];
+    const walk = (v, depth) => {
+      if (!v || typeof v !== "object" || depth > 6) return;
+      if (!Array.isArray(v) && (v.key || v.stock)) seen.push(v);
+      for (const x of Array.isArray(v) ? v : Object.values(v)) walk(x, depth + 1);
+    };
+    const cover = doc.blocks.find((b) => b && b.type === "cover" && !b.hidden);
+    if (cover) walk(cover, 0);
+    for (const b of doc.blocks) if (b && !b.hidden && b !== cover) walk(b, 0);
+    for (const ph of seen) { const u = of(ph); if (u) return u; }
+    return null;
+  }
+  if (content && typeof content === "object") {
+    for (const k of ["p:p1", ...Object.keys(content).filter((x) => /^p:/.test(x) && x !== "p:p1")]) {
+      const u = of(content[k]); if (u) return u;
+    }
+  }
+  return null;
 }
 
 // A page of the build, by its file's address. The assets binding answers

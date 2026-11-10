@@ -62,7 +62,15 @@
     'source-sans': ["'Source Sans 3', Helvetica, sans-serif", 'Source+Sans+3:wght@300;400;600'],
     archivo: ["'Archivo', Helvetica, sans-serif", 'Archivo:wght@400;600;800'],
     'nunito-sans': ["'Nunito Sans', Helvetica, sans-serif", 'Nunito+Sans:wght@300;400;600'],
-    'mrs-saint': ["'Mrs Saint Delafield', cursive", 'Mrs+Saint+Delafield']
+    'mrs-saint': ["'Mrs Saint Delafield', cursive", 'Mrs+Saint+Delafield'],
+    // the animated designs' own (172)
+    anton: ["'Anton', Impact, sans-serif", 'Anton'],
+    limelight: ["'Limelight', Georgia, serif", 'Limelight'],
+    poiret: ["'Poiret One', Helvetica, sans-serif", 'Poiret+One'],
+    homemade: ["'Homemade Apple', cursive", 'Homemade+Apple'],
+    julius: ["'Julius Sans One', Helvetica, sans-serif", 'Julius+Sans+One'],
+    shippori: ["'Shippori Mincho', Georgia, serif", 'Shippori+Mincho:wght@400;600'],
+    'petit-formal': ["'Petit Formal Script', cursive", 'Petit+Formal+Script']
   };
   var FONT_NAMES = {
     cormorant: 'Cormorant', playfair: 'Playfair', bodoni: 'Bodoni', cinzel: 'Cinzel', italiana: 'Italiana', fraunces: 'Fraunces', yeseva: 'Yeseva',
@@ -70,7 +78,8 @@
     lora: 'Lora', 'eb-garamond': 'Garamond', raleway: 'Raleway', mulish: 'Mulish', nunito: 'Nunito', karla: 'Karla', 'work-sans': 'Work Sans', crimson: 'Crimson',
     josefin: 'Josefin', 'great-vibes': 'Great Vibes', pinyon: 'Pinyon', parisienne: 'Parisienne', allura: 'Allura', 'alex-brush': 'Alex Brush', dancing: 'Dancing',
     caveat: 'Caveat', sacramento: 'Sacramento', tangerine: 'Tangerine', syne: 'Syne', 'dm-sans': 'DM Sans', 'source-sans': 'Source Sans',
-    archivo: 'Archivo', 'nunito-sans': 'Nunito Sans', 'mrs-saint': 'Mrs Saint Delafield'
+    archivo: 'Archivo', 'nunito-sans': 'Nunito Sans', 'mrs-saint': 'Mrs Saint Delafield',
+    anton: 'Anton', limelight: 'Limelight', poiret: 'Poiret', homemade: 'Homemade Apple', julius: 'Julius', shippori: 'Shippori', 'petit-formal': 'Petit Formal'
   };
   var PAIRS = [
     { id: 'classique', name: 'Classique', display: 'cormorant', body: 'montserrat', script: 'pinyon' },
@@ -283,7 +292,20 @@
     name: 'Couverture', icon: 'heart', group: 'Essentiels', desc: 'Les noms, la date, le lieu et une belle photo.',
     variants: [['plein', 'Photo plein écran'], ['cadre', 'Photo encadrée'], ['arche', 'Photo en arche'], ['typo', 'Sans photo']],
     make: function (ctx) { return { kicker: 'Vous êtes invités', names: ctx.title || 'Vos prénoms', sub: '', photo: { stock: 'wed-couple-1', pos: [50, 40] }, showDate: true, showPlace: true }; },
-    draw: function (b, ctx, f) {
+    draw: function (b, ctx, f) { return coverBase(b, ctx, f) + stickers(b, ctx); }
+  };
+  // the stickers on the cover (173): a few symbols the organiser places, in % of the cover
+  var STICKERS = ['💍', '❤️', '💐', '🌸', '🌺', '🌿', '✨', '⭐', '🕊️', '🎉', '🎈', '🎂', '🥂', '🎶', '👑', '🎓', '🙏', '🕯️', '🦋', '☀️'];
+  S.STICKERS = STICKERS;
+  function stickers(b, ctx) {
+    var l = ((b.props || {}).stickers || []).filter(function (x) { return x && STICKERS.indexOf(x.e) >= 0; }).slice(0, 12);
+    if (!l.length) return '';
+    return '<div class="st-stks" aria-hidden="true">' + l.map(function (x, i) {
+      var cx = Math.max(0, Math.min(100, +x.x || 50)), cy = Math.max(0, Math.min(100, +x.y || 50)), sz = Math.max(0.6, Math.min(4, +x.s || 2.6));
+      return '<span class="st-stk" data-stk="' + i + '" style="left:' + cx + '%;top:' + cy + '%;font-size:' + sz + 'em;animation-delay:-' + (i * 0.7) + 's">' + x.e + '</span>';
+    }).join('') + '</div>';
+  }
+  function coverBase(b, ctx, f) {
       var p = b.props || {}, v = b.variant || 'plein', date = p.showDate === false ? '' : (p.dateText || (f.has ? f.long + (f.time ? ' · ' + f.time : '') : '')),
         place = p.showPlace === false ? '' : (p.placeText || f.place);
       var words = F(b, ctx, 'kicker', 'p', 'st-kicker', 'Une ligne au-dessus des noms') + F(b, ctx, 'names', 'h1', 'st-names', 'Vos prénoms') +
@@ -296,8 +318,7 @@
         return pic(p.photo, ctx, 'st-cover-ph', 'photo', 1600, 'Ajouter la photo de couverture') + '<div class="st-cover-veil"></div><div class="st-cover-in">' + words + '</div>' + (ctx.editing ? '' : '<span class="st-cue" aria-hidden="true"></span>');
       }
       return pic(p.photo, ctx, v === 'arche' ? 'st-arch' : 'st-framed', 'photo', 1200, 'Ajouter la photo de couverture') + '<div class="st-cover-in">' + words + '</div>';
-    }
-  };
+  }
   B.text = {
     name: 'Texte', icon: 'info', group: 'Essentiels', desc: 'Un titre, un texte, une signature.',
     variants: [['simple', 'Simple'], ['carte', 'Dans une carte'], ['encadre', 'Encadré'], ['lettre', 'Lettre']],
@@ -409,6 +430,10 @@
     make: function () { return { text: 'L\'amour est patient, l\'amour est bon.', author: '1 Corinthiens 13, 4' }; },
     draw: function (b, ctx) { return '<blockquote class="st-quote">' + F(b, ctx, 'text', 'p', 'st-quote-t', 'La citation', true) + F(b, ctx, 'author', 'cite', 'st-quote-a', 'Auteur') + '</blockquote>'; }
   };
+  // the answers' closing day (173): « YYYY-MM-DD », closed the day after (on the guest's clock; the server holds it too)
+  function frDay(d) { var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d || ''); return m ? +m[3] + ' ' + ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'][+m[2] - 1] + ' ' + m[1] : ''; }
+  function rsvpClosed(p) { if (!p || !/^\d{4}-\d{2}-\d{2}$/.test(p.closes || '')) return false; var n = new Date(), t = n.getFullYear() + '-' + ('0' + (n.getMonth() + 1)).slice(-2) + '-' + ('0' + n.getDate()).slice(-2); return t > p.closes; }
+  S.frDay = frDay; S.rsvpClosed = rsvpClosed;
   B.rsvp = {
     name: 'Réponse des invités', icon: 'heart', group: 'Les invités', desc: 'Le formulaire « Je viens / Je ne peux pas ».',
     variants: [['carte', 'Dans une carte'], ['simple', 'Simple']],
@@ -417,10 +442,13 @@
       var p = b.props || {}, form;
       if (ctx.tickets && !sample(ctx)) form = '<p class="st-lead">Cet événement se fait sur billet. Réservez vos places, payez l\'organisateur, recevez vos billets avec leur QR code.</p><a class="st-btn" href="/e/' + encodeURIComponent(ctx.slug || '') + '/billets' + (ctx.preview ? '?apercu=' + encodeURIComponent(ctx.preview) : '') + '">Réserver mes billets</a>';
       else if (ctx.rsvp_on === false && !ctx.editing) form = '<p class="st-lead st-closed">Les réponses sont fermées pour cet événement.</p>';
+      else if (rsvpClosed(p) && !ctx.editing) form = '<p class="st-lead st-closed">Les réponses sont closes depuis le ' + esc(frDay(p.closes)) + '. Merci !</p>';
       else form = '<form class="st-rsvp" novalidate><label>Votre nom<input name="name" autocomplete="name" maxlength="80"></label><label>Nombre de personnes<select name="n">' +
         [1, 2, 3, 4, 5, 6].map(function (n) { return '<option>' + n + '</option>'; }).join('') + '</select></label>' +
         (p.askPhone !== false && !sample(ctx) ? '<label>WhatsApp, si vous voulez un rappel la veille<input name="wa" inputmode="tel" autocomplete="tel" placeholder="+226 70 00 00 00" maxlength="24"></label>' : '') +
         '<div class="st-choice"><button type="button" data-a="oui">' + esc(p.yes || 'Je viens') + '</button><button type="button" data-a="non">' + esc(p.no || 'Je ne peux pas') + '</button></div>' +
+        (p.questions || []).slice(0, 3).map(function (q, i) { return q && q.q ? '<label>' + esc(q.q) + '<input name="q' + i + '" maxlength="300"></label>' : ''; }).join('') +
+        (p.closes && /^\d{4}-\d{2}-\d{2}$/.test(p.closes) ? '<p class="st-lead st-by">Merci de répondre avant le ' + esc(frDay(p.closes)) + '.</p>' : '') +
         '<label>Un mot (facultatif)<textarea name="msg" rows="2" maxlength="500"></textarea></label><button type="submit" class="st-btn">Envoyer ma réponse</button><p class="st-done" role="status"></p><div class="st-pass" hidden></div></form>';
       return '<div class="st-box">' + F(b, ctx, 'title', 'h2', 'st-h2', 'Titre') + F(b, ctx, 'lead', 'p', 'st-lead', 'Un mot', true) + form + '</div>';
     }
@@ -467,13 +495,26 @@
   };
   function ytId(u) { var m = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/.exec(String(u || '')); return m ? m[1] : ''; }
   S.ytId = ytId;
+  // the music library (173): twelve pieces free of rights (CC0), served by the site
+  var TRACKS = [['village-heureux', 'Village heureux', 'Joyeuse, rythmes d’Afrique de l’Ouest'], ['ouest-afrique', 'À l’ouest de l’Afrique', 'Douce, guitare et percussions'],
+    ['soleil-rasta', 'Soleil rasta', 'Reggae ensoleillé'], ['kalimba', 'Kalimba', 'Calme, pour un baptême ou un hommage'], ['sagesse-soleil', 'Sagesse au soleil', 'Paisible'],
+    ['ukulele', 'Ukulélé', 'Légère et souriante'], ['ukulele-siffle', 'Ukulélé sifflé', 'Joyeuse, pour un anniversaire'], ['tranche-de-vie', 'Tranche de vie', 'Tendre'],
+    ['cafe-doux', 'Café doux', 'Feutrée, pour une soirée'], ['quelque-part', 'Quelque part', 'Rêveuse, pour un mariage'], ['cafe-matin', 'Café du matin', 'Détendue'],
+    ['rue-soleil', 'Rue au soleil', 'Entraînante']].map(function (x) { return { id: x[0], name: x[1], mood: x[2] }; });
+  S.TRACKS = TRACKS;
+  function trackSrc(p) {
+    if (p && /^https:\/\//.test(p.url || '')) return p.url;   // the organiser's own link first
+    if (p && p.track && TRACKS.some(function (x) { return x.id === p.track; })) return '/cartes/musique/' + p.track + '.mp3';
+    return '';
+  }
+  S.trackSrc = trackSrc;
   B.music = {
     name: 'Musique', icon: 'music', group: 'Photos', desc: 'Une musique que l\'invité lance d\'un toucher.',
     variants: [['bouton', 'Bouton']],
-    make: function () { return { title: 'Notre chanson', url: '' }; },
+    make: function () { return { title: 'Notre chanson', track: 'quelque-part' }; },
     draw: function (b, ctx) {
-      var u = (b.props && b.props.url) || '';
-      return F(b, ctx, 'title', 'p', 'st-kicker', 'Titre') + (/^https:\/\//.test(u) ? '<button type="button" class="st-btn" data-music="' + esc(u) + '">' + icon('play') + '<span>Écouter</span></button>' : (ctx.editing ? '<p class="st-note">Collez le lien d\'un fichier audio (https://…) dans les réglages.</p>' : ''));
+      var u = trackSrc(b.props || {});
+      return F(b, ctx, 'title', 'p', 'st-kicker', 'Titre') + (u ? '<button type="button" class="st-btn" data-music="' + esc(u) + '">' + icon('play') + '<span>Écouter</span></button>' : (ctx.editing ? '<p class="st-note">Choisissez une musique dans les réglages du bloc.</p>' : ''));
     }
   };
   function ornament(kind, flip) {
@@ -505,7 +546,10 @@
     variants: [['simple', 'Simple']],
     make: function (ctx) { return { text: ctx.title || '' }; },
     draw: function (b, ctx, f) {
-      return F(b, ctx, 'text', 'p', 'st-foot-t', 'Un dernier mot') + (f.has ? '<p class="st-foot-d">' + esc(f.short) + '</p>' : '') + '<p class="st-brand">Carte créée avec Marakaj</p>';
+      // « Partager la carte » (173): the guest passes it on, the organiser sees it counted
+      return F(b, ctx, 'text', 'p', 'st-foot-t', 'Un dernier mot') + (f.has ? '<p class="st-foot-d">' + esc(f.short) + '</p>' : '') +
+        (b.props && b.props.share === false ? '' : '<button type="button" class="st-btn st-btn-ghost" data-share>Partager la carte</button>') +
+        '<p class="st-brand">Carte créée avec Marakaj</p>';
     }
   };
   B.free = {
@@ -574,12 +618,39 @@
     }
   };
 
+  // ------------------------------------------------------------ the scenes
+  // The animated cards' living pictures (172), drawn behind a block by
+  // /evenements/scenes.js, loaded only when a card has one. « tone » says
+  // whether the picture is light or dark: the veil and the words follow it.
+  // The « lx- » ones are painted by the phone's graphics chip: Marakaj Pro.
+  var SCENES = [
+    ['silk', 'Soie', 'light'], ['garden', 'Jardin fleuri', 'light'], ['orchard', 'Verger en fleurs', 'light'], ['sky', 'Ciel du soir', 'light'],
+    ['savanna', 'Savane sous la lune', 'light'], ['loom', 'Métier à tisser', 'dark'], ['weave', 'Bandes tissées', 'dark'], ['blobs', 'Formes douces', 'light'],
+    ['velvet', 'Velours', 'dark'], ['party', 'Confettis', 'light'], ['sahel', 'Sahel', 'dark'], ['ocean', 'Océan', 'dark'], ['lotus', 'Étang aux lotus', 'dark'],
+    ['forest', 'Forêt', 'dark'], ['sakura', 'Cerisiers', 'light'], ['sunflowers', 'Tournesols', 'light'], ['lanterns', 'Lanternes', 'dark'],
+    ['roses', 'Roseraie', 'light'], ['desert', 'Désert', 'dark'], ['champagne', 'Champagne', 'light'], ['butterflies', 'Papillons', 'light'],
+    ['globe', 'Village sous la neige', 'light'], ['snowfall', 'Neige', 'light'], ['fireworks', 'Feux d’artifice', 'dark'], ['aurora', 'Aurore boréale', 'dark'],
+    ['lx-savane', 'Savane d’or', 'dark'], ['lx-lotus', 'Étang de lotus', 'dark'], ['lx-foret', 'Forêt enchantée', 'dark'], ['lx-cerisiers', 'Paravent de cerisiers', 'light'],
+    ['lx-tournesols', 'Champ d’or', 'dark'], ['lx-lanternes', 'Nuit des lanternes', 'dark'], ['lx-roseraie', 'Velours & roses', 'dark'], ['lx-dunes', 'Caravane des dunes', 'dark'],
+    ['lx-rivage', 'Carte du rivage', 'dark'], ['lx-champagne', 'Champagne Gatsby', 'dark'], ['lx-herbier', 'Herbier aux papillons', 'light'], ['lx-givre', 'Fenêtre givrée', 'dark'],
+    ['lx-feux', 'Grand soir', 'dark'], ['lx-aurore', 'Boréale', 'dark']
+  ].map(function (x) { return { id: x[0], name: x[1], tone: x[2], premium: x[0].indexOf('lx-') === 0 }; });
+  var SCENE = {}; SCENES.forEach(function (x) { SCENE[x.id] = x; });
+  S.SCENES = SCENES; S.SCENE = SCENE;
+  // the veil over a scene: its colour (the scene's tone unless chosen) and its strength
+  function sceneVeil(s) {
+    var sc = SCENE[s.scene], tone = s.veil === 'light' || s.veil === 'dark' ? s.veil : (sc ? sc.tone : 'dark');
+    return { tone: tone, dim: s.dim != null ? Math.max(0, Math.min(0.85, +s.dim)) : (tone === 'light' ? 0.45 : 0.3) };
+  }
+  S.sceneVeil = sceneVeil;
+
   // ------------------------------------------------------------------ render
   var PAD = { S: 'st-pad-s', M: '', L: 'st-pad-l' };
   function blockStyle(b) {
     var s = b.style || {}, cls = [], css = '';
     var bg = s.bg || (b.type === 'cover' && (b.variant || 'plein') === 'plein' ? 'none' : 'paper');
-    if (bg === 'photo' && s.bgPhoto) cls.push('st-bg-photo');
+    if (bg === 'scene' && s.scene && SCENE[s.scene]) cls.push('st-bg-scene', 'st-scene-' + sceneVeil(s).tone);
+    else if (bg === 'photo' && s.bgPhoto) cls.push('st-bg-photo');
     else if (isHex(bg)) { css += '--bg:' + bg + ';--ink-b:' + (contrast('#ffffff', bg) >= contrast('#151515', bg) ? '#ffffff' : '#151515') + ';'; cls.push('st-bg-hex'); }
     else cls.push('st-bg-' + ({ paper: 'paper', soft: 'soft', accent: 'accent', back: 'back', none: 'none', ink: 'ink' }[bg] || 'paper'));
     if (s.align) cls.push('st-al-' + ({ left: 'l', center: 'c', right: 'r' }[s.align] || 'c'));
@@ -598,6 +669,10 @@
     if (!inner && !ctx.editing && b.type !== 'spacer') return '';
     var st = blockStyle(b), s = b.style || {};
     var bgPh = s.bg === 'photo' && s.bgPhoto ? '<div class="st-bgph" style="background-image:url(\'' + esc(cssUrl(picSrc(s.bgPhoto, ctx, 1600))) + '\');' + (Array.isArray(s.bgPhoto.pos) ? 'background-position:' + s.bgPhoto.pos[0] + '% ' + s.bgPhoto.pos[1] + '%;' : '') + '"></div><div class="st-bgveil" style="opacity:' + (s.dim != null ? Math.max(0, Math.min(0.85, +s.dim)) : 0.45) + '"></div>' : '';
+    if (s.bg === 'scene' && s.scene && SCENE[s.scene]) {
+      var vl = sceneVeil(s);
+      bgPh = '<div class="st-scene" data-scene="' + esc(s.scene) + '" aria-hidden="true"></div><div class="st-bgveil st-veil-' + vl.tone + '" style="opacity:' + vl.dim + '"></div>';
+    }
     return '<section class="st-b st-t-' + esc(b.type) + ' v-' + esc(b.variant || (def.variants[0] && def.variants[0][0]) || 'base') + ' ' + st.cls + (b.hidden ? ' is-hidden' : '') + '" data-bid="' + esc(b.id) + '" data-type="' + esc(b.type) + '"' + (st.css ? ' style="' + st.css + '"' : '') + '>' +
       bgPh + (s.sep && s.sep !== 'none' ? ornament(s.sep) : '') + '<div class="st-in">' + inner + '</div></section>';
   };
@@ -697,6 +772,14 @@
       if (cal) { var s = ics(ctx, f); if (!s) return; var a = document.createElement('a'); a.href = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(s); a.download = (ctx.slug || 'invitation') + '.ics'; document.body.appendChild(a); a.click(); a.remove(); return; }
       var yt = e.target.closest('[data-yt]');
       if (yt && !yt.querySelector('iframe')) { yt.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + encodeURIComponent(yt.getAttribute('data-yt')) + '?autoplay=1&rel=0" title="Vidéo" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>'; return; }
+      var sh = e.target.closest('[data-share]');
+      if (sh && !ctx.editing) {
+        var link = location.origin + '/e/' + encodeURIComponent(ctx.slug || '');
+        var said = (doc.meta && doc.meta.title) || ctx.title || 'Notre invitation';
+        var beacon = function () { if (ctx.slug && !ctx.demo) try { navigator.sendBeacon('/e/' + encodeURIComponent(ctx.slug) + '/partage'); } catch (x) {} };
+        if (navigator.share) navigator.share({ title: said, text: said, url: link }).then(beacon, function () {});
+        else { beacon(); location.href = 'https://wa.me/?text=' + encodeURIComponent(said + ' ' + link); }
+      }
       var mu = e.target.closest('[data-music]');
       if (mu) { var au = mu._a || (mu._a = new Audio(mu.getAttribute('data-music'))); if (au.paused) { au.play(); mu.querySelector('span').textContent = 'Pause'; } else { au.pause(); mu.querySelector('span').textContent = 'Écouter'; } }
     });
@@ -718,7 +801,10 @@
         if (ctx.demo || !ctx.slug) { out.textContent = thanks; return; }
         var sub = form.querySelector('[type=submit]'); sub.disabled = true; out.textContent = 'Envoi…';
         var wa = form.elements.wa && form.elements.wa.value.trim();
-        api(ctx, 'event_rsvp', { p_slug: ctx.slug, p_preview: ctx.preview || null, p_name: name, p_people: parseInt(form.elements.n.value, 10) || 1, p_answer: ans, p_message: form.elements.msg.value.trim() || null, p_extra: wa ? { whatsapp: wa } : {} })
+        // the answers to the organiser's questions (173), in their order
+        var extra = wa ? { whatsapp: wa } : {}, qs = ((blk.props && blk.props.questions) || []).slice(0, 3);
+        if (qs.length) extra.answers = qs.map(function (q, i) { var f = form.elements['q' + i]; return f ? f.value.trim().slice(0, 300) : ''; });
+        api(ctx, 'event_rsvp', { p_slug: ctx.slug, p_preview: ctx.preview || null, p_name: name, p_people: parseInt(form.elements.n.value, 10) || 1, p_answer: ans, p_message: form.elements.msg.value.trim() || null, p_extra: extra })
           .then(function (id) {
             out.textContent = thanks;
             if (typeof id === 'string' && ans === 'oui') {
@@ -763,12 +849,53 @@
     var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { rootMargin: '0px 0px -8% 0px' });
     Array.prototype.forEach.call(root.querySelectorAll('.st-b'), function (b) { io.observe(b); });
   };
+  // The scenes behind the blocks (172): /evenements/scenes.js, loaded once,
+  // the first time a card has one. A redraw (the editor redraws on every
+  // change) keeps a scene that is still there — the same block, the same
+  // picture, the same colours: its canvases move into the new block, and
+  // the graphics chip is not asked to start again.
+  var live = [], sceneJs = null;
+  function loadScenes() {
+    if (window.MaraScenes) return Promise.resolve(window.MaraScenes);
+    if (!sceneJs) sceneJs = new Promise(function (ok, ko) {
+      var t = document.createElement('script'); t.src = '/evenements/scenes.js'; t.async = true;
+      t.onload = function () { if (window.MaraScenes) ok(window.MaraScenes); else ko(new Error('scenes')); };
+      t.onerror = function () { sceneJs = null; ko(new Error('scenes')); };
+      document.head.appendChild(t);
+    });
+    return sceneJs;
+  }
+  S.scenes = function (root, theme) {
+    var els = Array.prototype.slice.call(root.querySelectorAll('.st-scene[data-scene]'));
+    var c = colorsOf(theme || {}), pal = { bg: c.paper, ink: c.ink, accent: c.accent, soft: c.soft, deep: c.back };
+    var pk = [pal.bg, pal.ink, pal.accent, pal.soft, pal.deep].join(''), keep = [];
+    var want = els.map(function (el) {
+      var bl = el.closest('[data-bid]');
+      return { el: el, key: (bl ? bl.getAttribute('data-bid') : '') + '|' + el.getAttribute('data-scene') + '|' + pk };
+    });
+    want.forEach(function (w) {
+      var old = live.filter(function (x) { return x.key === w.key && keep.indexOf(x) < 0; })[0];
+      if (old && old.ctl) { old.ctl.canvases.forEach(function (cv) { w.el.appendChild(cv); }); old.el = w.el; keep.push(old); w.done = true; }
+    });
+    live.filter(function (x) { return keep.indexOf(x) < 0; }).forEach(function (x) { if (x.ctl) x.ctl.stop(); });
+    live = keep;
+    var todo = want.filter(function (w) { return !w.done; });
+    if (!todo.length) return Promise.resolve();
+    return loadScenes().then(function (M) {
+      todo.forEach(function (w) {
+        if (!w.el.isConnected) return;
+        var ctl = M.mount(w.el, w.el.getAttribute('data-scene'), pal);
+        if (ctl) live.push({ key: w.key, el: w.el, ctl: ctl });
+      });
+    }, function () { /* no scene: the block keeps its colours */ });
+  };
   // Everything at once: the guests' page.
   S.mount = function (root, doc, ctx) {
     root.classList.add('st-root');
     S.applyTheme(root, doc.theme);
     root.innerHTML = '<main class="st-card">' + S.render(doc, ctx) + '</main>';
     S.wire(root, ctx, doc);
+    S.scenes(root, doc.theme);
     if (!ctx.editing) S.motion(root);
   };
 })();

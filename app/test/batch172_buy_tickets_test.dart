@@ -112,3 +112,4 @@ void main() {
     expect(find.byKey(const Key('buy-name-vip-0')), findsOneWidget);
   });
 }
+

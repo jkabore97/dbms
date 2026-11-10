@@ -249,6 +249,14 @@ class EventsRepository {
     return m?.group(1)?.toLowerCase();
   }
 
+  /// The card's « Tableau de bord » (173): openings, shares, the last
+  /// thirty days, the answers. Null for another business's card, or a
+  /// database before 173.
+  Future<EventStats?> stats(String eventId) async {
+    final r = await _require().rpc('event_stats', params: {'p_event': eventId});
+    return r is Map ? EventStats.fromJson(Map<String, dynamic>.from(r)) : null;
+  }
+
   Future<List<EventRsvp>> rsvps(String eventId) async {
     final rows = await _require()
         .from('event_rsvps')
@@ -494,6 +502,48 @@ class EventSummary {
   /// The card's own editor (154): the words and pictures, edited on the
   /// page itself and saved to the server. Null before 154.
   String? get editPath => editToken.isEmpty ? null : '/e/$slug?apercu=$previewToken&modifier=$editToken';
+}
+
+/// What a card did (173): how many opened it, shared it, answered.
+class EventStats {
+  const EventStats({
+    required this.views,
+    required this.shares,
+    required this.days,
+    required this.yes,
+    required this.no,
+    required this.words,
+    required this.people,
+  });
+
+  factory EventStats.fromJson(Map<String, dynamic> j) {
+    int n(Object? v) => (v as num?)?.toInt() ?? 0;
+    return EventStats(
+      views: n(j['views']),
+      shares: n(j['shares']),
+      days: [
+        for (final d in (j['days'] as List? ?? const []))
+          if (d is Map && DateTime.tryParse('${d['day']}') != null)
+            (day: DateTime.parse('${d['day']}'), views: n(d['views']), shares: n(d['shares'])),
+      ],
+      yes: n(j['oui']),
+      no: n(j['non']),
+      words: n(j['mot']),
+      people: n(j['people']),
+    );
+  }
+
+  final int views;
+  final int shares;
+
+  /// Day by day, oldest first (thirty at most).
+  final List<({DateTime day, int views, int shares})> days;
+  final int yes;
+  final int no;
+  final int words;
+
+  /// How many people come, the « oui » answers' total.
+  final int people;
 }
 
 class EventRsvp {

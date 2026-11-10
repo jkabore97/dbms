@@ -27,6 +27,15 @@ html{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-
 .st-bg-photo{color:#fff;--a:#fff}
 .st-bgph{position:absolute;inset:0;background-size:cover;background-position:center;z-index:0}
 .st-bgveil{position:absolute;inset:0;background:#000;z-index:1}
+/* an animated scene behind the block (172): the picture, its veil, the words above */
+.st-bg-scene{position:relative;isolation:isolate;background:var(--st-paper)}
+.st-scene{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.st-bg-scene>.st-in,.st-bg-scene>.st-orn{position:relative;z-index:2}
+.st-bgveil.st-veil-light{background:var(--st-paper)}
+.st-scene-dark{color:#fff;--a:#fff}
+.st-scene-light{color:var(--st-ink)}
+.st-bg-scene .st-h2,.st-bg-scene .st-kicker{color:inherit}
+.st-b.st-scene-dark .st-names,.st-b.st-scene-dark .st-date,.st-b.st-scene-dark .st-place,.st-b.st-scene-dark .st-sub,.st-b.st-scene-dark .st-kicker{color:#fff;text-shadow:0 1px 18px rgba(0,0,0,.35)}
 .st-motif::before{content:"";position:absolute;inset:0;background-image:var(--st-motif);background-size:var(--st-motif-size);opacity:var(--st-motif-o);pointer-events:none;z-index:1}
 .st-sep>.st-orn{margin:-24px auto 24px;position:relative;z-index:2}
 .st-b.is-hidden{display:none}
@@ -42,6 +51,7 @@ html{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-
 .st-closed{font-style:italic}
 .st-link{display:inline-block;margin-top:6px;font-size:.88em;color:var(--a);text-decoration:underline;text-underline-offset:3px}
 .st-btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:48px;padding:0 24px;border:1px solid var(--st-accent);border-radius:calc(var(--st-rad) + 8px);background:var(--st-accent);color:var(--st-on-accent);font:600 .82em/1 var(--st-body);letter-spacing:.14em;text-transform:uppercase;text-decoration:none;cursor:pointer;margin-top:8px}
+.st-btn-ghost{background:transparent;color:inherit;border-color:currentColor;opacity:.85}
 .st-btn.ghost{background:transparent;color:var(--a)}
 .st-bg-accent .st-btn{background:var(--st-paper);color:var(--a);border-color:var(--st-paper)}
 .st-btn .st-ic{width:18px;height:18px}
@@ -260,3 +270,10 @@ html{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-
 .st-toast.on{opacity:1;transform:translate(-50%,0)}
 
 @media (max-width:420px){.st-b:not(.st-t-cover){padding-left:20px;padding-right:20px}.st-shape-plein{width:calc(100% + 40px);margin:0 -20px}.v-carrousel .st-gal{margin-left:-20px;margin-right:-20px;padding-left:20px;padding-right:20px}.st-t-cover .st-names{font-size:3em}.v-typo .st-names{font-size:3.5em}.st-prog li{grid-template-columns:64px 36px 1fr}.st-prog-dot{width:36px;height:36px}.v-timeline .st-prog li:not(:last-child)::after{left:91px}}
+/* the stickers on the cover (173) */
+.st-t-cover{position:relative}
+.st-stks{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden}
+.st-stk{position:absolute;transform:translate(-50%,-50%);line-height:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,.25))}
+.st-m-douce .st-stk,.st-m-vivante .st-stk{animation:st-stk-float 5s ease-in-out infinite}
+@keyframes st-stk-float{0%,100%{translate:0 0}50%{translate:0 -6px}}
+@media (prefers-reduced-motion:reduce){.st-stk{animation:none!important}}

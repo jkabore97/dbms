@@ -182,6 +182,9 @@ abstract final class Routes {
   /// The buyer's tickets on this phone (ticket sales, part 4).
   static const myTickets = '/billets';
 
+  /// Buying tickets (172), signed in: `/achat-billets/<slug>`.
+  static const buyTickets = '/achat-billets';
+
   /// « Vitrines masquées » (batch 150): the vitrines hidden on this device,
   /// public like the street — the hiding needs no account.
   static const hiddenVitrines = '/vitrines/masquees';
@@ -234,6 +237,7 @@ bool _shopperPath(String location) =>
       Routes.myProfile,
       Routes.picker,
       Routes.myOrders,
+      Routes.buyTickets,
       Routes.shopperProfile,
       Routes.language,
       Routes.payment,
@@ -413,6 +417,9 @@ GoRouter buildRouter(SessionController session) {
         if (at(Routes.join) ||
             at(Routes.myProfile) ||
             at(Routes.myOrders) ||
+            // buying tickets (172): every signed-in person, business or not —
+            // missing here, the redirect sent a signed-in buyer to the street
+            at(Routes.buyTickets) ||
             at(Routes.shopperProfile) ||
             at(Routes.security) ||
             at(Routes.payment) ||
@@ -458,6 +465,9 @@ GoRouter buildRouter(SessionController session) {
             at(Routes.join) ||
             at(Routes.myProfile) ||
             at(Routes.myOrders) ||
+            // buying tickets (172): every signed-in person, business or not —
+            // missing here, the redirect sent a signed-in buyer to the street
+            at(Routes.buyTickets) ||
             at(Routes.shopperProfile) ||
             at(Routes.security) ||
             at(Routes.payment) ||
@@ -492,6 +502,9 @@ GoRouter buildRouter(SessionController session) {
             at(Routes.join) ||
             at(Routes.myProfile) ||
             at(Routes.myOrders) ||
+            // buying tickets (172): every signed-in person, business or not —
+            // missing here, the redirect sent a signed-in buyer to the street
+            at(Routes.buyTickets) ||
             at(Routes.shopperProfile) ||
             at(Routes.security) ||
             at(Routes.payment) ||
@@ -722,7 +735,7 @@ GoRouter buildRouter(SessionController session) {
       // through sign-in (or a new account) and back here; the tickets are
       // the account's from the start, on the home's bar.
       GoRoute(
-        path: '/achat-billets/:slug',
+        path: '${Routes.buyTickets}/:slug',
         builder: (context, state) {
           final scope = AppScope.of(context);
           final slug = state.pathParameters['slug']!;

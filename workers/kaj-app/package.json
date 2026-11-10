@@ -5,5 +5,8 @@
   "description": "The site in front of the Flutter web build: one address, vitrine previews, legal pages, how long each file is kept.",
   "scripts": {
     "test": "node --test test"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "1.7.0"
   }
 }

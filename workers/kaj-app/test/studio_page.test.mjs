@@ -201,6 +201,17 @@ test("171d: a classic card without a document goes to Studio too; an animated on
   answers.event_public = card({ editor: true, card: "anime_lettre", family: "anime", doc: DOC });
   r = await get(`/e/salimata-boukary-ab12?modifier=${TOKEN}`);
   assert.equal(r.status, 302);
+  // 173 live (event_public says « pro »): every animated card goes to Studio,
+  // which draws its living picture; « pro » reaches Studio's boot
+  for (const pro of [true, false]) {
+    answers.event_public = card({ editor: true, card: "anime_lotus_p", family: "anime", pro });
+    r = await get(`/e/salimata-boukary-ab12?modifier=${TOKEN}`);
+    assert.equal(r.status, 302, `animated, pro ${pro}`);
+    assert.equal(r.headers.get("Location"), `/e/salimata-boukary-ab12/studio?modifier=${TOKEN}`);
+    r = await get(`/e/salimata-boukary-ab12/studio?modifier=${TOKEN}`);
+    html = await r.text();
+    assert.ok(html.includes(`"pro":${pro}`), `Studio told pro ${pro}`);
+  }
   // the guests of a classic card without a document: its page, never Studio
   answers.event_public = card({ editor: false });
   r = await get("/e/salimata-boukary-ab12");
@@ -239,4 +250,50 @@ test("Studio's pages are not addresses of their own; its scripts are", async () 
   const js = await get("/cartes/studio/render.js");
   assert.equal(js.status, 200);
   assert.equal(await js.text(), "window.Studio={};");
+});
+
+test("173: a guest's opening is counted once a day, never a robot, the organiser or an unpublished card; a share is counted", async () => {
+  const PHONE = "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/130 Mobile Safari/537.36";
+  const open = (path, headers = {}) => site.fetch(new Request(`https://marakaj.com${path}`, { headers }), env);
+  const counts = () => asked.filter((u) => u.endsWith("/rpc/event_count")).length;
+  answers.event_public = card({ doc: DOC });
+  asked.length = 0;
+  let r = await open("/e/salimata-boukary-ab12", { "User-Agent": PHONE });
+  assert.equal(r.status, 200);
+  assert.equal(counts(), 1, "a person's first opening: counted");
+  const cookie = r.headers.get("Set-Cookie") || "";
+  assert.ok(/^mkv_salimata_boukary_ab12=1; Max-Age=\d+; Path=\/e\/salimata-boukary-ab12; Secure; HttpOnly; SameSite=Lax$/.test(cookie), cookie);
+  assert.ok((await r.text()).includes('<div id="card" class="st-root">'), "the page itself, untouched");
+  await open("/e/salimata-boukary-ab12", { "User-Agent": PHONE, Cookie: "a=b; mkv_salimata_boukary_ab12=1" });
+  assert.equal(counts(), 1, "the same day again: not counted");
+  for (const ua of ["WhatsApp/2.23.20.0 A", "facebookexternalhit/1.1", "Mozilla/5.0 (compatible; Googlebot/2.1)", ""]) {
+    await open("/e/salimata-boukary-ab12", ua ? { "User-Agent": ua } : {});
+  }
+  assert.equal(counts(), 1, "link previews and crawlers: not counted");
+  answers.event_public = card({ doc: DOC, published: false, preview: true });
+  await open("/e/salimata-boukary-ab12?apercu=f00d", { "User-Agent": PHONE });
+  assert.equal(counts(), 1, "a card not yet published: not counted");
+  answers.event_public = card({ doc: DOC, editor: true });
+  await open(`/e/salimata-boukary-ab12?modifier=${TOKEN}`, { "User-Agent": PHONE });
+  assert.equal(counts(), 1, "the organiser: not counted");
+  r = await site.fetch(new Request("https://marakaj.com/e/salimata-boukary-ab12/partage", { method: "POST", headers: { "User-Agent": PHONE } }), env);
+  assert.equal(r.status, 204);
+  assert.equal(counts(), 2, "a share: counted");
+});
+
+test("173: a shared card's link shows its own photo (og:image)", async () => {
+  const KEY = "events/0b9f3c2e-1d2a-4c5b-9e8f-7a6b5c4d3e2f/0123456789abcdef0123456789abcdef.jpg";
+  const env2 = { ...env, UPLOADS_URL: "https://up.marakaj.com/" };
+  const og = async (answer) => {
+    answers.event_public = answer;
+    const html = await (await site.fetch(new Request("https://marakaj.com/e/salimata-boukary-ab12"), env2)).text();
+    const m = /<meta property="og:image" content="([^"]*)">/.exec(html);
+    return m ? m[1] : null;
+  };
+  const withCover = { ...DOC, blocks: [{ id: "b0", type: "text", props: { photo: { stock: "wed-lake" } } }, { id: "b1", type: "cover", props: { photo: { key: KEY, pos: [50, 40] } } }] };
+  assert.equal(await og(card({ doc: withCover })), `https://up.marakaj.com/v1/public/objects/${encodeURIComponent(KEY)}?w=1200`, "the cover's photo first");
+  assert.equal(await og(card({ doc: { ...DOC, blocks: [{ id: "b1", type: "gallery", props: { photos: [{ stock: "wed-lake" }] } }] } })), "https://marakaj.com/cartes/img/wed-lake.jpg", "a bank photo");
+  assert.equal(await og(card({ doc: null, content: { "p:p1": { key: KEY } } })), `https://up.marakaj.com/v1/public/objects/${encodeURIComponent(KEY)}?w=1200`, "a classic card's photo");
+  assert.equal(await og(card({ doc: DOC })), null, "no photo: no og:image");
+  assert.equal(await og(card({ doc: { ...DOC, blocks: [{ id: "b1", type: "photo", props: { photo: { key: "../../etc" } } }] } })), null, "a key that is not one: nothing");
 });
