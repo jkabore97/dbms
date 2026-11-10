@@ -124,6 +124,22 @@ async function serve(request, env, ctx) {
       return downloadPage(request, env);
     }
 
+    // The iPhone app opens these addresses itself (173c, Universal Links):
+    // buying tickets and « Mes billets ». Apple reads this file once when
+    // the app is installed; the app declares applinks:marakaj.com.
+    // The Android app the same (Android App Links): Google Play's signing
+    // key, checked by the phone when the app is installed (autoVerify).
+    if (url.pathname === "/.well-known/assetlinks.json") {
+      return new Response(JSON.stringify(ANDROID_APP_LINKS), {
+        headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=3600" },
+      });
+    }
+    if (url.pathname === "/.well-known/apple-app-site-association" || url.pathname === "/apple-app-site-association") {
+      return new Response(JSON.stringify(APPLE_APP_LINKS), {
+        headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=3600" },
+      });
+    }
+
     // Studio's writing assistant (173, Marakaj Pro; assistant.js).
     if (url.pathname === "/api/assistant") {
       return assistant(request, env);
@@ -458,6 +474,32 @@ export async function eventPage(request, env, slug, preview, edit, ctx) {
   }
   return page;
 }
+
+// Android's list (173c): the Play app's signing key (Play Console › App
+// integrity › App signing key certificate, SHA-256).
+export const ANDROID_APP_LINKS = [{
+  relation: ["delegate_permission/common.handle_all_urls"],
+  target: {
+    namespace: "android_app",
+    package_name: "bf.kaj.app",
+    sha256_cert_fingerprints: ["5C:29:33:1F:CE:64:5C:D0:BA:3F:B7:EA:72:30:6C:A4:63:1B:FE:93:FD:43:22:32:39:8F:46:3D:04:77:D1:AA"],
+  },
+}];
+
+// Apple’s list (173c): the app (team 9K236BL7SX, bf.kaj.app) and the
+// paths it opens — the cards (/e/…) stay web pages, for every guest.
+export const APPLE_APP_LINKS = {
+  applinks: {
+    details: [{
+      appIDs: ["9K236BL7SX.bf.kaj.app"],
+      components: [
+        { "/": "/achat-billets/*", comment: "buying tickets (172)" },
+        { "/": "/billets", comment: "my tickets" },
+        { "/": "/billets/*", comment: "one request of my tickets" },
+      ],
+    }],
+  },
+};
 
 // Link previews and crawlers: not people opening the card.
 const ROBOT = /bot|crawl|spider|slurp|facebookexternalhit|facebookcatalog|whatsapp|telegram|discord|skype|preview|headless|lighthouse|curl|wget|python|okhttp/i;

@@ -297,3 +297,27 @@ test("173: a shared card's link shows its own photo (og:image)", async () => {
   assert.equal(await og(card({ doc: DOC })), null, "no photo: no og:image");
   assert.equal(await og(card({ doc: { ...DOC, blocks: [{ id: "b1", type: "photo", props: { photo: { key: "../../etc" } } }] } })), null, "a key that is not one: nothing");
 });
+
+test("173c: the iPhone app's links — Apple's file, JSON, the buying and ticket paths only", async () => {
+  for (const path of ["/.well-known/apple-app-site-association", "/apple-app-site-association"]) {
+    const r = await get(path);
+    assert.equal(r.status, 200, path);
+    assert.equal(r.headers.get("Content-Type"), "application/json");
+    const j = await r.json();
+    const d = j.applinks.details[0];
+    assert.deepEqual(d.appIDs, ["9K236BL7SX.bf.kaj.app"]);
+    const paths = d.components.map((c) => c["/"]);
+    assert.deepEqual(paths, ["/achat-billets/*", "/billets", "/billets/*"]);
+    assert.ok(!paths.some((p) => p.startsWith("/e/")), "the cards stay web pages");
+  }
+});
+
+test("173c: the Android app's links — the Play signing key, the package, JSON", async () => {
+  const r = await get("/.well-known/assetlinks.json");
+  assert.equal(r.status, 200);
+  assert.equal(r.headers.get("Content-Type"), "application/json");
+  const [j] = await r.json();
+  assert.deepEqual(j.relation, ["delegate_permission/common.handle_all_urls"]);
+  assert.equal(j.target.package_name, "bf.kaj.app");
+  assert.deepEqual(j.target.sha256_cert_fingerprints, ["5C:29:33:1F:CE:64:5C:D0:BA:3F:B7:EA:72:30:6C:A4:63:1B:FE:93:FD:43:22:32:39:8F:46:3D:04:77:D1:AA"]);
+});
