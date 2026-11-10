@@ -6,6 +6,7 @@ import '../../core/auth/models.dart';
 import '../../core/console/console_repository.dart';
 import '../../core/console/models.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
+import '../common/copy_text.dart';
 
 /// What happened, and who did it.
 ///
@@ -391,7 +392,7 @@ class _EventTile extends StatelessWidget {
                           ),
                         ),
                         Expanded(
-                          child: SelectableText(
+                          child: CopyText(
                             '${entry.value ?? '—'}',
                             style: theme.textTheme.bodySmall,
                           ),

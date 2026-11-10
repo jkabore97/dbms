@@ -6,6 +6,7 @@ import '../../core/auth/models.dart';
 import '../../core/notify/bell_room.dart';
 import '../../core/nav/parent_route.dart';
 import '../../core/theme/scroll_hint.dart';
+import '../common/copy_text.dart';
 
 /// Signed in, invited to nothing.
 ///
@@ -111,7 +112,7 @@ class NoOrgScreen extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 6),
-                                SelectableText(
+                                CopyText(
                                   contact,
                                   style: const TextStyle(
                                     fontSize: 20,

@@ -7,7 +7,7 @@
   var S = window.Studio, U = S.util, esc = U.esc;
   var BOOT = window.CARTE || {};
   var ctx = {
-    slug: BOOT.slug, title: BOOT.title || '', kind: BOOT.kind || 'autre', card: BOOT.card, date: BOOT.date, time: BOOT.time, place: BOOT.place || '',
+    slug: BOOT.slug, title: BOOT.title || '', kind: BOOT.kind || 'autre', card: BOOT.card, family: BOOT.family || 'classique', date: BOOT.date, time: BOOT.time, place: BOOT.place || '',
     rsvp_on: BOOT.rsvp_on !== false, album_on: BOOT.album_on !== false, tickets: BOOT.tickets === true, preview: BOOT.preview || null,
     api: BOOT.api || {}, uploads: BOOT.uploads || null, edit: BOOT.edit, content: BOOT.content || {}, editing: true, demo: false
   };
@@ -185,26 +185,43 @@
   canvas.addEventListener('submit', function (e) { e.preventDefault(); });
 
   // ------------------------------------------- a block moved with a finger
-  // The chosen block's « Glisser », or a long press on any block, picks it
-  // up; a line shows where it will land; near the top or the bottom of the
-  // screen the card scrolls; let go and it is there (« Annuler » puts it back).
-  var drag = null, press = null, justDragged = false, LONG = 450;
+  // The chosen block's « Glisser », or a long press anywhere on a block —
+  // its words too (171d, the owner's ask) — picks it up; a line shows where
+  // it will land; near the top or the bottom of the screen the card scrolls;
+  // let go and it is there (« Annuler » puts it back). While the finger is
+  // held, the phone's own long press has nothing to take: no word chosen,
+  // no Google bar, no menu. A tap still writes; a long press in the words
+  // being written still chooses words, as in any text.
+  // 380 ms: before Android's own long press (400), well after a tap.
+  var drag = null, press = null, justDragged = false, LONG = 380;
   function blockEls() { return Array.prototype.slice.call(canvas.querySelectorAll('.st-b[data-bid]')); }
   canvas.addEventListener('pointerdown', function (e) {
     if (preview || drag || (e.pointerType === 'mouse' && e.button !== 0)) return;
     var bl = e.target.closest('.st-b[data-bid]'); if (!bl) return;
     if (e.target.closest('.ed-grip')) { e.preventDefault(); startDrag(bl.getAttribute('data-bid'), e.clientX, e.clientY, e.target.closest('.ed-grip'), e.pointerId); return; }
-    // a long press, away from the words being written and the buttons
-    if (e.target.closest('[data-f], button, a, input, select, textarea, label, summary, .ed-ins')) return;
+    // a long press anywhere on the block, its words and its buttons too;
+    // not in the words being written now, nor on Studio's own « + »
+    var f = e.target.closest('[data-f]');
+    if (f && f === document.activeElement) return;
+    if (e.target.closest('input, select, textarea, .ed-ins, .st-add-item')) return;
     var id = bl.getAttribute('data-bid'), x = e.clientX, y = e.clientY;
-    clearTimeout(press && press.t);
-    press = { x: x, y: y, t: setTimeout(function () { press = null; startDrag(id, x, y, null, null); }, LONG) };
+    unpress();
+    press = { x: x, y: y, t: setTimeout(function () { unpress(); startDrag(id, x, y, null, null); }, LONG) };
+    // a finger: the words cannot be chosen while it is held (a mouse places its caret now)
+    if (e.pointerType !== 'mouse') document.body.classList.add('ed-pressing');
   });
+  function unpress() { if (press) clearTimeout(press.t); press = null; document.body.classList.remove('ed-pressing'); }
   canvas.addEventListener('pointermove', function (e) {
-    if (press && (Math.abs(e.clientX - press.x) > 10 || Math.abs(e.clientY - press.y) > 10)) { clearTimeout(press.t); press = null; }   // a scroll, not a press
+    if (press && (Math.abs(e.clientX - press.x) > 10 || Math.abs(e.clientY - press.y) > 10)) unpress();   // a scroll, not a press
   });
-  ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) { canvas.addEventListener(ev, function () { if (press) { clearTimeout(press.t); press = null; } }); });
-  canvas.addEventListener('contextmenu', function (e) { if (drag || press || !e.target.closest('[data-f]')) { if (e.target.closest('.st-b')) e.preventDefault(); } });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) { canvas.addEventListener(ev, function () { if (press) unpress(); }); });
+  // the phone's own long press — the menu, the chosen word, Google's bar —
+  // gets nothing on a block, except in the words being written
+  canvas.addEventListener('contextmenu', function (e) {
+    var f = e.target.closest('[data-f]');
+    if (e.target.closest('.st-b') && (drag || press || !f || f !== document.activeElement)) e.preventDefault();
+  });
+  document.addEventListener('selectstart', function (e) { if (drag || press) e.preventDefault(); });
   // the tap that ends a move opens nothing; the next touch is a new one
   canvas.addEventListener('pointerdown', function () { justDragged = false; }, true);
   canvas.addEventListener('click', function (e) { if (justDragged) { justDragged = false; e.preventDefault(); e.stopPropagation(); } }, true);
@@ -317,7 +334,7 @@
   // Said once on this phone, the first time a block is chosen.
   function hintOnce() {
     try { if (localStorage.getItem('studio-astuce-glisser')) return; localStorage.setItem('studio-astuce-glisser', '1'); } catch (e) { return; }
-    toast('Pour déplacer un bloc : faites glisser « Glisser », ou appuyez longuement sur le bloc.');
+    toast('Pour déplacer un bloc : appuyez longuement dessus, même sur ses mots, puis glissez. Ou faites glisser « Glisser ».');
   }
   function handle(label) { return '<button type="button" class="ed-hd" aria-label="Glisser pour déplacer : ' + esc(label) + '">' + I.grip + '</button>'; }
   // writing in place
@@ -778,7 +795,12 @@
           if (!confirm('Revenir à la carte classique ? Vos invités verront à nouveau l’ancienne carte.')) return;
           S.api(ctx, 'event_doc_clear', { p_slug: ctx.slug, p_edit: ctx.edit }).then(function () {
             try { localStorage.removeItem(DRAFT); } catch (e2) {}
-            savedJson = canon(clean(doc)); location.href = '/e/' + encodeURIComponent(ctx.slug) + '?modifier=' + encodeURIComponent(ctx.edit) + '&studio=non';
+            savedJson = canon(clean(doc)); leaving = true;
+            // an animated card goes back to its own editor; a classic card's
+            // editor is Studio itself (171d): the card, as the guests see it again
+            location.href = ctx.family === 'anime'
+              ? '/e/' + encodeURIComponent(ctx.slug) + '?modifier=' + encodeURIComponent(ctx.edit) + '&studio=non'
+              : '/e/' + encodeURIComponent(ctx.slug) + (ctx.preview ? '?apercu=' + encodeURIComponent(ctx.preview) : '');
           }, function (err) { toast(err.message); });
         }
       });

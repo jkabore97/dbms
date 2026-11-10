@@ -18,6 +18,7 @@ import '../common/phone_field.dart';
 import '../common/step_flow.dart';
 import 'member_edit_sheet.dart' show grantableRolesFor;
 import 'team_access_screen.dart' show teamDialFeatures;
+import '../common/copy_text.dart';
 
 /// One line for each responsibility, said where it is chosen (French; the
 /// flow passes it through `tr`).
@@ -463,8 +464,9 @@ class _TeamInviteFlowState extends State<TeamInviteFlow> {
                       color: theme.colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: SelectableText(inv.code,
+                    child: CopyText(inv.code,
                         key: const Key('team-code'),
+                        copied: context.tr('Code copié'),
                         textAlign: TextAlign.center,
                         style: theme.textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold, letterSpacing: 3)),

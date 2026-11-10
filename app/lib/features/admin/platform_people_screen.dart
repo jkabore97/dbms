@@ -18,6 +18,7 @@ import '../../core/notify/bell_room.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
 import 'add_to_business_sheet.dart';
 import 'merge_accounts_sheet.dart';
+import '../common/copy_text.dart';
 
 /// The platform admin's global directory of people — the other axis to the
 /// business console. Search any account across every business, see where they
@@ -754,7 +755,7 @@ class _PersonSheetState extends State<PersonSheet> {
         child: Row(children: [
           Icon(icon, size: 18, color: Theme.of(context).colorScheme.outline),
           const SizedBox(width: 10),
-          Expanded(child: SelectableText(text)),
+          Expanded(child: CopyText(text)),
         ]),
       );
 }

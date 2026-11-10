@@ -15,6 +15,7 @@ import '../../storefront/storefront_screen.dart';
 import '../org_settings_screen.dart';
 import 'fiche_widgets.dart';
 import 'look_only_view.dart';
+import '../../common/copy_text.dart';
 
 /// Vitrine: where the business's window stands, and the owner's own editor
 /// opened as Mara. The editor is the very screen the owner uses
@@ -69,7 +70,7 @@ class FicheVitrineTab extends StatelessWidget {
           margin: EdgeInsets.zero,
           child: ListTile(
             leading: const Icon(Icons.link),
-            title: SelectableText(publicShopUrl(o.slug)),
+            title: CopyText(publicShopUrl(o.slug), copied: context.tr('Lien copié')),
             subtitle: Text(context.tr('Le lien que le propriétaire partage')),
           ),
         ),

@@ -18,6 +18,7 @@ import '../../core/errors.dart';
 import '../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import '../common/copy_text.dart';
 
 /// Everything this business has photographed.
 ///
@@ -697,7 +698,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
                   color: theme.colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: SelectableText(
+                child: CopyText(
                   document.ocrText!,
                   style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
                 ),

@@ -53,6 +53,8 @@
   <title>Marakaj — Au Service du Peuple</title>
 
   <style>
+    /* 171d: no word chosen by a long press, no Google bar, no menu, no grey flash on a tap — only what is typed in can be chosen. */
+    html{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}input,textarea,select,[contenteditable]:not([contenteditable="false"]){-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
     /*
       The page before the app: Mara's seal on graphite, one thin caramel line
       moving. Flutter's engine takes a few seconds to arrive on a market's

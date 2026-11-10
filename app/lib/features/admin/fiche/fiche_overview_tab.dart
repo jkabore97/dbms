@@ -11,6 +11,7 @@ import '../../../core/theme/kaj_card.dart';
 import '../../../core/theme/mara_mark.dart';
 import '../../auth/org_picker_screen.dart' show kindSingular;
 import 'fiche_widgets.dart';
+import '../../common/copy_text.dart';
 
 /// Aperçu: the business at a glance — how it is doing, whose it is, its
 /// plan and cauris, its people, its vitrine, and what wants attention,
@@ -305,11 +306,11 @@ class _OwnerCard extends StatelessWidget {
                                 style: theme.textTheme.titleMedium
                                     ?.copyWith(fontWeight: FontWeight.w800)),
                             if (owner.phone != null)
-                              SelectableText(owner.phone!,
+                              Text(owner.phone!,
                                   key: const Key('fiche-owner-phone'),
                                   style: theme.textTheme.bodyLarge),
                             if (owner.email != null)
-                              SelectableText(owner.email!, style: theme.textTheme.bodySmall),
+                              CopyText(owner.email!, style: theme.textTheme.bodySmall),
                           ],
                         ),
                       ),
@@ -382,7 +383,7 @@ class _Facts extends StatelessWidget {
                                   color: theme.colorScheme.onSurfaceVariant)),
                         ),
                         Expanded(
-                          child: SelectableText(value, style: theme.textTheme.bodyMedium),
+                          child: CopyText(value, style: theme.textTheme.bodyMedium),
                         ),
                       ],
                     ),
