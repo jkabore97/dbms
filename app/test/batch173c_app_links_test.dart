@@ -16,6 +16,15 @@ void main() {
     expect(proj, contains('PRODUCT_BUNDLE_IDENTIFIER = bf.kaj.app;'));
   });
 
+  test('the Android app claims the same two addresses on marakaj.com, verified, and nothing else', () {
+    final m = File('android/app/src/main/AndroidManifest.xml').readAsStringSync();
+    expect(m, contains('<intent-filter android:autoVerify="true">'));
+    expect(m, contains('<data android:scheme="https" android:host="marakaj.com"/>'));
+    expect(m, contains('<data android:pathPrefix="/achat-billets/"/>'));
+    expect(m, contains('<data android:path="/billets"/>'));
+    expect(m, isNot(contains('android:pathPrefix="/e/"')), reason: 'the cards stay web pages');
+  });
+
   test('the router knows both addresses Apple sends to the app', () {
     final src = File('lib/core/nav/router.dart').readAsStringSync();
     expect(src, contains("static const buyTickets = '/achat-billets';"));

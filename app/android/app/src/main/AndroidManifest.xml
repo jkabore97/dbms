@@ -85,6 +85,19 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="bf.kaj.app" android:host="login-callback"/>
             </intent-filter>
+            <!-- Android App Links (173c): marakaj.com's buying page and
+                 « Mes billets » open in the app, verified against
+                 https://marakaj.com/.well-known/assetlinks.json (the Play
+                 signing key). The cards (/e/…) stay web pages. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="marakaj.com"/>
+                <data android:pathPrefix="/achat-billets/"/>
+                <data android:path="/billets"/>
+                <data android:pathPrefix="/billets/"/>
+            </intent-filter>
         </activity>
         <!-- The status picture (140), handed to WhatsApp or a Facebook story
              by a content:// address of the app's cache (MainActivity's

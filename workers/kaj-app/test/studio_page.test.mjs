@@ -311,3 +311,13 @@ test("173c: the iPhone app's links — Apple's file, JSON, the buying and ticket
     assert.ok(!paths.some((p) => p.startsWith("/e/")), "the cards stay web pages");
   }
 });
+
+test("173c: the Android app's links — the Play signing key, the package, JSON", async () => {
+  const r = await get("/.well-known/assetlinks.json");
+  assert.equal(r.status, 200);
+  assert.equal(r.headers.get("Content-Type"), "application/json");
+  const [j] = await r.json();
+  assert.deepEqual(j.relation, ["delegate_permission/common.handle_all_urls"]);
+  assert.equal(j.target.package_name, "bf.kaj.app");
+  assert.deepEqual(j.target.sha256_cert_fingerprints, ["5C:29:33:1F:CE:64:5C:D0:BA:3F:B7:EA:72:30:6C:A4:63:1B:FE:93:FD:43:22:32:39:8F:46:3D:04:77:D1:AA"]);
+});
