@@ -6,6 +6,8 @@ import '../../core/events/my_tickets.dart';
 import '../../core/format/money.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import '../../core/phone/country_codes.dart';
+import '../common/phone_field.dart';
 
 /// Buying tickets (172), signed in. The owner: « every person buying a
 /// ticket should create an account with Marakaj, since the tickets show on
@@ -49,6 +51,10 @@ class _BuyTicketsScreenState extends State<BuyTicketsScreen> {
   String? _error;
   final _kinds = <_Kind>[];
   final _wa = TextEditingController();
+
+  /// The WhatsApp's country, chosen in front of the number (the app's
+  /// PhoneField): a buyer from Abidjan or Paris is not turned into +226.
+  CountryCode _country = defaultCountry;
   final _txn = TextEditingController();
 
   String get _me {
@@ -68,8 +74,13 @@ class _BuyTicketsScreenState extends State<BuyTicketsScreen> {
   @override
   void initState() {
     super.initState();
-    final phone = (widget.myPhone ?? widget.client?.auth.currentUser?.phone ?? '').trim();
-    if (phone.isNotEmpty) _wa.text = phone.startsWith('+') ? phone : '+$phone';
+    // the account's own number, under its country (Supabase keeps it without its « + »)
+    var phone = (widget.myPhone ?? widget.client?.auth.currentUser?.phone ?? '').trim();
+    if (phone.isNotEmpty) {
+      if (!phone.startsWith('+')) phone = '+$phone';
+      _country = countryOfNumber(phone) ?? defaultCountry;
+      _wa.text = _country.localPart(phone);
+    }
     _load();
   }
 
@@ -166,13 +177,18 @@ class _BuyTicketsScreenState extends State<BuyTicketsScreen> {
       setState(() => _error = context.tr('Votre numéro WhatsApp, pour que l’organisateur vous réponde.'));
       return;
     }
+    final waProblem = _country.lengthProblem(_wa.text);
+    if (waProblem != null) {
+      setState(() => _error = waProblem);
+      return;
+    }
     setState(() => _busy = true);
     try {
       final r = await _call('event_ticket_request', {
         'p_slug': widget.slug,
         'p_preview': widget.preview,
         'p_name': holders.first['name'],
-        'p_whatsapp': _wa.text.trim(),
+        'p_whatsapp': _country.toE164(_wa.text.trim()),
         'p_lines': [
           for (final k in _kinds)
             if (k.qty > 0) {'type': k.id, 'qty': k.qty},
@@ -279,16 +295,14 @@ class _BuyTicketsScreenState extends State<BuyTicketsScreen> {
                         Text(_money(_total), key: const Key('buy-total'), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
                       ]),
                       const SizedBox(height: 14),
-                      TextField(
+                      PhoneField(
                         key: const Key('buy-whatsapp'),
                         controller: _wa,
-                        keyboardType: TextInputType.phone,
-                        maxLength: 24,
-                        decoration: InputDecoration(
-                          labelText: context.tr('Votre WhatsApp'),
-                          counterText: '',
-                          border: const OutlineInputBorder(),
-                        ),
+                        country: _country,
+                        onCountry: (c) => setState(() => _country = c),
+                        labelText: context.tr('Votre WhatsApp'),
+                        errorText: _wa.text.trim().isEmpty ? null : _country.lengthProblem(_wa.text),
+                        onChanged: (_) => setState(() {}),
                       ),
                       const SizedBox(height: 12),
                       TextField(

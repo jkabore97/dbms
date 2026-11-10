@@ -20,7 +20,7 @@ void main() {
     ],
   };
 
-  Future<List<Map<String, dynamic>>> pump(WidgetTester tester) async {
+  Future<List<Map<String, dynamic>>> pump(WidgetTester tester, {String phone = '+22670443328'}) async {
     final calls = <Map<String, dynamic>>[];
     tester.view.physicalSize = const Size(400, 1400);
     tester.view.devicePixelRatio = 1.0;
@@ -38,7 +38,7 @@ void main() {
                   client: null,
                   slug: 'anniv',
                   myName: 'Wendtoin Kabore',
-                  myPhone: '+22670443328',
+                  myPhone: phone,
                   rpc: (fn, p) async {
                     calls.add({'fn': fn, ...p});
                     if (fn == 'event_ticket_offer') return offer;
@@ -69,7 +69,10 @@ void main() {
     expect(find.byKey(const Key('buy-name-vip-0')), findsOneWidget);
     expect(find.byKey(const Key('buy-name-vip-2')), findsOneWidget);
     expect(tester.widget<TextField>(find.byKey(const Key('buy-name-vip-0'))).controller!.text, 'Wendtoin Kabore');
-    expect(tester.widget<TextField>(find.byKey(const Key('buy-whatsapp'))).controller!.text, '+22670443328');
+    // the account's number under its country: « BF +226 » in front, the rest in the field
+    final wa = find.descendant(of: find.byKey(const Key('buy-whatsapp')), matching: find.byType(TextField));
+    expect(tester.widget<TextField>(wa).controller!.text, '70443328');
+    expect(find.descendant(of: find.byKey(const Key('buy-whatsapp')), matching: find.text('+226')), findsOneWidget);
     expect(find.text('30 000 FCFA'), findsOneWidget);
 
     // a name missing
@@ -98,6 +101,7 @@ void main() {
       {'type': 'vip', 'name': 'Petit Paul'},
     ]);
     expect(sent['p_name'], 'Wendtoin Kabore');
+    expect(sent['p_whatsapp'], '+22670443328', reason: 'sent whole, with its country code');
     expect(find.byType(BuyTicketsScreen), findsNothing, reason: 'on to « Mes billets »');
   });
 
@@ -111,5 +115,26 @@ void main() {
     expect(find.byKey(const Key('buy-name-vip-1')), findsNothing);
     expect(find.byKey(const Key('buy-name-vip-0')), findsOneWidget);
   });
-}
 
+  testWidgets('a buyer from Abidjan: « CI +225 » in front, a short number refused, sent whole', (tester) async {
+    final calls = await pump(tester, phone: '+2250707123456');
+    final field = find.byKey(const Key('buy-whatsapp'));
+    expect(find.descendant(of: field, matching: find.text('+225')), findsOneWidget);
+    final wa = find.descendant(of: field, matching: find.byType(TextField));
+    expect(tester.widget<TextField>(wa).controller!.text, '0707123456');
+    await tester.tap(find.byKey(const Key('buy-more-vip')));
+    await tester.pumpAndSettle();
+    // too short for Côte d'Ivoire: said under the field, nothing sent
+    await tester.enterText(wa, '0707');
+    await tester.ensureVisible(find.byKey(const Key('buy-send')));
+    await tester.tap(find.byKey(const Key('buy-send')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('10 chiffres'), findsWidgets);
+    expect(calls.where((c) => c['fn'] == 'event_ticket_request'), isEmpty);
+    await tester.enterText(wa, '07 07 12 34 56');
+    await tester.ensureVisible(find.byKey(const Key('buy-send')));
+    await tester.tap(find.byKey(const Key('buy-send')));
+    await tester.pumpAndSettle();
+    expect(calls.lastWhere((c) => c['fn'] == 'event_ticket_request')['p_whatsapp'], '+2250707123456');
+  });
+}
