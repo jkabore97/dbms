@@ -105,11 +105,14 @@ end $$;
 do $$
 declare j jsonb; v_err text;
 begin
-    set local role anon;
-    perform set_config('request.jwt.claim.sub', '', true);
-    j := event_ticket_request('concert-163', null, 'Tanti Rose', '70123456', '[{"type": "16316316-3333-0000-0000-000000000001", "qty": 2}]');
+    -- 172: the buyers are signed in (Omar, a stranger to the business), one name per ticket
+    set local role authenticated;
+    perform set_config('request.jwt.claim.sub', '16316316-0000-0000-0000-000000000005', true);
+    j := event_ticket_request('concert-163', null, 'Tanti Rose', '70123456', '[{"type": "16316316-3333-0000-0000-000000000001", "qty": 2}]', null,
+                              '[{"type": "16316316-3333-0000-0000-000000000001", "name": "Tanti Rose"}, {"type": "16316316-3333-0000-0000-000000000001", "name": "Petit Paul"}]');
     insert into t163 values ('rose', j ->> 'id');
-    j := event_ticket_request('concert-163', null, 'Oncle Sam', '70123457', '[{"type": "16316316-3333-0000-0000-000000000002", "qty": 1}]');
+    j := event_ticket_request('concert-163', null, 'Oncle Sam', '70123457', '[{"type": "16316316-3333-0000-0000-000000000002", "qty": 1}]', null,
+                              '[{"type": "16316316-3333-0000-0000-000000000002", "name": "Oncle Sam"}]');
     insert into t163 values ('sam', j ->> 'id');
     reset role;
 
