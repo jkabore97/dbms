@@ -1069,6 +1069,55 @@ void main() {
       expect(def.group, 'help');
     });
 
+    // The owner, on the live site (172): « after clicking on the button,
+    // I'm redirected to the app but nothing happens ». The ticket-buying page
+    // was missing from the pages a signed-in person may stay on: the real
+    // redirect sent every signed-in buyer to the street.
+    testWidgets('the real router: a signed-in buyer stays on « Acheter mes billets »', (tester) async {
+      final s = await shopper(tester);
+      final router = buildRouter(s);
+      await tester.pumpWidget(AppScope(
+        session: s,
+        localeController: LocaleController(db),
+        db: db,
+        auth: s.auth,
+        admin: s.admin,
+        reports: ReportsRepository(null),
+        accounting: AccountingRepository(null),
+        console: ConsoleRepository(null),
+        farm: FarmRepository(null),
+        invoicing: InvoicingRepository(null),
+        retail: RetailRepository(null),
+        staff: StaffRepository(null),
+        capture: CaptureRepository(null, db: db),
+        onboarding: OnboardingRepository(null),
+        credit: CreditRepository(null),
+        tontine: TontineRepository(null),
+        production: ProductionRepository(null),
+        notify: NotificationsRepository(null),
+        analytics: AnalyticsRepository(null),
+        child: MaterialApp.router(
+          routerConfig: router,
+          locale: const Locale('fr'),
+          localizationsDelegates: Strings.localizationsDelegates,
+          supportedLocales: Strings.supportedLocales,
+        ),
+      ));
+      await settle(tester);
+      router.go('/achat-billets/esprance-anniversaire-55fe');
+      await settle(tester);
+      expect(router.state.uri.path, '/achat-billets/esprance-anniversaire-55fe');
+      expect(find.text('Acheter mes billets'), findsOneWidget);
+      await tester.pump(const Duration(minutes: 2));
+    });
+
+    test('the router: buying tickets is open in every signed-in phase, on the street\'s half', () {
+      final src = File('lib/core/nav/router.dart').readAsStringSync();
+      expect(RegExp(r'at\(Routes\.buyTickets\) \|\|').allMatches(src).length, 3, reason: 'noOrg, picking and ready');
+      final street = src.substring(src.indexOf('bool _shopperPath'), src.indexOf('Future<bool>? _businessScreens'));
+      expect(street, contains('Routes.buyTickets,'));
+    });
+
     test('the router: the shopper\'s pages are the street\'s half and open in every signed-in phase', () {
       final src = File('lib/core/nav/router.dart').readAsStringSync();
       expect(src, contains("static const shopperProfile = '/mon-compte';"));
