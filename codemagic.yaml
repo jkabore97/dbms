@@ -27,7 +27,7 @@ workflows:
     integrations:
       app_store_connect: Mara App Store Connect
     environment:
-      flutter: stable
+      flutter: 3.47.9  # pinned (178): stable moved to 3.50, which deprecates material.dart
       xcode: latest
       cocoapods: default
       groups:

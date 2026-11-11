@@ -1203,9 +1203,14 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+      # Pinned (178): « stable » moved to 3.50 on 2026-11-11 and deprecated
+      # package:flutter/material.dart itself — every file failed analyze and
+      # the builds. The version the app is built and tested with; raised on
+      # purpose, with the migration to material_ui, never by surprise.
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: 3.47.9
       - name: Install dependencies
         working-directory: app
         run: flutter pub get
