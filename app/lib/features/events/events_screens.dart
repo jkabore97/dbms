@@ -12,6 +12,7 @@ import '../../core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import '../../core/theme/kaj_card.dart';
 import '../capture/barcode_sheet.dart';
+import 'street_picture_sheet.dart';
 import 'templates_gallery_screen.dart';
 import 'tickets_screens.dart';
 
@@ -112,6 +113,9 @@ String reminderText(BuildContext context, EventSummary e, String guest) {
 }
 
 /// Opens an address in the app it belongs to (WhatsApp for wa.me).
+/// A picture of Marakaj's gallery (174, 175), on the site.
+String streetGalleryUrl(String name) => '${eventSiteOrigin()}/cartes/fetes/$name.jpg';
+
 Future<void> openOutside(Uri uri) => launchUrl(uri, mode: LaunchMode.externalApplication);
 
 /// Événementiel (152, 153): the business's events — each a card with an
@@ -609,6 +613,27 @@ class _EventScreenState extends State<EventScreen> {
     }
   }
 
+  /// « Photo sur la rue » (175): the card's own pictures read first (none
+  /// before 155), then the choice written.
+  Future<void> _chooseStreetPicture(EventSummary e) async {
+    var own = const <String>[];
+    try {
+      own = await widget.events.cardPictures(e.id);
+    } catch (_) {
+      own = const [];
+    }
+    if (!mounted) return;
+    final picked = await showStreetPictureSheet(
+      context,
+      current: e.streetPicture,
+      kind: e.kind,
+      ownKeys: own,
+      ownUrl: (k) => widget.events.pictureUrl(k, width: 360),
+    );
+    if (picked == null || picked.choice == e.streetPicture || !mounted) return;
+    await _run(() => widget.events.setStreetPicture(e.id, picked.choice), done: context.tr('Photo sur la rue enregistrée'));
+  }
+
   Future<void> _open(String path) async {
     final uri = Uri.parse('${eventSiteOrigin()}$path');
     final open = widget.open;
@@ -870,6 +895,17 @@ class _EventScreenState extends State<EventScreen> {
                             : (v) => _run(() => widget.events.setListed(e.id, v),
                                 done: v ? context.tr('Sur la rue, dans « Événements »') : context.tr('Retiré de la rue')),
                       ),
+                      // The event's picture on the street (175): the
+                      // organiser's own, a gallery picture, or automatic.
+                      if (e.listed && e.published)
+                        ListTile(
+                          key: const Key('event-street-picture'),
+                          leading: const Icon(Icons.image_outlined),
+                          title: Text(context.tr('Photo sur la rue')),
+                          subtitle: Text(streetPictureLabel(context, e.streetPicture)),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => _chooseStreetPicture(e),
+                        ),
                       // The guests' album (155): open, the card takes their
                       // pictures; closed, it says so and takes none.
                       SwitchListTile(
