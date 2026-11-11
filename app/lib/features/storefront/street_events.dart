@@ -1,7 +1,10 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/capture/capture_repository.dart';
+import '../../core/events/events_repository.dart' show eventKindName, knownTemplates;
 import '../../core/events/street_event.dart';
 import '../../core/format/money.dart';
 import '../../core/l10n/tr.dart';
@@ -87,26 +90,107 @@ String _priceLine(BuildContext context, StreetEvent e) {
   return context.tr('Billets dès {price}', {'price': moneyFormat(e.currency).format(e.fromPrice)});
 }
 
+/// The event's picture (174): the card's own photo, else a photo of the
+/// card bank, else the card's design drawn behind its own day — its preview
+/// softened so that the design's sample names (« Inès + Thomas ») never
+/// read as this event's, with the kind and the date written on it.
 class _Poster extends StatelessWidget {
-  const _Poster({required this.event, required this.capture});
+  const _Poster({required this.event, required this.capture, this.large = false});
 
   final StreetEvent event;
   final CaptureRepository capture;
 
+  /// The event's own page: the day written larger.
+  final bool large;
+
+  static final _safe = RegExp(r'^[a-z0-9_-]{1,40}$');
+
   @override
   Widget build(BuildContext context) {
-    const blank = ColoredBox(
-      color: ShopStyle.stone,
-      child: Center(child: Icon(Icons.celebration_outlined, size: 36, color: ShopStyle.mist)),
-    );
+    final design = _DesignPoster(event: event, large: large);
     final key = event.poster;
-    if (key == null) return blank;
-    return LazyPhoto(
-      id: key,
-      load: (width) => capture.publicObjectBytes(key, width: width),
-      placeholder: blank,
-      builder: (context, bytes, width) => Image.memory(bytes, fit: BoxFit.cover, cacheWidth: width),
-    );
+    if (key != null) {
+      return LazyPhoto(
+        id: key,
+        load: (width) => capture.publicObjectBytes(key, width: width),
+        placeholder: design,
+        builder: (context, bytes, width) => Image.memory(bytes, fit: BoxFit.cover, cacheWidth: width),
+      );
+    }
+    final stock = event.posterStock;
+    if (stock != null && _safe.hasMatch(stock)) {
+      return Image.network('${eventSiteOrigin()}/cartes/img/$stock.jpg',
+          key: const Key('street-event-stock'),
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => design);
+    }
+    return design;
+  }
+}
+
+class _DesignPoster extends StatelessWidget {
+  const _DesignPoster({required this.event, required this.large});
+
+  final StreetEvent event;
+  final bool large;
+
+  // saturation 1.6, a touch of contrast
+  static const List<double> _lively = [
+    1.62, -0.53, -0.07, 0, -6,
+    -0.19, 1.25, -0.07, 0, -6,
+    -0.19, -0.53, 1.74, 0, -6,
+    0, 0, 0, 1, 0,
+  ];
+
+  static const _months = ['JANV.', 'FÉVR.', 'MARS', 'AVR.', 'MAI', 'JUIN', 'JUIL.', 'AOÛT', 'SEPT.', 'OCT.', 'NOV.', 'DÉC.'];
+
+  @override
+  Widget build(BuildContext context) {
+    final card = event.card;
+    final known = card != null && knownTemplates.any((t) => t.key == card);
+    final d = event.startsAt;
+    final white = TextStyle(color: Colors.white, shadows: [Shadow(color: Colors.black.withValues(alpha: .35), blurRadius: 12)]);
+    return Stack(key: const Key('street-event-design'), fit: StackFit.expand, children: [
+      const ColoredBox(color: ShopStyle.ink),
+      if (known)
+        // softened: the design's colours and art, none of its sample words
+        // (and its colours a little livelier: a pale design must not read as grey)
+        ColorFiltered(
+          colorFilter: const ColorFilter.matrix(_lively),
+          child: ImageFiltered(
+            imageFilter: ImageFilter.blur(sigmaX: 9, sigmaY: 9, tileMode: TileMode.decal),
+            child: Image.network('${eventSiteOrigin()}/cartes/apercu/$card.jpg',
+                fit: BoxFit.cover, alignment: const Alignment(0, -0.2), errorBuilder: (_, _, _) => const SizedBox()),
+          ),
+        ),
+      DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.black.withValues(alpha: .10), Colors.black.withValues(alpha: .55)],
+          ),
+        ),
+      ),
+      Padding(
+        padding: EdgeInsets.fromLTRB(14, large ? 20 : 40, 14, large ? 22 : 12),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(context.tr(eventKindName(event.kind)).toUpperCase(),
+                maxLines: 1, overflow: TextOverflow.ellipsis,
+                style: white.copyWith(fontSize: large ? 13 : 10, letterSpacing: 2, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 2),
+            Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
+              Text('${d.day}', style: white.copyWith(fontSize: large ? 64 : 40, height: 1, fontWeight: FontWeight.w800)),
+              const SizedBox(width: 6),
+              Text(_months[d.month - 1], style: white.copyWith(fontSize: large ? 22 : 15, fontWeight: FontWeight.w700, letterSpacing: 1)),
+            ]),
+          ],
+        ),
+      ),
+    ]);
   }
 }
 
@@ -253,7 +337,7 @@ class _EventVitrineScreenState extends State<EventVitrineScreen> {
     final wide = MediaQuery.sizeOf(context).width >= 900;
     final poster = ClipRRect(
       borderRadius: BorderRadius.circular(18),
-      child: AspectRatio(aspectRatio: 4 / 5, child: _Poster(event: e, capture: widget.capture)),
+      child: AspectRatio(aspectRatio: 4 / 5, child: _Poster(event: e, capture: widget.capture, large: true)),
     );
     final details = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(_countdown(context, e.startsAt, now).toUpperCase(),
