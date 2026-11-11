@@ -66,8 +66,7 @@ class StreetEvent {
   /// A photo of the card bank when that is all the card has (174).
   final String? posterStock;
 
-  /// The card's design (its template key): with no photo, the street
-  /// draws its look (`/cartes/apercu/<card>.jpg`) softened, under the day.
+  /// The card's design (its template key).
   final String? card;
 
   /// It sells tickets (Marakaj Pro), from [fromPrice].

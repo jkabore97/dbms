@@ -10,8 +10,8 @@
 -- a Studio card's cover first, then its other blocks (the guests' view:
 -- hidden blocks left out), then the classic card's p:hero, p:p1 and any
 -- other p:<slot> — a stored picture only (154). 'poster_stock' is a photo
--- of the bank when that is all the card has. With neither, the app draws
--- the card's design (its preview, softened) with the event's own day.
+-- of the bank when that is all the card has. With neither, the app shows
+-- a picture of the event's kind with the event's own day.
 --
 -- For a shop, a farm and an association: nothing (an Événementiel's public
 -- events only). Applies twice.

@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kaj_app/core/capture/capture_repository.dart';
 import 'package:kaj_app/core/db/local_db.dart';
+import 'package:kaj_app/core/events/events_repository.dart' show eventKinds;
 import 'package:kaj_app/core/events/street_event.dart';
 import 'package:kaj_app/core/storefront/storefront_repository.dart';
 import 'package:kaj_app/features/storefront/street_events.dart';
@@ -162,36 +165,45 @@ void main() {
   });
 
   // 174: the owner — « you really need to find and put a nice preview for
-  // events ». No photo: the card's design, softened, under its own day; a
-  // bank photo: that photo; the card's own photo: that, as before.
-  testWidgets('174: a card without a photo shows its design under its kind and day; a bank photo is used', (tester) async {
-    StreetEvent ev(Map<String, dynamic> extra) => StreetEvent.fromJson({
-          'slug': 'esprance-${extra.length}',
+  // events », then « very nice and high quality preview images ». No photo:
+  // the picture of its kind of event under its kind and day; a bank photo:
+  // that photo; the card's own photo: that, as before.
+  testWidgets('174: a card without a photo shows its kind\'s picture under its kind and day; a bank photo is used', (tester) async {
+    StreetEvent ev(String kind, Map<String, dynamic> extra) => StreetEvent.fromJson({
+          'slug': 'e-$kind-${extra.length}',
           'title': 'Esprance Anniversaire',
-          'kind': 'anniversaire',
+          'kind': kind,
           'starts_at': DateTime(2027, 1, 16, 18).toUtc().toIso8601String(),
           'date_fr': 'Samedi 16 janvier 2027 · 18 h',
           'tickets': false,
           ...extra,
         });
-    final design = ev({'card': 'anime_carnet'});
-    await _pump(tester, StreetEventsStrip(storefront: _Street([design]), capture: CaptureRepository(null, db: db), now: () => _now));
-    expect(find.byKey(const Key('street-event-design')), findsOneWidget);
-    expect(find.text('ANNIVERSAIRE'), findsOneWidget);
-    expect(find.text('16'), findsOneWidget);
-    expect(find.text('JANV.'), findsOneWidget);
-    final net = tester.widgetList<Image>(find.byType(Image)).map((i) => i.image).whereType<NetworkImage>().map((n) => n.url).toList();
-    expect(net, ['https://marakaj.com/cartes/apercu/anime_carnet.jpg'], reason: 'the design\'s own preview, softened');
+    String? asked(WidgetTester tester) => tester.widgetList<Image>(find.byType(Image)).map((i) => i.image)
+        .map((p) => p is ResizeImage ? p.imageProvider : p).whereType<NetworkImage>().map((n) => n.url).firstOrNull;
 
-    // a design the app does not know, or none: the day on ink, no picture asked
-    await _pump(tester, StreetEventsStrip(key: const Key('b'), storefront: _Street([ev({'card': '../../x'})]), capture: CaptureRepository(null, db: db), now: () => _now));
+    await _pump(tester, StreetEventsStrip(storefront: _Street([ev('anniversaire', {'card': 'anime_carnet'})]), capture: CaptureRepository(null, db: db), now: () => _now));
     expect(find.byKey(const Key('street-event-design')), findsOneWidget);
-    expect(tester.widgetList<Image>(find.byType(Image)).map((i) => i.image).whereType<NetworkImage>(), isEmpty);
+    expect(find.text('16'), findsOneWidget, reason: 'the day on its badge');
+    expect(find.text('JANV.'), findsOneWidget);
+    expect(asked(tester), 'https://marakaj.com/cartes/fetes/anniversaire.jpg');
+
+    // a kind without its own picture (« retraite »): the festive gathering
+    await _pump(tester, StreetEventsStrip(key: const Key('b'), storefront: _Street([ev('retraite', {})]), capture: CaptureRepository(null, db: db), now: () => _now));
+    expect(asked(tester), 'https://marakaj.com/cartes/fetes/autre.jpg');
 
     // a bank photo
-    await _pump(tester, StreetEventsStrip(key: const Key('c'), storefront: _Street([ev({'card': 'jardin', 'poster_stock': 'garden-2'})]), capture: CaptureRepository(null, db: db), now: () => _now));
+    await _pump(tester, StreetEventsStrip(key: const Key('c'), storefront: _Street([ev('mariage', {'card': 'jardin', 'poster_stock': 'garden-2'})]), capture: CaptureRepository(null, db: db), now: () => _now));
     expect(find.byKey(const Key('street-event-stock')), findsOneWidget);
-    expect(tester.widget<Image>(find.byKey(const Key('street-event-stock'))).image, isA<NetworkImage>()
-        .having((n) => n.url, 'url', 'https://marakaj.com/cartes/img/garden-2.jpg'));
+    expect(asked(tester), 'https://marakaj.com/cartes/img/garden-2.jpg');
+  });
+
+  test('174: every kind of event has its picture in the site, small enough for a phone', () {
+    for (final (kind, _) in eventKinds) {
+      final pic = kind == 'retraite' ? 'autre' : kind;
+      final f = File('web/cartes/fetes/$pic.jpg');
+      expect(f.existsSync(), isTrue, reason: kind);
+      expect(f.lengthSync(), lessThan(400 * 1024), reason: '$kind: under 400 kB');
+    }
+    expect(File('web/cartes/fetes/autre.jpg').existsSync(), isTrue);
   });
 }

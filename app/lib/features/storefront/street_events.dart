@@ -1,10 +1,8 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/capture/capture_repository.dart';
-import '../../core/events/events_repository.dart' show eventKindName, knownTemplates;
+import '../../core/events/events_repository.dart' show eventKindName;
 import '../../core/events/street_event.dart';
 import '../../core/format/money.dart';
 import '../../core/l10n/tr.dart';
@@ -91,9 +89,7 @@ String _priceLine(BuildContext context, StreetEvent e) {
 }
 
 /// The event's picture (174): the card's own photo, else a photo of the
-/// card bank, else the card's design drawn behind its own day — its preview
-/// softened so that the design's sample names (« Inès + Thomas ») never
-/// read as this event's, with the kind and the date written on it.
+/// card bank, else the picture of its kind of event under its kind and day.
 class _Poster extends StatelessWidget {
   const _Poster({required this.event, required this.capture, this.large = false});
 
@@ -128,68 +124,90 @@ class _Poster extends StatelessWidget {
   }
 }
 
+/// The picture of the event's kind (174), when the card has no photo of its
+/// own: thirteen photographs made for Marakaj (`/cartes/fetes/<kind>.jpg` — a
+/// wedding's rings on a Faso Dan Fani cloth, a dot's kola nuts and pagnes,
+/// a birthday's cake…), with no text and no face, under the event's kind
+/// and its day.
 class _DesignPoster extends StatelessWidget {
   const _DesignPoster({required this.event, required this.large});
 
   final StreetEvent event;
   final bool large;
 
-  // saturation 1.6, a touch of contrast
-  static const List<double> _lively = [
-    1.62, -0.53, -0.07, 0, -6,
-    -0.19, 1.25, -0.07, 0, -6,
-    -0.19, -0.53, 1.74, 0, -6,
-    0, 0, 0, 1, 0,
-  ];
+  static const kinds = {
+    'mariage', 'dot', 'anniversaire', 'bapteme', 'naissance', 'diplome', 'gala',
+    'inauguration', 'concert', 'culture', 'conference', 'hommage', 'autre',
+  };
+
+  /// The picture's name for a kind: the kinds' own, « anniv » the birthday's,
+  /// any other (« retraite », a kind added later) the festive gathering.
+  static String pictureOf(String kind) => kind == 'anniv' ? 'anniversaire' : (kinds.contains(kind) ? kind : 'autre');
 
   static const _months = ['JANV.', 'FÉVR.', 'MARS', 'AVR.', 'MAI', 'JUIN', 'JUIL.', 'AOÛT', 'SEPT.', 'OCT.', 'NOV.', 'DÉC.'];
 
   @override
   Widget build(BuildContext context) {
-    final card = event.card;
-    final known = card != null && knownTemplates.any((t) => t.key == card);
     final d = event.startsAt;
-    final white = TextStyle(color: Colors.white, shadows: [Shadow(color: Colors.black.withValues(alpha: .35), blurRadius: 12)]);
+    final white = TextStyle(color: Colors.white, shadows: [Shadow(color: Colors.black.withValues(alpha: .45), blurRadius: 14)]);
     return Stack(key: const Key('street-event-design'), fit: StackFit.expand, children: [
       const ColoredBox(color: ShopStyle.ink),
-      if (known)
-        // softened: the design's colours and art, none of its sample words
-        // (and its colours a little livelier: a pale design must not read as grey)
-        ColorFiltered(
-          colorFilter: const ColorFilter.matrix(_lively),
-          child: ImageFiltered(
-            imageFilter: ImageFilter.blur(sigmaX: 9, sigmaY: 9, tileMode: TileMode.decal),
-            child: Image.network('${eventSiteOrigin()}/cartes/apercu/$card.jpg',
-                fit: BoxFit.cover, alignment: const Alignment(0, -0.2), errorBuilder: (_, _, _) => const SizedBox()),
+      Image.network('${eventSiteOrigin()}/cartes/fetes/${pictureOf(event.kind)}.jpg',
+          key: const Key('street-event-kind'),
+          fit: BoxFit.cover,
+          cacheWidth: large ? 1200 : 600,
+          errorBuilder: (_, _, _) => const SizedBox()),
+      if (!large)
+        // the tile: a small calendar badge in the corner, the picture left whole
+        Positioned(
+          left: 8,
+          bottom: 8,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: .25), blurRadius: 8, offset: const Offset(0, 2))],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 5, 10, 6),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                Text('${d.day}', style: const TextStyle(fontSize: 20, height: 1.05, fontWeight: FontWeight.w800, color: ShopStyle.ink)),
+                Text(_months[d.month - 1], style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: .5, color: ShopStyle.ink)),
+              ]),
+            ),
+          ),
+        )
+      else ...[
+        // the event's page: the kind and the day large, dark only where they are
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              stops: const [0, .5, 1],
+              colors: [Colors.black.withValues(alpha: 0), Colors.black.withValues(alpha: .05), Colors.black.withValues(alpha: .6)],
+            ),
           ),
         ),
-      DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.black.withValues(alpha: .10), Colors.black.withValues(alpha: .55)],
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 22),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(context.tr(eventKindName(event.kind)).toUpperCase(),
+                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: white.copyWith(fontSize: 13, letterSpacing: 2, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 2),
+              Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
+                Text('${d.day}', style: white.copyWith(fontSize: 64, height: 1, fontWeight: FontWeight.w800)),
+                const SizedBox(width: 6),
+                Text(_months[d.month - 1], style: white.copyWith(fontSize: 22, fontWeight: FontWeight.w700, letterSpacing: 1)),
+              ]),
+            ],
           ),
         ),
-      ),
-      Padding(
-        padding: EdgeInsets.fromLTRB(14, large ? 20 : 40, 14, large ? 22 : 12),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(context.tr(eventKindName(event.kind)).toUpperCase(),
-                maxLines: 1, overflow: TextOverflow.ellipsis,
-                style: white.copyWith(fontSize: large ? 13 : 10, letterSpacing: 2, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 2),
-            Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
-              Text('${d.day}', style: white.copyWith(fontSize: large ? 64 : 40, height: 1, fontWeight: FontWeight.w800)),
-              const SizedBox(width: 6),
-              Text(_months[d.month - 1], style: white.copyWith(fontSize: large ? 22 : 15, fontWeight: FontWeight.w700, letterSpacing: 1)),
-            ]),
-          ],
-        ),
-      ),
+      ],
     ]);
   }
 }
