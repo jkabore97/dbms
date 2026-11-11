@@ -8,7 +8,7 @@ import '../../core/format/money.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import '../../core/storefront/storefront_repository.dart';
-import '../events/events_screens.dart' show eventSiteOrigin, openOutside, openSitePage, whatsappDigits;
+import '../events/events_screens.dart' show eventSiteOrigin, openOutside, openSitePage, streetGalleryUrl, whatsappDigits;
 import 'directory_screen.dart' show SponsoredTag;
 import 'lazy_photo.dart';
 import 'shop_style.dart';
@@ -88,8 +88,9 @@ String _priceLine(BuildContext context, StreetEvent e) {
   return context.tr('Billets dès {price}', {'price': moneyFormat(e.currency).format(e.fromPrice)});
 }
 
-/// The event's picture (174): the card's own photo, else a photo of the
-/// card bank, else the picture of its kind of event under its kind and day.
+/// The event's picture (174, 175): the gallery picture its organiser chose,
+/// else the card's own photo, else a photo of the card bank, else the
+/// gallery picture of its kind of event under its kind and day.
 class _Poster extends StatelessWidget {
   const _Poster({required this.event, required this.capture, this.large = false});
 
@@ -103,7 +104,9 @@ class _Poster extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final design = _DesignPoster(event: event, large: large);
+    final fete = event.posterFete;
+    if (streetGalleryName(fete)) return _DesignPoster(event: event, large: large, picture: fete!);
+    final design = _DesignPoster(event: event, large: large, picture: streetPictureOfKind(event.kind));
     final key = event.poster;
     if (key != null) {
       return LazyPhoto(
@@ -124,25 +127,17 @@ class _Poster extends StatelessWidget {
   }
 }
 
-/// The picture of the event's kind (174), when the card has no photo of its
-/// own: thirteen photographs made for Marakaj (`/cartes/fetes/<kind>.jpg` — a
-/// wedding's rings on a Faso Dan Fani cloth, a dot's kola nuts and pagnes,
-/// a birthday's cake…), with no text and no face, under the event's kind
-/// and its day.
+/// A picture of Marakaj's gallery (174, 175) — the event's kind's when the
+/// card has no photo, or the one its organiser chose — under the event's
+/// kind and its day.
 class _DesignPoster extends StatelessWidget {
-  const _DesignPoster({required this.event, required this.large});
+  const _DesignPoster({required this.event, required this.large, required this.picture});
 
   final StreetEvent event;
   final bool large;
 
-  static const kinds = {
-    'mariage', 'dot', 'anniversaire', 'bapteme', 'naissance', 'diplome', 'gala',
-    'inauguration', 'concert', 'culture', 'conference', 'hommage', 'autre',
-  };
-
-  /// The picture's name for a kind: the kinds' own, « anniv » the birthday's,
-  /// any other (« retraite », a kind added later) the festive gathering.
-  static String pictureOf(String kind) => kind == 'anniv' ? 'anniversaire' : (kinds.contains(kind) ? kind : 'autre');
+  /// Its name in the gallery ([streetGallery]).
+  final String picture;
 
   static const _months = ['JANV.', 'FÉVR.', 'MARS', 'AVR.', 'MAI', 'JUIN', 'JUIL.', 'AOÛT', 'SEPT.', 'OCT.', 'NOV.', 'DÉC.'];
 
@@ -152,7 +147,7 @@ class _DesignPoster extends StatelessWidget {
     final white = TextStyle(color: Colors.white, shadows: [Shadow(color: Colors.black.withValues(alpha: .45), blurRadius: 14)]);
     return Stack(key: const Key('street-event-design'), fit: StackFit.expand, children: [
       const ColoredBox(color: ShopStyle.ink),
-      Image.network('${eventSiteOrigin()}/cartes/fetes/${pictureOf(event.kind)}.jpg',
+      Image.network(streetGalleryUrl(picture),
           key: const Key('street-event-kind'),
           fit: BoxFit.cover,
           cacheWidth: large ? 1200 : 600,

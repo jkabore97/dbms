@@ -178,6 +178,26 @@ class EventsRepository {
     }).eq('id', id);
   }
 
+  /// The event's picture on the street (175): null for the automatic one,
+  /// `'fete:<name>'` or one of the card's own picture keys.
+  Future<void> setStreetPicture(String id, String? choice) async {
+    await _require().from('events').update({'street_picture': choice}).eq('id', id);
+  }
+
+  /// The card's own pictures (154), the organiser's — not the guests' —
+  /// stored, newest first: what « Photo sur la rue » offers.
+  Future<List<String>> cardPictures(String eventId) async {
+    final rows = await _require()
+        .from('event_pictures')
+        .select('key')
+        .eq('event_id', eventId)
+        .eq('state', 'stored')
+        .eq('source', 'organiser')
+        .order('done_at', ascending: false)
+        .limit(60);
+    return [for (final r in rows) '${r['key']}'];
+  }
+
   /// The organiser's yes: a guest's picture joins the card's album.
   Future<void> approvePicture(String key) async {
     await _require().rpc('event_picture_approve', params: {'p_key': key});
@@ -442,6 +462,7 @@ class EventSummary {
     this.listed = false,
     this.albumLimit = false,
     this.albumReview = false,
+    this.streetPicture,
   });
 
   factory EventSummary.fromJson(Map<String, dynamic> j) => EventSummary(
@@ -463,6 +484,7 @@ class EventSummary {
         listed: (j['listed'] as bool?) ?? false,
         albumLimit: (j['album_limit'] as bool?) ?? false,
         albumReview: (j['album_review'] as bool?) ?? false,
+        streetPicture: j['street_picture'] as String?,
       );
 
   final String id;
@@ -491,6 +513,11 @@ class EventSummary {
   /// once the organiser said yes.
   final bool albumLimit;
   final bool albumReview;
+
+  /// The event's picture on the street (175): null automatic (the card's
+  /// photo, else its kind's), `'fete:<name>'` a gallery picture, or the key
+  /// of one of the card's own pictures.
+  final String? streetPicture;
 
   /// The card's address on the site, for the guests.
   String get publicPath => '/e/$slug';

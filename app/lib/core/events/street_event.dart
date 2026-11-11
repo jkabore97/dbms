@@ -11,6 +11,7 @@ class StreetEvent {
     this.orgName,
     this.poster,
     this.posterStock,
+    this.posterFete,
     this.card,
     this.tickets = false,
     this.fromPrice,
@@ -33,6 +34,7 @@ class StreetEvent {
       orgName: j['org_name'] as String?,
       poster: j['poster'] as String?,
       posterStock: j['poster_stock'] as String?,
+      posterFete: j['poster_fete'] as String?,
       card: j['card'] as String?,
       tickets: j['tickets'] == true,
       fromPrice: (j['from_price'] as num?)?.toDouble(),
@@ -66,6 +68,10 @@ class StreetEvent {
   /// A photo of the card bank when that is all the card has (174).
   final String? posterStock;
 
+  /// A picture of Marakaj's gallery the organiser chose (175): its name in
+  /// [streetGallery].
+  final String? posterFete;
+
   /// The card's design (its template key).
   final String? card;
 
@@ -98,3 +104,19 @@ class StreetEvent {
   if (days == 1) return (phrase: 'Demain', n: null);
   return (phrase: 'Dans {n} j', n: days);
 }
+
+/// Marakaj's gallery of event pictures (174, 175): `/cartes/fetes/<name>.jpg`,
+/// photographs made for Marakaj, no text and no face. A card without a photo
+/// shows its kind's; the organiser may choose any of them for the street.
+const streetGallery = [
+  'mariage', 'dot', 'anniversaire', 'bapteme', 'naissance', 'diplome', 'gala',
+  'inauguration', 'concert', 'culture', 'conference', 'hommage', 'autre',
+];
+
+/// The gallery picture of a kind: the kinds' own, « anniv » the birthday's,
+/// any other (« retraite », a kind added later) the festive gathering.
+String streetPictureOfKind(String kind) =>
+    kind == 'anniv' ? 'anniversaire' : (streetGallery.contains(kind) ? kind : 'autre');
+
+/// A gallery name the app will ask for: letters, digits and dashes.
+bool streetGalleryName(String? name) => name != null && RegExp(r'^[a-z0-9-]{1,40}$').hasMatch(name);
