@@ -8939,8 +8939,6 @@ const enStrings = <String, String>{
       'Ticket type',
   'Standard, VIP…':
       'Standard, VIP…',
-  'Prix (FCFA)':
-      'Price (FCFA)',
   'Places':
       'Places',
   'Vide : illimité':

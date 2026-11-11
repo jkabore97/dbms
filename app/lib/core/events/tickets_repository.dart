@@ -201,6 +201,24 @@ class TicketsRepository {
     return [for (final t in (r as List? ?? const [])) MyTickets.fromJson(Map<String, dynamic>.from(t as Map))];
   }
 
+  /// The money of this event's tickets (176): its business's currency, for
+  /// its admins and its team — the buyer's page, the requests and « Bilan »
+  /// use the same. Before 176, the admins read it from the business; XOF
+  /// when nothing answers.
+  Future<String> currency(String eventId) async {
+    try {
+      final c = _require();
+      try {
+        final r = await c.rpc('event_currency', params: {'p_event': eventId});
+        if (r is String && r.isNotEmpty) return r;
+      } catch (_) {}
+      final row = await c.from('events').select('orgs(default_currency)').eq('id', eventId).maybeSingle();
+      final cur = (row?['orgs'] as Map?)?['default_currency'];
+      if (cur is String && cur.isNotEmpty) return cur;
+    } catch (_) {}
+    return 'XOF';
+  }
+
   // ------------------------------------------------------------ 163
   /// The types on sale (163: the door's sale, read by its team too).
   Future<List<TicketType>> activeTypes(String eventId) async {

@@ -251,6 +251,9 @@ class _TicketJournalScreenState extends State<TicketJournalScreen> {
   List<Map<String, dynamic>>? _rows;
   String? _error;
 
+  /// The business's money (176).
+  String _currency = 'XOF';
+
   @override
   void initState() {
     super.initState();
@@ -260,9 +263,11 @@ class _TicketJournalScreenState extends State<TicketJournalScreen> {
   Future<void> _load() async {
     try {
       final r = await widget.tickets.journal(widget.eventId);
+      final cur = await widget.tickets.currency(widget.eventId);
       if (!mounted) return;
       setState(() {
         _rows = r;
+        _currency = cur;
         _error = null;
       });
     } catch (e) {
@@ -292,7 +297,7 @@ class _TicketJournalScreenState extends State<TicketJournalScreen> {
                             DateFormat('d MMM · HH:mm', context.trLocale)
                                 .format(DateTime.tryParse('${x['at']}')?.toLocal() ?? DateTime.now()),
                             if (x['detail'] != null) '${x['detail']}',
-                            if (x['amount'] != null) moneyFormat('XOF').format(x['amount'] as num),
+                            if (x['amount'] != null) moneyFormat(_currency).format(x['amount'] as num),
                           ].join(' · ')),
                         ),
                     ],
@@ -306,8 +311,10 @@ class _TicketJournalScreenState extends State<TicketJournalScreen> {
 /// once and counted to whoever sold them.
 Future<void> showDoorSale(BuildContext context, TicketsRepository tickets, String eventId) async {
   final List<TicketType> types;
+  final String currency;
   try {
     types = await tickets.activeTypes(eventId);
+    currency = await tickets.currency(eventId);
   } catch (e) {
     if (context.mounted) _say(context, AuthRepository.describeError(e));
     return;
@@ -325,7 +332,7 @@ Future<void> showDoorSale(BuildContext context, TicketsRepository tickets, Strin
           content: Column(mainAxisSize: MainAxisSize.min, children: [
             for (final t in types)
               Row(children: [
-                Expanded(child: Text('${t.name} · ${moneyFormat('XOF').format(t.price)}')),
+                Expanded(child: Text('${t.name} · ${moneyFormat(currency).format(t.price)}')),
                 IconButton(
                   icon: const Icon(Icons.remove_circle_outline),
                   onPressed: (qty[t.id] ?? 0) == 0 ? null : () => set(() => qty[t.id] = qty[t.id]! - 1),
@@ -338,7 +345,7 @@ Future<void> showDoorSale(BuildContext context, TicketsRepository tickets, Strin
                 ),
               ]),
             const SizedBox(height: 8),
-            Text(context.tr('À encaisser en espèces : {total}', {'total': moneyFormat('XOF').format(total)}),
+            Text(context.tr('À encaisser en espèces : {total}', {'total': moneyFormat(currency).format(total)}),
                 style: const TextStyle(fontWeight: FontWeight.w700)),
           ]),
           actions: [
@@ -382,9 +389,10 @@ Future<void> cancelEvent(BuildContext context, TicketsRepository tickets, EventS
   if (why == null || !context.mounted) return;
   try {
     final holders = await tickets.cancel(event.id, reason: why.isEmpty ? null : why);
+    final currency = await tickets.currency(event.id);
     if (!context.mounted) return;
     await Navigator.of(context).push(MaterialPageRoute<void>(
-      builder: (_) => HoldersScreen(event: event, holders: holders, reason: why, open: open),
+      builder: (_) => HoldersScreen(event: event, holders: holders, reason: why, open: open, currency: currency),
     ));
   } catch (e) {
     if (context.mounted) _say(context, AuthRepository.describeError(e));
@@ -393,9 +401,12 @@ Future<void> cancelEvent(BuildContext context, TicketsRepository tickets, EventS
 
 /// The holders of a cancelled event, each with a WhatsApp message ready.
 class HoldersScreen extends StatelessWidget {
-  const HoldersScreen({super.key, required this.event, required this.holders, this.reason = '', this.open});
+  const HoldersScreen({super.key, required this.event, required this.holders, this.reason = '', this.open, this.currency = 'XOF'});
 
   final EventSummary event;
+
+  /// The business's money (176).
+  final String currency;
   final List<Map<String, dynamic>> holders;
   final String reason;
   final Future<void> Function(Uri uri)? open;
@@ -418,7 +429,7 @@ class HoldersScreen extends StatelessWidget {
               child: ListTile(
                 key: ValueKey('holder-${h['id']}'),
                 title: Text('${h['name']} · ${h['ref']}'),
-                subtitle: Text(moneyFormat('XOF').format(h['total'] as num? ?? 0)),
+                subtitle: Text(moneyFormat(currency).format(h['total'] as num? ?? 0)),
                 trailing: const Icon(Icons.chat_outlined),
                 onTap: () async {
                   final to = whatsappDigits(h['whatsapp']);
