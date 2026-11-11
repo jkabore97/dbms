@@ -69,7 +69,7 @@ void main() {
   testWidgets('a gallery picture chosen, then the card\'s own, then automatic again', (tester) async {
     final events = _Events();
     await _pump(tester, EventScreen(events: events, org: _org, eventId: 'e1'));
-    expect(find.text('Automatique : la photo de la carte, sinon celle de son type d’événement.'), findsOneWidget);
+    expect(find.text('Automatique : l’aperçu de votre carte, sinon sa photo ou celle de son type d’événement.'), findsOneWidget);
 
     Future<void> choose(Key key) async {
       await tester.ensureVisible(find.byKey(const Key('event-street-picture')));

@@ -107,6 +107,14 @@ export default {
         return withCors(await putEventPicture(request, env, picture[1], url.searchParams.get("modifier") || ""), cors);
       }
 
+      // POST /v1/events/<slug>/preview?modifier=<edit token> — the card's
+      // own picture, drawn by Studio (177): the street shows it. Each one
+      // replaces the last, whose bytes go.
+      const preview = url.pathname.match(/^\/v1\/events\/([a-z0-9-]+)\/preview$/);
+      if (preview && request.method === "POST") {
+        return withCors(await putEventPreview(request, env, preview[1], url.searchParams.get("modifier") || ""), cors);
+      }
+
       // POST /v1/events/<slug>/album?apercu=<preview token>&invite=<name>&pass=<id> —
       // a guest's picture for the card's album (155): signed out, the
       // card's link is the key; Postgres mints and confirms every key.
@@ -569,6 +577,23 @@ async function putEventPicture(request, env, slug, edit) {
   });
 }
 
+// The card's own picture (177), drawn by Studio from the card itself:
+// Postgres mints the key, confirms it as the card's preview and names the
+// one it replaces, whose bytes are deleted here.
+async function putEventPreview(request, env, slug, edit) {
+  if (!/^[0-9a-f]{24}$/.test(edit)) {
+    return refusal(403, "Cette carte ne peut pas être modifiée d'ici.");
+  }
+  return storeEventPicture(request, env, {
+    mint: (ext) => rpcAnonAsked(env, "event_preview_slot", { p_slug: slug, p_edit: edit, p_ext: ext }),
+    confirm: (key, bytes) => rpcAnonAsked(env, "event_preview_done", { p_key: key, p_edit: edit, p_bytes: bytes }),
+    meta: { event: slug, preview: "1" },
+    after: async (old) => {
+      if (typeof old === "string" && EVENT_KEY.test(old)) await env.UPLOADS.delete(old);
+    },
+  });
+}
+
 // A guest's picture for the album (155): the card's link (the preview
 // token, or none for a published card) and the guest's first name.
 async function putAlbumPicture(request, env, slug, preview, guest, pass = "") {
@@ -585,7 +610,7 @@ async function putAlbumPicture(request, env, slug, preview, guest, pass = "") {
 // The one shape of a card's upload: Postgres mints the key, the Worker
 // puts the bytes, Postgres confirms them — and a refusal there deletes
 // what was just written, so nothing stays behind unreferenced.
-async function storeEventPicture(request, env, { mint, confirm, meta }) {
+async function storeEventPicture(request, env, { mint, confirm, meta, after }) {
   const contentType = (request.headers.get("Content-Type") || "")
     .split(";")[0]
     .trim()
@@ -623,6 +648,7 @@ async function storeEventPicture(request, env, { mint, confirm, meta }) {
     await env.UPLOADS.delete(slot.value);
     return refused(done);
   }
+  if (after) await after(done.value);
   return json({ key: slot.value, bytes: body.byteLength, url: `/v1/public/objects/${encodeURIComponent(slot.value)}` }, 201);
 }
 

@@ -1029,6 +1029,14 @@
     leaving = true;
     location.href = '/e/' + encodeURIComponent(ctx.slug || '') + (ctx.preview ? '?apercu=' + encodeURIComponent(ctx.preview) : '');
   };
+  // The card's own picture for the street (177): drawn from the guests'
+  // page after each save, and once on opening when the card has none — only
+  // where the guests' page opens (published, or by its preview link).
+  function cardPicture(wait) {
+    if (!S.cardPicture || !(BOOT.published === true || ctx.preview)) return;
+    setTimeout(function () { S.cardPicture(ctx); }, wait);
+  }
+  if (BOOT.has_preview === false) cardPicture(5000);
   var saving = false;
   document.getElementById('edSave').onclick = function () {
     if (saving) return;
@@ -1041,6 +1049,7 @@
       savedJson = canon(body); savedAt = r && r.saved_at || new Date().toISOString(); converted = false;
       try { localStorage.removeItem(DRAFT); } catch (e) {}
       stateBar(); toast('Carte enregistrée. Vos invités la voient ainsi.');
+      cardPicture(1200);
     }, function (err) { saving = false; btn.textContent = 'Enregistrer'; toast(err.message || 'La carte n’est pas enregistrée. Réessayez.'); });
   };
   window.addEventListener('beforeunload', function (e) { if (doc && dirty() && !leaving) { e.preventDefault(); e.returnValue = ''; } });   // asked once, not twice

@@ -8,7 +8,7 @@ import 'events_screens.dart' show streetGalleryUrl;
 /// automatic one, `'fete:<name>'` for a gallery picture, a key for one of the
 /// card's own pictures.
 String streetPictureLabel(BuildContext context, String? choice) {
-  if (choice == null) return context.tr('Automatique : la photo de la carte, sinon celle de son type d’événement.');
+  if (choice == null) return context.tr('Automatique : l’aperçu de votre carte, sinon sa photo ou celle de son type d’événement.');
   if (choice.startsWith('fete:')) return context.tr('Une photo de la galerie Marakaj.');
   return context.tr('Une photo de votre carte.');
 }
@@ -90,7 +90,7 @@ class StreetPictureSheet extends StatelessWidget {
                 color: current == null ? theme.colorScheme.primary : null),
             onTap: () => pick(null),
             title: Text(context.tr('Automatique')),
-            subtitle: Text(context.tr('La photo de la carte, sinon celle de son type d’événement.')),
+            subtitle: Text(context.tr('L’aperçu de votre carte, telle que vos invités la voient.')),
           ),
           const SizedBox(height: 8),
           Text(context.tr('Mes photos'), style: theme.textTheme.titleMedium),
