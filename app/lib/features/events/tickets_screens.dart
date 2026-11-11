@@ -116,6 +116,9 @@ class TicketSetupScreen extends StatefulWidget {
 
 class _TicketSetupScreenState extends State<TicketSetupScreen> {
   TicketSettings? _s;
+
+  /// The business's money (176): the prices are typed and shown in it.
+  String _currency = 'XOF';
   String? _error;
   bool _saving = false;
   final _whatsapp = TextEditingController();
@@ -135,9 +138,11 @@ class _TicketSetupScreenState extends State<TicketSetupScreen> {
   Future<void> _load() async {
     try {
       final s = await widget.tickets.settings(widget.event.id);
+      final cur = await widget.tickets.currency(widget.event.id);
       if (!mounted) return;
       setState(() {
         _s = s;
+        _currency = cur;
         _error = null;
         _whatsapp.text = s.payWhatsapp ?? '';
       });
@@ -172,7 +177,7 @@ class _TicketSetupScreenState extends State<TicketSetupScreen> {
   }
 
   Future<void> _editType([TicketType? t]) async {
-    final made = await showDialog<TicketType>(context: context, builder: (_) => _TypeDialog(initial: t));
+    final made = await showDialog<TicketType>(context: context, builder: (_) => _TypeDialog(initial: t, currency: _currency));
     if (made == null || !mounted) return;
     try {
       await widget.tickets.saveType(widget.event.id, made);
@@ -235,7 +240,7 @@ class _TicketSetupScreenState extends State<TicketSetupScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final s = _s;
-    final money = moneyFormat('XOF');
+    final money = moneyFormat(_currency);
     return Scaffold(
       appBar: AppBar(title: Text(context.tr('Vente de billets')), actions: const [bellRoom]),
       body: s == null
@@ -386,9 +391,12 @@ class _TicketSetupScreenState extends State<TicketSetupScreen> {
 }
 
 class _TypeDialog extends StatefulWidget {
-  const _TypeDialog({this.initial});
+  const _TypeDialog({this.initial, required this.currency});
 
   final TicketType? initial;
+
+  /// The business's money (176): what the price is typed in.
+  final String currency;
 
   @override
   State<_TypeDialog> createState() => _TypeDialogState();
@@ -439,7 +447,7 @@ class _TypeDialogState extends State<_TypeDialog> {
             key: const Key('ticket-type-price'),
             controller: _price,
             keyboardType: TextInputType.number,
-            decoration: InputDecoration(labelText: context.tr('Prix (FCFA)')),
+            decoration: InputDecoration(labelText: context.tr('Prix ({currency})', {'currency': currencySymbol(widget.currency)})),
           ),
           TextField(
             key: const Key('ticket-type-places'),
@@ -549,6 +557,9 @@ class TicketRequestsScreen extends StatefulWidget {
 
 class _TicketRequestsScreenState extends State<TicketRequestsScreen> {
   List<TicketRequest>? _all;
+
+  /// The business's money (176), for the totals.
+  String _currency = 'XOF';
   String? _error;
   String _show = 'pending';
   final _busy = <String>{};
@@ -562,9 +573,11 @@ class _TicketRequestsScreenState extends State<TicketRequestsScreen> {
   Future<void> _load() async {
     try {
       final r = await widget.tickets.requests(widget.event.id);
+      final cur = await widget.tickets.currency(widget.event.id);
       if (!mounted) return;
       setState(() {
         _all = r;
+        _currency = cur;
         _error = null;
       });
     } catch (e) {
@@ -668,7 +681,7 @@ class _TicketRequestsScreenState extends State<TicketRequestsScreen> {
           ];
     final paid = all?.where((r) => r.status == 'paid') ?? const <TicketRequest>[];
     final pending = all?.where((r) => r.status == 'pending') ?? const <TicketRequest>[];
-    final money = moneyFormat('XOF');
+    final money = moneyFormat(_currency);
     return Scaffold(
       appBar: AppBar(title: Text(context.tr('Demandes de billets')), actions: const [bellRoom]),
       body: all == null

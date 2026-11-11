@@ -26,6 +26,12 @@ class _Tickets extends TicketsRepository {
   final used = <String>{};
   bool offline = false;
 
+  /// The business's money (176).
+  String money = 'XOF';
+
+  @override
+  Future<String> currency(String eventId) async => money;
+
   @override
   Future<bool> allowed(String orgId) async => may;
 
@@ -274,5 +280,29 @@ void main() {
     await tester.pumpAndSettle();
     expect(events.listed, [true]);
     expect(find.text('Sur la rue, dans « Événements »'), findsOneWidget);
+  });
+
+  // 176: the owner, on « Bilan » in USD — « you didn't fix the currency
+  // mismatch issue ». The organiser types and reads the prices in the
+  // business's own money, as the buyer and « Bilan » do — never FCFA by default.
+  testWidgets('176: a business in USD types and reads its prices in USD, not FCFA', (tester) async {
+    final t = _Tickets()..money = 'USD';
+    await _pump(tester, TicketSetupScreen(tickets: t, event: _event));
+    await tester.tap(find.byKey(const Key('tickets-type-add')));
+    await tester.pumpAndSettle();
+    expect(find.text('Prix (USD)'), findsOneWidget);
+    expect(find.text('Prix (FCFA)'), findsNothing);
+    await tester.enterText(find.byKey(const Key('ticket-type-name')), 'VIP');
+    await tester.enterText(find.byKey(const Key('ticket-type-price')), '25');
+    await tester.tap(find.byKey(const Key('ticket-type-ok')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('USD'), findsWidgets);
+    expect(find.textContaining('FCFA'), findsNothing);
+
+    final cfa = _Tickets();
+    await _pump(tester, TicketSetupScreen(key: const Key('cfa'), tickets: cfa, event: _event));
+    await tester.tap(find.byKey(const Key('tickets-type-add')));
+    await tester.pumpAndSettle();
+    expect(find.text('Prix (FCFA)'), findsOneWidget, reason: 'a business in francs CFA: FCFA');
   });
 }
