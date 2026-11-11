@@ -452,6 +452,9 @@ export async function eventPage(request, env, slug, preview, edit, ctx) {
   // editor — saved in Studio it would have lost its motion. « studio=lire »
   // is Studio reading the card it is made from (the converter's frame).
   const reading = new URL(request.url).searchParams.get("studio") === "lire";
+  // The card shown inside Marakaj (177): the street's event page and
+  // Studio's own picture of the card — not a guest opening it.
+  const framed = new URL(request.url).searchParams.get("vitrine") === "1";
   if (editor && !reading && (hasDoc(data) || ("doc" in data && (!isAnimatedCard(data) || "pro" in data)))) {
     return new Response(null, {
       status: 302,
@@ -463,7 +466,7 @@ export async function eventPage(request, env, slug, preview, edit, ctx) {
   // this card until midnight), never the organiser, Studio's frame or a
   // robot (WhatsApp's or Facebook's link preview, a crawler).
   const seen = `mkv_${slug.replace(/-/g, "_").slice(0, 60)}`;
-  if (!editor && !reading && page.status === 200 && data.published === true && !isRobot(request) &&
+  if (!editor && !reading && !framed && page.status === 200 && data.published === true && !isRobot(request) &&
       !(request.headers.get("Cookie") || "").split(/;\s*/).some((c) => c.startsWith(`${seen}=`))) {
     const counted = countEvent(env, slug, "view");
     if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(counted); else await counted;
@@ -575,6 +578,21 @@ export async function studioPage(request, env, slug, preview, edit) {
   } catch (_) {
     data.tickets = false;
   }
+  // the card's own picture (177): Studio draws one when it has none
+  let hasPreview = null;
+  try {
+    const r = await fetch(rpcUrl(env, "event_preview_of", { p_slug: slug, p_edit: edit }), {
+      method: "GET",
+      headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${env.SUPABASE_PUBLISHABLE_KEY}` },
+      cache: "no-store",
+    });
+    if (r.ok) {
+      const key = await r.json();
+      hasPreview = typeof key === "string" && key.length > 0;
+    }
+  } catch (_) {
+    hasPreview = null;
+  }
   const page = await assetPage(env, request, "/cartes/studio/editor.html");
   if (!page.ok) return refused();
   const when = localParts(data.starts_at, data.tz);
@@ -602,6 +620,8 @@ export async function studioPage(request, env, slug, preview, edit) {
     edit,
     // Premium open to this business (173): true, false, or null before 173
     pro: data.pro === true ? true : data.pro === false ? false : null,
+    // the card's own picture for the street (177): true, false, or null before 177
+    has_preview: hasPreview,
     uploads: env.UPLOADS_URL ? env.UPLOADS_URL.replace(/\/$/, "") : null,
     api: { url: env.SUPABASE_URL || null, key: env.SUPABASE_PUBLISHABLE_KEY || null },
   };

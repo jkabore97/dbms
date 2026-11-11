@@ -11,6 +11,7 @@ import '../../core/storefront/storefront_repository.dart';
 import '../events/events_screens.dart' show eventSiteOrigin, openOutside, openSitePage, streetGalleryUrl, whatsappDigits;
 import 'directory_screen.dart' show SponsoredTag;
 import 'lazy_photo.dart';
+import 'live_card.dart';
 import 'shop_style.dart';
 
 /// The street's « Événements » (162): the public events, soonest first, in
@@ -88,8 +89,9 @@ String _priceLine(BuildContext context, StreetEvent e) {
   return context.tr('Billets dès {price}', {'price': moneyFormat(e.currency).format(e.fromPrice)});
 }
 
-/// The event's picture (174, 175): the gallery picture its organiser chose,
-/// else the card's own photo, else a photo of the card bank, else the
+/// The event's picture (174, 175, 177): what the street's row names — the
+/// organiser's choice, else the card itself (its picture, drawn by Studio),
+/// else the card's own photo — or a photo of the card bank, else the
 /// gallery picture of its kind of event under its kind and day.
 class _Poster extends StatelessWidget {
   const _Poster({required this.event, required this.capture, this.large = false});
@@ -348,9 +350,28 @@ class _EventVitrineScreenState extends State<EventVitrineScreen> {
     final now = (widget.now ?? DateTime.now)();
     final money = moneyFormat(e.currency);
     final wide = MediaQuery.sizeOf(context).width >= 900;
+    // The card itself (177): live — an animated card moves — over its
+    // still picture until loaded; a touch anywhere opens it.
     final poster = ClipRRect(
       borderRadius: BorderRadius.circular(18),
-      child: AspectRatio(aspectRatio: 4 / 5, child: _Poster(event: e, capture: widget.capture, large: true)),
+      child: AspectRatio(
+        aspectRatio: 412 / 732,
+        child: Stack(fit: StackFit.expand, children: [
+          liveCard(
+            key: const Key('event-vitrine-live'),
+            uri: Uri.parse('${eventSiteOrigin()}${e.cardPath}?vitrine=1'),
+            placeholder: _Poster(event: e, capture: widget.capture, large: true),
+          ),
+          Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              key: const Key('event-vitrine-open'),
+              onTap: () => _go(e.cardPath),
+              child: Semantics(button: true, label: context.tr('Voir l’invitation')),
+            ),
+          ),
+        ]),
+      ),
     );
     final details = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(_countdown(context, e.startsAt, now).toUpperCase(),

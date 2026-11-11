@@ -155,6 +155,10 @@ dependencies:
   # in_app_purchase 3.3.1 resolves, pinned with it.
   in_app_purchase_android: 0.5.3
   in_app_purchase_storekit: 0.4.13+1
+  # The card itself on an event's page (177): the guests' page, live and
+  # animated, in the Android and iPhone apps (the web app uses a frame).
+  # Flutter's own plugin, BSD-3.
+  webview_flutter: ^4.14.1
 
 dev_dependencies:
   flutter_test:

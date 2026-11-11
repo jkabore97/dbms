@@ -394,6 +394,11 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch176.sql
+      # The street shows the card itself (177).
+      - name: Prove the card's own picture — minted with its edit token, replacing the last, shown on the street after the organiser's choice (177)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch177.sql
 
       # The bell: the right people hear the right events and nobody else,
       # a threshold rings on the crossing rather than on every sale below

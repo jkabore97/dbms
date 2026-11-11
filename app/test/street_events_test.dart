@@ -280,4 +280,29 @@ void main() {
       expect(File('web/cartes/fetes/$g.jpg').existsSync(), isTrue, reason: g);
     }
   });
+
+  // 177: the owner — « the card in good quality to display here and
+  // animated if the card is animated and a direct click on the picture open
+  // the card ». The page holds the card itself (a web view on a phone, a
+  // frame on the web; its still picture where neither can be drawn, as
+  // here); a touch on it opens the card — not counted as an opening when
+  // only shown (?vitrine=1).
+  testWidgets('177: the event page holds the card itself; a touch on it opens the card', (tester) async {
+    final opened = <Uri>[];
+    await _pump(
+      tester,
+      EventVitrineScreen(
+        storefront: _Street(const [], one: _concert(full: true)),
+        capture: CaptureRepository(null, db: db),
+        first: _concert(),
+        now: () => _now,
+        open: (u) async => opened.add(u),
+      ),
+    );
+    expect(find.byKey(const Key('street-event-design')), findsOneWidget, reason: 'its still picture, no web view in a test');
+    await tester.tap(find.byKey(const Key('event-vitrine-open')));
+    await tester.pumpAndSettle();
+    expect(opened.single.path, '/e/concert-fatim-ab12');
+    expect(opened.single.query, isEmpty, reason: 'the card opened for real, counted as an opening');
+  });
 }
