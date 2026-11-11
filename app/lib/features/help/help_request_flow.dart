@@ -11,6 +11,7 @@ import '../../core/update/update_check.dart' show buildSha, installStore;
 import '../capture/capture_action.dart';
 import '../common/step_flow.dart';
 import 'help_words.dart';
+import 'package:kaj_app/features/common/phone_field.dart' show PhoneInput;
 
 /// « Demander un formateur » (143): Mara Pro's request, one question at a
 /// time on the app's StepFlow (115) — the same for a shop, a farm and an
@@ -386,16 +387,12 @@ class _HelpRequestFlowState extends State<HelpRequestFlow> {
                 },
               ),
               if (_askPhone)
-                TextField(
+                PhoneInput(
                   key: const Key('help-phone'),
                   controller: _phone,
-                  keyboardType: TextInputType.phone,
                   onChanged: (_) => setState(() {}),
-                  decoration: InputDecoration(
-                    labelText: context.tr('Votre numéro (avec l\'indicatif)'),
-                    hintText: '+226 70 00 00 00',
-                    border: const OutlineInputBorder(),
-                  ),
+                  labelText: context.tr('Votre numéro'),
+                  hintText: '70 00 00 00',
                 )
               else
                 Row(

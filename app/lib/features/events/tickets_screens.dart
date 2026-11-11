@@ -11,6 +11,8 @@ import '../../core/theme/kaj_card.dart';
 import '../capture/barcode_sheet.dart';
 import 'events_screens.dart' show openOutside, whatsappDigits;
 import 'tickets_team_screens.dart';
+import 'package:kaj_app/core/phone/country_codes.dart' show displayPhone;
+import 'package:kaj_app/features/common/phone_field.dart' show PhoneInput;
 
 /// Ticket sales (161), on the card's page: the three doors — the sale's
 /// setup, the requests to validate, the door. Shown only to a business
@@ -301,7 +303,7 @@ class _TicketSetupScreenState extends State<TicketSetupScreen> {
                 for (var i = 0; i < s.payMethods.length; i++)
                   KajCard(
                     child: ListTile(
-                      title: Text('${PayMethod.kinds[s.payMethods[i].kind] ?? s.payMethods[i].kind} · ${s.payMethods[i].number}'),
+                      title: Text('${PayMethod.kinds[s.payMethods[i].kind] ?? s.payMethods[i].kind} · ${s.payMethods[i].number.startsWith('+') ? displayPhone(s.payMethods[i].number) : s.payMethods[i].number}'),
                       subtitle: s.payMethods[i].name == null ? null : Text(s.payMethods[i].name!),
                       onTap: () => _editMethod(i),
                       trailing: IconButton(
@@ -322,14 +324,11 @@ class _TicketSetupScreenState extends State<TicketSetupScreen> {
                     ),
                   ),
                 const SizedBox(height: 12),
-                TextField(
+                PhoneInput(
                   key: const Key('tickets-whatsapp'),
                   controller: _whatsapp,
-                  keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(
-                    labelText: context.tr('WhatsApp pour les acheteurs'),
-                    helperText: context.tr('Ils y envoient la preuve de paiement.'),
-                  ),
+                  labelText: context.tr('WhatsApp pour les acheteurs'),
+                  helperText: context.tr('Ils y envoient la preuve de paiement.'),
                   onSubmitted: (_) => _save(),
                 ),
                 const SizedBox(height: 16),
@@ -503,11 +502,10 @@ class _MethodDialogState extends State<_MethodDialog> {
             items: [for (final k in PayMethod.kinds.entries) DropdownMenuItem(value: k.key, child: Text(context.tr(k.value)))],
             onChanged: (v) => setState(() => _kind = v ?? 'orange'),
           ),
-          TextField(
+          PhoneInput(
             key: const Key('ticket-method-number'),
             controller: _number,
-            keyboardType: TextInputType.phone,
-            decoration: InputDecoration(labelText: context.tr('Numéro')),
+            labelText: context.tr('Numéro'),
           ),
           TextField(
             key: const Key('ticket-method-name'),

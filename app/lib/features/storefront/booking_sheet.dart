@@ -8,6 +8,7 @@ import '../../core/theme/mara_mark.dart';
 import '../common/keyboard_sheet.dart';
 import 'shop_style.dart';
 import 'storefront_screen.dart' show priceOf;
+import 'package:kaj_app/features/common/phone_field.dart' show PhoneInput;
 
 /// What the customer chose on the booking sheet (125): one service, its
 /// day and time, how many when it is by the person or the hour, their
@@ -378,14 +379,11 @@ class _BookingSheetState extends State<BookingSheet> {
             ],
           )
         else
-          TextField(
+          PhoneInput(
             key: const Key('booking-phone'),
             controller: _phone,
-            keyboardType: TextInputType.phone,
-            decoration: InputDecoration(
-              labelText: context.tr('Votre numéro (facultatif)'),
-              hintText: '+226 70 00 00 00',
-            ),
+            labelText: context.tr('Votre numéro (facultatif)'),
+            hintText: '70 00 00 00',
           ),
         const SizedBox(height: 10),
         Text(

@@ -187,12 +187,13 @@ void main() {
     await tester.enterText(find.byKey(const Key('ticket-method-name')), 'Awa K.');
     await tester.tap(find.byKey(const Key('ticket-method-ok')));
     await tester.pumpAndSettle();
-    expect(find.text('Orange Money · 70 00 00 01'), findsOneWidget);
+    // typed under Burkina (178): stored with its code, read in pairs
+    expect(find.text('Orange Money · +226 70 00 00 01'), findsOneWidget);
 
-    await tester.enterText(find.byKey(const Key('tickets-whatsapp')), '+226 70 00 00 01');
+    await tester.enterText(find.byKey(const Key('tickets-whatsapp')), '70 00 00 01');
     await tester.tap(find.byKey(const Key('tickets-on')));
     await tester.pumpAndSettle();
-    expect(t.calls.last, 'settings:on=true,methods=1,wa=+226 70 00 00 01,hold=72');
+    expect(t.calls.last, 'settings:on=true,methods=1,wa=+22670000001,hold=72');
     expect(find.text('Vente ouverte : le bouton « Réserver » est sur la carte.'), findsOneWidget);
   });
 

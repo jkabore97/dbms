@@ -33,6 +33,7 @@ import '../../core/nav/router.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import '../common/copy_text.dart';
+import 'package:kaj_app/features/common/phone_field.dart' show PhoneInput;
 
 /// The business's own details.
 ///
@@ -907,15 +908,11 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
         Row(
           children: [
             Expanded(
-              child: TextField(
+              child: PhoneInput(
                 controller: _payoutController,
                 enabled: !_savingPayout,
-                keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
-                  border: const OutlineInputBorder(),
-                  labelText: context.tr('Numéro Wave'),
-                  hintText: '+226 70 00 00 00',
-                ),
+                labelText: context.tr('Numéro Wave'),
+                hintText: '70 00 00 00',
               ),
             ),
             const SizedBox(width: 8),
@@ -1587,22 +1584,17 @@ class _OrgSettingsScreenState extends State<OrgSettingsScreen> {
       ),
       const SizedBox(height: 12),
       // Two of the six steps: what a shopper calls, and where they come.
-      TextField(
+      PhoneInput(
         key: const Key('vitrine-phone'),
         controller: _phoneController,
         enabled: !_saving,
-        keyboardType: TextInputType.phone,
         onChanged: (_) => setState(() {}),
-        decoration: InputDecoration(
-          border: const OutlineInputBorder(),
-          labelText: _association
-              ? context.tr('Téléphone de l\'association')
-              : _profile == 'farm'
-              ? context.tr('Téléphone de la ferme')
-              : context.tr('Téléphone de la boutique'),
-          hintText: '+226 70 00 00 00',
-          prefixIcon: const Icon(Icons.call_outlined),
-        ),
+        labelText: _association
+            ? context.tr('Téléphone de l\'association')
+            : _profile == 'farm'
+            ? context.tr('Téléphone de la ferme')
+            : context.tr('Téléphone de la boutique'),
+        hintText: '70 00 00 00',
       ),
       const SizedBox(height: 12),
       TextField(

@@ -11,6 +11,7 @@ import '../../core/nav/router.dart';
 import 'cauris_console_card.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
+import 'package:kaj_app/features/common/phone_field.dart' show PhoneInput;
 
 /// Kaj Pro, from the platform's side (066, M10 block 2).
 ///
@@ -267,15 +268,11 @@ class _ProConsoleScreenState extends State<ProConsoleScreen> {
                       ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),
                 const SizedBox(height: 12),
-                TextField(
+                PhoneInput(
                   controller: _wave,
                   enabled: !_saving,
-                  keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(
-                    labelText: context.tr('Numéro Wave / Orange Money de Marakaj'),
-                    hintText: '+226 70 00 00 00',
-                    border: const OutlineInputBorder(),
-                  ),
+                  labelText: context.tr('Numéro Wave / Orange Money de Marakaj'),
+                  hintText: '70 00 00 00',
                 ),
                 const SizedBox(height: 10),
                 TextField(

@@ -10,6 +10,7 @@ import 'package:kaj_app/core/theme/mara_sheet.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/nav/router.dart';
 import '../../core/theme/app_bar_title.dart' show labelledBarAction;
+import 'package:kaj_app/features/common/phone_field.dart' show PhoneInput;
 
 /// Where the platform runs its trainers (038): the students sent out to teach
 /// businesses the app.
@@ -201,16 +202,11 @@ class _AddTrainerDialogState extends State<_AddTrainerDialog> {
             context.tr('Entrez le numéro de téléphone du compte à désigner comme formateur. Le compte doit déjà exister.'),
           ),
           const SizedBox(height: 16),
-          TextField(
+          PhoneInput(
             controller: _controller,
-            keyboardType: TextInputType.phone,
-            autofocus: true,
             onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
-              labelText: context.tr('Numéro de téléphone'),
-              hintText: '+226 70 00 00 00',
-              border: const OutlineInputBorder(),
-            ),
+            labelText: context.tr('Numéro de téléphone'),
+            hintText: '70 00 00 00',
           ),
         ],
       ),

@@ -6,6 +6,7 @@ import '../../core/admin/models.dart';
 import '../../core/auth/auth_repository.dart';
 import '../../core/l10n/tr.dart';
 import '../common/keyboard_sheet.dart';
+import 'package:kaj_app/features/common/phone_field.dart' show PhoneInput;
 
 /// The admin edit of one member's own information (moved from the old
 /// People screen into Équipe, 101). Pre-filled from the roster, saved
@@ -151,14 +152,10 @@ class _EditMemberSheetState extends State<EditMemberSheet> {
               ),
             ),
             const SizedBox(height: 12),
-            TextField(
+            PhoneInput(
               controller: _phone,
               enabled: !_busy,
-              keyboardType: TextInputType.phone,
-              decoration: InputDecoration(
-                labelText: context.tr('Téléphone (facultatif)'),
-                border: const OutlineInputBorder(),
-              ),
+              labelText: context.tr('Téléphone (facultatif)'),
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(

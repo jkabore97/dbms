@@ -9272,4 +9272,5 @@ const enStrings = <String, String>{
   'Mes photos': 'My photos',
   'Ajoutez une photo sur votre carte (« Modifier la carte ») : elle apparaîtra ici.': 'Add a photo to your card (“Edit the card”): it will appear here.',
   'Galerie Marakaj': 'Marakaj gallery',
+  'Votre numéro': 'Your number',
 };
