@@ -1383,6 +1383,7 @@
     var make = SCN[id]; if (!make) return null;
     var cv = canvasIn(el, 'ms-cv'), s = { cv: cv, g: cv.getContext('2d'), fixed: false, vis: true, rev: false }, raf = 0, dead = false;
     function size() {
+      if (!el.isConnected) return;   // a block being redrawn: keep the picture until its new place is known
       var r = el.getBoundingClientRect(), dpr = Math.min(1.5, window.devicePixelRatio || 1);
       s.w = Math.max(1, r.width); s.h = Math.max(1, r.height);
       cv.width = Math.round(s.w * dpr); cv.height = Math.round(s.h * dpr);
@@ -1397,7 +1398,10 @@
       if (s.vis) { try { s.fn(s.g, s.w, s.h, RM ? 2 : (now - t0) / 1000, travel(el), pageTravel()); } catch (e) { /* a frame lost, the next one draws */ } }
       if (!RM) raf = requestAnimationFrame(loop);
     })(t0 + (RM ? 2000 : 0));
-    return { stop: function () { dead = true; cancelAnimationFrame(raf); if (io) io.disconnect(); if (ro) ro.disconnect(); else window.removeEventListener('resize', size); cv.remove(); }, canvases: [cv] };
+    return { stop: function () { dead = true; cancelAnimationFrame(raf); if (io) io.disconnect(); if (ro) ro.disconnect(); else window.removeEventListener('resize', size); cv.remove(); }, canvases: [cv],
+      // the editor redraws its blocks on every change: the scene follows its block's new place
+      // (it used to keep measuring the old one, gone, and shrank to nothing — 181)
+      move: function (nel) { el = nel; if (io) { io.disconnect(); io = watch(el, s); } if (ro) { ro.disconnect(); ro.observe(el); } size(); } };
   }
 
   function mountGL(el, key, P) {
@@ -1426,6 +1430,7 @@
     // no graphics chip: the card's own colours, deepening downwards, under the hand-drawn foreground
     if (!ok) { cv.remove(); el.style.background = 'linear-gradient(180deg,' + rgb(P.bg) + ',' + rgb(mix(P.bg, P.deep, .6)) + ')'; }
     function size() {
+      if (!el.isConnected) return;   // a block being redrawn: keep the picture until its new place is known
       var r = el.getBoundingClientRect(), w = Math.max(1, Math.round(r.width * G.dpr * G.scale)), h = Math.max(1, Math.round(r.height * G.dpr * G.scale));
       if (ok && (cv.width !== w || cv.height !== h)) { cv.width = w; cv.height = h; gl.viewport(0, 0, w, h); }
       var fw = Math.max(1, Math.round(r.width * G.dpr)), fh = Math.max(1, Math.round(r.height * G.dpr));
@@ -1457,7 +1462,8 @@
         if (gl) { var lose = gl.getExtension('WEBGL_lose_context'); if (lose) lose.loseContext(); }
         cv.remove(); fx.remove();
       },
-      canvases: ok ? [cv, fx] : [fx], gl: ok
+      canvases: ok ? [cv, fx] : [fx], gl: ok,
+      move: function (nel) { el = nel; if (!ok) el.style.background = 'linear-gradient(180deg,' + rgb(P.bg) + ',' + rgb(mix(P.bg, P.deep, .6)) + ')'; if (io) { io.disconnect(); io = watch(el, G); } if (ro) { ro.disconnect(); ro.observe(el); } size(); }
     };
   }
 

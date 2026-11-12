@@ -4,6 +4,7 @@
 // rewritten, every picture replaced and reframed, and the card can be
 // turned to another kind of event (the words and the programme follow).
 (function () {
+  function oneByOne(xs, f) { return xs.reduce(function (p, x) { return p.then(function (acc) { return f(x).then(function (r) { acc.push(r); return acc; }); }); }, Promise.resolve([])); }
   function phoneId() {
     // this phone's own random identifier (179): the album counts its photos by it
     try {
@@ -1184,6 +1185,7 @@
         });
         counted();
       }).catch(function () {});
+      var refused = '';
       var send = function (file) {
         if (!file.type || file.type.indexOf('image/') !== 0) return Promise.resolve(null);
         var name = (who && who.value.trim()) || '';
@@ -1201,7 +1203,7 @@
                 // Waiting for the organiser's yes (164): not in the album yet.
                 if (!rules.review) { grid.insertBefore(figureFor(src, picUrl(j.key), name), grid.firstChild); n++; counted(); }
                 res(j);
-              }, function (err) { toast(err && err.message ? err.message : 'La photo n’est pas passée. Réessayez.'); res(null); });
+              }, function (err) { refused = err && err.message ? err.message : 'La photo n’est pas passée. Réessayez.'; toast(refused); res(null); });
             }, 'image/jpeg', 0.82);
           });
         });
@@ -1209,10 +1211,12 @@
       var sendAll = function (files) {
         if (!files.length) return;
         toast(files.length > 1 ? 'Envoi des photos…' : 'Envoi de la photo…');
-        Promise.all(files.map(send)).then(function (r) {
-          var k = r.filter(Boolean).length;
-          if (k && rules.review) toast(k > 1 ? k + ' photos envoyées : visibles après validation' : 'Photo envoyée : visible après validation');
-          else if (k) toast(k > 1 ? k + ' photos ajoutées à l’album' : 'Photo ajoutée à l’album');
+        // one after the other (181): each counted after those before it
+        refused = '';
+        oneByOne(files, send).then(function (r) {
+          var k = r.filter(Boolean).length, more = refused ? ' — ' + refused : '';
+          if (k && rules.review) toast((k > 1 ? k + ' photos envoyées : visibles après validation' : 'Photo envoyée : visible après validation') + more);
+          else if (k) toast((k > 1 ? k + ' photos ajoutées à l’album' : 'Photo ajoutée à l’album') + more);
         });
       };
       input.addEventListener('change', function () {

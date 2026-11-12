@@ -84,3 +84,18 @@ test("the first preview: nothing to delete; a refusal: its words, nothing kept; 
     assert.equal(asked.length, 0);
   });
 });
+
+test("180: the wide picture for a shared link: minted and confirmed as the card's, the one it replaces deleted", async () => {
+  const e = env({ [OLD]: { bytes: new Uint8Array(3) } });
+  await withPostgres({
+    event_og_slot: (b) => b.p_edit === EDIT && b.p_slug === "awa-paul-ab12" ? [200, KEY] : [403, { message: "non" }],
+    event_og_done: (b) => b.p_key === KEY && b.p_edit === EDIT ? [200, OLD] : [403, { message: "Envoi inconnu." }],
+  }, async (asked) => {
+    const r = await worker.fetch(new Request(`https://up.example/v1/events/awa-paul-ab12/og?modifier=${EDIT}`, {
+      method: "POST", headers: { "Content-Type": "image/jpeg", Origin: "https://marakaj.com" }, body: PHOTO,
+    }), e);
+    assert.equal(r.status, 201);
+    assert.deepEqual(asked.map((a) => a.name), ["event_og_slot", "event_og_done"]);
+    assert.deepEqual(e.UPLOADS.deletes, [OLD]);
+  });
+});

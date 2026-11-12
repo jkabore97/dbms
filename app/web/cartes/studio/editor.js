@@ -425,15 +425,13 @@
     canvas.querySelectorAll('.ed-tsel').forEach(function (x) { x.classList.remove('ed-tsel'); });
     textSel = ts; var b = blockById(ts.bid); if (!b) return;
     var f = (b.style && b.style.f && b.style.f[S.fkey(ts.path)]) || {};
-    var fonts = '<option value="">Police : du thème</option><option value="display"' + (f.ff === 'display' ? ' selected' : '') + '>Titres</option><option value="body"' + (f.ff === 'body' ? ' selected' : '') + '>Texte</option><option value="script"' + (f.ff === 'script' ? ' selected' : '') + '>Écriture</option>' +
-      Object.keys(S.FONTS).map(function (id) { return '<option value="' + id + '"' + (f.ff === id ? ' selected' : '') + '>' + esc(S.FONT_NAMES[id] || id) + '</option>'; }).join('');
     var cols = [['', 'Couleur : du bloc'], ['accent', 'Accent'], ['ink', 'Texte'], ['paper', 'Papier'], ['white', 'Blanc'], ['black', 'Noir']];
     textBar.innerHTML = '<button data-t="size" data-d="-1" aria-label="Plus petit">A−</button><button data-t="size" data-d="1" aria-label="Plus grand">A+</button><span class="sep"></span>' +
       '<button data-t="b" aria-pressed="' + !!f.b + '"><b>G</b></button><button data-t="i" aria-pressed="' + !!f.i + '"><i>I</i></button><button data-t="u" aria-pressed="' + !!f.u + '">AA</button>' +
       '<button data-t="ls" aria-pressed="' + !!f.ls + '">A·B</button>' +
       '<button data-t="a" aria-pressed="' + !!f.a + '" aria-label="Alignement : ' + ({ l: 'à gauche', c: 'centré', r: 'à droite' }[f.a] || 'celui du bloc') + '">' + ({ l: '⇤', c: '↔', r: '⇥' }[f.a] || '≡') + '</button><span class="sep"></span>' +
       '<select data-t="c" aria-label="Couleur">' + cols.map(function (c) { return '<option value="' + c[0] + '"' + ((f.c || '') === c[0] ? ' selected' : '') + '>' + c[1] + '</option>'; }).join('') + (U.isHex(f.c) ? '<option value="' + f.c + '" selected>Ma couleur</option>' : '') + '<option value="pick">Autre couleur…</option></select>' +
-      '<select data-t="ff" aria-label="Police">' + fonts + '</select><button data-t="reset">Par défaut</button><button data-t="ok" aria-label="Terminé">OK</button>';
+      '<button data-t="ff" class="ed-fbtn" aria-label="Police" style="font-family:' + attrFont(fontCss(f.ff)) + '">' + esc(fontLabel(f.ff)) + ' ▾</button><button data-t="reset">Par défaut</button><button data-t="ok" aria-label="Terminé">OK</button>';
     textBar.hidden = false;
   }
   function closeText() { textSel = null; textBar.hidden = true; canvas.querySelectorAll('.ed-tsel').forEach(function (x) { x.classList.remove('ed-tsel'); }); }
@@ -455,6 +453,15 @@
     var bt = e.target.closest('button[data-t]'); if (!bt) return;
     var t = bt.getAttribute('data-t');
     if (t === 'ok') { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); closeText(); return; }
+    if (t === 'ff') {
+      var b0 = blockById(textSel.bid), f0 = (b0 && b0.style && b0.style.f && b0.style.f[S.fkey(textSel.path)]) || {};
+      var el0 = canvas.querySelector('[data-bid="' + textSel.bid + '"] [data-f="' + textSel.path + '"]');
+      // « the theme's own »: the font the text has without a choice (its own now, else the theme's text)
+      var own = f0.ff ? fontCss('body') : (el0 ? getComputedStyle(el0).fontFamily : fontCss('body'));
+      var themeRoles = [['', 'Celle du thème', own], ['display', 'Titres du thème'], ['body', 'Texte du thème'], ['script', 'Écriture du thème']];
+      fontPicker('Police', f0.ff || '', themeRoles, el0 && el0.textContent, function (v) { setFieldStyle(function (f) { f.ff = v; }); });
+      return;
+    }
     setFieldStyle(function (f) {
       if (t === 'size') { var i = TSIZES.indexOf(f.s || 'M') + (+bt.getAttribute('data-d')); f.s = TSIZES[Math.max(0, Math.min(TSIZES.length - 1, i))]; if (f.s === 'M') delete f.s; }
       else if (t === 'reset') { Object.keys(f).forEach(function (x) { delete f[x]; }); }
@@ -472,6 +479,37 @@
     }
     setFieldStyle(function (f) { f[t] = v; });
   });
+
+  // ------------------------------------------------------- the font chooser
+  // Each font shown in itself (the owner: « the choice is blind here »): a
+  // phone's own list of options cannot take a font, so a list of our own,
+  // over everything, each row the field's own words in that font.
+  function fontCss(id, role) {
+    if (!id) return role ? S.fontOf(id, role) : 'inherit';
+    if (id === 'display' || id === 'body' || id === 'script') { var fo = (doc.theme && doc.theme.fonts) || {}; S.loadFonts([fo[id]]); return S.fontOf(fo[id], id); }
+    S.loadFonts([id]); return S.fontOf(id, 'body');
+  }
+  function fontLabel(id) { return !id ? 'Police du thème' : ({ display: 'Titres', body: 'Texte', script: 'Écriture' }[id] || S.FONT_NAMES[id] || id); }
+  function attrFont(css) { return String(css).replace(/"/g, '&quot;'); }
+  function fontPicker(title, cur, extra, sample, onPick) {
+    S.loadFonts(Object.keys(S.FONTS));
+    var words = String(sample || '').replace(/\s+/g, ' ').trim().slice(0, 32) || 'Phanuel & Espérance';
+    var rows = (extra || []).map(function (x) { return [x[0], x[1], x[2] || fontCss(x[0])]; })
+      .concat(Object.keys(S.FONTS).map(function (id) { return [id, S.FONT_NAMES[id] || id, S.FONTS[id][0]]; }));
+    var box = document.createElement('div'); box.className = 'ed-fp'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', title);
+    box.innerHTML = '<div class="ed-fp-in"><div class="ed-fp-h"><b>' + esc(title) + '</b><button type="button" data-x aria-label="Fermer">✕</button></div><div class="ed-fp-l">' +
+      rows.map(function (r) {
+        return '<button type="button" data-ff="' + esc(r[0]) + '" aria-pressed="' + (r[0] === cur) + '"><span class="ed-fp-s" style="font-family:' + attrFont(r[2]) + '">' + esc(words) + '</span><span class="ed-fp-n">' + esc(r[1]) + '</span></button>';
+      }).join('') + '</div></div>';
+    document.body.appendChild(box);
+    var on = box.querySelector('[aria-pressed="true"]'); if (on) on.scrollIntoView({ block: 'center' });
+    box.addEventListener('pointerdown', function (e) { if (e.target.closest('button')) e.preventDefault(); });   // the field keeps the keyboard
+    box.addEventListener('click', function (e) {
+      if (e.target === box || e.target.closest('[data-x]')) { box.remove(); return; }
+      var bt = e.target.closest('[data-ff]'); if (!bt) return;
+      box.remove(); onPick(bt.getAttribute('data-ff'));
+    });
+  }
 
   // ----------------------------------------------------------------- sheets
   var sheetClose = null;
@@ -869,10 +907,11 @@
       }).join('') + '</div>' +
       ['display:Titres', 'body:Texte', 'script:Écriture'].map(function (x) {
         var r = x.split(':');
-        return '<label class="ed-field">' + r[1] + '<select data-font="' + r[0] + '">' + Object.keys(S.FONTS).map(function (id) { return '<option value="' + id + '"' + (fo[r[0]] === id ? ' selected' : '') + '>' + esc(S.FONT_NAMES[id] || id) + '</option>'; }).join('') + '</select></label>';
+        return '<label class="ed-field">' + r[1] + '<button type="button" class="ed-fbtn ed-fbtn-wide" data-fontrole="' + r[0] + '" data-fname="' + esc(r[1]) + '" style="font-family:' + attrFont(fontCss(fo[r[0]], r[0])) + '">' + esc(S.FONT_NAMES[fo[r[0]]] || 'Du modèle') + ' ▾</button></label>';
       }).join('') +
       '<p class="ed-lab">Motif</p>' + chips('motif', [['', 'Aucun']].concat(Object.keys(S.MOTIFS).map(function (k) { return [k, S.MOTIFS[k].name]; })), th.motif && th.motif.id || '') +
       (th.motif && th.motif.id ? '<label class="ed-field">Intensité<input class="ed-range" type="range" min="4" max="40" data-mo value="' + Math.round((th.motif.opacity != null ? th.motif.opacity : 0.12) * 100) + '"></label><label class="ed-check"><input type="checkbox" data-moall' + (th.motif.all ? ' checked' : '') + '>Sur toute la carte</label>' : '') +
+      '<p class="ed-lab">Pétales</p><label class="ed-check"><input type="checkbox" data-fall' + (th.fall === 'petales' ? ' checked' : '') + '>Pétales de toutes les couleurs qui tombent sur toute la carte</label>' +
       '<p class="ed-lab">Mouvement</p>' + chips('motion', [['aucune', 'Aucun'], ['douce', 'Doux'], ['vivante', 'Vivant']], th.motion || 'douce') +
       '<p class="ed-lab">Coins</p>' + chips('corners', [['droit', 'Droits'], ['doux', 'Doux'], ['rond', 'Ronds']], th.corners || 'doux') +
       // the designs (173): the classic ones, the animated ones, the Premium ones (locked off Pro)
@@ -887,6 +926,14 @@
         var t = e.target.closest('button'); if (!t) return;
         th = doc.theme = doc.theme || {};   // the live theme (an undo replaces the document)
         if (t.hasAttribute('data-pal')) { var p = S.PALETTES.filter(function (x) { return x.id === t.getAttribute('data-pal'); })[0]; commit(function () { th.preset = p.id; th.colors = { back: p.back, paper: p.paper, ink: p.ink, accent: p.accent }; }); openTheme(); return; }
+        if (t.hasAttribute('data-fontrole')) {
+          var role = t.getAttribute('data-fontrole');
+          fontPicker(t.getAttribute('data-fname'), (th.fonts || {})[role] || '', null, ctx.title, function (v) {
+            th = doc.theme = doc.theme || {};
+            commit(function () { th.fonts = Object.assign({}, th.fonts || {}); th.fonts[role] = v; }); openTheme();
+          });
+          return;
+        }
         if (t.hasAttribute('data-pair')) { var q = S.PAIRS.filter(function (x) { return x.id === t.getAttribute('data-pair'); })[0]; commit(function () { th.fonts = { display: q.display, body: q.body, script: q.script }; }); openTheme(); return; }
         if (t.hasAttribute('data-motif')) { var m = t.getAttribute('data-motif'); commit(function () { if (m) th.motif = { id: m, opacity: (th.motif && th.motif.opacity) || 0.12, all: th.motif && th.motif.all }; else th.motif = null; }); openTheme(); return; }
         if (t.hasAttribute('data-motion')) { commit(function () { th.motion = t.getAttribute('data-motion'); }); openTheme(); return; }
@@ -906,6 +953,7 @@
         if (t.hasAttribute('data-col')) { commit(function () { th.colors = Object.assign({}, th.colors || {}); th.colors[t.getAttribute('data-col')] = t.value.toLowerCase(); delete th.preset; }); return; }
         if (t.hasAttribute('data-font')) { commit(function () { th.fonts = Object.assign({}, th.fonts || {}); th.fonts[t.getAttribute('data-font')] = t.value; }); return; }
         if (t.hasAttribute('data-mo')) { commit(function () { th.motif.opacity = (+t.value) / 100; }); return; }
+        if (t.hasAttribute('data-fall')) { commit(function () { if (t.checked) th.fall = 'petales'; else delete th.fall; }); return; }
         if (t.hasAttribute('data-moall')) { commit(function () { th.motif.all = t.checked; }); }
       });
     }, null, true);
@@ -1090,7 +1138,8 @@
     if (!S.cardPicture || !(BOOT.published === true || ctx.preview)) return;
     setTimeout(function () { S.cardPicture(ctx); }, wait);
   }
-  if (BOOT.has_preview === false) cardPicture(5000);
+  // the card's pictures (177, 180): drawn on opening when one is missing
+  if (BOOT.has_preview === false || BOOT.has_og === false) cardPicture(5000);
   var saving = false;
   document.getElementById('edSave').onclick = function () {
     if (saving) return;

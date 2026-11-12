@@ -85,12 +85,50 @@
     }).then(function (r) { if (!r.ok) throw new Error('refusé ' + r.status); return r.json(); });
   }
 
+  // The wide picture for a shared link (180): the card in the middle, over a
+  // blurred, darkened copy of itself (drawn small then large: a blur every
+  // browser does), 1200 × 630 — what WhatsApp and the others show large.
+  function banner(blob) {
+    return new Promise(function (ok, no) {
+      var url = URL.createObjectURL(blob), im = new Image();
+      im.onload = function () {
+        var W = 1200, H = 630, c = document.createElement('canvas'); c.width = W; c.height = H;
+        var g = c.getContext('2d');
+        var s = Math.max(W / im.width, H / im.height), w = im.width * s, h = im.height * s;
+        var t = document.createElement('canvas'); t.width = 48; t.height = Math.max(1, Math.round(48 * H / W));
+        var tg = t.getContext('2d'), ts = Math.max(t.width / im.width, t.height / im.height);
+        tg.drawImage(im, (t.width - im.width * ts) / 2, (t.height - im.height * ts) / 2, im.width * ts, im.height * ts);
+        g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+        g.drawImage(t, 0, 0, W, H);
+        g.fillStyle = 'rgba(0,0,0,.22)'; g.fillRect(0, 0, W, H);
+        var ch = H - 48, cw = im.width * ch / im.height, x = (W - cw) / 2, y = 24, r = 18;
+        var path = function () { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + cw, y, x + cw, y + ch, r); g.arcTo(x + cw, y + ch, x, y + ch, r); g.arcTo(x, y + ch, x, y, r); g.arcTo(x, y, x + cw, y, r); g.closePath(); };
+        g.save(); g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowBlur = 34; g.shadowOffsetY = 8; path(); g.fillStyle = '#ffffff'; g.fill(); g.restore();
+        g.save(); path(); g.clip(); g.drawImage(im, x, y, cw, ch); g.restore();
+        URL.revokeObjectURL(url);
+        c.toBlob(function (b) { if (b) ok(b); else no(new Error('vide')); }, 'image/jpeg', 0.86);
+      };
+      im.onerror = function () { URL.revokeObjectURL(url); no(new Error('image')); };
+      im.src = url;
+    });
+  }
+  function sendOg(ctx, blob) {
+    return fetch(ctx.uploads + '/v1/events/' + encodeURIComponent(ctx.slug) + '/og?modifier=' + encodeURIComponent(ctx.edit), {
+      method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob
+    }).then(function (r) { if (!r.ok) throw new Error('refusé ' + r.status); return r.json(); });
+  }
+
   // The card's picture, drawn and sent; one at a time, the last asked wins.
   S.cardPicture = function (ctx) {
     if (!ctx || !ctx.slug || !ctx.edit || !ctx.uploads || !window.Promise || !window.fetch) return Promise.resolve(null);
     if (busy) { again = ctx; return Promise.resolve(null); }
     busy = true;
-    return shoot(ctx).then(function (blob) { return send(ctx, blob); }).then(function (r) { return r && r.key || null; }, function () { return null; })
+    return shoot(ctx).then(function (blob) {
+      return send(ctx, blob).then(function (r) {
+        // the wide one for a shared link (180), from the same picture
+        return banner(blob).then(function (b) { return sendOg(ctx, b); }).then(function () { return r; }, function () { return r; });
+      });
+    }).then(function (r) { return r && r.key || null; }, function () { return null; })
       .then(function (key) {
         busy = false;
         if (again) { var next = again; again = null; return S.cardPicture(next); }

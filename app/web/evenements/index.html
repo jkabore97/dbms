@@ -1009,7 +1009,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
     var p = (S.date || '2026-12-19').split('-'), d = new Date(+p[0], +p[1] - 1, +p[2]);
     return {d: d, day: DAYS[d.getDay()], dd: p[2], n: +p[2], mm: p[1], m: d.getMonth(), yyyy: p[0], month: MONTHS[d.getMonth()], mon3: MON3[d.getMonth()], roman: ROMAN[d.getMonth()]};
   }
-  function hh(t, dflt) { return (t ? t.replace(':', ' h ').replace(' h 00', ' h') : dflt); }
+  function hh(t, dflt) { return (t ? t.replace(':', '\u00a0h\u00a0').replace('\u00a0h\u00a000', '\u00a0h') : dflt); }
   function W() {
     var A = esc(S.a || 'Prénom'), B = esc((S.b || '').trim()), two = !!B, cu = esc((S.custom || '').trim() || 'Notre événement');
     var t = {
@@ -4095,6 +4095,7 @@ body.has-album #site > footer.f{display:none}
 </style>
 <script>
 (function () {
+  function oneByOne(xs, f) { return xs.reduce(function (p, x) { return p.then(function (acc) { return f(x).then(function (r) { acc.push(r); return acc; }); }); }, Promise.resolve([])); }
   function phoneId() {
     // this phone's own random identifier (179): the album counts its photos by it
     try {
@@ -4154,6 +4155,7 @@ body.has-album #site > footer.f{display:none}
     };
     img.onerror = function () { done(null); }; img.src = url;
   };
+  var refused = '';
   var send = function (file) {
     return new Promise(function (res) {
       if (!file.type || file.type.indexOf('image/') !== 0) return res(null);
@@ -4164,7 +4166,7 @@ body.has-album #site > footer.f{display:none}
           method: 'POST', headers: {'Content-Type': 'image/jpeg'}, body: blob
         }).then(function (r) { return r.json().then(function (j) { if (!r.ok || !j || !j.key) throw new Error(j && j.error ? j.error : 'La photo n\u2019est pas pass\u00e9e. R\u00e9essayez.'); return j; }); })
           .then(function (j) { if (!rules.review) grid.insertBefore(fig(src, name), grid.firstChild); res(j); },
-                function (e) { say.textContent = e && e.message ? e.message : 'La photo n\u2019est pas pass\u00e9e. R\u00e9essayez.'; res(null); });
+                function (e) { refused = say.textContent = e && e.message ? e.message : 'La photo n\u2019est pas pass\u00e9e. R\u00e9essayez.'; res(null); });
       });
     });
   };
@@ -4172,10 +4174,13 @@ body.has-album #site > footer.f{display:none}
     var files = Array.prototype.slice.call(input.files); input.value = '';
     if (!files.length) return;
     say.textContent = files.length > 1 ? 'Envoi des photos\u2026' : 'Envoi de la photo\u2026';
-    Promise.all(files.map(send)).then(function (r) {
+    // one after the other (181): each counted after those before it
+    refused = '';
+    oneByOne(files, send).then(function (r) {
       var k = r.filter(Boolean).length; if (!k) return;
       say.textContent = rules.review ? (k > 1 ? k + ' photos envoy\u00e9es : visibles apr\u00e8s validation' : 'Photo envoy\u00e9e : visible apr\u00e8s validation')
                                     : (k > 1 ? k + ' photos ajout\u00e9es \u00e0 l\u2019album' : 'Photo ajout\u00e9e \u00e0 l\u2019album');
+      if (refused) say.textContent += ' \u2014 ' + refused;
     });
   });
 })();

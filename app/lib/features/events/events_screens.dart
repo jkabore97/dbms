@@ -813,7 +813,8 @@ class _EventScreenState extends State<EventScreen> {
                             key: const Key('event-preview'),
                             onPressed: () => _open(e.previewPath),
                             icon: const Icon(Icons.visibility_outlined),
-                            label: Text(context.tr('Voir la carte')),
+                            // « l'invitation », not « la carte »: in English that read « See the map »
+                            label: Text(context.tr('Voir l’invitation')),
                           ),
                           OutlinedButton.icon(
                             key: const Key('event-copy'),

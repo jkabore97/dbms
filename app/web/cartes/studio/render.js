@@ -101,6 +101,7 @@
     if (f) return f[0];
     return { display: FONTS.cormorant[0], body: FONTS.montserrat[0], script: FONTS['great-vibes'][0] }[role] || FONTS.montserrat[0];
   }
+  S.fontOf = fontOf;
   var loaded = {};
   function loadFonts(ids) {
     var q = ids.filter(function (id) { return FONTS[id] && !loaded[id]; });
@@ -202,7 +203,8 @@
   // ------------------------------------------------------------ the event
   var MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
   var DAYS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
-  function hourText(t) { if (!t) return ''; var m = /^(\d{1,2}):(\d{2})/.exec(t); if (!m) return t; return (+m[1]) + ' h' + (m[2] === '00' ? '' : ' ' + m[2]); }
+  function hourText(t) { if (!t) return ''; var m = /^(\d{1,2}):(\d{2})/.exec(t); if (!m) return t; return (+m[1]) + '\u00a0h' + (m[2] === '00' ? '' : '\u00a0' + m[2]); }
+  // « 10 h » never split by the end of a line (a narrow phone showed « H » alone)
   function facts(ctx) {
     var d = null, p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ctx.date || '');
     if (p) d = new Date(+p[1], +p[2] - 1, +p[3]);
@@ -309,7 +311,7 @@
     }).join('') + '</div>';
   }
   function coverBase(b, ctx, f) {
-      var p = b.props || {}, v = b.variant || 'plein', date = p.showDate === false ? '' : (p.dateText || (f.has ? f.long + (f.time ? ' · ' + f.time : '') : '')),
+      var p = b.props || {}, v = b.variant || 'plein', date = p.showDate === false ? '' : (p.dateText || (f.has ? f.long + (f.time ? '\u00a0· ' + f.time : '') : '')),
         place = p.showPlace === false ? '' : (p.placeText || f.place);
       var words = F(b, ctx, 'kicker', 'p', 'st-kicker', 'Une ligne au-dessus des noms') + F(b, ctx, 'names', 'h1', 'st-names', 'Vos prénoms') +
         F(b, ctx, 'sub', 'p', 'st-sub', 'Une phrase sous les noms') +
@@ -410,7 +412,7 @@
     variants: [['bouton', 'Bouton']],
     make: function () { return { title: 'Notez la date', label: 'Ajouter à mon calendrier' }; },
     draw: function (b, ctx, f) {
-      return F(b, ctx, 'title', 'p', 'st-kicker', 'Titre') + (f.has ? '<p class="st-h2 st-cal-d">' + esc(f.long) + (f.time ? ' · ' + esc(f.time) : '') + '</p>' : '') +
+      return F(b, ctx, 'title', 'p', 'st-kicker', 'Titre') + (f.has ? '<p class="st-h2 st-cal-d">' + esc(f.long) + (f.time ? '\u00a0· ' + esc(f.time) : '') + '</p>' : '') +
         '<button type="button" class="st-btn" data-cal>' + icon('calendar') + '<span data-f="label">' + esc((b.props && b.props.label) || 'Ajouter à mon calendrier') + '</span></button>';
     }
   };
@@ -832,6 +834,7 @@
       });
     });
     if (wantsPass && saved && saved.pass) Array.prototype.forEach.call(root.querySelectorAll('[data-passbox]'), function (pb) { drawPass(pb, ctx, saved.pass, saved.name); });
+    function oneByOne(xs, f) { return xs.reduce(function (p, x) { return p.then(function (acc) { return f(x).then(function (r) { acc.push(r); return acc; }); }); }, Promise.resolve([])); }
     function phoneId() {
       // this phone's own random identifier (179): the album counts its photos by it
       try {
@@ -855,16 +858,18 @@
         if (ctx.demo) { say.textContent = 'Aperçu : vos invités ajoutent leurs photos sur la vraie carte.'; return; }
         say.textContent = files.length > 1 ? 'Envoi des photos…' : 'Envoi de la photo…';
         var pass = (function () { try { var s = JSON.parse(localStorage.getItem(passKey(ctx)) || 'null'); return s && s.pass || ''; } catch (e) { return ''; } })();
-        Promise.all(files.map(function (file) {
+        // one after the other (181): each counted after those before it
+        var refused = '';
+        oneByOne(files, function (file) {
           return new Promise(function (res) {
             shrink(file, 1400, function (blob) {
               if (!blob) return res(null);
               fetch(ctx.uploads + '/v1/events/' + encodeURIComponent(ctx.slug) + '/album?apercu=' + encodeURIComponent(ctx.preview || '') + '&invite=' + encodeURIComponent(who.value.trim()) + '&pass=' + encodeURIComponent(pass) + '&device=' + encodeURIComponent(phoneId()), { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob })
                 .then(function (r) { return r.json().then(function (j) { if (!r.ok || !j || !j.key) throw new Error(j && j.error ? j.error : 'La photo n\'est pas passée.'); return j; }); })
-                .then(function (j) { if (!rules.review) grid.insertBefore(fig(URL.createObjectURL(blob), who.value.trim()), grid.firstChild); res(j); }, function (err) { say.textContent = err.message; res(null); });
+                .then(function (j) { if (!rules.review) grid.insertBefore(fig(URL.createObjectURL(blob), who.value.trim()), grid.firstChild); res(j); }, function (err) { refused = err.message; say.textContent = err.message; res(null); });
             });
           });
-        })).then(function (r) { var k = r.filter(Boolean).length; if (k) say.textContent = rules.review ? (k > 1 ? k + ' photos envoyées : visibles après validation' : 'Photo envoyée : visible après validation') : (k > 1 ? k + ' photos ajoutées à l\'album' : 'Photo ajoutée à l\'album'); });
+        }).then(function (r) { var k = r.filter(Boolean).length; if (k) say.textContent = rules.review ? (k > 1 ? k + ' photos envoyées : visibles après validation' : 'Photo envoyée : visible après validation') : (k > 1 ? k + ' photos ajoutées à l\'album' : 'Photo ajoutée à l\'album'); if (k && refused) say.textContent += ' — ' + refused; });
       });
     });
   };
@@ -892,7 +897,58 @@
     });
     return sceneJs;
   }
+  // Petals falling over the whole card (181): the owner, on a card whose
+  // cherry trees were only on its cover: « at least the flowers falling down
+  // to the bottom and not only 1 type of color ». theme.fall 'petales': one
+  // canvas over the screen (the guests' touches go through it), petals and
+  // small blossoms in several colours — the accent lightened, white, pink,
+  // lilac, peach, a pale gold — drifting down the whole way as one scrolls.
+  // None for « reduce motion »; asleep while the page is hidden.
+  var fallers = [];
+  S.fall = function (root, theme) {
+    var on = !!(theme && theme.fall === 'petales') && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    var cur = fallers.filter(function (x) { return x.root === root; })[0];
+    var acc = colorsOf(theme || {}).accent, key = on ? acc : '';
+    if (cur && cur.key === key) return;
+    if (cur) { cur.stop(); fallers.splice(fallers.indexOf(cur), 1); }
+    if (!on) return;
+    var cv = document.createElement('canvas'); cv.className = 'st-fall'; cv.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(cv);
+    var g = cv.getContext('2d'), W = 0, H = 0, dpr = Math.min(2, window.devicePixelRatio || 1), run = true, raf = 0;
+    var cols = [mix(acc, '#ffffff', 0.35), mix(acc, '#ffffff', 0.6), '#ffffff', '#ffc2d6', '#f7a8c4', '#d9c2f0', '#ffd3b6', '#f9e7a8'];
+    var R = function () { return Math.random(); }, P = [];
+    function size() { W = window.innerWidth; H = window.innerHeight; cv.width = W * dpr; cv.height = H * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0); }
+    function one(top) { return { x: R() * W, y: top ? -20 - R() * H * 0.3 : R() * H, s: 4 + R() * 6, v: 18 + R() * 30, sw: 10 + R() * 26, ph: R() * 6.28, sp: 0.6 + R() * 1.6, c: cols[(R() * cols.length) | 0], fl: R() < 0.28 }; }
+    size(); var n = Math.round(Math.min(46, 18 + W / 22)); for (var i = 0; i < n; i++) P.push(one(false));
+    var last = performance.now(), sy = window.scrollY;
+    function draw(now) {
+      if (!run) return;
+      var dt = Math.min(0.05, (now - last) / 1000); last = now;
+      var dy = window.scrollY - sy; sy = window.scrollY;   // scrolling carries them a little, as air does
+      g.clearRect(0, 0, W, H);
+      P.forEach(function (q, k) {
+        q.y += q.v * dt - dy * 0.15; q.ph += q.sp * dt;
+        var x = q.x + Math.sin(q.ph) * q.sw;
+        if (q.y > H + 20 || q.y < -60) { P[k] = one(true); return; }
+        g.save(); g.translate(x, q.y); g.rotate(q.ph * 0.8); g.globalAlpha = 0.9; g.fillStyle = q.c;
+        if (q.fl) {   // a small blossom: five petals and a heart
+          for (var j = 0; j < 5; j++) { g.rotate(1.2566); g.beginPath(); g.ellipse(0, -q.s * 0.75, q.s * 0.45, q.s * 0.7, 0, 0, 6.2832); g.fill(); }
+          g.fillStyle = '#f6d36b'; g.beginPath(); g.arc(0, 0, q.s * 0.28, 0, 6.2832); g.fill();
+        } else {      // a petal turning in the air
+          g.scale(1, 0.35 + 0.65 * Math.abs(Math.cos(q.ph * 1.3)));
+          g.beginPath(); g.moveTo(0, -q.s); g.quadraticCurveTo(q.s, -q.s * 0.2, 0, q.s); g.quadraticCurveTo(-q.s, -q.s * 0.2, 0, -q.s); g.fill();
+        }
+        g.restore();
+      });
+      raf = requestAnimationFrame(draw);
+    }
+    function vis() { if (document.hidden) { cancelAnimationFrame(raf); } else if (run) { last = performance.now(); raf = requestAnimationFrame(draw); } }
+    window.addEventListener('resize', size); document.addEventListener('visibilitychange', vis);
+    raf = requestAnimationFrame(draw);
+    fallers.push({ root: root, key: key, stop: function () { run = false; cancelAnimationFrame(raf); window.removeEventListener('resize', size); document.removeEventListener('visibilitychange', vis); cv.remove(); } });
+  };
   S.scenes = function (root, theme) {
+    S.fall(root, theme);
     var els = Array.prototype.slice.call(root.querySelectorAll('.st-scene[data-scene]'));
     var c = colorsOf(theme || {}), pal = { bg: c.paper, ink: c.ink, accent: c.accent, soft: c.soft, deep: c.back };
     var pk = [pal.bg, pal.ink, pal.accent, pal.soft, pal.deep].join(''), keep = [];
@@ -902,7 +958,7 @@
     });
     want.forEach(function (w) {
       var old = live.filter(function (x) { return x.key === w.key && keep.indexOf(x) < 0; })[0];
-      if (old && old.ctl) { old.ctl.canvases.forEach(function (cv) { w.el.appendChild(cv); }); old.el = w.el; keep.push(old); w.done = true; }
+      if (old && old.ctl) { old.ctl.canvases.forEach(function (cv) { w.el.appendChild(cv); }); if (old.ctl.move) old.ctl.move(w.el); w.el.setAttribute('data-scene-on', w.el.getAttribute('data-scene')); old.el = w.el; keep.push(old); w.done = true; }
     });
     live.filter(function (x) { return keep.indexOf(x) < 0; }).forEach(function (x) { if (x.ctl) x.ctl.stop(); });
     live = keep;

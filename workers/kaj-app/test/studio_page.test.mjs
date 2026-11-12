@@ -332,3 +332,25 @@ test("178: a payment number stored with its country is read in pairs and copied 
   assert.equal(phoneLocal("+2250712345678"), "0712345678");
   assert.equal(phoneText("70 00 00 01"), "70 00 00 01", "a number typed before, as it was");
 });
+
+test("180: a shared card's link shows the card itself — its wide picture, else its own tall one, else its photo", async () => {
+  const WIDE = "events/0b9f3c2e-1d2a-4c5b-9e8f-7a6b5c4d3e2f/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.jpg";
+  const TALL = "events/0b9f3c2e-1d2a-4c5b-9e8f-7a6b5c4d3e2f/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.jpg";
+  const env2 = { ...env, UPLOADS_URL: "https://up.marakaj.com/" };
+  const head = async () => (await (await site.fetch(new Request("https://marakaj.com/e/salimata-boukary-ab12"), env2)).text());
+  answers.event_public = card({ doc: DOC });
+  answers.event_share_image = { key: WIDE, wide: true };
+  let html = await head();
+  assert.ok(html.includes(`<meta property="og:image" content="https://up.marakaj.com/v1/public/objects/${encodeURIComponent(WIDE)}?w=1200">`), "the wide picture");
+  assert.ok(html.includes('<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">'), "said wide, so it is shown large");
+  answers.event_share_image = { key: TALL, wide: false };
+  html = await head();
+  assert.ok(html.includes(encodeURIComponent(TALL)) && !html.includes("og:image:width"), "the tall one, no size said");
+  answers.event_share_image = { key: "../../etc", wide: true };
+  html = await head();
+  assert.ok(!/og:image" content="[^"]*etc/.test(html), "a key that is not one: never");
+  answers.event_share_image = null;
+  html = await head();
+  assert.ok(!html.includes('property="og:image"'), "nothing: as 173 (no photo, no picture)");
+  delete answers.event_share_image;
+});
