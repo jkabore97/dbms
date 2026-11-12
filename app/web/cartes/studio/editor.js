@@ -806,7 +806,7 @@
     var h = '<p class="ed-lab">Palettes</p><div class="ed-swatches">' + S.PALETTES.map(function (p) {
       return '<button type="button" data-pal="' + p.id + '" title="' + esc(p.name) + '" aria-label="' + esc(p.name) + '" aria-pressed="' + (th.preset === p.id) + '" style="background:linear-gradient(135deg,' + p.paper + ' 0 50%,' + p.accent + ' 50% 75%,' + p.back + ' 75%)"></button>';
     }).join('') + '</div>' +
-      '<p class="ed-lab">Vos couleurs</p><div class="ed-colors">' + [['back', 'Fond de page'], ['paper', 'Papier'], ['ink', 'Texte'], ['accent', 'Accent'], ['soft', 'Doux'], ['line', 'Lignes']].map(function (x) {
+      '<p class="ed-lab">Vos couleurs</p><div class="ed-colors">' + [['back', 'Fond de page'], ['paper', 'Papier'], ['ink', 'Texte'], ['accent', 'Accent'], ['button', 'Boutons'], ['soft', 'Doux'], ['line', 'Lignes']].map(function (x) {
         return '<label><input type="color" data-col="' + x[0] + '" value="' + c[x[0]] + '">' + x[1] + '</label>';
       }).join('') + '</div><div class="ed-row" style="margin-top:10px"><button type="button" class="ed-chip" data-fromphoto>Couleurs depuis ma photo</button></div>' +
       '<p class="ed-lab">Écritures</p><div class="ed-pairs">' + S.PAIRS.map(function (p) {

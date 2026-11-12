@@ -143,7 +143,10 @@
     var line = isHex(c.line) ? c.line : mix(paper, ink, 0.2);
     var onAccent = contrast('#ffffff', accent) >= contrast(ink, accent) ? '#ffffff' : ink;
     var onBack = contrast('#ffffff', back) >= contrast('#151515', back) ? '#ffffff' : '#151515';
-    return { back: back, paper: paper, ink: ink, accent: accent, soft: soft, line: line, onAccent: onAccent, onBack: onBack };
+    // the buttons (179): their own colour when the organiser chose one, else the accent
+    var button = isHex(c.button) ? c.button : accent;
+    var onButton = contrast('#ffffff', button) >= contrast(ink, button) ? '#ffffff' : ink;
+    return { back: back, paper: paper, ink: ink, accent: accent, soft: soft, line: line, onAccent: onAccent, onBack: onBack, button: button, onButton: onButton };
   }
   S.colorsOf = colorsOf;
 
@@ -684,7 +687,7 @@
   S.applyTheme = function (root, theme) {
     theme = theme || {};
     var c = colorsOf(theme), fo = theme.fonts || {}, st = root.style;
-    ['back', 'paper', 'ink', 'accent', 'soft', 'line', 'onAccent', 'onBack'].forEach(function (k) { st.setProperty('--st-' + k.replace(/[A-Z]/g, function (m) { return '-' + m.toLowerCase(); }), c[k]); });
+    ['back', 'paper', 'ink', 'accent', 'soft', 'line', 'onAccent', 'onBack', 'button', 'onButton'].forEach(function (k) { st.setProperty('--st-' + k.replace(/[A-Z]/g, function (m) { return '-' + m.toLowerCase(); }), c[k]); });
     // the accent as text, where it reads (else the background's own text colour)
     var on = function (bg, alt) { return contrast(c.accent, bg) >= 2.6 ? c.accent : alt; };
     st.setProperty('--st-a-paper', on(c.paper, c.ink)); st.setProperty('--st-a-soft', on(c.soft, c.ink));
@@ -816,11 +819,22 @@
       });
     });
     if (wantsPass && saved && saved.pass) Array.prototype.forEach.call(root.querySelectorAll('[data-passbox]'), function (pb) { drawPass(pb, ctx, saved.pass, saved.name); });
+    function phoneId() {
+      // this phone's own random identifier (179): the album counts its photos by it
+      try {
+        var v = localStorage.getItem('mk-phone');
+        if (!v || !/^[a-zA-Z0-9-]{16,64}$/.test(v)) {
+          v = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 14);
+          localStorage.setItem('mk-phone', v);
+        }
+        return v;
+      } catch (e) { return ''; }
+    }
     // the guests' album (155/164)
     Array.prototype.forEach.call(root.querySelectorAll('[data-album]'), function (box) {
       var grid = box.querySelector('.st-album-g'), say = box.querySelector('.st-done'), input = box.querySelector('input[type=file]'), who = box.querySelector('input[name=who]'), rules = {};
       var fig = function (src, name) { var d = document.createElement('figure'); d.innerHTML = '<img alt="" loading="lazy"><figcaption></figcaption>'; d.querySelector('img').src = src; d.querySelector('figcaption').textContent = name || 'Un invité'; return d; };
-      api(ctx, 'event_album_rules', { p_slug: ctx.slug, p_preview: ctx.preview || null }).then(function (j) { rules = j || {}; }, function () {});
+      api(ctx, 'event_album_rules', { p_slug: ctx.slug, p_preview: ctx.preview || null }).then(function (j) { rules = j || {}; if (rules.open_quota && !say.textContent) say.textContent = 'Ouvert à tous : ' + rules.open_quota + ' photo' + (rules.open_quota > 1 ? 's' : '') + ' par personne.'; }, function () {});
       api(ctx, 'event_album', { p_slug: ctx.slug, p_preview: ctx.preview || null }).then(function (l) { (Array.isArray(l) ? l : []).forEach(function (p) { if (p && p.key) grid.appendChild(fig(picSrc({ key: p.key }, ctx, 400), p.guest)); }); }, function () {});
       input.addEventListener('change', function () {
         var files = Array.prototype.slice.call(input.files); input.value = '';
@@ -832,7 +846,7 @@
           return new Promise(function (res) {
             shrink(file, 1400, function (blob) {
               if (!blob) return res(null);
-              fetch(ctx.uploads + '/v1/events/' + encodeURIComponent(ctx.slug) + '/album?apercu=' + encodeURIComponent(ctx.preview || '') + '&invite=' + encodeURIComponent(who.value.trim()) + '&pass=' + encodeURIComponent(pass), { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob })
+              fetch(ctx.uploads + '/v1/events/' + encodeURIComponent(ctx.slug) + '/album?apercu=' + encodeURIComponent(ctx.preview || '') + '&invite=' + encodeURIComponent(who.value.trim()) + '&pass=' + encodeURIComponent(pass) + '&device=' + encodeURIComponent(phoneId()), { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob })
                 .then(function (r) { return r.json().then(function (j) { if (!r.ok || !j || !j.key) throw new Error(j && j.error ? j.error : 'La photo n\'est pas passée.'); return j; }); })
                 .then(function (j) { if (!rules.review) grid.insertBefore(fig(URL.createObjectURL(blob), who.value.trim()), grid.firstChild); res(j); }, function (err) { say.textContent = err.message; res(null); });
             });

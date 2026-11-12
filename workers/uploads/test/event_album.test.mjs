@@ -69,8 +69,8 @@ function env(objects) {
   };
 }
 
-const upload = (e, { preview = PREVIEW, guest = "Tanti Rose", slug = "ines-thomas-ab12", type = "image/jpeg", bytes = PHOTO, pass = null } = {}) =>
-  worker.fetch(new Request(`https://up.example/v1/events/${slug}/album?apercu=${preview}&invite=${encodeURIComponent(guest)}${pass === null ? "" : `&pass=${encodeURIComponent(pass)}`}`, {
+const upload = (e, { preview = PREVIEW, guest = "Tanti Rose", slug = "ines-thomas-ab12", type = "image/jpeg", bytes = PHOTO, pass = null, device = null } = {}) =>
+  worker.fetch(new Request(`https://up.example/v1/events/${slug}/album?apercu=${preview}&invite=${encodeURIComponent(guest)}${pass === null ? "" : `&pass=${encodeURIComponent(pass)}`}${device === null ? "" : `&device=${encodeURIComponent(device)}`}`, {
     method: "POST",
     headers: { "Content-Type": type, Origin: "https://marakaj.com" },
     body: bytes,
@@ -191,4 +191,19 @@ test("164: the guest's pass goes with the picture; anything else is no pass", as
       assert.equal(r.status, 201, `pass ${given}`);
     });
   }
+});
+
+test("179: the phone's identifier goes to Postgres when the page sends one, and only a well-formed one", async () => {
+  const e = env();
+  await withPostgres({
+    event_album_add: () => [200, KEY],
+    event_album_done: () => [200, true],
+  }, async (asked) => {
+    await upload(e, { device: "phone-0123456789abcdef" });
+    assert.equal(asked[0].body.p_device, "phone-0123456789abcdef");
+    await upload(e);
+    assert.equal("p_device" in asked[2].body, false, "none sent: none asked (a database before 179)");
+    await upload(e, { device: "<script>" });
+    assert.equal("p_device" in asked[4].body, false, "a malformed one dropped");
+  });
 });

@@ -50,7 +50,7 @@ html{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-
 .st-note{margin:12px 0 0;padding:10px 12px;border:1px dashed currentColor;border-radius:10px;font:500 13px/1.45 system-ui,sans-serif;opacity:.7;text-align:left}
 .st-closed{font-style:italic}
 .st-link{display:inline-block;margin-top:6px;font-size:.88em;color:var(--a);text-decoration:underline;text-underline-offset:3px}
-.st-btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:48px;padding:0 24px;border:1px solid var(--st-accent);border-radius:calc(var(--st-rad) + 8px);background:var(--st-accent);color:var(--st-on-accent);font:600 .82em/1 var(--st-body);letter-spacing:.14em;text-transform:uppercase;text-decoration:none;cursor:pointer;margin-top:8px}
+.st-btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:48px;padding:0 24px;border:1px solid var(--st-button,var(--st-accent));border-radius:calc(var(--st-rad) + 8px);background:var(--st-button,var(--st-accent));color:var(--st-on-button,var(--st-on-accent));font:600 .82em/1 var(--st-body);letter-spacing:.14em;text-transform:uppercase;text-decoration:none;cursor:pointer;margin-top:8px}
 .st-btn-ghost{background:transparent;color:inherit;border-color:currentColor;opacity:.85}
 .st-btn.ghost{background:transparent;color:var(--a)}
 .st-bg-accent .st-btn{background:var(--st-paper);color:var(--a);border-color:var(--st-paper)}

@@ -4,6 +4,17 @@
 // rewritten, every picture replaced and reframed, and the card can be
 // turned to another kind of event (the words and the programme follow).
 (function () {
+  function phoneId() {
+    // this phone's own random identifier (179): the album counts its photos by it
+    try {
+      var v = localStorage.getItem('mk-phone');
+      if (!v || !/^[a-zA-Z0-9-]{16,64}$/.test(v)) {
+        v = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 14);
+        localStorage.setItem('mk-phone', v);
+      }
+      return v;
+    } catch (e) { return ''; }
+  }
   var sprite = '<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0" aria-hidden="true">' +
     '<symbol id="i-rings" viewBox="0 0 48 48"><circle cx="18" cy="28" r="11"/><circle cx="30" cy="28" r="11"/><path d="M26 10l-2 4-2-4 2-2z"/></symbol>' +
     '<symbol id="i-glass" viewBox="0 0 48 48"><path d="M15 7h18l-3 15a6 6 0 0 1-12 0z"/><path d="M24 28v11M17 39h14M18 14c4 3 8 3 12 0"/></symbol>' +
@@ -1179,7 +1190,7 @@
         return new Promise(function (res) {
           shrink(file, 1400, function (src, canvas) {
             canvas.toBlob(function (blob) {
-              fetch(SERVER.uploads + '/v1/events/' + encodeURIComponent(SERVER.slug) + '/album?apercu=' + encodeURIComponent(SERVER.preview || '') + '&invite=' + encodeURIComponent(name) + '&pass=' + encodeURIComponent(passFor()), {
+              fetch(SERVER.uploads + '/v1/events/' + encodeURIComponent(SERVER.slug) + '/album?apercu=' + encodeURIComponent(SERVER.preview || '') + '&invite=' + encodeURIComponent(name) + '&pass=' + encodeURIComponent(passFor()) + '&device=' + encodeURIComponent(phoneId()), {
                 method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob
               }).then(function (r) {
                 return r.json().then(function (j) {

@@ -21,8 +21,12 @@ do $$ begin
 end $$;
 grant usage on schema public to anon, authenticated;
 grant usage on schema auth to anon, authenticated;
+-- 179's album door taken off while 164 is installed again over a newer database
+drop function if exists event_album_add(text, text, text, text, uuid, text);
 \i database/migrations/164_events_album_pro.sql
 \i database/migrations/164_events_album_pro.sql
+-- 179 replaced event_album_add (a phone's identifier added): back to it
+\i database/migrations/179_album_open_quota.sql
 
 begin;
 update platform_settings set value = 'false' where key = 'events_tickets';
