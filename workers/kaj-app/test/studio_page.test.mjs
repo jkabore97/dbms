@@ -354,3 +354,13 @@ test("180: a shared card's link shows the card itself — its wide picture, else
   assert.ok(!html.includes('property="og:image"'), "nothing: as 173 (no photo, no picture)");
   delete answers.event_share_image;
 });
+
+test("181: a draft shared by its preview link names that link as its address (og:url), a published card its plain one", async () => {
+  const page = async (url) => (await (await site.fetch(new Request(url), env)).text());
+  answers.event_public = { ...card({ doc: DOC }), published: false };
+  let html = await page("https://marakaj.com/e/salimata-boukary-ab12?apercu=cccccccccccccccccccc1811");
+  assert.ok(html.includes('<meta property="og:url" content="https://marakaj.com/e/salimata-boukary-ab12?apercu=cccccccccccccccccccc1811">'), "the draft: its preview link");
+  answers.event_public = { ...card({ doc: DOC }), published: true };
+  html = await page("https://marakaj.com/e/salimata-boukary-ab12?apercu=cccccccccccccccccccc1811");
+  assert.ok(html.includes('<meta property="og:url" content="https://marakaj.com/e/salimata-boukary-ab12">'), "published: the plain link, no code");
+});
