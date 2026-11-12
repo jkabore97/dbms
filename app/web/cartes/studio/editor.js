@@ -229,8 +229,10 @@
     if (f && f === document.activeElement) return;
     if (e.target.closest('input, select, textarea, .ed-ins, .st-add-item')) return;
     var id = bl.getAttribute('data-bid'), x = e.clientX, y = e.clientY;
+    // a long press on a button (179): its colour and its look, not a move
+    var onBtn = !!e.target.closest('.st-btn');
     unpress();
-    press = { x: x, y: y, t: setTimeout(function () { unpress(); startDrag(id, x, y, null, null); }, LONG) };
+    press = { x: x, y: y, t: setTimeout(function () { unpress(); if (onBtn) { justDragged = true; setTimeout(function () { justDragged = false; }, 400); select(id); openButton(id); } else startDrag(id, x, y, null, null); }, LONG) };
     // a finger: the words cannot be chosen while it is held (a mouse places its caret now)
     if (e.pointerType !== 'mouse') document.body.classList.add('ed-pressing');
   });
@@ -358,7 +360,7 @@
   // Said once on this phone, the first time a block is chosen.
   function hintOnce() {
     try { if (localStorage.getItem('studio-astuce-glisser')) return; localStorage.setItem('studio-astuce-glisser', '1'); } catch (e) { return; }
-    toast('Pour déplacer un bloc : appuyez longuement dessus, même sur ses mots, puis glissez. Ou faites glisser « Glisser ».');
+    toast('Pour déplacer un bloc : appuyez longuement dessus, même sur ses mots, puis glissez. Ou faites glisser « Glisser ». Un appui long sur un bouton change sa couleur et son style.');
   }
   function handle(label) { return '<button type="button" class="ed-hd" aria-label="Glisser pour déplacer : ' + esc(label) + '">' + I.grip + '</button>'; }
   // writing in place
@@ -377,7 +379,8 @@
     var el = e.target.closest && e.target.closest('[data-f]'); if (!el) return;
     var bl = el.closest('[data-bid]'), b = bl && blockById(bl.getAttribute('data-bid')); if (!b) return;
     var path = el.getAttribute('data-f'), multi = el.hasAttribute('data-multi');
-    var v = multi ? el.innerText.replace(/ /g, ' ').replace(/\n{3,}/g, '\n\n').replace(/^\s+|\s+$/g, '') : el.textContent.replace(/\s+/g, ' ').trim();
+    var v = multi ? el.innerText.replace(/ /g, ' ').replace(/\n{3,}/g, '\n\n').replace(/^\s+|\s+$/g, '') 
+      : el.innerText.replace(/[ \t\u00a0]+/g, ' ').replace(/ *\n */g, '\n').replace(/\n{2,}/g, '\n').trim();
     if (typing !== el) { snap(); typing = el; }
     b.props = b.props || {};
     setPath(b.props, path, v.slice(0, 4000));
@@ -385,7 +388,12 @@
   });
   canvas.addEventListener('keydown', function (e) {
     var el = e.target.closest && e.target.closest('[data-f]'); if (!el) return;
-    if (e.key === 'Enter' && !el.hasAttribute('data-multi')) { e.preventDefault(); el.blur(); }
+    // Enter (179): a new line in every field — the names, the place, a title
+    // (the guests' page draws it); a paragraph keeps its own
+    if (e.key === 'Enter' && !el.hasAttribute('data-multi')) {
+      e.preventDefault();
+      if (!document.execCommand('insertLineBreak')) document.execCommand('insertHTML', false, '<br>');
+    }
     // a question's words sit in a <summary>, whose space would fold it
     if (e.key === ' ' && el.closest('summary')) { e.preventDefault(); document.execCommand('insertText', false, ' '); }
   });
@@ -393,7 +401,7 @@
     var el = e.target.closest && e.target.closest('[data-f]'); if (!el) return;
     e.preventDefault();
     var t = ((e.clipboardData || window.clipboardData).getData('text') || '');
-    if (!el.hasAttribute('data-multi')) t = t.replace(/\s+/g, ' ');
+    if (!el.hasAttribute('data-multi')) t = t.replace(/[ \t\u00a0]+/g, ' ').replace(/\n{2,}/g, '\n');
     document.execCommand('insertText', false, t);
   });
   function addItem(b, key) {
@@ -602,6 +610,7 @@
       (U.isHex(bg) ? '<div class="ed-row" style="margin-top:8px"><input type="color" data-bgc value="' + bg + '"></div>' : '') +
       (bg === 'photo' ? '<div class="ed-row" style="margin-top:8px">' + photoBtn('style.bgPhoto', 'Choisir la photo de fond') + '</div><label class="ed-field">Voile sur la photo<input class="ed-range" type="range" min="0" max="85" data-dim value="' + Math.round((st.dim != null ? st.dim : 0.45) * 100) + '"></label>' : '') +
       (bg === 'scene' ? scenePicker(st) : '');
+    if (canvas.querySelector('[data-bid="' + b.id + '"] .st-btn')) h += '<p class="ed-lab">Boutons</p><div class="ed-row"><button type="button" class="ed-chip" data-openbtn>Couleur et style des boutons…</button></div>';
     h += '<p class="ed-lab">Alignement</p>' + chips('al', [['', 'Du modèle'], ['left', 'À gauche'], ['center', 'Centré'], ['right', 'À droite']], st.align || '') +
       '<p class="ed-lab">Espace autour</p>' + chips('pad', [['S', 'Serré'], ['', 'Normal'], ['L', 'Large']], st.pad || '') +
       '<p class="ed-lab">Taille des textes</p>' + chips('size', [['S', 'Petite'], ['', 'Normale'], ['L', 'Grande'], ['XL', 'Très grande']], st.size || '') +
@@ -612,6 +621,50 @@
     openSheet(d.name, h, function (box) { wireSettings(box, b.id); }, null, true);
     if (fresh) reveal(b.id);
   }
+  // A block's buttons (179), opened by a long press on one of them (or from
+  // the block's « Réglages »): their colour, their look, their shape, their
+  // size, the full width — every button of the block alike.
+  function openButton(id) {
+    var b = blockById(id); if (!b) return;
+    var bt = (b.style && b.style.btn) || {}, c = bt.c || '';
+    var h = '<p class="ed-help">Les boutons de ce bloc. Pour tous les boutons de la carte : Thème › Boutons.</p>' +
+      '<p class="ed-lab">Couleur</p>' + chips('bc', [['', 'Celle de la carte'], ['accent', 'Accent'], ['ink', 'Sombre'], ['paper', 'Papier'], ['white', 'Blanc'], ['black', 'Noir'], ['custom', 'Couleur…']], U.isHex(c) ? 'custom' : c) +
+      (U.isHex(c) ? '<div class="ed-row" style="margin-top:8px"><input type="color" data-bcc value="' + c + '"></div>' : '') +
+      '<p class="ed-lab">Style</p>' + chips('bl', [['', 'Plein'], ['contour', 'Contour'], ['texte', 'Texte seul']], bt.look || '') +
+      '<p class="ed-lab">Forme</p>' + chips('bs', [['', 'Celle de la carte'], ['pilule', 'Pilule'], ['doux', 'Arrondie'], ['carre', 'Carrée']], bt.shape || '') +
+      '<p class="ed-lab">Taille</p>' + chips('bz', [['S', 'Petite'], ['', 'Normale'], ['L', 'Grande']], bt.size || '') +
+      '<label class="ed-check"><input type="checkbox" data-bw' + (bt.full ? ' checked' : '') + '>Toute la largeur</label>' +
+      '<div class="ed-row" style="margin-top:12px"><button type="button" class="ed-chip" data-breset>Comme les autres boutons</button></div>';
+    var set = function (k, v) {
+      commit(function () {
+        b.style = b.style || {};
+        var n = Object.assign({}, b.style.btn || {});
+        if (v === '' || v === false || v == null) delete n[k]; else n[k] = v;
+        if (Object.keys(n).length) b.style.btn = n; else delete b.style.btn;
+      });
+      openButton(id);
+    };
+    openSheet('Bouton', h, function (box) {
+      box.addEventListener('click', function (e) {
+        var t = e.target.closest('button'); if (!t) return;
+        if (t.hasAttribute('data-bc')) { var v = t.getAttribute('data-bc'); set('c', v === 'custom' ? S.colorsOf(doc.theme).button : v); }
+        else if (t.hasAttribute('data-bl')) set('look', t.getAttribute('data-bl'));
+        else if (t.hasAttribute('data-bs')) set('shape', t.getAttribute('data-bs'));
+        else if (t.hasAttribute('data-bz')) set('size', t.getAttribute('data-bz'));
+        else if (t.hasAttribute('data-breset')) { commit(function () { if (b.style) delete b.style.btn; }); openButton(id); }
+      });
+      box.addEventListener('input', function (e) {
+        var t = e.target, bl = canvas.querySelector('[data-bid="' + id + '"]');
+        if (t.hasAttribute('data-bcc') && bl) bl.style.setProperty('--st-button', t.value);
+      });
+      box.addEventListener('change', function (e) {
+        var t = e.target;
+        if (t.hasAttribute('data-bcc')) set('c', t.value.toLowerCase());
+        else if (t.hasAttribute('data-bw')) set('full', t.checked);
+      });
+    }, null, true);
+  }
+
   // A link as the server keeps it (171: https, tel or mailto): « www.… » and
   // « http:// » made https, a phone number made tel:. '' for nothing, null
   // for a link that cannot serve.
@@ -625,6 +678,7 @@
   }
   function wireSettings(box, id) {
     var b = function () { return blockById(id); };
+    box.addEventListener('click', function (e) { if (e.target.closest('[data-openbtn]')) openButton(id); });
     var re = function () { openSettings(id); };
     var items = box.querySelector('.ed-items');
     if (items) sortable(items, function (from, to) {

@@ -662,6 +662,19 @@
     if (s.ink) css += 'color:' + colorRef(s.ink) + ';';
     if (s.motif) cls.push('st-motif');
     if (s.sep && s.sep !== 'none') cls.push('st-sep');
+    // its buttons (179): a colour, a look, a shape, a size, the full width —
+    // chosen by a long press on one of them; else the card's buttons
+    var bt = s.btn && typeof s.btn === 'object' ? s.btn : null;
+    if (bt) {
+      var role = { accent: ['var(--st-accent)', 'var(--st-on-accent)'], ink: ['var(--st-ink)', 'var(--st-paper)'], paper: ['var(--st-paper)', 'var(--st-ink)'], white: ['#ffffff', '#151515'], black: ['#111111', '#ffffff'] }[bt.c];
+      if (isHex(bt.c)) css += '--st-button:' + bt.c + ';--st-on-button:' + (contrast('#ffffff', bt.c) >= contrast('#151515', bt.c) ? '#ffffff' : '#151515') + ';';
+      else if (role) css += '--st-button:' + role[0] + ';--st-on-button:' + role[1] + ';';
+      if (isHex(bt.c) || role) cls.push('st-bc');
+      if (bt.look === 'contour' || bt.look === 'texte') cls.push('st-bl-' + bt.look);
+      if (bt.shape === 'pilule' || bt.shape === 'carre' || bt.shape === 'doux') cls.push('st-bs-' + bt.shape);
+      if (bt.size === 'L' || bt.size === 'S') cls.push('st-bz-' + bt.size);
+      if (bt.full) cls.push('st-bw-full');
+    }
     return { cls: cls.join(' '), css: css };
   }
   S.renderBlock = function (b, ctx, f) {
