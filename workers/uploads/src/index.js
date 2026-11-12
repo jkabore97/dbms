@@ -122,7 +122,7 @@ export default {
       // each when the album is limited.
       const album = url.pathname.match(/^\/v1\/events\/([a-z0-9-]+)\/album$/);
       if (album && request.method === "POST") {
-        return withCors(await putAlbumPicture(request, env, album[1], url.searchParams.get("apercu") || "", url.searchParams.get("invite") || "", url.searchParams.get("pass") || ""), cors);
+        return withCors(await putAlbumPicture(request, env, album[1], url.searchParams.get("apercu") || "", url.searchParams.get("invite") || "", url.searchParams.get("pass") || "", url.searchParams.get("device") || ""), cors);
       }
 
       // GET /v1/public/objects/<key> — a vitrine photo, for anyone. No token:
@@ -596,12 +596,16 @@ async function putEventPreview(request, env, slug, edit) {
 
 // A guest's picture for the album (155): the card's link (the preview
 // token, or none for a published card) and the guest's first name.
-async function putAlbumPicture(request, env, slug, preview, guest, pass = "") {
+async function putAlbumPicture(request, env, slug, preview, guest, pass = "", device = "") {
   const who = guest.trim().slice(0, 60);
   const link = /^[0-9a-f]{24}$/.test(preview) ? preview : null;
   const card = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(pass) ? pass.toLowerCase() : null;
+  // The phone's own identifier (179): counted when the album takes so many
+  // per phone; sent only when the page has one (a database before 179 has
+  // no such parameter).
+  const phone = /^[a-zA-Z0-9-]{16,64}$/.test(device) ? device : null;
   return storeEventPicture(request, env, {
-    mint: (ext) => rpcAnonAsked(env, "event_album_add", { p_slug: slug, p_preview: link, p_ext: ext, p_guest: who || null, p_pass: card }),
+    mint: (ext) => rpcAnonAsked(env, "event_album_add", { p_slug: slug, p_preview: link, p_ext: ext, p_guest: who || null, p_pass: card, ...(phone ? { p_device: phone } : {}) }),
     confirm: (key, bytes) => rpcAnonAsked(env, "event_album_done", { p_key: key, p_preview: link, p_bytes: bytes }),
     meta: { event: slug, guest: who },
   });

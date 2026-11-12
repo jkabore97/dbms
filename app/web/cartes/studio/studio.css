@@ -50,11 +50,21 @@ html{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-
 .st-note{margin:12px 0 0;padding:10px 12px;border:1px dashed currentColor;border-radius:10px;font:500 13px/1.45 system-ui,sans-serif;opacity:.7;text-align:left}
 .st-closed{font-style:italic}
 .st-link{display:inline-block;margin-top:6px;font-size:.88em;color:var(--a);text-decoration:underline;text-underline-offset:3px}
-.st-btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:48px;padding:0 24px;border:1px solid var(--st-accent);border-radius:calc(var(--st-rad) + 8px);background:var(--st-accent);color:var(--st-on-accent);font:600 .82em/1 var(--st-body);letter-spacing:.14em;text-transform:uppercase;text-decoration:none;cursor:pointer;margin-top:8px}
+.st-btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:48px;padding:0 24px;border:1px solid var(--st-button,var(--st-accent));border-radius:calc(var(--st-rad) + 8px);background:var(--st-button,var(--st-accent));color:var(--st-on-button,var(--st-on-accent));font:600 .82em/1 var(--st-body);letter-spacing:.14em;text-transform:uppercase;text-decoration:none;cursor:pointer;margin-top:8px}
 .st-btn-ghost{background:transparent;color:inherit;border-color:currentColor;opacity:.85}
 .st-btn.ghost{background:transparent;color:var(--a)}
 .st-bg-accent .st-btn{background:var(--st-paper);color:var(--a);border-color:var(--st-paper)}
 .st-btn .st-ic{width:18px;height:18px}
+/* a block's own buttons (179): their colour (over the accent block's paper), look, shape, size and width */
+.st-b.st-bc .st-btn{background:var(--st-button);color:var(--st-on-button);border-color:var(--st-button)}
+.st-b.st-bl-contour .st-btn{background:transparent;color:var(--st-button,var(--st-accent));border-color:var(--st-button,var(--st-accent))}
+.st-b.st-bl-texte .st-btn{background:transparent;border-color:transparent;color:var(--st-button,var(--st-accent));text-decoration:underline;text-underline-offset:5px;padding:0 8px}
+.st-b.st-bs-pilule .st-btn{border-radius:999px}
+.st-b.st-bs-doux .st-btn{border-radius:12px}
+.st-b.st-bs-carre .st-btn{border-radius:0}
+.st-b.st-bz-L .st-btn{min-height:58px;padding:0 34px;font-size:.95em}
+.st-b.st-bz-S .st-btn{min-height:40px;padding:0 18px;font-size:.74em}
+.st-b.st-bw-full .st-btn{display:flex;width:100%}
 .st-ic{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
 .st-box{padding:34px 26px;border-radius:var(--st-rad);background:var(--st-paper);color:var(--st-ink);box-shadow:0 18px 50px -24px rgba(0,0,0,.35)}
 .st-bg-paper .st-box{background:var(--st-soft);box-shadow:none}

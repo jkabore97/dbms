@@ -184,7 +184,9 @@ jobs:
           fi
 
   build-web:
-    runs-on: ubuntu-latest
+    # Pinned (179): « ubuntu-latest » moved to 26.04 on 2026-11-12, where the
+    # smoke test's Playwright (1.56) cannot install its Chromium.
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     # The public values come from the workflow's env above. No signing key:
     # the web build never used one (SEC_AUDIT_2 M5).

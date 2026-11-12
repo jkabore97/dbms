@@ -399,6 +399,11 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch177.sql
+      # An album open to everyone, so many photos per phone (179).
+      - name: Prove the open album — anyone adds, so many per phone, album_limit still wins (179)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch179.sql
 
       # The bell: the right people hear the right events and nobody else,
       # a threshold rings on the crossing rather than on every sale below
