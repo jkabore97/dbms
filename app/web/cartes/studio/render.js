@@ -221,7 +221,11 @@
   S.facts = facts;
 
   // --------------------------------------------------------------- pictures
-  var STOCK = ['africa-sunset', 'baby-1', 'baby-2', 'baby-3', 'birthday-cake', 'dot-1', 'dot-2', 'family-1', 'gala-1', 'gala-2', 'gala-3', 'garden-1',
+  // the street's event pictures (174), made for Marakaj, first in the bank (the owner: « add the
+  // pictures you generated in this list »)
+  var STOCK = ['fete-mariage', 'fete-dot', 'fete-gala', 'fete-anniversaire', 'fete-bapteme', 'fete-naissance', 'fete-diplome',
+    'fete-concert', 'fete-conference', 'fete-culture', 'fete-inauguration', 'fete-hommage', 'fete-autre',
+    'africa-sunset', 'baby-1', 'baby-2', 'baby-3', 'birthday-cake', 'dot-1', 'dot-2', 'family-1', 'gala-1', 'gala-2', 'gala-3', 'garden-1',
     'garden-2', 'garden-3', 'grad-1', 'grad-2', 'grad-3', 'guest-1', 'guest-2', 'guest-3', 'guest-4', 'memorial-1', 'memorial-2', 'party-1', 'party-2',
     'wed-africa-1', 'wed-africa-2', 'wed-bw-1', 'wed-bw-2', 'wed-bw-3', 'wed-couple-1', 'wed-couple-2', 'wed-lake', 'wed-night-1', 'wed-night-2', 'wed-table'];
   S.STOCK = STOCK;
