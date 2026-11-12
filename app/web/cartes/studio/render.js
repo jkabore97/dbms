@@ -958,7 +958,7 @@
     });
     want.forEach(function (w) {
       var old = live.filter(function (x) { return x.key === w.key && keep.indexOf(x) < 0; })[0];
-      if (old && old.ctl) { old.ctl.canvases.forEach(function (cv) { w.el.appendChild(cv); }); old.el = w.el; keep.push(old); w.done = true; }
+      if (old && old.ctl) { old.ctl.canvases.forEach(function (cv) { w.el.appendChild(cv); }); if (old.ctl.move) old.ctl.move(w.el); w.el.setAttribute('data-scene-on', w.el.getAttribute('data-scene')); old.el = w.el; keep.push(old); w.done = true; }
     });
     live.filter(function (x) { return keep.indexOf(x) < 0; }).forEach(function (x) { if (x.ctl) x.ctl.stop(); });
     live = keep;
