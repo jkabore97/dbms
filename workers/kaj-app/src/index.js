@@ -1018,7 +1018,10 @@ async function cardPage(request, env, { slug, data, preview, edit, editor, demo,
         e.append(
           `<meta property="og:title" content="${escapeHtml(data.title)}">` +
           `<meta property="og:description" content="${escapeHtml(description)}">` +
-          `<meta property="og:url" content="${SITE}/${demo ? `modele/${escapeHtml(data.card)}` : `e/${escapeHtml(slug)}`}">` +
+          // a draft shared by its preview link: the link's own address, with
+          // its code — the plain one answers 404, and an app that follows
+          // og:url (Facebook, iMessage…) then found no card and no picture (181)
+          `<meta property="og:url" content="${SITE}/${demo ? `modele/${escapeHtml(data.card)}` : `e/${escapeHtml(slug)}` + (data.published !== true && preview ? `?apercu=${escapeHtml(encodeURIComponent(preview))}` : "")}">` +
           `<meta property="og:type" content="website">` +
           (image ? `<meta property="og:image" content="${escapeHtml(image)}"><meta name="twitter:card" content="summary_large_image">` +
             (wide ? `<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">` : "") : "") +
