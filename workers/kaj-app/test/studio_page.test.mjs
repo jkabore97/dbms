@@ -235,7 +235,9 @@ test("171d: the site's own pages choose no word on a long press; the payment num
   html = await r.text();
   assert.equal(r.status, 200);
   assert.ok(html.includes("user-select:none"), "the ticket page");
-  assert.ok(html.includes('data-cp="+226 70 00 00 00">Copier le numéro</button>'), "the number has its button");
+  // 178: read with its code, copied without it — as a transfer is typed
+  assert.ok(html.includes("+226 70 00 00 00"), "the number read in pairs with its code");
+  assert.ok(html.includes('data-cp="70000000">Copier le numéro</button>'), "the number has its button, the local digits");
   assert.ok(html.includes('data-cp="MK-7Q2P">Copier la référence</button>'), "the reference has its button");
   assert.ok(html.includes("navigator.clipboard"), "and the button copies");
   // inputs and the words being written stay choosable
@@ -320,4 +322,13 @@ test("173c: the Android app's links — the Play signing key, the package, JSON"
   assert.deepEqual(j.relation, ["delegate_permission/common.handle_all_urls"]);
   assert.equal(j.target.package_name, "bf.kaj.app");
   assert.deepEqual(j.target.sha256_cert_fingerprints, ["5C:29:33:1F:CE:64:5C:D0:BA:3F:B7:EA:72:30:6C:A4:63:1B:FE:93:FD:43:22:32:39:8F:46:3D:04:77:D1:AA"]);
+});
+
+test("178: a payment number stored with its country is read in pairs and copied without its code", async () => {
+  const { phoneText, phoneLocal } = await import("../src/index.js");
+  assert.equal(phoneText("+22670000001"), "+226 70 00 00 01");
+  assert.equal(phoneLocal("+22670000001"), "70000001");
+  assert.equal(phoneText("+2250712345678"), "+225 07 12 34 56 78", "Côte d'Ivoire keeps its zero");
+  assert.equal(phoneLocal("+2250712345678"), "0712345678");
+  assert.equal(phoneText("70 00 00 01"), "70 00 00 01", "a number typed before, as it was");
 });

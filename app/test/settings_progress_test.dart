@@ -158,7 +158,9 @@ void main() {
   testWidgets('the vitrine asks for the phone and the address', (tester) async {
     await pump(tester, _Admin(phone: '+22670000000'), part: 'vitrine');
     expect(find.byKey(const Key('vitrine-phone')), findsOneWidget);
-    expect(find.widgetWithText(TextField, '+22670000000'), findsOneWidget);
+    // the stored number opens under its country (178): Burkina, then the rest
+    expect(find.widgetWithText(TextField, '70000000'), findsOneWidget);
+    expect(find.textContaining('+226'), findsWidgets);
     expect(find.byKey(const Key('vitrine-address')), findsOneWidget);
   });
 

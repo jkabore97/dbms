@@ -731,6 +731,28 @@ function moneyText(n, currency) {
   return `${v} ${currency === "XOF" || currency === "XAF" || !currency ? "FCFA" : currency}`;
 }
 
+// A number where to pay (178: stored with its country, « +22670000001 »):
+// read in pairs after its code, « +226 70 00 00 01 »; copied without the
+// code, as a mobile-money transfer is typed. A number typed before, as it was.
+function dialOf(digits) {
+  if (/^(1|7)/.test(digits)) return digits.slice(0, 1);
+  if (/^(2[0-7]|3[0-469]|4[0-9]|5[1-8]|6[0-6]|8[1-46]|9[0-58])/.test(digits) && !/^2[1-9]/.test(digits)) return digits.slice(0, 2);
+  return digits.slice(0, 3);
+}
+export function phoneText(raw) {
+  const s = String(raw || "").trim();
+  if (!s.startsWith("+")) return s;
+  const digits = s.replace(/\D/g, "");
+  const dial = dialOf(digits), rest = digits.slice(dial.length);
+  return [`+${dial}`, ...(rest.match(/.{1,2}/g) || [])].join(" ");
+}
+export function phoneLocal(raw) {
+  const s = String(raw || "").trim();
+  if (!s.startsWith("+")) return s;
+  const digits = s.replace(/\D/g, "");
+  return digits.slice(dialOf(digits).length);
+}
+
 function waDigits(raw) {
   let d = String(raw || "").replace(/\D/g, "");
   if (d.startsWith("00")) d = d.slice(2);
@@ -796,7 +818,7 @@ export async function ticketStatusPage(env, slug, id) {
     // word of the page is chosen by a long press.
     const copy = (v, label) => (v ? `<button type="button" class="cp" data-cp="${escapeHtml(String(v))}">${label}</button>` : "");
     const pays = (r.pay_methods || []).map((p) => `<div class="pay"><b>${escapeHtml(PAY_KIND[p.kind] || p.kind || "")}</b>` +
-      `${escapeHtml(p.number || "")}${p.name ? ` · ${escapeHtml(p.name)}` : ""}${copy(p.number, "Copier le numéro")}</div>`).join("");
+      `${escapeHtml(phoneText(p.number))}${p.name ? ` · ${escapeHtml(p.name)}` : ""}${copy(phoneLocal(p.number), "Copier le numéro")}</div>`).join("");
     const waText = `Bonjour, j’ai demandé des billets pour « ${r.title} » : référence ${r.ref}, ${moneyText(r.total, r.currency)}.${r.txn_ref ? ` Transaction : ${r.txn_ref}.` : ""}`;
     const until = new Date(r.hold_until);
     body += `<div class="card"><span class="tag">En attente du paiement</span>` +

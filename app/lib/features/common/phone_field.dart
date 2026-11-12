@@ -237,3 +237,127 @@ class _CountrySheetState extends State<_CountrySheet> {
     );
   }
 }
+
+/// A [PhoneField] that keeps its own country (178): the screen's
+/// [controller] always holds the whole number, `+22670000000` — what the
+/// screen already saved and reads — while the person picks a country and
+/// types only the rest. A number already in [controller] (loaded, or set
+/// later) opens under its own country. Empty stays empty.
+class PhoneInput extends StatefulWidget {
+  const PhoneInput({
+    super.key,
+    required this.controller,
+    required this.labelText,
+    this.enabled = true,
+    this.hintText,
+    this.helperText,
+    this.errorText,
+    this.onChanged,
+    this.onSubmitted,
+    this.country = defaultCountry,
+  });
+
+  /// Holds the whole number (E.164), read and written by the screen.
+  final TextEditingController controller;
+  final String labelText;
+  final bool enabled;
+  final String? hintText;
+  final String? helperText;
+
+  /// The screen's own words; else the length the chosen country expects.
+  final String? errorText;
+
+  /// The whole number, each time it changes.
+  final ValueChanged<String>? onChanged;
+  final ValueChanged<String>? onSubmitted;
+
+  /// The country shown first when the field is empty.
+  final CountryCode country;
+
+  @override
+  State<PhoneInput> createState() => _PhoneInputState();
+}
+
+class _PhoneInputState extends State<PhoneInput> {
+  late CountryCode _country = widget.country;
+  final _local = TextEditingController();
+  String _written = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _read();
+    widget.controller.addListener(_outside);
+  }
+
+  @override
+  void didUpdateWidget(PhoneInput old) {
+    super.didUpdateWidget(old);
+    if (old.controller != widget.controller) {
+      old.controller.removeListener(_outside);
+      widget.controller.addListener(_outside);
+      _read();
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_outside);
+    _local.dispose();
+    super.dispose();
+  }
+
+  /// The screen's number, split into its country and the rest.
+  void _read() {
+    final whole = widget.controller.text.trim();
+    _written = whole;
+    if (whole.isEmpty) {
+      _local.text = '';
+      return;
+    }
+    final e164 = whole.startsWith('00') ? '+${whole.substring(2)}' : whole;
+    final found = countryOfNumber(e164.replaceAll(RegExp(r'[\s\-().]'), ''));
+    if (found != null) {
+      _country = found;
+      _local.text = found.localPart(e164.replaceAll(RegExp(r'[\s\-().]'), ''));
+    } else {
+      _local.text = whole;
+    }
+  }
+
+  /// The screen set its number itself (a load): shown again.
+  void _outside() {
+    if (widget.controller.text == _written) return;
+    setState(_read);
+  }
+
+  void _write() {
+    final typed = _local.text.trim();
+    final whole = typed.isEmpty ? '' : _country.toE164(typed);
+    _written = whole;
+    if (widget.controller.text != whole) widget.controller.text = whole;
+    widget.onChanged?.call(whole);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PhoneField(
+      controller: _local,
+      country: _country,
+      enabled: widget.enabled,
+      labelText: widget.labelText,
+      hintText: widget.hintText,
+      helperText: widget.helperText,
+      errorText: widget.errorText ?? (_local.text.trim().isEmpty ? null : _country.lengthProblem(_local.text)),
+      onCountry: (c) {
+        setState(() => _country = c);
+        _write();
+      },
+      onChanged: (_) {
+        setState(() {});
+        _write();
+      },
+      onSubmitted: widget.onSubmitted == null ? null : (_) => widget.onSubmitted!(widget.controller.text),
+    );
+  }
+}

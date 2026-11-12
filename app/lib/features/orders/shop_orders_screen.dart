@@ -32,6 +32,7 @@ import 'package:kaj_app/core/theme/mara_sheet.dart';
 import '../../core/format/money_text.dart';
 import '../../core/theme/app_bar_title.dart';
 import '../home/place_sections.dart';
+import 'package:kaj_app/features/common/phone_field.dart' show PhoneInput;
 
 /// The shop's orders: who wants what, and the one button that moves each
 /// one along. "À traiter" is what needs an answer or a hand; "Historique"
@@ -1081,15 +1082,11 @@ class _CouriersSheetState extends State<_CouriersSheet> {
       footer: Row(
               children: [
                 Expanded(
-                  child: TextField(
+                  child: PhoneInput(
                     controller: _phone,
                     enabled: !_busy,
-                    keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(
-                      labelText: context.tr('Numéro du livreur'),
-                      hintText: context.tr('Inscrit et validé comme livreur Marakaj'),
-                      border: const OutlineInputBorder(),
-                    ),
+                    labelText: context.tr('Numéro du livreur'),
+                    helperText: context.tr('Inscrit et validé comme livreur Marakaj'),
                   ),
                 ),
                 const SizedBox(width: 8),

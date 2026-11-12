@@ -46,6 +46,7 @@ import 'visitors_badge.dart';
 import 'whatsapp_verify_screen.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 import '../common/keyboard_sheet.dart';
+import 'package:kaj_app/features/common/phone_field.dart' show PhoneInput;
 
 /// A shop's window, for the street.
 ///
@@ -2340,13 +2341,10 @@ class _OrderSheetState extends State<OrderSheet> {
                 ],
               )
             else
-              TextField(
+              PhoneInput(
                 controller: _phone,
-                keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
-                  labelText: context.tr('Votre numéro (facultatif)'),
-                  hintText: '+226 70 00 00 00',
-                ),
+                labelText: context.tr('Votre numéro (facultatif)'),
+                hintText: '70 00 00 00',
               ),
             const SizedBox(height: 12),
             note,

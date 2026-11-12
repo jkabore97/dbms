@@ -8,6 +8,7 @@ import '../../../core/l10n/tr.dart';
 import '../../../core/theme/mara_mark.dart';
 import '../../../core/onboarding/business_creation.dart' show slugProblem;
 import 'fiche_widgets.dart';
+import 'package:kaj_app/features/common/phone_field.dart' show PhoneInput;
 
 /// Identité: the business's name, kind, address (its vitrine's link),
 /// money, phone and street address, and — for an association — Mara's
@@ -247,13 +248,12 @@ class _FicheIdentityTabState extends State<FicheIdentityTab> {
                 onChanged: _saving ? null : (v) => setState(() => _currency = v ?? _currency),
               ),
               const SizedBox(height: 16),
-              TextField(
+              PhoneInput(
                 key: const Key('identity-phone'),
                 controller: _phone,
                 enabled: !_saving,
-                keyboardType: TextInputType.phone,
-                decoration: field(context.tr('Téléphone'),
-                    helper: context.tr('Sur la vitrine et les factures.')),
+                labelText: context.tr('Téléphone'),
+                helperText: context.tr('Sur la vitrine et les factures.'),
               ),
               const SizedBox(height: 16),
               TextField(

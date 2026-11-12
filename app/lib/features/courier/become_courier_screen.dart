@@ -806,11 +806,10 @@ class _BecomeCourierScreenState extends State<BecomeCourierScreen> {
           gap,
           // RULE M: the payout number only while Mara takes mobile money.
           if (d.rules.mobileMoney)
-            TextField(
+            PhoneInput(
               key: const Key('courier-payout'),
               controller: _payout,
-              keyboardType: TextInputType.phone,
-              decoration: field(context.tr('Numéro Mobile Money pour vos gains (facultatif)')),
+              labelText: context.tr('Numéro Mobile Money pour vos gains (facultatif)'),
             )
           else
             Text(context.tr('Vos courses vous sont payées en espèces, à la porte.'),
