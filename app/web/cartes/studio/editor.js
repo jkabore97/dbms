@@ -911,6 +911,7 @@
       }).join('') +
       '<p class="ed-lab">Motif</p>' + chips('motif', [['', 'Aucun']].concat(Object.keys(S.MOTIFS).map(function (k) { return [k, S.MOTIFS[k].name]; })), th.motif && th.motif.id || '') +
       (th.motif && th.motif.id ? '<label class="ed-field">Intensité<input class="ed-range" type="range" min="4" max="40" data-mo value="' + Math.round((th.motif.opacity != null ? th.motif.opacity : 0.12) * 100) + '"></label><label class="ed-check"><input type="checkbox" data-moall' + (th.motif.all ? ' checked' : '') + '>Sur toute la carte</label>' : '') +
+      '<p class="ed-lab">Pétales</p><label class="ed-check"><input type="checkbox" data-fall' + (th.fall === 'petales' ? ' checked' : '') + '>Pétales de toutes les couleurs qui tombent sur toute la carte</label>' +
       '<p class="ed-lab">Mouvement</p>' + chips('motion', [['aucune', 'Aucun'], ['douce', 'Doux'], ['vivante', 'Vivant']], th.motion || 'douce') +
       '<p class="ed-lab">Coins</p>' + chips('corners', [['droit', 'Droits'], ['doux', 'Doux'], ['rond', 'Ronds']], th.corners || 'doux') +
       // the designs (173): the classic ones, the animated ones, the Premium ones (locked off Pro)
@@ -952,6 +953,7 @@
         if (t.hasAttribute('data-col')) { commit(function () { th.colors = Object.assign({}, th.colors || {}); th.colors[t.getAttribute('data-col')] = t.value.toLowerCase(); delete th.preset; }); return; }
         if (t.hasAttribute('data-font')) { commit(function () { th.fonts = Object.assign({}, th.fonts || {}); th.fonts[t.getAttribute('data-font')] = t.value; }); return; }
         if (t.hasAttribute('data-mo')) { commit(function () { th.motif.opacity = (+t.value) / 100; }); return; }
+        if (t.hasAttribute('data-fall')) { commit(function () { if (t.checked) th.fall = 'petales'; else delete th.fall; }); return; }
         if (t.hasAttribute('data-moall')) { commit(function () { th.motif.all = t.checked; }); }
       });
     }, null, true);

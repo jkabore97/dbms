@@ -9,7 +9,8 @@
 --   2. once the first is done, the second counts it: a phone at its two is
 --      refused, as the owner wanted (three chosen at once had passed);
 --   3. another card is not held up by it;
---   4. the doors: anon's, one album door.
+--   4. the doors: anon's, one album door;
+--   5. a card's theme may say petals fall over it (fall), and only as a word.
 -- Installed twice, the same. The rows are committed (the other connection
 -- must see them) and deleted at the end.
 -- ============================================================
@@ -86,6 +87,13 @@ begin
        and not has_function_privilege('public', 'event_album_add(text, text, text, text, uuid, text)', 'execute'), 'anon''s door';
     assert (select count(*) from pg_proc where proname = 'event_album_add') = 1, 'one album door';
     raise notice 'PASS: the doors';
+    -- 5
+    perform studio_doc_check('18118118-2222-0000-0000-000000000001', '{"v": 2, "theme": {"fall": "petales", "scene": "sakura"}, "blocks": [{"id": "b1", "type": "cover"}]}');
+    begin
+        perform studio_doc_check('18118118-2222-0000-0000-000000000001', '{"v": 2, "theme": {"fall": {"x": 1}}, "blocks": [{"id": "b1", "type": "cover"}]}');
+        assert false, 'a fall that is not a word refused';
+    exception when raise_exception then null; end;
+    raise notice 'PASS: petals over the whole card, said in the theme';
 end $$;
 
 delete from event_pictures where event_id in ('18118118-2222-0000-0000-000000000001', '18118118-2222-0000-0000-000000000002');

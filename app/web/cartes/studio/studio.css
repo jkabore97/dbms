@@ -287,3 +287,6 @@ html{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-
 .st-m-douce .st-stk,.st-m-vivante .st-stk{animation:st-stk-float 5s ease-in-out infinite}
 @keyframes st-stk-float{0%,100%{translate:0 0}50%{translate:0 -6px}}
 @media (prefers-reduced-motion:reduce){.st-stk{animation:none!important}}
+
+/* petals over the whole card (181): above the card, under the editor's bars, never in the way of a touch */
+.st-fall{position:fixed;inset:0;width:100vw;height:100vh;z-index:60;pointer-events:none}
