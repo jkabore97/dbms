@@ -202,7 +202,8 @@
   // ------------------------------------------------------------ the event
   var MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
   var DAYS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
-  function hourText(t) { if (!t) return ''; var m = /^(\d{1,2}):(\d{2})/.exec(t); if (!m) return t; return (+m[1]) + ' h' + (m[2] === '00' ? '' : ' ' + m[2]); }
+  function hourText(t) { if (!t) return ''; var m = /^(\d{1,2}):(\d{2})/.exec(t); if (!m) return t; return (+m[1]) + '\u00a0h' + (m[2] === '00' ? '' : '\u00a0' + m[2]); }
+  // « 10 h » never split by the end of a line (a narrow phone showed « H » alone)
   function facts(ctx) {
     var d = null, p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ctx.date || '');
     if (p) d = new Date(+p[1], +p[2] - 1, +p[3]);
@@ -309,7 +310,7 @@
     }).join('') + '</div>';
   }
   function coverBase(b, ctx, f) {
-      var p = b.props || {}, v = b.variant || 'plein', date = p.showDate === false ? '' : (p.dateText || (f.has ? f.long + (f.time ? ' · ' + f.time : '') : '')),
+      var p = b.props || {}, v = b.variant || 'plein', date = p.showDate === false ? '' : (p.dateText || (f.has ? f.long + (f.time ? '\u00a0· ' + f.time : '') : '')),
         place = p.showPlace === false ? '' : (p.placeText || f.place);
       var words = F(b, ctx, 'kicker', 'p', 'st-kicker', 'Une ligne au-dessus des noms') + F(b, ctx, 'names', 'h1', 'st-names', 'Vos prénoms') +
         F(b, ctx, 'sub', 'p', 'st-sub', 'Une phrase sous les noms') +
@@ -410,7 +411,7 @@
     variants: [['bouton', 'Bouton']],
     make: function () { return { title: 'Notez la date', label: 'Ajouter à mon calendrier' }; },
     draw: function (b, ctx, f) {
-      return F(b, ctx, 'title', 'p', 'st-kicker', 'Titre') + (f.has ? '<p class="st-h2 st-cal-d">' + esc(f.long) + (f.time ? ' · ' + esc(f.time) : '') + '</p>' : '') +
+      return F(b, ctx, 'title', 'p', 'st-kicker', 'Titre') + (f.has ? '<p class="st-h2 st-cal-d">' + esc(f.long) + (f.time ? '\u00a0· ' + esc(f.time) : '') + '</p>' : '') +
         '<button type="button" class="st-btn" data-cal>' + icon('calendar') + '<span data-f="label">' + esc((b.props && b.props.label) || 'Ajouter à mon calendrier') + '</span></button>';
     }
   };
@@ -832,6 +833,7 @@
       });
     });
     if (wantsPass && saved && saved.pass) Array.prototype.forEach.call(root.querySelectorAll('[data-passbox]'), function (pb) { drawPass(pb, ctx, saved.pass, saved.name); });
+    function oneByOne(xs, f) { return xs.reduce(function (p, x) { return p.then(function (acc) { return f(x).then(function (r) { acc.push(r); return acc; }); }); }, Promise.resolve([])); }
     function phoneId() {
       // this phone's own random identifier (179): the album counts its photos by it
       try {
@@ -855,16 +857,18 @@
         if (ctx.demo) { say.textContent = 'Aperçu : vos invités ajoutent leurs photos sur la vraie carte.'; return; }
         say.textContent = files.length > 1 ? 'Envoi des photos…' : 'Envoi de la photo…';
         var pass = (function () { try { var s = JSON.parse(localStorage.getItem(passKey(ctx)) || 'null'); return s && s.pass || ''; } catch (e) { return ''; } })();
-        Promise.all(files.map(function (file) {
+        // one after the other (181): each counted after those before it
+        var refused = '';
+        oneByOne(files, function (file) {
           return new Promise(function (res) {
             shrink(file, 1400, function (blob) {
               if (!blob) return res(null);
               fetch(ctx.uploads + '/v1/events/' + encodeURIComponent(ctx.slug) + '/album?apercu=' + encodeURIComponent(ctx.preview || '') + '&invite=' + encodeURIComponent(who.value.trim()) + '&pass=' + encodeURIComponent(pass) + '&device=' + encodeURIComponent(phoneId()), { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob })
                 .then(function (r) { return r.json().then(function (j) { if (!r.ok || !j || !j.key) throw new Error(j && j.error ? j.error : 'La photo n\'est pas passée.'); return j; }); })
-                .then(function (j) { if (!rules.review) grid.insertBefore(fig(URL.createObjectURL(blob), who.value.trim()), grid.firstChild); res(j); }, function (err) { say.textContent = err.message; res(null); });
+                .then(function (j) { if (!rules.review) grid.insertBefore(fig(URL.createObjectURL(blob), who.value.trim()), grid.firstChild); res(j); }, function (err) { refused = err.message; say.textContent = err.message; res(null); });
             });
           });
-        })).then(function (r) { var k = r.filter(Boolean).length; if (k) say.textContent = rules.review ? (k > 1 ? k + ' photos envoyées : visibles après validation' : 'Photo envoyée : visible après validation') : (k > 1 ? k + ' photos ajoutées à l\'album' : 'Photo ajoutée à l\'album'); });
+        }).then(function (r) { var k = r.filter(Boolean).length; if (k) say.textContent = rules.review ? (k > 1 ? k + ' photos envoyées : visibles après validation' : 'Photo envoyée : visible après validation') : (k > 1 ? k + ' photos ajoutées à l\'album' : 'Photo ajoutée à l\'album'); if (k && refused) say.textContent += ' — ' + refused; });
       });
     });
   };
