@@ -101,6 +101,7 @@
     if (f) return f[0];
     return { display: FONTS.cormorant[0], body: FONTS.montserrat[0], script: FONTS['great-vibes'][0] }[role] || FONTS.montserrat[0];
   }
+  S.fontOf = fontOf;
   var loaded = {};
   function loadFonts(ids) {
     var q = ids.filter(function (id) { return FONTS[id] && !loaded[id]; });
