@@ -115,6 +115,13 @@ export default {
         return withCors(await putEventPreview(request, env, preview[1], url.searchParams.get("modifier") || ""), cors);
       }
 
+      // POST /v1/events/<slug>/og?modifier=<edit token> — the card's wide
+      // picture (180), for a shared link: each one replaces the last.
+      const og = url.pathname.match(/^\/v1\/events\/([a-z0-9-]+)\/og$/);
+      if (og && request.method === "POST") {
+        return withCors(await putEventOg(request, env, og[1], url.searchParams.get("modifier") || ""), cors);
+      }
+
       // POST /v1/events/<slug>/album?apercu=<preview token>&invite=<name>&pass=<id> —
       // a guest's picture for the card's album (155): signed out, the
       // card's link is the key; Postgres mints and confirms every key.
@@ -588,6 +595,21 @@ async function putEventPreview(request, env, slug, edit) {
     mint: (ext) => rpcAnonAsked(env, "event_preview_slot", { p_slug: slug, p_edit: edit, p_ext: ext }),
     confirm: (key, bytes) => rpcAnonAsked(env, "event_preview_done", { p_key: key, p_edit: edit, p_bytes: bytes }),
     meta: { event: slug, preview: "1" },
+    after: async (old) => {
+      if (typeof old === "string" && EVENT_KEY.test(old)) await env.UPLOADS.delete(old);
+    },
+  });
+}
+
+// The card's wide picture (180), drawn by Studio for a shared link.
+async function putEventOg(request, env, slug, edit) {
+  if (!/^[0-9a-f]{24}$/.test(edit)) {
+    return refusal(403, "Cette carte ne peut pas être modifiée d'ici.");
+  }
+  return storeEventPicture(request, env, {
+    mint: (ext) => rpcAnonAsked(env, "event_og_slot", { p_slug: slug, p_edit: edit, p_ext: ext }),
+    confirm: (key, bytes) => rpcAnonAsked(env, "event_og_done", { p_key: key, p_edit: edit, p_bytes: bytes }),
+    meta: { event: slug, og: "1" },
     after: async (old) => {
       if (typeof old === "string" && EVENT_KEY.test(old)) await env.UPLOADS.delete(old);
     },

@@ -1090,7 +1090,8 @@
     if (!S.cardPicture || !(BOOT.published === true || ctx.preview)) return;
     setTimeout(function () { S.cardPicture(ctx); }, wait);
   }
-  if (BOOT.has_preview === false) cardPicture(5000);
+  // the card's pictures (177, 180): drawn on opening when one is missing
+  if (BOOT.has_preview === false || BOOT.has_og === false) cardPicture(5000);
   var saving = false;
   document.getElementById('edSave').onclick = function () {
     if (saving) return;

@@ -593,6 +593,20 @@ export async function studioPage(request, env, slug, preview, edit) {
   } catch (_) {
     hasPreview = null;
   }
+  let hasOg = null;
+  try {
+    const r = await fetch(rpcUrl(env, "event_og_of", { p_slug: slug, p_edit: edit }), {
+      method: "GET",
+      headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${env.SUPABASE_PUBLISHABLE_KEY}` },
+      cache: "no-store",
+    });
+    if (r.ok) {
+      const key = await r.json();
+      hasOg = typeof key === "string" && key.length > 0;
+    }
+  } catch (_) {
+    hasOg = null;
+  }
   const page = await assetPage(env, request, "/cartes/studio/editor.html");
   if (!page.ok) return refused();
   const when = localParts(data.starts_at, data.tz);
@@ -622,6 +636,8 @@ export async function studioPage(request, env, slug, preview, edit) {
     pro: data.pro === true ? true : data.pro === false ? false : null,
     // the card's own picture for the street (177): true, false, or null before 177
     has_preview: hasPreview,
+    // its wide picture for a shared link (180): true, false, or null before 180
+    has_og: hasOg,
     uploads: env.UPLOADS_URL ? env.UPLOADS_URL.replace(/\/$/, "") : null,
     api: { url: env.SUPABASE_URL || null, key: env.SUPABASE_PUBLISHABLE_KEY || null },
   };
@@ -980,8 +996,18 @@ async function cardPage(request, env, { slug, data, preview, edit, editor, demo,
     data.org_name ? `Une invitation de ${data.org_name}` : "Une invitation sur Marakaj",
   ].filter(Boolean).join(" · "), 160);
 
-  // The picture a shared link shows (173): the card's own first photo.
-  const image = cardImage(env, studio ? data.doc : null, boot.content);
+  // The picture a shared link shows: the card itself (180) — its wide
+  // picture, else its own tall one (177) — else its first photo (173).
+  let image = cardImage(env, studio ? data.doc : null, boot.content), wide = false;
+  if (!demo && env.UPLOADS_URL) {
+    try {
+      const share = await rpcFresh(env, "event_share_image", { p_slug: slug, p_preview: preview || "" });
+      if (share && typeof share.key === "string" && /^events\/[0-9a-f-]{36}\/[0-9a-f]{32}\.(jpg|png|webp)$/.test(share.key)) {
+        image = `${env.UPLOADS_URL.replace(/\/$/, "")}/v1/public/objects/${encodeURIComponent(share.key)}?w=1200`;
+        wide = share.wide === true;
+      }
+    } catch (_) { /* a database before 180: the photo */ }
+  }
   const rewritten = new HTMLRewriter()
     .on("title", { element(e) { e.setInnerContent(title); } })
     .on("head", {
@@ -994,7 +1020,8 @@ async function cardPage(request, env, { slug, data, preview, edit, editor, demo,
           `<meta property="og:description" content="${escapeHtml(description)}">` +
           `<meta property="og:url" content="${SITE}/${demo ? `modele/${escapeHtml(data.card)}` : `e/${escapeHtml(slug)}`}">` +
           `<meta property="og:type" content="website">` +
-          (image ? `<meta property="og:image" content="${escapeHtml(image)}"><meta name="twitter:card" content="summary_large_image">` : "") +
+          (image ? `<meta property="og:image" content="${escapeHtml(image)}"><meta name="twitter:card" content="summary_large_image">` +
+            (wide ? `<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">` : "") : "") +
           `<meta name="robots" content="noindex">` +
           `<script>window.CARTE=${json}</script>`,
           { html: true },
