@@ -165,6 +165,13 @@ async function serve(request, env, ctx) {
       if (!isRobot(request)) await countEvent(env, shared[1], "share");
       return new Response(null, { status: 204, headers: { "Cache-Control": "no-store" } });
     }
+    // /e/<slug>/image.jpg — the picture a shared link shows (180), from this
+    // site's own address: WhatsApp and Facebook showed none from the
+    // uploads Worker's workers.dev one. The same gate (event_share_image).
+    const shareImg = url.pathname.match(/^\/e\/([a-z0-9-]+)\/image\.jpg$/);
+    if (shareImg && (request.method === "GET" || request.method === "HEAD")) {
+      return shareImagePage(request, env, shareImg[1], url.searchParams.get("apercu"));
+    }
     // /e/<slug>/studio?modifier=<edit token> — the card in Studio (171),
     // the organiser's editor that works like Canva.
     const studio = url.pathname.match(/^\/e\/([a-z0-9-]+)\/studio\/?$/);
@@ -1002,8 +1009,13 @@ async function cardPage(request, env, { slug, data, preview, edit, editor, demo,
   if (!demo && env.UPLOADS_URL) {
     try {
       const share = await rpcFresh(env, "event_share_image", { p_slug: slug, p_preview: preview || "" });
-      if (share && typeof share.key === "string" && /^events\/[0-9a-f-]{36}\/[0-9a-f]{32}\.(jpg|png|webp)$/.test(share.key)) {
-        image = `${env.UPLOADS_URL.replace(/\/$/, "")}/v1/public/objects/${encodeURIComponent(share.key)}?w=1200`;
+      if (share && typeof share.key === "string" && SHARE_KEY.test(share.key)) {
+        // from this site's address (see shareImagePage), the key's name in
+        // it so that a new picture is a new address for the apps' caches
+        image = env.UPLOADS
+          ? `${SITE}/e/${encodeURIComponent(slug)}/image.jpg?v=${share.key.slice(-36, -4)}` +
+            (data.published !== true && preview ? `&apercu=${encodeURIComponent(preview)}` : "")
+          : `${env.UPLOADS_URL.replace(/\/$/, "")}/v1/public/objects/${encodeURIComponent(share.key)}?w=1200`;
         wide = share.wide === true;
       }
     } catch (_) { /* a database before 180: the photo */ }
@@ -1024,7 +1036,8 @@ async function cardPage(request, env, { slug, data, preview, edit, editor, demo,
           `<meta property="og:url" content="${SITE}/${demo ? `modele/${escapeHtml(data.card)}` : `e/${escapeHtml(slug)}` + (data.published !== true && preview ? `?apercu=${escapeHtml(encodeURIComponent(preview))}` : "")}">` +
           `<meta property="og:type" content="website">` +
           (image ? `<meta property="og:image" content="${escapeHtml(image)}"><meta name="twitter:card" content="summary_large_image">` +
-            (wide ? `<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">` : "") : "") +
+            (wide ? `<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">` : "") +
+            (image.startsWith(SITE) ? `<meta property="og:image:type" content="image/jpeg">` : "") : "") +
           `<meta name="robots" content="noindex">` +
           `<script>window.CARTE=${json}</script>`,
           { html: true },
@@ -1042,6 +1055,29 @@ async function cardPage(request, env, { slug, data, preview, edit, editor, demo,
 // the cover's photo, else the card's first photo (a document's, 171, or the
 // classic card's p:<key>, 154) — an uploaded picture at 1200 pixels wide, or
 // a photo of the bank. None: the platform's own picture stays.
+const SHARE_KEY = /^events\/[0-9a-f-]{36}\/[0-9a-f]{32}\.(jpg|png|webp)$/;
+
+// The picture a card's shared link shows, read from the pictures' own
+// storage (the uploads Worker's bucket, bound here read-only in use) once
+// event_share_image says this card may be shown — the same gate as the
+// page: a draft only with its preview link. Anything else: 404.
+async function shareImagePage(request, env, slug, preview) {
+  const none = () => new Response("Introuvable.", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } });
+  if (!env.UPLOADS) return none();
+  let share = null;
+  try { share = await rpcFresh(env, "event_share_image", { p_slug: slug, p_preview: preview || "" }); } catch (_) { return none(); }
+  if (!share || typeof share.key !== "string" || !SHARE_KEY.test(share.key)) return none();
+  const object = await env.UPLOADS.get(share.key);
+  if (!object) return none();
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  if (!headers.get("Content-Type")) headers.set("Content-Type", share.key.endsWith(".png") ? "image/png" : share.key.endsWith(".webp") ? "image/webp" : "image/jpeg");
+  headers.set("etag", object.httpEtag);
+  headers.set("Cache-Control", "public, max-age=600");
+  headers.set("X-Content-Type-Options", "nosniff");
+  return new Response(request.method === "HEAD" ? null : object.body, { status: 200, headers });
+}
+
 export function cardImage(env, doc, content) {
   const uploads = env.UPLOADS_URL ? env.UPLOADS_URL.replace(/\/$/, "") : null;
   const of = (ph) => {

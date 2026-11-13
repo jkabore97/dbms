@@ -395,8 +395,12 @@ class _AndroidInstallBarState extends State<AndroidInstallBar> {
       listenable: widget.listenable,
       builder: (context, _) {
         final links = _links;
-        final up = _android && links != null && widget.signedIn();
         final mq = MediaQuery.of(context);
+        // Not while the keyboard is up: the bar stayed under it and the page
+        // above it made room for the keyboard too — the bar's height counted
+        // twice, an empty strip between the page and the keyboard (the
+        // owner's screenshot, searching « kaj »).
+        final up = _android && links != null && widget.signedIn() && mq.viewInsets.bottom == 0;
         // The tree keeps one shape whether the bar is up or not, so the
         // app under it is never built again from nothing when it comes
         // (the street's questions asked twice, a page's scroll lost).

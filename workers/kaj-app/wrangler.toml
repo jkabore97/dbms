@@ -41,6 +41,12 @@ not_found_handling = "single-page-application"
 
 # Filled at deploy (deploy-cloudflare.yml passes --var from the repository's
 # secrets and variables): never committed.
+# The pictures' storage (the uploads Worker's bucket), read for a shared
+# card's link picture from this site's own address (/e/<slug>/image.jpg).
+[[r2_buckets]]
+binding = "UPLOADS"
+bucket_name = "kaj-app-uploads"
+
 [vars]
 SUPABASE_URL = ""
 SUPABASE_PUBLISHABLE_KEY = ""

@@ -99,6 +99,7 @@ class _TrainerInboxScreenState extends State<TrainerInboxScreen> {
         builder: (d) {
           final c = TextEditingController();
           return AlertDialog(
+            scrollable: true,
             title: Text(title),
             content: TextField(
               key: const Key('help-note'),

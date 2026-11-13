@@ -197,6 +197,34 @@ void main() {
     expect(find.text('Vente ouverte : le bouton « Réserver » est sur la carte.'), findsOneWidget);
   });
 
+  testWidgets('« Où payer » with the keyboard up on a phone: the whole dialog scrolls, nothing squeezed', (tester) async {
+    // the owner's screenshot: the keyboard up, only a sliver of « Orange Money » left
+    final t = _Tickets();
+    await _pump(tester, TicketSetupScreen(tickets: t, event: _event));
+    tester.view.physicalSize = const Size(360, 720);
+    tester.view.viewInsets = const FakeViewPadding(bottom: 330);
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.byKey(const Key('tickets-method-add')), 120);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('tickets-method-add')));
+    await tester.pumpAndSettle();
+    // the scrolling part is the dialog itself, not a sliver between its title and its buttons
+    final room = tester.getRect(find.ancestor(of: find.byType(DropdownButtonFormField<String>), matching: find.byType(Scrollable)).first).height;
+    expect(room, greaterThan(200), reason: 'the fields had $room px (126 before: squeezed between the title and the buttons)');
+    for (final k in ['ticket-method-number', 'ticket-method-name', 'ticket-method-ok']) {
+      await tester.ensureVisible(find.byKey(Key(k)));
+      await tester.pumpAndSettle();
+      expect(tester.getRect(find.byKey(Key(k))).bottom, lessThanOrEqualTo(720 - 330), reason: '$k above the keyboard');
+    }
+    await tester.enterText(find.byKey(const Key('ticket-method-number')), '70 00 00 01');
+    await tester.ensureVisible(find.byKey(const Key('ticket-method-ok')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('ticket-method-ok')));
+    await tester.pumpAndSettle();
+    expect(find.text('Orange Money · +226 70 00 00 01'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('a request: WhatsApp with its link, « Payé » confirmed, then the tickets sent', (tester) async {
     final t = _Tickets();
     t.reqs.add(TicketRequest(

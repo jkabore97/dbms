@@ -364,3 +364,25 @@ test("181: a draft shared by its preview link names that link as its address (og
   html = await page("https://marakaj.com/e/salimata-boukary-ab12?apercu=cccccccccccccccccccc1811");
   assert.ok(html.includes('<meta property="og:url" content="https://marakaj.com/e/salimata-boukary-ab12">'), "published: the plain link, no code");
 });
+
+test("181: the link's picture from marakaj.com — named by the page, served from the bucket once the card may be shown", async () => {
+  const WIDE = "events/0b9f3c2e-1d2a-4c5b-9e8f-7a6b5c4d3e2f/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.jpg";
+  const bytes = new Uint8Array([255, 216, 255, 224, 1, 2, 3]);
+  const bucket = { get: async (k) => (k === WIDE ? { body: bytes, httpEtag: '"e1"', writeHttpMetadata: (h) => h.set("Content-Type", "image/jpeg") } : null) };
+  const env2 = { ...env, UPLOADS_URL: "https://up.example.workers.dev", UPLOADS: bucket };
+  answers.event_public = { ...card({ doc: DOC }), published: false };
+  answers.event_share_image = { key: WIDE, wide: true };
+  const html = await (await site.fetch(new Request("https://marakaj.com/e/salimata-boukary-ab12?apercu=cccccccccccccccccccc1811"), env2)).text();
+  assert.ok(html.includes('<meta property="og:image" content="https://marakaj.com/e/salimata-boukary-ab12/image.jpg?v=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&amp;apercu=cccccccccccccccccccc1811">'), "the page names marakaj.com's address");
+  assert.ok(!/og:image" content="[^"]*workers\.dev/.test(html), "never the workers.dev one");
+  assert.ok(html.includes('<meta property="og:image:type" content="image/jpeg">'));
+  const r = await site.fetch(new Request("https://marakaj.com/e/salimata-boukary-ab12/image.jpg?v=x&apercu=cccccccccccccccccccc1811"), env2);
+  assert.equal(r.status, 200);
+  assert.equal(r.headers.get("Content-Type"), "image/jpeg");
+  assert.deepEqual(new Uint8Array(await r.arrayBuffer()), bytes, "the picture's own bytes");
+  answers.event_share_image = null;
+  assert.equal((await site.fetch(new Request("https://marakaj.com/e/salimata-boukary-ab12/image.jpg"), env2)).status, 404, "a card that may not be shown: nothing");
+  answers.event_share_image = { key: "../../secret", wide: true };
+  assert.equal((await site.fetch(new Request("https://marakaj.com/e/salimata-boukary-ab12/image.jpg"), env2)).status, 404, "a key that is not one: nothing");
+  delete answers.event_share_image;
+});
