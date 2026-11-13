@@ -65,11 +65,11 @@ boutique,commerce,caisse,stock,livraison,vitrine,invitation,mariage,carte,evenem
 **Description** : reprendre la description complète Google Play, mêmes lignes (Apple et Google doivent dire la même chose ; ce qui est écrit doit être visible par le compte de test).
 **Nouveautés de la version** : reprendre les Nouveautés Google Play.
 **Notes pour la revue (App Review Information › Notes)**
-Compte de démonstration : celui de `store_review_account`. Il ouvre une boutique, une ferme, une association[ et un Événementiel avec une carte d'exemple]. Les cartes d'invitation s'ouvrent dans le navigateur (lien https://marakaj.com/e/…) : aucune connexion n'est demandée aux invités. Marakaj Pro s'achète dans l'app par l'abonnement de l'App Store.
+Compte de démonstration : celui de `store_review_account`. Il ouvre une boutique (Review Shop), une ferme (Farm Review), une association (Association Review) et un Événementiel (Event Review) avec une carte d'exemple publiée, « Awa & Paul » (https://marakaj.com/e/awa-paul-322c), et trois réponses d'invités. Dans l'app : Changer d'activité › Event Review › Cartes. Les cartes d'invitation s'ouvrent dans le navigateur (lien https://marakaj.com/e/…) : aucune connexion n'est demandée aux invités. Marakaj Pro s'achète dans l'app par l'abonnement de l'App Store.
 
 ## Avant d'envoyer aux stores (à cocher)
 
-1. **Ce que la description promet, le compte de test le voit.** Aujourd'hui `events_public` est fermé et le compte de test n'a pas d'Événementiel : soit ouvrir l'Événementiel à tous (Console), soit donner au compte de test un Événementiel avec une carte d'exemple — sinon retirer de la description les lignes « organisateurs d'événements ».
+1. **Ce que la description promet, le compte de test le voit.** Fait le 13 novembre 2026 : le compte de test a un Événementiel, « Event Review » (ouvert à lui seul, `events_allowed`, l'Événementiel restant fermé au public), avec la carte « Awa & Paul » publiée et trois réponses. Ne pas le supprimer avant la fin de la revue.
 2. **La billetterie** : ne la citer que si `events_tickets` est ouvert (Console › Événementiel l'indique).
 3. **Marakaj Pro** : l'abonnement des stores (`store_billing_on`) est ouvert ; les prix des produits d'abonnement dans App Store Connect et la Play Console doivent correspondre à ceux de la Console › Pro.
 4. **Captures d'écran** : refaire celles des cartes (nouvelle liste « Cartes », Studio, aperçu WhatsApp) — elles doivent montrer l'app actuelle.
