@@ -16,8 +16,9 @@ import 'package:kaj_app/features/common/phone_field.dart' show PhoneInput;
 
 /// Ticket sales (161), on the card's page: the three doors — the sale's
 /// setup, the requests to validate, the door. Shown only to a business
-/// that may sell (Marakaj Pro, or Marakaj's own while the platform's
-/// switch is off): the server says so, and refuses the rest anyway.
+/// that may sell (every one once the platform's switch is on — a free card
+/// so many tickets, 182 —, or Marakaj's own before): the server says so,
+/// and refuses the rest anyway.
 class TicketsCard extends StatelessWidget {
   const TicketsCard({super.key, required this.tickets, required this.event, this.open});
 
@@ -40,6 +41,33 @@ class TicketsCard extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
           child: Text(context.tr('Le paiement se fait directement à l’organisateur. Marakaj n’encaisse rien.'),
               style: theme.textTheme.bodySmall),
+        ),
+        // A free card's allowance (182): so many tickets free, then Marakaj Pro.
+        FutureBuilder<({int? cap, int used})?>(
+          future: tickets.freeTickets(event.id),
+          builder: (context, snap) {
+            final f = snap.data;
+            final cap = f?.cap;
+            if (f == null || cap == null) return const SizedBox.shrink();
+            final full = f.used >= cap;
+            return Padding(
+              key: const Key('tickets-free-left'),
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 4),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(value: cap == 0 ? 1 : (f.used / cap).clamp(0, 1).toDouble(), minHeight: 6),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  full
+                      ? context.tr('Les {cap} billets gratuits de cette carte sont vendus. Marakaj Pro vend sans limite.', {'cap': cap})
+                      : context.tr('{used} sur {cap} billets gratuits vendus pour cette carte.', {'used': f.used, 'cap': cap}),
+                  style: theme.textTheme.bodySmall?.copyWith(fontWeight: full ? FontWeight.w700 : null),
+                ),
+              ]),
+            );
+          },
         ),
         ListTile(
           key: const Key('tickets-setup'),

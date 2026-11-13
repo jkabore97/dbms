@@ -24,6 +24,7 @@ export '../../features/accounting/income_statement_screen.dart';
 export '../../features/accounting/trial_balance_screen.dart';
 export '../../features/accounting/journal_screen.dart';
 export '../../features/admin/admin_home_screen.dart';
+export '../../features/admin/events_console_screen.dart';
 export '../../features/admin/created_businesses_screen.dart';
 export '../../features/admin/kind_models_screen.dart';
 export '../../features/admin/request_form_screen.dart';

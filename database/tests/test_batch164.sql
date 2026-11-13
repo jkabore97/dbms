@@ -27,6 +27,7 @@ drop function if exists event_album_add(text, text, text, text, uuid, text);
 \i database/migrations/164_events_album_pro.sql
 -- 179 replaced event_album_add (a phone's identifier added): back to it
 \i database/migrations/179_album_open_quota.sql
+\i database/migrations/182_events_free_limits.sql
 
 begin;
 update platform_settings set value = 'false' where key = 'events_tickets';
@@ -52,7 +53,12 @@ begin
     insert into events (id, org_id, created_by, kind, card, slug, preview_token, edit_token, title, starts_at, content, tz, published, album_on)
     values ('16416416-2222-0000-0000-000000000001', '16416416-1111-0000-0000-000000000002', '16416416-0000-0000-0000-000000000002',
             'anniversaire', 'gala', 'fete-avant-164', 'aaaaaaaaaaaaaaaaaaaaaa64', 'bbbbbbbbbbbbbbbbbbbbbb64', 'Avant', now() + interval '3 days', '{}', 'Africa/Ouagadougou', true, true);
-    assert (select album_on from events where id = '16416416-2222-0000-0000-000000000001'), 'before the switch: open';
+    -- since 182 the album is Pro's, the switch on or not: a free new card starts closed
+    assert not (select album_on from events where id = '16416416-2222-0000-0000-000000000001'), 'before the switch too, since 182: closed';
+    -- an album a free business opened before 182: kept as it was
+    alter table events disable trigger events_album_guard;
+    update events set album_on = true where id = '16416416-2222-0000-0000-000000000001';
+    alter table events enable trigger events_album_guard;
 
     update platform_settings set value = 'true' where key = 'events_tickets';
     insert into events (id, org_id, created_by, kind, card, slug, preview_token, edit_token, title, starts_at, content, tz, published, album_on)
@@ -114,8 +120,15 @@ begin
         get stacked diagnostics v_err = message_text;
         assert v_err like 'Vous avez déposé vos 5 photos%', 'five, no more: ' || v_err;
     end;
-    -- Bob's album, open before the switch and not limited: as before.
-    perform event_album_add('fete-avant-164', null, 'jpg', 'Cousin', null);
+    -- Bob's album, open before the switch: since 182 the guests' album is
+    -- Pro's — a free business's open album takes no new photo.
+    begin
+        perform event_album_add('fete-avant-164', null, 'jpg', 'Cousin', null);
+        raise exception 'a free business''s album took a photo';
+    exception when others then
+        get stacked diagnostics v_err = message_text;
+        assert v_err = 'L''album de cette carte est fermé.', 'a free album closed since 182: ' || v_err;
+    end;
     reset role;
 end $$;
 

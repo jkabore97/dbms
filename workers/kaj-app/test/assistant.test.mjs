@@ -74,3 +74,17 @@ test("refused plainly: no key, not Pro, the day's forty used, a wrong token, not
   r = await assistant(new Request("https://marakaj.com/api/assistant"), env, { client: c });
   assert.equal(r.status, 405);
 });
+
+test("182: a free card writes its free texts of the day (the server says « ok »); none left, refused", async () => {
+  allowanceAnswer = { status: 200, body: { pro: false, ok: true, left: 4 } };
+  let c = fakeClient({ stop_reason: "end_turn", content: [{ type: "text", text: "Bienvenue à tous." }] });
+  let r = await assistant(post(ask), env, { client: c });
+  assert.equal(r.status, 200);
+  assert.equal((await r.json()).left, 4);
+  assert.equal(c.sent.length, 1, "Claude asked for a free card's free text");
+  allowanceAnswer = { status: 200, body: { pro: false, ok: false, left: 0 } };
+  c = fakeClient({ stop_reason: "end_turn", content: [{ type: "text", text: "x" }] });
+  r = await assistant(post(ask), env, { client: c });
+  assert.equal(r.status, 402);
+  assert.equal(c.sent.length, 0);
+});

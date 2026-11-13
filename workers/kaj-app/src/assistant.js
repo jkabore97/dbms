@@ -77,7 +77,8 @@ export async function assistant(request, env, { client } = {}) {
 
   const allowed = await allowance(env, slug, edit).catch(() => ({ error: "Pas de réseau : réessayez." }));
   if (allowed.error) return json(/demain/.test(allowed.error) ? 429 : 403, { error: allowed.error });
-  if (allowed.pro !== true) return json(402, { error: "L’assistant d’écriture fait partie de Marakaj Pro." });
+  // free so many a day, Pro forty (182): « ok »; before 182, Pro only
+  if (allowed.pro !== true && allowed.ok !== true) return json(402, { error: "L’assistant d’écriture a écrit ses textes gratuits du jour : il revient demain, ou sans limite avec Marakaj Pro." });
 
   const facts = [
     `Événement : ${clip(q.kind, 40) || "autre"}`,

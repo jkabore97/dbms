@@ -49,6 +49,18 @@ class TicketsRepository {
     }
   }
 
+  /// The card's free tickets (182): [cap] null for Marakaj Pro (no limit).
+  /// Null when it cannot be asked (offline, or a database before 182).
+  Future<({int? cap, int used})?> freeTickets(String eventId) async {
+    try {
+      final r = await _require().rpc('event_tickets_free_left', params: {'p_event': eventId});
+      if (r is! Map) return null;
+      return (cap: (r['cap'] as num?)?.toInt(), used: (r['used'] as num?)?.toInt() ?? 0);
+    } catch (_) {
+      return null;
+    }
+  }
+
   bool get isConfigured => _client != null;
 
   SupabaseClient _require() {
