@@ -126,6 +126,22 @@ void main() {
     expect(bar.height, lessThan(90), reason: 'two lines and a button');
   });
 
+  testWidgets('the keyboard up: no bar, no empty strip — the page reaches the keyboard; down: the bar again', (tester) async {
+    // the owner's screenshot: searching « kaj », a white strip the bar's
+    // height between the page and the keyboard
+    await _pump(tester, _Browser(AppPhone.android), ValueNotifier(true));
+    expect(find.byKey(const Key('android-install-bar')), findsOneWidget);
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('android-install-bar')), findsNothing);
+    final body = tester.getRect(find.byType(ListView)).bottom;
+    expect(body, closeTo(844 - 300, 0.01), reason: 'the page ends at the keyboard, nothing between');
+    expect(find.text('La rue'), findsOneWidget, reason: 'the page kept (not built again from nothing)');
+    tester.view.resetViewInsets();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('android-install-bar')), findsOneWidget);
+  });
+
   testWidgets('a sheet opened in the page comes above the bar, never over it', (tester) async {
     await _pump(tester, _Browser(AppPhone.android), ValueNotifier(true));
     await tester.scrollUntilVisible(find.byKey(const Key('open-order')), 400);
