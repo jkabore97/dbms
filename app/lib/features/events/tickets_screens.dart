@@ -434,33 +434,32 @@ class _TypeDialogState extends State<_TypeDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      scrollable: true,
       title: Text(widget.initial == null ? context.tr('Nouveau type de billet') : context.tr('Type de billet')),
-      content: SingleChildScrollView(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(
-            key: const Key('ticket-type-name'),
-            controller: _name,
-            decoration: InputDecoration(labelText: context.tr('Nom'), hintText: context.tr('Standard, VIP…')),
+      content: Column(mainAxisSize: MainAxisSize.min, children: [
+        TextField(
+          key: const Key('ticket-type-name'),
+          controller: _name,
+          decoration: InputDecoration(labelText: context.tr('Nom'), hintText: context.tr('Standard, VIP…')),
+        ),
+        TextField(
+          key: const Key('ticket-type-price'),
+          controller: _price,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(labelText: context.tr('Prix ({currency})', {'currency': currencySymbol(widget.currency)})),
+        ),
+        TextField(
+          key: const Key('ticket-type-places'),
+          controller: _places,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(labelText: context.tr('Places'), helperText: context.tr('Vide : illimité')),
+        ),
+        if (_problem != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Text(_problem!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
           ),
-          TextField(
-            key: const Key('ticket-type-price'),
-            controller: _price,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(labelText: context.tr('Prix ({currency})', {'currency': currencySymbol(widget.currency)})),
-          ),
-          TextField(
-            key: const Key('ticket-type-places'),
-            controller: _places,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(labelText: context.tr('Places'), helperText: context.tr('Vide : illimité')),
-          ),
-          if (_problem != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 10),
-              child: Text(_problem!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-            ),
-        ]),
-      ),
+      ]),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: Text(context.tr('Annuler'))),
         FilledButton(key: const Key('ticket-type-ok'), onPressed: _done, child: Text(context.tr('Enregistrer'))),
@@ -494,31 +493,30 @@ class _MethodDialogState extends State<_MethodDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      scrollable: true,
       title: Text(context.tr('Où payer')),
-      content: SingleChildScrollView(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          DropdownButtonFormField<String>(
-            initialValue: _kind,
-            items: [for (final k in PayMethod.kinds.entries) DropdownMenuItem(value: k.key, child: Text(context.tr(k.value)))],
-            onChanged: (v) => setState(() => _kind = v ?? 'orange'),
+      content: Column(mainAxisSize: MainAxisSize.min, children: [
+        DropdownButtonFormField<String>(
+          initialValue: _kind,
+          items: [for (final k in PayMethod.kinds.entries) DropdownMenuItem(value: k.key, child: Text(context.tr(k.value)))],
+          onChanged: (v) => setState(() => _kind = v ?? 'orange'),
+        ),
+        PhoneInput(
+          key: const Key('ticket-method-number'),
+          controller: _number,
+          labelText: context.tr('Numéro'),
+        ),
+        TextField(
+          key: const Key('ticket-method-name'),
+          controller: _name,
+          decoration: InputDecoration(labelText: context.tr('Au nom de'), helperText: context.tr('Ce que l’acheteur voit en payant')),
+        ),
+        if (_problem != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Text(_problem!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
           ),
-          PhoneInput(
-            key: const Key('ticket-method-number'),
-            controller: _number,
-            labelText: context.tr('Numéro'),
-          ),
-          TextField(
-            key: const Key('ticket-method-name'),
-            controller: _name,
-            decoration: InputDecoration(labelText: context.tr('Au nom de'), helperText: context.tr('Ce que l’acheteur voit en payant')),
-          ),
-          if (_problem != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 10),
-              child: Text(_problem!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-            ),
-        ]),
-      ),
+      ]),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: Text(context.tr('Annuler'))),
         FilledButton(
@@ -1089,13 +1087,12 @@ class _NoteDialogState extends State<NoteDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      scrollable: true,
       title: Text(widget.title),
-      content: SingleChildScrollView(
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(widget.body),
-          TextField(controller: _note, maxLength: 300, decoration: InputDecoration(labelText: widget.label)),
-        ]),
-      ),
+      content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(widget.body),
+        TextField(controller: _note, maxLength: 300, decoration: InputDecoration(labelText: widget.label)),
+      ]),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: Text(widget.cancel ?? context.tr('Annuler'))),
         FilledButton(
