@@ -463,6 +463,8 @@ class EventSummary {
     this.albumLimit = false,
     this.albumReview = false,
     this.streetPicture,
+    this.tz,
+    this.cardPreview,
   });
 
   factory EventSummary.fromJson(Map<String, dynamic> j) => EventSummary(
@@ -485,7 +487,28 @@ class EventSummary {
         albumLimit: (j['album_limit'] as bool?) ?? false,
         albumReview: (j['album_review'] as bool?) ?? false,
         streetPicture: j['street_picture'] as String?,
+        tz: j['tz'] as String?,
+        cardPreview: j['card_preview'] as String?,
       );
+
+  /// The card's own picture (177), drawn by Studio: its key, for the list.
+  final String? cardPreview;
+
+  /// The card's own time zone (152): an IANA name (« Africa/Ouagadougou »)
+  /// or an offset (« +00:00 »). Null against an old row.
+  final String? tz;
+
+  /// When it starts, on the clock of the place it happens (« 10 h » in
+  /// Ouagadougou), not of the phone reading it — an organiser in Newark
+  /// saw « 05:00 ». The phone's clock when the zone is not known.
+  DateTime? get startsWall {
+    final s = startsAt;
+    if (s == null) return null;
+    final off = eventZoneOffset(tz);
+    if (off == null) return s;
+    final w = s.toUtc().add(off);
+    return DateTime(w.year, w.month, w.day, w.hour, w.minute);
+  }
 
   final String id;
   final String orgId;
@@ -648,4 +671,27 @@ class EventPicture {
   /// Shown in the card's album (164): false while it waits for the
   /// organiser's yes.
   final bool approved;
+}
+
+
+/// A card's time zone as an offset from UTC: « +01:00 », or the zones
+/// Marakaj's cards are made in (none of them changes its clock in summer).
+/// Null for a zone this does not know: the phone's clock is then used.
+Duration? eventZoneOffset(String? tz) {
+  if (tz == null) return null;
+  final m = RegExp(r'^([+-])(\d{2}):?(\d{2})$').firstMatch(tz.trim());
+  if (m != null) {
+    final d = Duration(hours: int.parse(m.group(2)!), minutes: int.parse(m.group(3)!));
+    return m.group(1) == '-' ? -d : d;
+  }
+  const zones = {
+    'UTC': 0, 'Etc/UTC': 0, 'Africa/Ouagadougou': 0, 'Africa/Abidjan': 0, 'Africa/Dakar': 0, 'Africa/Bamako': 0,
+    'Africa/Lome': 0, 'Africa/Accra': 0, 'Africa/Conakry': 0, 'Africa/Nouakchott': 0, 'Africa/Banjul': 0,
+    'Africa/Freetown': 0, 'Africa/Monrovia': 0, 'Africa/Bissau': 0,
+    'Africa/Niamey': 60, 'Africa/Lagos': 60, 'Africa/Porto-Novo': 60, 'Africa/Douala': 60, 'Africa/Libreville': 60,
+    'Africa/Brazzaville': 60, 'Africa/Kinshasa': 60, 'Africa/Ndjamena': 60, 'Africa/Bangui': 60, 'Africa/Malabo': 60,
+    'Africa/Kigali': 120, 'Africa/Lubumbashi': 120, 'Africa/Johannesburg': 120, 'Africa/Nairobi': 180,
+  };
+  final min = zones[tz.trim()];
+  return min == null ? null : Duration(minutes: min);
 }

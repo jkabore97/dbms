@@ -107,9 +107,19 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
   String _period = 'year';
   final _timers = <Timer>[];
 
+  /// An Événementiel's free numbers (182), read from the server.
+  EventsPlanNumbers _events = EventsPlanNumbers.defaults;
+
+  bool get _isEvents => widget.org.profile == 'events';
+
   @override
   void initState() {
     super.initState();
+    if (_isEvents) {
+      widget.admin.eventsPlanNumbers().then((n) {
+        if (mounted) setState(() => _events = n);
+      }, onError: (_) {});
+    }
     final onPaid = widget.onPaid;
     if (widget.stripeReturn == 'ok' && !widget.org.isPro && onPaid != null) {
       for (final s in const [3, 10, 30]) {
@@ -204,7 +214,9 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
                         Text(
                           org.isPro
                               ? context.tr('Tous les outils ci-dessous sont ouverts.')
-                              : context.tr('Marakaj reste gratuit pour le quotidien. Marakaj Pro ajoute la livraison, le paiement en ligne et les outils d\'une entreprise qui grandit.'),
+                              : _isEvents
+                                  ? context.tr('Vos cartes, Studio et les réponses de vos invités restent gratuits. Marakaj Pro ajoute les modèles Premium, l\'album des invités et la billetterie sans limite.')
+                                  : context.tr('Marakaj reste gratuit pour le quotidien. Marakaj Pro ajoute la livraison, le paiement en ligne et les outils d\'une entreprise qui grandit.'),
                           textAlign: TextAlign.center,
                           style: muted,
                         ),
@@ -239,7 +251,7 @@ class _ProPlansScreenState extends State<ProPlansScreen> {
                         // currency — what the card charges; FCFA before.
                         : '${t.proZones.isEmpty ? _money(price) : zonePriceText(t.proPriceFor(org.currency, year: _period == 'year').amount, t.proPriceFor(org.currency, year: _period == 'year').currency, language: context.trLanguage)} / ${_period == 'year' ? context.tr('an') : context.tr('mois')}',
                   ),
-                  for (final (title, rows) in rowsFor(t, costs: _costs)) ...[
+                  for (final (title, rows) in _isEvents ? ProPlansScreenRows.events(_events) : rowsFor(t, costs: _costs)) ...[
                     const SizedBox(height: 18),
                     ScrollReveal(
                       child: Padding(
@@ -496,6 +508,36 @@ class _Row extends StatelessWidget {
 /// The whole comparison, from the platform's terms — public so a test can
 /// read it without drawing the page.
 class ProPlansScreenRows {
+  /// An Événementiel's (182): everything to make and send a card free; the
+  /// Premium designs, the guests' album and tickets past the free ones, Pro.
+  static List<(String, List<PlanRow>)> events(EventsPlanNumbers n) => [
+        (
+          'Pour tous',
+          const [
+            PlanRow('Cartes d\'invitation classiques et animées', true, true),
+            PlanRow('Studio : composez votre carte au doigt', true, true),
+            PlanRow('Réponses des invités et carte d\'invité avec QR code', true, true),
+            PlanRow('Lien à partager, aperçu WhatsApp', true, true),
+            PlanRow('PDF à imprimer', true, true),
+          ],
+        ),
+        (
+          'Avec Marakaj Pro',
+          const [
+            PlanRow('Modèles et décors animés Premium', null, true),
+            PlanRow('Album photo des invités', null, true),
+            PlanRow('Album réservé aux invités, photos validées avant d\'être vues', null, true),
+          ],
+        ),
+        (
+          'Sans limite',
+          [
+            PlanRow('Billets vendus par carte', '${n.freeTickets}', 'Illimité'),
+            PlanRow('Textes de l\'assistant par jour', n.assistFreeDay == 0 ? null : '${n.assistFreeDay}', '40'),
+          ],
+        ),
+      ];
+
   static List<(String, List<PlanRow>)> of(PlanTerms t,
           {Map<String, int> costs = const {}}) =>
       [

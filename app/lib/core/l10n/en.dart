@@ -9273,4 +9273,58 @@ const enStrings = <String, String>{
   'Ajoutez une photo sur votre carte (« Modifier la carte ») : elle apparaîtra ici.': 'Add a photo to your card (“Edit the card”): it will appear here.',
   'Galerie Marakaj': 'Marakaj gallery',
   'Votre numéro': 'Your number',
+  'Deux nombres, s’il vous plaît.':
+      'Two numbers, please.',
+  'Gratuit pour tous':
+      'Free for everyone',
+  'Cartes, Studio, réponses des invités et PDF sont gratuits. Ces deux nombres fixent ce qu’une entreprise sans Marakaj Pro reçoit ; Pro n’a pas de limite (l’assistant : 40 textes par jour).':
+      'Cards, Studio, guests\' replies and the PDF are free. These two numbers set what a business without Marakaj Pro gets; Pro has no limit (the assistant: 40 texts a day).',
+  'Billets gratuits par carte':
+      'Free tickets per card',
+  'Au-delà, la carte ne vend plus en ligne sans Marakaj Pro.':
+      'Past that, the card stops selling online without Marakaj Pro.',
+  'La vente de billets est encore fermée à tous (réglage events_tickets).':
+      'Ticket sales are still closed to everyone (setting events_tickets).',
+  'Textes de l’assistant gratuits par jour et par carte':
+      'Free assistant texts per day and per card',
+  '0 : l’assistant réservé à Marakaj Pro.':
+      '0: the assistant only for Marakaj Pro.',
+  'Un modèle Premium est réservé à Marakaj Pro, son décor animé aussi. Les cartes déjà faites gardent leur modèle.':
+      'A Premium design is for Marakaj Pro only, and so is its animated scene. Cards already made keep their design.',
+  'Animés':
+      'Animated',
+  'Classiques':
+      'Classic',
+  'Premium · Marakaj Pro':
+      'Premium · Marakaj Pro',
+  'Vos cartes, Studio et les réponses de vos invités restent gratuits. Marakaj Pro ajoute les modèles Premium, l\'album des invités et la billetterie sans limite.':
+      'Your cards, Studio and your guests\' replies stay free. Marakaj Pro adds the Premium designs, the guests\' album and unlimited ticketing.',
+  'Les {cap} billets gratuits de cette carte sont vendus. Marakaj Pro vend sans limite.':
+      'This card\'s {cap} free tickets are sold. Marakaj Pro sells without limit.',
+  '{used} sur {cap} billets gratuits vendus pour cette carte.':
+      '{used} of {cap} free tickets sold for this card.',
+  'Marakaj Pro : les invités déposent leurs photos sur la carte ; elles arrivent ici.':
+      'Marakaj Pro: guests add their photos on the card; they arrive here.',
+  'Cartes d\'invitation classiques et animées':
+      'Classic and animated invitation cards',
+  'Studio : composez votre carte au doigt':
+      'Studio: design your card with your finger',
+  'Réponses des invités et carte d\'invité avec QR code':
+      'Guests\' replies and a guest pass with QR code',
+  'Lien à partager, aperçu WhatsApp':
+      'A link to share, with its WhatsApp preview',
+  'PDF à imprimer':
+      'PDF to print',
+  'Modèles et décors animés Premium':
+      'Premium designs and animated scenes',
+  'Album photo des invités':
+      'Guests\' photo album',
+  'Album réservé aux invités, photos validées avant d\'être vues':
+      'Album for guests only, photos approved before they show',
+  'Billets vendus par carte':
+      'Tickets sold per card',
+  'Textes de l\'assistant par jour':
+      'Assistant texts per day',
+  'J-{days}':
+      'D-{days}',
 };

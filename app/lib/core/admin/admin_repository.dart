@@ -949,6 +949,39 @@ class AdminRepository {
     }
   }
 
+  /// An Événementiel's free numbers (182): the tickets a card sells free,
+  /// the assistant's free texts a day. Before 182, or offline: 50 and 5.
+  Future<EventsPlanNumbers> eventsPlanNumbers() async {
+    final client = _client;
+    if (client == null) return EventsPlanNumbers.defaults;
+    try {
+      final json = await client.rpc('events_plan_numbers');
+      return json is Map ? EventsPlanNumbers.fromJson(Map<String, dynamic>.from(json)) : EventsPlanNumbers.defaults;
+    } on PostgrestException catch (error) {
+      if (isSchemaOutOfDate(error)) return EventsPlanNumbers.defaults;
+      rethrow;
+    }
+  }
+
+  /// Marakaj's console, the Événementiel (182): its numbers and its designs.
+  Future<EventsConsole> eventsConsole() async {
+    final json = await _requireClient().rpc('admin_events_settings');
+    return EventsConsole.fromJson(Map<String, dynamic>.from(json as Map));
+  }
+
+  Future<EventsConsole> setEventsNumbers({required int freeTickets, required int assistFreeDay}) async {
+    final json = await _requireClient().rpc('admin_events_set', params: {
+      'p_free_tickets': freeTickets,
+      'p_assist_free_day': assistFreeDay,
+    });
+    return EventsConsole.fromJson(Map<String, dynamic>.from(json as Map));
+  }
+
+  Future<EventsConsole> setEventTemplatePremium(String key, bool premium) async {
+    final json = await _requireClient().rpc('admin_event_template_premium', params: {'p_key': key, 'p_premium': premium});
+    return EventsConsole.fromJson(Map<String, dynamic>.from(json as Map));
+  }
+
   /// "J'ai payé" (066): an admin of the business says the money was sent.
   /// One open request per business; saying it twice updates the first.
   Future<void> requestPro(String orgId, {double? amount, String? note}) async {
@@ -1835,4 +1868,56 @@ class DoomedBusiness {
       stripe: json['stripe'] == true,
     );
   }
+}
+
+
+/// An Événementiel's free numbers (182).
+class EventsPlanNumbers {
+  const EventsPlanNumbers({required this.freeTickets, required this.assistFreeDay});
+
+  static const defaults = EventsPlanNumbers(freeTickets: 50, assistFreeDay: 5);
+
+  final int freeTickets;
+  final int assistFreeDay;
+
+  factory EventsPlanNumbers.fromJson(Map<String, dynamic> j) => EventsPlanNumbers(
+        freeTickets: (j['free_tickets'] as num?)?.toInt() ?? 50,
+        assistFreeDay: (j['assist_free_day'] as num?)?.toInt() ?? 5,
+      );
+}
+
+/// One design in the console's list (182).
+class EventsConsoleTemplate {
+  const EventsConsoleTemplate({required this.key, required this.name, required this.family, required this.premium});
+
+  final String key;
+  final String name;
+  final String family;
+  final bool premium;
+}
+
+/// Marakaj's console, the Événementiel (182).
+class EventsConsole {
+  const EventsConsole({required this.numbers, required this.ticketsOn, required this.templates});
+
+  final EventsPlanNumbers numbers;
+
+  /// The platform's ticket switch (161): the free allowance applies once it is on.
+  final bool ticketsOn;
+  final List<EventsConsoleTemplate> templates;
+
+  factory EventsConsole.fromJson(Map<String, dynamic> j) => EventsConsole(
+        numbers: EventsPlanNumbers.fromJson(j),
+        ticketsOn: j['tickets_on'] == true,
+        templates: [
+          for (final t in (j['templates'] as List? ?? const []))
+            if (t is Map)
+              EventsConsoleTemplate(
+                key: '${t['key']}',
+                name: '${t['name'] ?? t['key']}',
+                family: '${t['family'] ?? ''}',
+                premium: t['premium'] == true,
+              ),
+        ],
+      );
 }

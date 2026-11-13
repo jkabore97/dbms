@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../core/nav/router.dart' show Routes;
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -106,7 +108,7 @@ String? whatsappDigits(Object? raw) {
 String reminderText(BuildContext context, EventSummary e, String guest) {
   final when = e.startsAt == null
       ? ''
-      : ' ${DateFormat('EEEE d MMMM', context.trLocale).format(e.startsAt!)} ${context.tr('à')} ${DateFormat('HH:mm').format(e.startsAt!)}';
+      : ' ${DateFormat('EEEE d MMMM', context.trLocale).format(e.startsWall!)} ${context.tr('à')} ${DateFormat('HH:mm').format(e.startsWall!)}';
   final place = e.place == null || e.place!.isEmpty ? '' : ', ${e.place}';
   return context.tr('Bonjour {name}, petit rappel : « {title} », c’est{when}{place}. À très vite !',
       {'name': guest, 'title': e.title, 'when': when, 'place': place});
@@ -257,6 +259,7 @@ class _EventsListState extends State<EventsList> {
         itemCount: _events.length,
         itemBuilder: (context, i) => _EventTile(
           event: _events[i],
+          picture: _events[i].cardPreview == null ? null : widget.events.pictureUrl(_events[i].cardPreview!, width: 200),
           onTap: () async {
             await Navigator.of(context).push(MaterialPageRoute<void>(
               builder: (_) => EventScreen(
@@ -271,28 +274,126 @@ class _EventsListState extends State<EventsList> {
 }
 
 class _EventTile extends StatelessWidget {
-  const _EventTile({required this.event, required this.onTap});
+  const _EventTile({required this.event, required this.onTap, this.picture});
 
   final EventSummary event;
   final VoidCallback onTap;
 
+  /// The card's own picture (177), small; null before Studio drew one.
+  final String? picture;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final when = event.startsAt == null
+    final scheme = theme.colorScheme;
+    final start = event.startsWall;
+    final when = start == null
         ? context.tr('Date à fixer')
-        : DateFormat('EEEE d MMMM yyyy · HH:mm', context.trLocale).format(event.startsAt!);
-    return KajCard(
-      margin: const EdgeInsets.only(bottom: 10),
-      child: ListTile(
-        key: Key('event-${event.id}'),
-        onTap: onTap,
-        leading: CircleAvatar(child: Icon(_kindIcon(event.kind))),
-        title: Text(event.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-        subtitle: Text('${context.tr(eventKindName(event.kind))} · ${eventCardName(event.card)}\n$when'),
-        isThreeLine: true,
-        trailing: _StatusChip(published: event.published),
-        titleTextStyle: theme.textTheme.titleMedium,
+        : DateFormat('EEE d MMM yyyy · HH:mm', context.trLocale).format(start);
+    // « J-8 »: the days left, for a card still to come
+    final today = DateTime.now();
+    final days = start == null ? null : DateTime(start.year, start.month, start.day).difference(DateTime(today.year, today.month, today.day)).inDays;
+    final soon = days != null && days >= 0 && days <= 60;
+    final eyebrow = '${context.tr(eventKindName(event.kind))} · ${eventCardName(event.card)}'.toUpperCase();
+    final thumb = ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(
+        width: 66,
+        height: 88,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [scheme.primary, Color.lerp(scheme.primary, Colors.black, 0.45)!],
+            ),
+          ),
+          child: Stack(fit: StackFit.expand, children: [
+            Center(child: Icon(_kindIcon(event.kind), color: Colors.white.withValues(alpha: 0.9), size: 28)),
+            if (picture != null)
+              Image.network(
+                picture!,
+                key: const Key('event-tile-picture'),
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => const SizedBox.shrink(),
+              ),
+          ]),
+        ),
+      ),
+    );
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: scheme.surface,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          key: Key('event-${event.id}'),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              thumb,
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          eyebrow,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelSmall?.copyWith(letterSpacing: 1.3, color: scheme.primary, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _StatusChip(published: event.published),
+                  ]),
+                  const SizedBox(height: 6),
+                  Text(
+                    event.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700, height: 1.15, letterSpacing: -0.2),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(children: [
+                    Icon(Icons.event_outlined, size: 16, color: scheme.onSurfaceVariant),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        when,
+                        style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+                      ),
+                    ),
+                  ]),
+                  if (soon) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      key: const Key('event-tile-countdown'),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: scheme.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        days == 0 ? context.tr('Aujourd’hui') : context.tr('J-{days}', {'days': days}),
+                        style: theme.textTheme.labelMedium?.copyWith(color: scheme.primary, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ],
+                ]),
+              ),
+            ]),
+          ),
+        ),
       ),
     );
   }
@@ -304,12 +405,24 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Chip(
-      label: Text(published ? context.tr('Publiée') : context.tr('Brouillon')),
-      backgroundColor: published ? scheme.primaryContainer : scheme.surfaceContainerHighest,
-      visualDensity: VisualDensity.compact,
-      padding: EdgeInsets.zero,
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final color = published ? const Color(0xFF2E7D4F) : scheme.onSurfaceVariant;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+      decoration: BoxDecoration(
+        color: published ? color.withValues(alpha: 0.1) : Colors.transparent,
+        border: Border.all(color: color.withValues(alpha: published ? 0.0 : 0.5)),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        const SizedBox(width: 5),
+        Text(
+          published ? context.tr('Publiée') : context.tr('Brouillon'),
+          style: theme.textTheme.labelSmall?.copyWith(color: color, fontWeight: FontWeight.w700),
+        ),
+      ]),
     );
   }
 }
@@ -794,7 +907,7 @@ class _EventScreenState extends State<EventScreen> {
                         Text(
                           e.startsAt == null
                               ? context.tr('Date à fixer')
-                              : DateFormat('EEEE d MMMM yyyy · HH:mm', context.trLocale).format(e.startsAt!),
+                              : DateFormat('EEEE d MMMM yyyy · HH:mm', context.trLocale).format(e.startsWall!),
                           style: theme.textTheme.titleMedium,
                         ),
                         if (e.place != null && e.place!.isNotEmpty) Text(e.place!, style: theme.textTheme.bodyMedium),
@@ -909,12 +1022,19 @@ class _EventScreenState extends State<EventScreen> {
                         ),
                       // The guests' album (155): open, the card takes their
                       // pictures; closed, it says so and takes none.
+                      // Marakaj Pro's since 182 (each photo is kept, at a cost).
                       SwitchListTile(
                         key: const Key('event-album-on'),
                         title: Text(context.tr('Album des invités ouvert')),
-                        subtitle: Text(context.tr('Les invités déposent leurs photos sur la carte ; elles arrivent ici.')),
+                        subtitle: Text(widget.org.isPro || e.albumOn
+                            ? context.tr('Les invités déposent leurs photos sur la carte ; elles arrivent ici.')
+                            : context.tr('Marakaj Pro : les invités déposent leurs photos sur la carte ; elles arrivent ici.')),
+                        secondary: widget.org.isPro || e.albumOn ? null : const Icon(Icons.workspace_premium_outlined),
+                        // an album already open (the server let it) stays as it is
                         value: e.albumOn,
-                        onChanged: (v) => _run(() => widget.events.setAlbumOn(e.id, v)),
+                        onChanged: (v) => widget.org.isPro || !v
+                            ? _run(() => widget.events.setAlbumOn(e.id, v))
+                            : GoRouter.of(context).push(Routes.inside(widget.org.id, 'kaj-pro')),
                       ),
                       // The album's rules (164).
                       if (e.albumOn) ...[

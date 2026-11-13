@@ -46,8 +46,9 @@ update platform_settings set value = 'true' where key = 'events_public';
 insert into auth.users (id, phone, email, raw_user_meta_data, created_at) values
     ('15515515-0000-0000-0000-000000000001', '+22615510001', 'awa155@example.com',    '{"full_name": "Awa Planner"}',  now()),
     ('15515515-0000-0000-0000-000000000002', '+22615510002', 'seller155@example.com', '{"full_name": "La vendeuse"}',  now());
-insert into orgs (id, name, slug, profile, default_currency) values
-    ('15515515-1111-0000-0000-000000000001', 'Awa Événements 155', 'awa-evenements-155', 'events', 'XOF');
+-- Pro: since 182 the guests' album is Marakaj Pro's
+insert into orgs (id, name, slug, profile, default_currency, plan) values
+    ('15515515-1111-0000-0000-000000000001', 'Awa Événements 155', 'awa-evenements-155', 'events', 'XOF', 'pro');
 insert into memberships (user_id, org_id, role, scope_kind, scope_id, visibility) values
     ('15515515-0000-0000-0000-000000000001', '15515515-1111-0000-0000-000000000001', 'owner',    'org', '15515515-1111-0000-0000-000000000001', 'full'),
     ('15515515-0000-0000-0000-000000000002', '15515515-1111-0000-0000-000000000001', 'employee', 'org', '15515515-1111-0000-0000-000000000001', 'full');

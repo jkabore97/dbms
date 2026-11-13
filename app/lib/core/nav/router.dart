@@ -133,6 +133,7 @@ abstract final class Routes {
   /// Kaj Pro from the platform's side: the queue of "J'ai payé" and the
   /// number and prices the paywall says (066).
   static const consolePro = '/console/kaj-pro';
+  static const consoleEvents = '/console/evenementiel';
   /// The platform's gifts (100): cauris, promotional cauris, a tool opened
   /// until a date — for any business.
   static const consoleCaurisGifts = '/console/kaj-pro/cauris';
@@ -1068,6 +1069,8 @@ GoRouter buildRouter(SessionController session) {
                 admin: AppScope.of(context).admin,
                 cauris: CaurisRepository(AppScope.of(context).auth.client),
               )),
+          // The Événementiel's free numbers and its Premium designs (182).
+          _centerPage(Routes.consoleEvents, (context, _) => biz.EventsConsoleScreen(admin: AppScope.of(context).admin)),
           _centerPage(Routes.consoleCaurisGifts, (context, _) {
             final scope = AppScope.of(context);
             return biz.CaurisGiftsScreen(

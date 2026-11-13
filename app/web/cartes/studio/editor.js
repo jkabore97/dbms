@@ -15,6 +15,14 @@
   };
   var DRAFT = 'studio-' + (ctx.slug || 'demo');
   var doc = null, savedJson = '', savedAt = BOOT.doc_saved_at || null, converted = false;
+  // Which designs and animated scenes are Premium: Marakaj's console decides (182); until the
+  // server answers (or before 182), as written in designs.js.
+  if (ctx.api && ctx.api.url) S.api(ctx, 'event_premium_designs', {}).then(function (p) {
+    if (!p || !Array.isArray(p.designs) || !Array.isArray(p.scenes)) return;
+    (S.DESIGNS || []).forEach(function (d) { if (d.animated) d.premium = p.designs.indexOf(d.id) >= 0; });
+    Object.keys(S.SCENE || {}).forEach(function (k) { if (k.indexOf('lx-') === 0) S.SCENE[k].premium = p.scenes.indexOf(k) >= 0; });
+    (S.SCENES || []).forEach(function (x) { if (S.SCENE[x.id]) x.premium = S.SCENE[x.id].premium; });
+  }, function () {});
   var hist = [], fut = [], sel = null, textSel = null, preview = false, inserting = null;
 
   // ------------------------------------------------------------ the frame
@@ -607,10 +615,11 @@
     if (b.type === 'tickets') h += field('label', 'Texte du bouton');
     if (b.type === 'place') h += field('href', 'Itinéraire : le lien Google Maps du lieu', 'url', 'https://maps.app.goo.gl/…') +
       '<p class="ed-help">Dans Google Maps, touchez le lieu, « Partager », « Copier le lien », puis collez-le ici. Sans lien, l’itinéraire cherche le nom du lieu.</p>';
-    // the writing assistant (173, Marakaj Pro): the block's main words, written or rewritten
-    if (ASSIST[b.type]) h += '<p class="ed-lab">L’assistant d’écriture' + (ctx.pro === false ? ' · 🔒 Pro' : '') + '</p><div class="ed-row">' +
+    // the writing assistant (173): the block's main words, written or rewritten — free so many
+    // a day, Marakaj Pro forty (182): the server counts and says when the day's are written
+    if (ASSIST[b.type]) h += '<p class="ed-lab">L’assistant d’écriture</p><div class="ed-row">' +
       [['ecrire', 'Écrire pour moi'], ['raccourcir', 'Plus court'], ['chaleureux', 'Plus chaleureux'], ['solennel', 'Plus solennel'], ['corriger', 'Corriger']].map(function (x) {
-        return '<button type="button" class="ed-chip' + (ctx.pro === false ? ' ed-locked' : '') + '" data-assist="' + x[0] + '">' + x[1] + '</button>';
+        return '<button type="button" class="ed-chip" data-assist="' + x[0] + '">' + x[1] + '</button>';
       }).join('') + '</div>';
     if (b.type === 'text') h += '<p class="ed-lab">Des phrases toutes prêtes</p><div class="ed-list ed-phrases">' + S.phrasesFor(ctx.kind).map(function (x, i) { return '<button type="button" class="ed-phrase" data-phrase="' + i + '">' + esc(x) + '</button>'; }).join('') + '</div>';
     if (b.type === 'footer') h += check('share', 'Bouton « Partager la carte » pour vos invités', true);
@@ -1007,7 +1016,6 @@
   // the writing assistant (173): /api/assistant, the card's edit token as the key
   var ASSIST = { text: 'body', story: 'body', quote: 'text', rsvp: 'lead', footer: 'text' };
   function assist(bb, what, btn) {
-    if (ctx.pro === false) { toast('L’assistant d’écriture fait partie de Marakaj Pro.'); return; }
     var key = ASSIST[bb.type], before = S.plainText((bb.props || {})[key] || '');
     if (what !== 'ecrire' && !before) { toast('Écrivez d’abord un texte : l’assistant le reprendra.'); return; }
     var f = S.facts(ctx); btn.disabled = true; var label = btn.textContent; btn.textContent = 'L’assistant écrit…';
@@ -1060,7 +1068,7 @@
     var h = '<p class="ed-lab">Partager</p><div class="ed-row"><button type="button" class="ed-chip" data-share="copy">Copier le lien</button><a class="ed-chip" style="display:inline-flex;align-items:center;text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent((ctx.title || 'Invitation') + ' : ' + link) + '">WhatsApp</a></div>' +
       // the helpers (173): the poster, the check, the print
       '<p class="ed-lab">Une affiche à partager</p><div class="ed-row"><button type="button" class="ed-chip" data-poster="story">Statut WhatsApp (vertical)</button><button type="button" class="ed-chip" data-poster="carre">Publication (carrée)</button></div>' +
-      '<p class="ed-lab">Avant d’envoyer</p><div class="ed-row"><button type="button" class="ed-chip" data-check>Vérifier ma carte</button><button type="button" class="ed-chip" data-print>Imprimer · PDF' + (ctx.pro === false ? ' · 🔒 Pro' : '') + '</button></div>' +
+      '<p class="ed-lab">Avant d’envoyer</p><div class="ed-row"><button type="button" class="ed-chip" data-check>Vérifier ma carte</button><button type="button" class="ed-chip" data-print>Imprimer · PDF</button></div>' +
       (window.matchMedia && window.matchMedia('(pointer: fine)').matches ? '<p class="ed-help">Au clavier : Ctrl+S enregistre, Ctrl+Z annule, Suppr retire le bloc choisi, Alt+↑ / Alt+↓ le déplace, Alt+D le duplique, Échap ferme.</p>' : '') +
       '<p class="ed-lab">Versions enregistrées</p><div class="ed-list ed-vers" id="edVers"><p class="ed-lab">Chargement…</p></div>' +
       '<p class="ed-lab">La carte classique</p><p style="margin:0 0 10px;font:400 13px/1.45 var(--ed-font);color:var(--ed-mute)">Votre carte d’avant Studio est gardée. Y revenir remet l’ancienne carte pour vos invités ; vos versions Studio restent ici.</p>' +
@@ -1071,7 +1079,6 @@
         if (t.hasAttribute('data-poster')) { makePoster(t.getAttribute('data-poster')); return; }
         if (t.hasAttribute('data-check')) { openCheck(); return; }
         if (t.hasAttribute('data-print')) {
-          if (ctx.pro === false) { toast('L’impression de la carte fait partie de Marakaj Pro.'); return; }
           closeSheet(); sel = null; draw();
           document.body.classList.add('ed-printing');
           setTimeout(function () { window.print(); document.body.classList.remove('ed-printing'); }, 400);
@@ -1162,7 +1169,7 @@
     // a computer's keys (173): save, print, and the chosen block moved, copied or taken away
     var typing = e.target.closest && e.target.closest('[data-f], input, textarea, select, [contenteditable="true"]');
     if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); document.getElementById('edSave').click(); return; }
-    if ((e.ctrlKey || e.metaKey) && e.key === 'p') { e.preventDefault(); if (ctx.pro === false) toast('L’impression de la carte fait partie de Marakaj Pro.'); else { closeSheet(); sel = null; draw(); setTimeout(function () { window.print(); }, 300); } return; }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'p') { e.preventDefault(); closeSheet(); sel = null; draw(); setTimeout(function () { window.print(); }, 300); return; }
     if (e.key === 'Escape') { if (sheet.classList.contains('open')) closeSheet(); else if (sel && !typing) { var bc = blockBar.querySelector('[data-bb="close"]'); if (bc) bc.click(); } return; }
     if (!sel || typing || preview || e.ctrlKey || e.metaKey) return;
     var key = { Delete: 'del', Backspace: 'del', ArrowUp: e.altKey ? 'up' : null, ArrowDown: e.altKey ? 'down' : null, d: e.altKey ? 'dup' : null }[e.key];

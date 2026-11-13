@@ -96,6 +96,7 @@ List<CenterSection> centerSections(BuildContext context) => [
     icon: Icons.account_balance_wallet_outlined,
     pages: [
       CenterPage(context.tr('Pro'), Routes.consolePro),
+      CenterPage(context.tr('Événementiel'), Routes.consoleEvents),
       CenterPage(context.tr('Paiements'), Routes.consoleWave),
       CenterPage(context.tr('Livreurs'), Routes.consoleSettlement),
       CenterPage(context.tr('Cauris'), Routes.consoleCaurisGifts),

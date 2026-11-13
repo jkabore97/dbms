@@ -1,9 +1,11 @@
 # Marakaj — textes pour les stores et YouTube
 
-Brouillon à relire. Ne citez que des fonctions déjà disponibles dans l'app.
-Les lignes sur les événements valent une fois l'Événementiel ouvert à tous (console)
-et Studio en ligne (171). La billetterie n'y est pas : elle a son propre interrupteur
-(`events_tickets`), à citer seulement une fois ouvert.
+Brouillon à relire. Ne citez que des fonctions déjà disponibles dans l'app, et visibles
+par le compte de test des stores. Les lignes sur les événements valent une fois
+l'Événementiel ouvert à tous (Console), ou visible du compte de test. Les lignes entre
+crochets [ ] dépendent d'un interrupteur : la billetterie (`events_tickets`) à citer
+seulement une fois ouverte. Mis à jour pour 182 : l'Événementiel gratuit, Pro pour les
+modèles Premium, l'album des invités et les billets au-delà des gratuits.
 
 **Slogan** : Au Service du Peuple
 
@@ -13,7 +15,7 @@ et Studio en ligne (171). La billetterie n'y est pas : elle a son propre interru
 Marakaj – Boutiques proches
 
 **Description courte (80 car. max)**
-Boutiques près de chez vous, caisse et stock, cartes d'invitation en ligne.
+Boutiques près de chez vous, caisse et stock, cartes d'invitation animées.
 
 **Description complète**
 Marakaj rapproche les boutiques de leurs clients, et les organisateurs de leurs invités.
@@ -29,31 +31,52 @@ Pour les commerçants :
 • Une vitrine en ligne, mise à jour avec votre stock
 
 Pour les organisateurs d'événements (mariage, dot, baptême, anniversaire, gala, concert…) :
-• Des cartes d'invitation en ligne, classiques ou animées, envoyées par un simple lien
-• Studio : composez votre carte au doigt, bloc par bloc — textes, couleurs, polices, photos
+• Des cartes d'invitation en ligne, classiques ou animées, envoyées par un simple lien — avec un bel aperçu dans WhatsApp
+• Studio : composez votre carte au doigt, bloc par bloc — textes, couleurs, polices (vues avant de choisir), photos, fonds animés, pétales qui tombent
 • Les réponses de vos invités au fur et à mesure, et la veille un rappel sur WhatsApp en un geste
 • Une carte d'invité avec QR code, à présenter à l'entrée
-• L'album de la fête, où vos invités ajoutent leurs photos
+• La carte en PDF, à imprimer
+[Seulement une fois `events_tickets` ouvert :]
+• La billetterie : vos invités réservent sur la carte et paient directement chez vous (Orange Money, Moov…) ; billets avec QR code, contrôle à l'entrée même sans réseau
+
+Gratuit pour l'essentiel. Marakaj Pro (abonnement mensuel ou annuel) ajoute :
+• Pour les commerces : la livraison, le paiement en ligne, l'équipe, la comptabilité et plus
+• Pour les événements : les modèles et décors animés Premium, l'album photo des invités (avec validation des photos) et la billetterie sans limite[ — seulement si la billetterie est ouverte]
 
 Marakaj est conçue pour l'Afrique de l'Ouest : en français, sur téléphone, pour le commerce de quartier comme pour les grands jours.
 
 **Catégorie** Shopping (ou Entreprise)
 
+**Nouveautés (500 car. max)**
+• Studio : choisissez une police en la voyant, pétales de toutes les couleurs sur toute la carte, chaque section animée
+• Un bel aperçu de votre carte quand vous partagez son lien sur WhatsApp
+• L'heure de vos événements toujours à l'heure du lieu
+• Vos cartes présentées avec leur image
+• Les fenêtres et champs restent visibles au-dessus du clavier
+• L'Événementiel gratuit ; Marakaj Pro pour les modèles Premium et l'album des invités
+
 ## App Store
 
 **Nom (30 car. max)** Marakaj
-**Sous-titre (30 car. max)** Boutiques, caisse, événements
+**Sous-titre (30 car. max)** Boutiques, caisse, invitations
 **Mots-clés (100 car. max, sans accent pour tenir aussi en octets)**
-boutique,commerce,caisse,stock,livraison,vitrine,commande,invitation,mariage,evenement,Burkina,FCFA
-**Texte promotionnel (170 car. max)** Au Service du Peuple : les boutiques près de vous, et des cartes d'invitation que vous composez au doigt avec Studio.
-**Description** : reprendre la description complète Google Play.
-**Nouveautés de la version 1.0.1**
-Nouveau : l'Événementiel.
-• Créez vos cartes d'invitation en ligne et envoyez-les par un simple lien.
-• Studio : composez votre carte au doigt. Déplacez, ajoutez, masquez chaque bloc ; changez textes, couleurs et photos.
-• Suivez les réponses de vos invités et rappelez-les la veille sur WhatsApp.
-• Accueillez-les avec leur carte d'invité et son QR code.
-Et des améliorations dans toute l'app.
+boutique,commerce,caisse,stock,livraison,vitrine,invitation,mariage,carte,evenement,Burkina,FCFA
+**Texte promotionnel (170 car. max)** Au Service du Peuple : les boutiques près de vous, et des cartes d'invitation animées que vous composez au doigt avec Studio.
+**Description** : reprendre la description complète Google Play, mêmes lignes (Apple et Google doivent dire la même chose ; ce qui est écrit doit être visible par le compte de test).
+**Nouveautés de la version** : reprendre les Nouveautés Google Play.
+**Notes pour la revue (App Review Information › Notes)**
+Compte de démonstration : celui de `store_review_account`. Il ouvre une boutique, une ferme, une association[ et un Événementiel avec une carte d'exemple]. Les cartes d'invitation s'ouvrent dans le navigateur (lien https://marakaj.com/e/…) : aucune connexion n'est demandée aux invités. Marakaj Pro s'achète dans l'app par l'abonnement de l'App Store.
+
+## Avant d'envoyer aux stores (à cocher)
+
+1. **Ce que la description promet, le compte de test le voit.** Aujourd'hui `events_public` est fermé et le compte de test n'a pas d'Événementiel : soit ouvrir l'Événementiel à tous (Console), soit donner au compte de test un Événementiel avec une carte d'exemple — sinon retirer de la description les lignes « organisateurs d'événements ».
+2. **La billetterie** : ne la citer que si `events_tickets` est ouvert (Console › Événementiel l'indique).
+3. **Marakaj Pro** : l'abonnement des stores (`store_billing_on`) est ouvert ; les prix des produits d'abonnement dans App Store Connect et la Play Console doivent correspondre à ceux de la Console › Pro.
+4. **Captures d'écran** : refaire celles des cartes (nouvelle liste « Cartes », Studio, aperçu WhatsApp) — elles doivent montrer l'app actuelle.
+5. **Version** : augmenter le numéro de version et de build (`app/pubspec.yaml`) avant la compilation Codemagic et la construction Android.
+6. **iPhone** : Associated Domains (applinks:marakaj.com) dans le profil de l'identifiant bf.kaj.app, sinon les liens de billets n'ouvrent pas l'app (ce n'est pas bloquant pour la revue).
+7. **Assistant d'écriture** : la clé `ANTHROPIC_API_KEY` doit être ajoutée dans Cloudflare (par vous) ; sans elle Studio répond « pas disponible » — retirer « assistant » des textes tant qu'elle manque.
+8. **Notifications du compte de test** : pendant la revue, les testeurs se connectent et envoient des notifications test ; c'est normal.
 
 ## YouTube
 
