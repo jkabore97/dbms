@@ -9283,8 +9283,8 @@ const enStrings = <String, String>{
       'Free tickets per card',
   'Au-delà, la carte ne vend plus en ligne sans Marakaj Pro.':
       'Past that, the card stops selling online without Marakaj Pro.',
-  'La vente de billets est encore fermée à tous (réglage events_tickets).':
-      'Ticket sales are still closed to everyone (setting events_tickets).',
+  'La vente de billets est encore fermée à tous (Réglages › Événementiel › Billetterie).':
+      'Ticket sales are still closed to everyone (Settings › Événementiel › Ticketing).',
   'Textes de l’assistant gratuits par jour et par carte':
       'Free assistant texts per day and per card',
   '0 : l’assistant réservé à Marakaj Pro.':
@@ -9438,4 +9438,6 @@ const enStrings = <String, String>{
       'From {from} to {until}',
   'par défaut : le jour de l’événement et les 7 jours suivants':
       'default: the day of the event and the 7 days after',
+  'Billetterie ouverte à tous les Événementiels (sinon : celui de Marakaj seulement)':
+      'Ticketing open to every Événementiel (otherwise: Marakaj\'s own only)',
 };

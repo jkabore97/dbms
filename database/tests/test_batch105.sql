@@ -811,7 +811,9 @@ declare
         'order_open_max_per_shop', 'order_first_open_max', 'courier_cash_cap', 'till_gap_review',
         -- 152: read by events_public_on(), which the events' policies, the
         -- card (event_public) and the street's switch (events_options) ask.
-        'events_public'];
+        'events_public',
+        -- 161: read by event_tickets_allowed() (182), the tickets' guard.
+        'events_tickets'];
     v_dead text;
     v_missing text;
 begin

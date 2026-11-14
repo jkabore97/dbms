@@ -682,7 +682,11 @@ void main() {
       expect(def.type, SettingType.flag);
       expect(def.group, 'events');
       expect(settingCardOf('events_public')?.key, 'evenements');
-      expect(platformSettingDefs.last.key, 'events_public', reason: 'appended, as in test_batch105\'s list');
+      // 184's fix: the ticketing switch beside it, appended as in test_batch105's list
+      final tickets = platformSettingDefs.firstWhere((d) => d.key == 'events_tickets');
+      expect(tickets.type, SettingType.flag);
+      expect(settingCardOf('events_tickets')?.key, 'evenements');
+      expect(platformSettingDefs.last.key, 'events_tickets', reason: 'appended, as in test_batch105\'s list');
     });
 
     test('the kinds and the cards: every card belongs to a kind the presets know', () {

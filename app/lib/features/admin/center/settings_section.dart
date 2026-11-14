@@ -199,6 +199,9 @@ const platformSettingDefs = <SettingDef>[
   // Marakaj's admins' alone (the owner: « admin only can view … a tab in
   // admin that can allow me to switch the feature to public view »).
   SettingDef('events_public', 'events', SettingType.flag),
+  // 161: ticket sales open to every Événementiel (off: Marakaj's own
+  // business alone, 182) — until now set only in the database.
+  SettingDef('events_tickets', 'events', SettingType.flag),
 ];
 
 /// One of Réglages' nine cards (135, 152): its address, its icon, and the
@@ -292,7 +295,7 @@ const settingCards = <SettingCard>[
   ]),
   // 152: the ninth card — one switch, the whole module's.
   SettingCard('evenements', Icons.celebration_outlined, [
-    ('visibility', ['events_public']),
+    ('visibility', ['events_public', 'events_tickets']),
   ]),
 ];
 
@@ -430,6 +433,8 @@ String settingGroupLabel(BuildContext context, String group) => switch (group) {
 String settingLabel(BuildContext context, String key) => switch (key) {
       'events_public' =>
         context.tr('Événementiel visible par toutes les entreprises (sinon : les administrateurs de Marakaj seulement)'),
+      'events_tickets' =>
+        context.tr('Billetterie ouverte à tous les Événementiels (sinon : celui de Marakaj seulement)'),
       'pro_price_month' =>context.tr('Prix de Marakaj Pro, par mois — FCFA (zone franc CFA)'),
       'pro_price_year' => context.tr('Prix de Marakaj Pro, par an — FCFA (zone franc CFA)'),
       'pro_price_month_eur' => context.tr('Prix de Marakaj Pro, par mois — euros (zone euro)'),
