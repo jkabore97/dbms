@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../events/events_access.dart' show eventsShownFor;
 import '../notify/notifications_screen.dart' show ShopperBell;
 import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
@@ -1791,7 +1792,11 @@ class StreetInviteCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(right: 10),
             child: Text(
-              context.tr('Vous vendez, élevez ou gérez une association ?'),
+              // the Événementiel named too once it is offered (152, as the
+              // creation's own screen: create_my_business_screen)
+              eventsShownFor(context)
+                  ? context.tr('Vous vendez, élevez, gérez une association ou organisez des événements ?')
+                  : context.tr('Vous vendez, élevez ou gérez une association ?'),
               style: const TextStyle(
                   fontSize: 20,
                   height: 1.2,
@@ -1807,6 +1812,7 @@ class StreetInviteCard extends StatelessWidget {
               chip(Icons.storefront_outlined, context.tr('Boutique')),
               chip(Icons.agriculture_outlined, context.tr('Ferme')),
               chip(Icons.volunteer_activism_outlined, context.tr('Association')),
+              if (eventsShownFor(context)) chip(Icons.celebration_outlined, context.tr('Événementiel')),
             ],
           ),
           const SizedBox(height: 16),

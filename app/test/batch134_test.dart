@@ -158,8 +158,13 @@ class _Carnet extends CreditRepository {
 
 /// The server as the session reads it: these locks on Le Chemin.
 class _Admin extends AdminRepository {
-  _Admin({this.locks = const {}}) : super(null);
+  _Admin({this.locks = const {}, this.events = false}) : super(null);
   final Map<String, bool> locks;
+
+  /// The platform's Événementiel switch (152).
+  final bool events;
+  @override
+  Future<bool> eventsPublic() async => events;
   @override
   Future<bool> isPlatformAdmin() async => false;
   @override
@@ -346,11 +351,11 @@ void main() {
   });
   tearDown(() => db.close());
 
-  SessionController session0({List<OrgSummary> orgs = const [], Map<String, bool> locks = const {}}) =>
+  SessionController session0({List<OrgSummary> orgs = const [], Map<String, bool> locks = const {}, bool events = false}) =>
       SessionController(
         db: db,
         auth: _Server(orgs),
-        admin: _Admin(locks: locks),
+        admin: _Admin(locks: locks, events: events),
         accounting: AccountingRepository(null),
       );
 
@@ -822,6 +827,16 @@ void main() {
       }
     });
 
+    testWidgets('the invite card names the Événementiel once it is open to all (the owner)', (tester) async {
+      final s = session0(events: true);
+      await tester.runAsync(s.resolveOrgs);
+      expect(s.eventsPublic, isTrue);
+      await street(tester, s, shopper: _Shopper(pending: false));
+      expect(find.text('Vous vendez, élevez, gérez une association ou organisez des événements ?'), findsOneWidget);
+      expect(find.descendant(of: find.byKey(const Key('street-invite')), matching: find.text('Événementiel')), findsOneWidget);
+      s.dispose();
+    });
+
     testWidgets('the invite card: at the top of the list, straight to the form, closed for good', (tester) async {
       final s = await noBusiness(tester);
       final router = await street(tester, s, shopper: _Shopper(pending: false));
@@ -832,6 +847,8 @@ void main() {
         expect(find.descendant(of: find.byKey(const Key('street-invite')), matching: find.text(chip)),
             findsOneWidget);
       }
+      // Événementiel closed to the public: not offered here (as on the creation screen)
+      expect(find.descendant(of: find.byKey(const Key('street-invite')), matching: find.text('Événementiel')), findsNothing);
       // Above the shops.
       expect(tester.getRect(find.byKey(const Key('street-invite'))).top,
           lessThan(tester.getRect(find.text('Tony Pizza')).top));
