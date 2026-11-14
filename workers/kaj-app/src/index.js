@@ -391,6 +391,27 @@ const ANIMATED = /^anime_[a-z]+(_p)?$/;
 // The day and hour of an instant on the organiser's clock: the zone's name
 // (Africa/Ouagadougou, America/New_York) or the phone's offset for that
 // day (« -05:00 »); an unknown zone reads on Ouagadougou's clock.
+// The kinds of event, in the app's words (events_repository.dart).
+export const EVENT_KINDS = {
+  mariage: "Mariage", dot: "Fiançailles, dot", anniversaire: "Anniversaire", bapteme: "Baptême",
+  naissance: "Naissance, dénomination", diplome: "Remise de diplômes", gala: "Soirée, gala",
+  inauguration: "Inauguration", concert: "Concert, spectacle", culture: "Festival, événement culturel",
+  conference: "Conférence, séminaire", retraite: "Départ à la retraite", hommage: "Hommage",
+};
+
+// « samedi 21 novembre 2026 à 10 h » from the card's own clock (localParts).
+export function dayInFrench(date, time) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date || "");
+  if (!m) return null;
+  const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+  const days = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
+  const months = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+  let s = `${days[d.getUTCDay()]} ${+m[3] === 1 ? "1er" : +m[3]} ${months[+m[2] - 1]} ${m[1]}`;
+  const t = /^(\d{2}):(\d{2})$/.exec(time || "");
+  if (t) s += ` à ${+t[1]} h${t[2] === "00" ? "" : " " + t[2]}`;
+  return s;
+}
+
 function localParts(iso, tz) {
   const none = { date: null, time: null };
   if (!iso) return none;
@@ -998,10 +1019,14 @@ async function cardPage(request, env, { slug, data, preview, edit, editor, demo,
   // Safe inside <script>: no « < » (so no « </script> »), no line separators.
   const json = JSON.stringify(boot).replace(/</g, "\\u003c").replace(/[\u2028\u2029]/g, "");
   const title = `${data.title} · Marakaj`;
+  // What the event is, when, where (« Fiançailles, dot · samedi 21 novembre
+  // 2026 à 10 h · Bazoulé ») — not the business's name, which read as the
+  // kind (« Une invitation de Mariage Phanuel & Esperance » for a dot).
   const description = clip([
+    EVENT_KINDS[data.kind] || null,
+    when.date ? dayInFrench(when.date, when.time) : null,
     data.place,
-    data.org_name ? `Une invitation de ${data.org_name}` : "Une invitation sur Marakaj",
-  ].filter(Boolean).join(" · "), 160);
+  ].filter(Boolean).join(" · ") || "Une invitation sur Marakaj", 160);
 
   // The picture a shared link shows: the card itself (180) — its wide
   // picture, else its own tall one (177) — else its first photo (173).

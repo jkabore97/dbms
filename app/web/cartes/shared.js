@@ -1172,7 +1172,9 @@
         rules = j;
         var said = [];
         if (j.limit) said.push((j.per_pass || 5) + ' photos par invité : répondez d’abord à l’invitation (ou réservez votre billet) sur ce téléphone.');
+        if (!j.limit && j.open_quota) said.push('Ouvert à tous : ' + j.open_quota + ' photo' + (j.open_quota > 1 ? 's' : '') + ' par personne.');
         if (j.review) said.push('Elles apparaissent dans l’album une fois validées par l’organisateur.');
+        fitPicker();
         if (said.length && note) note.textContent = said.join(' ');
         if (j.review && meta.length > 1) meta[meta.length - 1].textContent = 'Validées par l’organisateur';
       }).catch(function () {});
@@ -1186,6 +1188,20 @@
         counted();
       }).catch(function () {});
       var refused = '';
+      // So many per phone (179): the photos this phone sent, counted here too, so the
+      // picker takes no more than are left; the name first, under each photo
+      var sentKey = 'mk-album-sent:' + SERVER.slug;
+      var sent = function () { try { return +localStorage.getItem(sentKey) || 0; } catch (e) { return 0; } };
+      var left = function () { return !rules.limit && rules.open_quota ? Math.max(0, rules.open_quota - sent()) : null; };
+      var fitPicker = function () { var l = left(); input.multiple = l === null || l > 1; };
+      var needName = function () {
+        if (who && !who.value.trim()) { toast('Écrivez d’abord votre nom : il s’affiche sous vos photos.'); who.focus(); return true; }
+        return false;
+      };
+      input.addEventListener('click', function (e) {
+        if (needName()) { e.preventDefault(); return; }
+        if (left() === 0) { e.preventDefault(); toast('Vous avez déjà envoyé vos ' + rules.open_quota + ' photo' + (rules.open_quota > 1 ? 's' : '') + ' : c’est le maximum par personne.'); }
+      });
       var send = function (file) {
         if (!file.type || file.type.indexOf('image/') !== 0) return Promise.resolve(null);
         var name = (who && who.value.trim()) || '';
@@ -1200,6 +1216,7 @@
                   return j;
                 }, function () { throw new Error('La photo n’est pas passée. Réessayez.'); });
               }).then(function (j) {
+                try { localStorage.setItem(sentKey, String(sent() + 1)); } catch (e) {}
                 // Waiting for the organiser's yes (164): not in the album yet.
                 if (!rules.review) { grid.insertBefore(figureFor(src, picUrl(j.key), name), grid.firstChild); n++; counted(); }
                 res(j);
@@ -1210,11 +1227,18 @@
       };
       var sendAll = function (files) {
         if (!files.length) return;
+        if (needName()) return;
+        var l = left(), cut = '';
+        if (l !== null && files.length > l) {
+          if (l === 0) { toast('Vous avez déjà envoyé vos ' + rules.open_quota + ' photos : c’est le maximum par personne.'); return; }
+          files = files.slice(0, l); cut = ' (vos ' + l + ' première' + (l > 1 ? 's' : '') + ' seulement : ' + rules.open_quota + ' par personne)';
+        }
         toast(files.length > 1 ? 'Envoi des photos…' : 'Envoi de la photo…');
         // one after the other (181): each counted after those before it
         refused = '';
         oneByOne(files, send).then(function (r) {
-          var k = r.filter(Boolean).length, more = refused ? ' — ' + refused : '';
+          var k = r.filter(Boolean).length, more = cut + (refused ? ' — ' + refused : '');
+          fitPicker();
           if (k && rules.review) toast((k > 1 ? k + ' photos envoyées : visibles après validation' : 'Photo envoyée : visible après validation') + more);
           else if (k) toast((k > 1 ? k + ' photos ajoutées à l’album' : 'Photo ajoutée à l’album') + more);
         });

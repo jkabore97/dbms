@@ -153,13 +153,14 @@ class EventsRepository {
   /// the place — the row's, changed by the business's admins as 152's
   /// policy allows; the pages read them at their next opening. The offset
   /// goes with the hour, as at creation.
-  Future<void> update(String id, {required String title, required String kind, DateTime? startsAt, String? place}) async {
+  /// With [keepZone], the card keeps its own zone (the hour was chosen on it).
+  Future<void> update(String id, {required String title, required String kind, DateTime? startsAt, String? place, bool keepZone = false}) async {
     await _require().from('events').update({
       'title': title,
       'kind': kind,
       'starts_at': startsAt?.toUtc().toIso8601String(),
       'place': place,
-      if (startsAt != null) 'tz': offsetOf(startsAt),
+      if (startsAt != null && !keepZone) 'tz': offsetOf(startsAt),
     }).eq('id', id);
   }
 

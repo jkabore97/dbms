@@ -481,7 +481,7 @@
       var closed = ctx.album_on === false || !ctx.uploads || sample(ctx);
       return F(b, ctx, 'title', 'h2', 'st-h2', 'Titre') + F(b, ctx, 'lead', 'p', 'st-lead', 'Un mot', true) +
         (closed ? (ctx.editing ? '<p class="st-note">L\'album est fermé : vos invités verront « L\'album est fermé pour cet événement ».</p>' : '<p class="st-lead st-closed">L\'album est fermé pour cet événement.</p>')
-          : '<div class="st-album" data-album><label>Votre nom (sous la photo)<input name="who" maxlength="60" placeholder="Nora"></label><label class="st-btn">' + icon('camera') + 'Ajouter des photos<input type="file" accept="image/*" multiple hidden></label><p class="st-done" role="status"></p><div class="st-album-g"></div></div>');
+          : '<div class="st-album" data-album><label>Votre nom (sous la photo)<input name="who" maxlength="60"></label><label class="st-btn">' + icon('camera') + 'Ajouter des photos<input type="file" accept="image/*" multiple hidden></label><p class="st-done" role="status"></p><div class="st-album-g"></div></div>');
     }
   };
   B.pass = {
@@ -854,12 +854,28 @@
     Array.prototype.forEach.call(root.querySelectorAll('[data-album]'), function (box) {
       var grid = box.querySelector('.st-album-g'), say = box.querySelector('.st-done'), input = box.querySelector('input[type=file]'), who = box.querySelector('input[name=who]'), rules = {};
       var fig = function (src, name) { var d = document.createElement('figure'); d.innerHTML = '<img alt="" loading="lazy"><figcaption></figcaption>'; d.querySelector('img').src = src; d.querySelector('figcaption').textContent = name || 'Un invité'; return d; };
-      api(ctx, 'event_album_rules', { p_slug: ctx.slug, p_preview: ctx.preview || null }).then(function (j) { rules = j || {}; if (rules.open_quota && !say.textContent) say.textContent = 'Ouvert à tous : ' + rules.open_quota + ' photo' + (rules.open_quota > 1 ? 's' : '') + ' par personne.'; }, function () {});
+      api(ctx, 'event_album_rules', { p_slug: ctx.slug, p_preview: ctx.preview || null }).then(function (j) { rules = j || {}; fitPicker(); if (rules.open_quota && !say.textContent) say.textContent = 'Ouvert à tous : ' + rules.open_quota + ' photo' + (rules.open_quota > 1 ? 's' : '') + ' par personne.'; }, function () {});
       api(ctx, 'event_album', { p_slug: ctx.slug, p_preview: ctx.preview || null }).then(function (l) { (Array.isArray(l) ? l : []).forEach(function (p) { if (p && p.key) grid.appendChild(fig(picSrc({ key: p.key }, ctx, 400), p.guest)); }); }, function () {});
+      // So many per phone (179): the photos this phone sent, counted here too, so the
+      // picker takes no more than are left (a browser's picker has no number of its own)
+      var sentKey = 'mk-album-sent:' + ctx.slug;
+      var sent = function () { try { return +localStorage.getItem(sentKey) || 0; } catch (e) { return 0; } };
+      var left = function () { return rules.open_quota ? Math.max(0, rules.open_quota - sent()) : null; };
+      var fitPicker = function () { var l = left(); input.multiple = l === null || l > 1; };
+      // the name first: it goes under each photo (the owner: « name should be required »)
+      input.addEventListener('click', function (e) {
+        if (ctx.demo) return;
+        if (!who.value.trim()) { e.preventDefault(); say.textContent = 'Écrivez d’abord votre nom : il s’affiche sous vos photos.'; who.focus(); return; }
+        if (left() === 0) { e.preventDefault(); say.textContent = 'Vous avez déjà envoyé vos ' + rules.open_quota + ' photo' + (rules.open_quota > 1 ? 's' : '') + ' : c’est le maximum par personne.'; }
+      });
       input.addEventListener('change', function () {
         var files = Array.prototype.slice.call(input.files); input.value = '';
         if (!files.length) return;
         if (ctx.demo) { say.textContent = 'Aperçu : vos invités ajoutent leurs photos sur la vraie carte.'; return; }
+        if (!who.value.trim()) { say.textContent = 'Écrivez d’abord votre nom : il s’affiche sous vos photos.'; who.focus(); return; }
+        var l = left(), cut = '';
+        if (l !== null && files.length > l) { files = files.slice(0, l); cut = l === 0 ? '' : ' (vos ' + l + ' première' + (l > 1 ? 's' : '') + ' seulement : ' + rules.open_quota + ' par personne)'; }
+        if (!files.length) { say.textContent = 'Vous avez déjà envoyé vos ' + rules.open_quota + ' photos : c’est le maximum par personne.'; return; }
         say.textContent = files.length > 1 ? 'Envoi des photos…' : 'Envoi de la photo…';
         var pass = (function () { try { var s = JSON.parse(localStorage.getItem(passKey(ctx)) || 'null'); return s && s.pass || ''; } catch (e) { return ''; } })();
         // one after the other (181): each counted after those before it
@@ -870,10 +886,10 @@
               if (!blob) return res(null);
               fetch(ctx.uploads + '/v1/events/' + encodeURIComponent(ctx.slug) + '/album?apercu=' + encodeURIComponent(ctx.preview || '') + '&invite=' + encodeURIComponent(who.value.trim()) + '&pass=' + encodeURIComponent(pass) + '&device=' + encodeURIComponent(phoneId()), { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob })
                 .then(function (r) { return r.json().then(function (j) { if (!r.ok || !j || !j.key) throw new Error(j && j.error ? j.error : 'La photo n\'est pas passée.'); return j; }); })
-                .then(function (j) { if (!rules.review) grid.insertBefore(fig(URL.createObjectURL(blob), who.value.trim()), grid.firstChild); res(j); }, function (err) { refused = err.message; say.textContent = err.message; res(null); });
+                .then(function (j) { try { localStorage.setItem(sentKey, String(sent() + 1)); } catch (e) {} if (!rules.review) grid.insertBefore(fig(URL.createObjectURL(blob), who.value.trim()), grid.firstChild); res(j); }, function (err) { refused = err.message; say.textContent = err.message; res(null); });
             });
           });
-        }).then(function (r) { var k = r.filter(Boolean).length; if (k) say.textContent = rules.review ? (k > 1 ? k + ' photos envoyées : visibles après validation' : 'Photo envoyée : visible après validation') : (k > 1 ? k + ' photos ajoutées à l\'album' : 'Photo ajoutée à l\'album'); if (k && refused) say.textContent += ' — ' + refused; });
+        }).then(function (r) { var k = r.filter(Boolean).length; if (k) say.textContent = rules.review ? (k > 1 ? k + ' photos envoyées : visibles après validation' : 'Photo envoyée : visible après validation') : (k > 1 ? k + ' photos ajoutées à l\'album' : 'Photo ajoutée à l\'album'); if (k && cut) say.textContent += cut; if (k && refused) say.textContent += ' — ' + refused; fitPicker(); });
       });
     });
   };
