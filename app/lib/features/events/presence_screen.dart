@@ -284,7 +284,10 @@ class _PresenceScreenState extends State<PresenceScreen> {
         ),
       const SizedBox(height: 14),
       if (album) ...[
-        Text(context.tr('Vous pouvez maintenant ajouter vos photos de la fête : {n} au plus.', {'n': inv.photosLimit}),
+        Text(
+            inv.photosOpen
+                ? context.tr('Vous pouvez maintenant ajouter vos photos de la fête : {n} au plus.', {'n': inv.photosLimit})
+                : context.tr('Vous pourrez ajouter vos photos de la fête : {n} au plus.', {'n': inv.photosLimit}),
             style: theme.textTheme.bodyMedium),
         const SizedBox(height: 10),
         ConstrainedBox(
@@ -296,6 +299,11 @@ class _PresenceScreenState extends State<PresenceScreen> {
             label: Text('${context.tr('Ajouter des photos')} · ${inv.photosUsed} / ${inv.photosLimit}'),
           ),
         ),
+        if (photoDaysNote(context, inv, DateTime.now()) case final note?)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(note, key: const Key('presence-photo-days'), style: theme.textTheme.bodySmall),
+          ),
         const SizedBox(height: 10),
       ],
       OutlinedButton.icon(

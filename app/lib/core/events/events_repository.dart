@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../db/local_db.dart';
@@ -202,6 +203,13 @@ class EventsRepository {
   /// The organiser's yes: a guest's picture joins the card's album.
   Future<void> approvePicture(String key) async {
     await _require().rpc('event_picture_approve', params: {'p_key': key});
+  }
+
+  /// The days the guests add their photos (184): both null for the
+  /// default (the event's day and the seven after).
+  Future<void> setAlbumDays(String id, DateTime? from, DateTime? until) async {
+    String? day(DateTime? d) => d == null ? null : DateFormat('yyyy-MM-dd').format(d);
+    await _require().from('events').update({'album_from': day(from), 'album_until': day(until)}).eq('id', id);
   }
 
   Future<void> setAlbumOn(String id, bool on) async {
@@ -466,6 +474,8 @@ class EventSummary {
     this.streetPicture,
     this.tz,
     this.cardPreview,
+    this.albumFrom,
+    this.albumUntil,
   });
 
   factory EventSummary.fromJson(Map<String, dynamic> j) => EventSummary(
@@ -490,7 +500,29 @@ class EventSummary {
         streetPicture: j['street_picture'] as String?,
         tz: j['tz'] as String?,
         cardPreview: j['card_preview'] as String?,
+        albumFrom: _day(j['album_from']),
+        albumUntil: _day(j['album_until']),
       );
+
+  static DateTime? _day(Object? v) {
+    final d = v == null ? null : DateTime.tryParse('$v');
+    return d == null ? null : DateTime(d.year, d.month, d.day);
+  }
+
+  /// The days the guests add their photos (184), as the organiser set
+  /// them; null for the default.
+  final DateTime? albumFrom;
+  final DateTime? albumUntil;
+
+  /// The first and last of those days, the default filled in as the server
+  /// does: the event's day on its own clock, and seven days after the first.
+  DateTime? get albumOpens {
+    if (albumFrom != null) return albumFrom;
+    final w = startsWall;
+    return w == null ? null : DateTime(w.year, w.month, w.day);
+  }
+
+  DateTime? get albumCloses => albumUntil ?? albumOpens?.add(const Duration(days: 7));
 
   /// The card's own picture (177), drawn by Studio: its key, for the list.
   final String? cardPreview;

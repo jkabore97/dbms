@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_picker_android/image_picker_android.dart';
+import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
 import 'package:sqflite/sqflite.dart' show databaseFactory;
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import 'package:go_router/go_router.dart';
@@ -127,6 +129,13 @@ Future<void> _startup() async {
   if (kIsWeb) {
     databaseFactory = databaseFactoryFfiWeb;
   }
+
+  // The gallery stops at the photos a guest has left (184): Android's own
+  // photo picker honours the limit, Google Photos' (the default) does not.
+  // iOS's picker honours it already; a browser's never does (the extras are
+  // cut and the guest told, in my_invitations_screen).
+  final picker = ImagePickerPlatform.instance;
+  if (picker is ImagePickerAndroid) picker.useAndroidPhotoPicker = true;
 
   // French and English calendars only (core/l10n/fr_en_localizations.dart):
   // intl's initializeDateFormatting brought every language's into the web

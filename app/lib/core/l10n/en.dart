@@ -9414,4 +9414,28 @@ const enStrings = <String, String>{
       'Only your first {n} photos are sent (5 per guest).',
   'Cet événement est annulé.':
       'This event is cancelled.',
+  'Les photos s’ajoutent à partir du {day}.':
+      'Photos can be added from {day}.',
+  'L’ajout de photos est clos.':
+      'Adding photos is closed.',
+  'L’ajout de photos est clos depuis le {day}.':
+      'Adding photos closed on {day}.',
+  'Jusqu’au {day}.':
+      'Until {day}.',
+  'Vous pourrez ajouter vos photos de la fête : {n} au plus.':
+      'You will be able to add your photos of the party: {n} at most.',
+  'Jours pour ajouter les photos':
+      'Days to add photos',
+  'Revenir au réglage par défaut':
+      'Back to the default',
+  'Le jour de l’événement et les 7 jours suivants':
+      'The day of the event and the 7 days after',
+  'Jours des photos enregistrés':
+      'Photo days saved',
+  'Tous les jours : la carte n’a pas de date.':
+      'Every day: the card has no date.',
+  'Du {from} au {until}':
+      'From {from} to {until}',
+  'par défaut : le jour de l’événement et les 7 jours suivants':
+      'default: the day of the event and the 7 days after',
 };

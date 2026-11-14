@@ -540,7 +540,7 @@ void main() {
       // The second answer sits below the fold: the list builds it on scroll.
       await tester.scrollUntilVisible(find.text('Ne viendra pas'), 200, scrollable: find.byType(Scrollable).first);
       expect(find.text('Ne viendra pas'), findsOneWidget);
-      await tester.drag(find.byType(Scrollable).first, const Offset(0, 800));
+      await tester.scrollUntilVisible(find.byKey(const Key('event-preview')), -200, scrollable: find.byType(Scrollable).first);
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.byKey(const Key('event-preview')));
       await tester.pumpAndSettle();

@@ -168,6 +168,9 @@ class MyInvitation {
     this.photosUsed = 0,
     this.photosLimit = 5,
     this.photos = const [],
+    this.photosFrom,
+    this.photosUntil,
+    this.photosOpen = true,
   });
 
   factory MyInvitation.fromJson(Map<String, dynamic> j) => MyInvitation(
@@ -191,7 +194,16 @@ class MyInvitation {
           for (final p in (j['photos'] as List? ?? const []))
             if (p is Map && p['key'] is String) (key: p['key'] as String, approved: p['approved'] != false),
         ],
+        photosFrom: _day(j['photos_from']),
+        photosUntil: _day(j['photos_until']),
+        // a server of before 184 says nothing: any day, as then
+        photosOpen: j['photos_open'] != false,
       );
+
+  static DateTime? _day(Object? v) {
+    final d = v == null ? null : DateTime.tryParse('$v');
+    return d == null ? null : DateTime(d.year, d.month, d.day);
+  }
 
   final String id;
   final String slug;
@@ -221,7 +233,25 @@ class MyInvitation {
   /// The guest's own photos sent, newest first.
   final List<({String key, bool approved})> photos;
 
-  bool get canAddPhotos => albumOn && albumAllowed && photosUsed < photosLimit;
+  /// The days the guests add their photos (184), on the card's clock: by
+  /// default the event's day and the seven after; the organiser's own
+  /// otherwise. Null: no limit that side.
+  final DateTime? photosFrom;
+  final DateTime? photosUntil;
+
+  /// Today is one of those days (the server's word).
+  final bool photosOpen;
+
+  /// Not yet one of the days: before the first (else, after the last).
+  bool photosSoon(DateTime now) {
+    final from = photosFrom;
+    if (photosOpen || from == null) return false;
+    final off = eventZoneOffset(tz);
+    final w = off == null ? now : now.toUtc().add(off);
+    return DateTime(w.year, w.month, w.day).isBefore(from);
+  }
+
+  bool get canAddPhotos => albumOn && albumAllowed && photosOpen && photosUsed < photosLimit;
   int get photosLeft => (photosLimit - photosUsed).clamp(0, photosLimit);
 
   /// When it starts on the card's own clock, as EventSummary.startsWall.

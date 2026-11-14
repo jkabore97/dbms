@@ -88,6 +88,11 @@ dependencies:
   # which is why it was chosen over a full camera package — M5 needs one
   # photograph, not a viewfinder.
   image_picker: ^1.1.2
+  # Android's own photo picker (184): the only gallery on Android that
+  # stops at the guest's photos left (« 5 par invité ») — Google Photos'
+  # picker, the default, ignores the limit. Set once in main.dart.
+  image_picker_android: ^0.8.13+19
+  image_picker_platform_interface: ^2.11.1
 
   # Talks to the upload Worker. Supabase's client cannot be used for it: the
   # bytes go to Cloudflare, not to PostgREST, and every read is authorised, so

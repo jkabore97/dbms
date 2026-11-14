@@ -41,6 +41,28 @@ Future<List<PickedPhoto>> pickGuestPhotos(int limit) async {
   ];
 }
 
+/// Why « Ajouter des photos » waits or is over (184): the card's days —
+/// « Les photos s'ajoutent à partir du samedi 21 novembre. », « L'ajout de
+/// photos est clos depuis le … ». Null on one of the days.
+String? photoDaysNote(BuildContext context, MyInvitation inv, DateTime now) {
+  if (inv.photosOpen) return null;
+  String day(DateTime d) => DateFormat('EEEE d MMMM', context.trLocale).format(d);
+  if (inv.photosSoon(now)) {
+    return context.tr('Les photos s’ajoutent à partir du {day}.', {'day': day(inv.photosFrom!)});
+  }
+  final until = inv.photosUntil;
+  return until == null
+      ? context.tr('L’ajout de photos est clos.')
+      : context.tr('L’ajout de photos est clos depuis le {day}.', {'day': day(until)});
+}
+
+/// The last day, said under the button while the photos are open (184).
+String? photoUntilNote(BuildContext context, MyInvitation inv) {
+  final until = inv.photosUntil;
+  if (!inv.photosOpen || until == null) return null;
+  return context.tr('Jusqu’au {day}.', {'day': DateFormat('EEEE d MMMM', context.trLocale).format(until)});
+}
+
 /// « Ajouter des photos » for one confirmed card: no more than are left of
 /// the five, sent one after the other (each counted by the server after
 /// those before it). Says what happened; returns how many went.
@@ -246,6 +268,8 @@ class _MyInvitationsScreenState extends State<MyInvitationsScreen> {
             const SizedBox(height: 6),
             if (!albumOpen)
               Text(context.tr('L’album de cette carte est fermé.'), style: theme.textTheme.bodySmall)
+            else if (photoDaysNote(context, inv, (widget.now ?? DateTime.now)()) case final note?)
+              Text(note, key: ValueKey('invitation-days-${inv.id}'), style: theme.textTheme.bodySmall)
             else if (!inv.canAddPhotos)
               Text(context.tr('Vous avez déposé vos {n} photos : c’est le maximum par invité.', {'n': inv.photosLimit}),
                   style: theme.textTheme.bodySmall)
@@ -256,6 +280,8 @@ class _MyInvitationsScreenState extends State<MyInvitationsScreen> {
                     : context.tr('Jusqu’à {n} photos chacun : elles s’affichent sur la carte, sous votre nom.', {'n': inv.photosLimit}),
                 style: theme.textTheme.bodySmall,
               ),
+            if (albumOpen && inv.canAddPhotos && photoUntilNote(context, inv) != null)
+              Text(photoUntilNote(context, inv)!, key: ValueKey('invitation-until-${inv.id}'), style: theme.textTheme.bodySmall),
             if (inv.photos.isNotEmpty) ...[
               const SizedBox(height: 12),
               Text(context.tr('Vos photos'), style: const TextStyle(fontWeight: FontWeight.w700)),
