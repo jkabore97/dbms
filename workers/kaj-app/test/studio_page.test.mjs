@@ -386,3 +386,15 @@ test("181: the link's picture from marakaj.com — named by the page, served fro
   assert.equal((await site.fetch(new Request("https://marakaj.com/e/salimata-boukary-ab12/image.jpg"), env2)).status, 404, "a key that is not one: nothing");
   delete answers.event_share_image;
 });
+
+test("a shared link says what the event is, when and where — not the business's name", async () => {
+  const { dayInFrench, EVENT_KINDS } = await import("../src/index.js");
+  assert.equal(dayInFrench("2026-11-21", "10:00"), "samedi 21 novembre 2026 à 10 h");
+  assert.equal(dayInFrench("2027-03-01", "15:30"), "lundi 1er mars 2027 à 15 h 30");
+  assert.equal(EVENT_KINDS.dot, "Fiançailles, dot");
+  answers.event_public = { ...card({ doc: DOC }), kind: "dot", place: "Bazoulé", starts_at: "2026-11-21T10:00:00+00:00", tz: "Africa/Ouagadougou", org_name: "Mariage Phanuel & Esperance" };
+  const html = await (await site.fetch(new Request("https://marakaj.com/e/salimata-boukary-ab12"), env)).text();
+  const d = /<meta property="og:description" content="([^"]*)"/.exec(html)[1];
+  assert.equal(d, "Fiançailles, dot · samedi 21 novembre 2026 à 10 h · Bazoulé");
+  assert.ok(!d.includes("Mariage Phanuel"), "not the business's name");
+});

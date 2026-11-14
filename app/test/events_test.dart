@@ -68,9 +68,12 @@ class _Events extends EventsRepository {
     );
   }
 
+  ({DateTime? startsAt, bool keepZone})? lastUpdate;
+
   @override
-  Future<void> update(String id, {required String title, required String kind, DateTime? startsAt, String? place}) async {
+  Future<void> update(String id, {required String title, required String kind, DateTime? startsAt, String? place, bool keepZone = false}) async {
     calls.add('update:$id');
+    lastUpdate = (startsAt: startsAt, keepZone: keepZone);
     final i = rows.indexWhere((r) => r.id == id);
     if (i < 0) return;
     final r = rows[i];
@@ -406,6 +409,28 @@ void main() {
       expect(whatsappDigits('+226 70 12 34 56'), '22670123456');
       expect(whatsappDigits('0033 6 12 34 56 78'), '33612345678');
       expect(whatsappDigits('bonjour'), isNull);
+    });
+
+    testWidgets('« Modifier les infos » reads and saves the hour on the card\'s own clock, its zone kept', (tester) async {
+      // the owner's screenshot: in Newark, a card at 10 h in Ouagadougou read « 05:00 » here, and a
+      // save would have moved the card to New York's clock
+      final repo = _Events();
+      final made = await repo.create(
+          orgId: 'o1', title: 'Phanuel & Espérance', kind: 'dot', card: 'anime_cerisiers',
+          startsAt: DateTime.utc(2026, 11, 21, 10).toLocal(), place: 'Bazoulé');
+      repo.rows[0] = EventSummary(
+        id: made.id, orgId: 'o1', kind: 'dot', card: 'anime_cerisiers', slug: made.slug, previewToken: made.previewToken,
+        editToken: made.editToken, title: made.title, startsAt: DateTime.utc(2026, 11, 21, 10).toLocal(), place: 'Bazoulé',
+        content: const {}, rsvpOn: true, albumOn: false, published: false, createdAt: made.createdAt, tz: 'Africa/Ouagadougou',
+      );
+      await _pump(tester, EventScreen(events: repo, org: _org, eventId: made.id, open: (u) async {}));
+      await tester.tap(find.byKey(const Key('event-info-edit')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('samedi 21 novembre 2026 · 10:00'), findsWidgets, reason: 'the card\'s own hour in the form');
+      await tester.tap(find.byKey(const Key('event-save')));
+      await tester.pumpAndSettle();
+      expect(repo.lastUpdate!.startsAt!.toUtc(), DateTime.utc(2026, 11, 21, 10), reason: 'the same moment saved back');
+      expect(repo.lastUpdate!.keepZone, isTrue, reason: 'the card keeps Ouagadougou\'s clock');
     });
 
     testWidgets('« Modifier les infos » on a card: its title, kind, day and place changed from the app', (tester) async {

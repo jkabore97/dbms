@@ -4114,7 +4114,7 @@ body.has-album #site > footer.f{display:none}
   var sec = document.createElement('section');
   sec.className = 'album-anime'; sec.id = 'album';
   sec.innerHTML = '<h2>Vos photos</h2><p class="lead">Ajoutez les photos que vous prenez : elles rejoignent l\u2019album de l\u2019\u00e9v\u00e9nement, sous votre pr\u00e9nom.</p>'
-    + '<label class="who">Votre nom (sous la photo)<input name="who" maxlength="60" placeholder="Nora"></label>'
+    + '<label class="who">Votre nom (sous la photo)<input name="who" maxlength="60"></label>'
     + '<label class="btn solid">Ajouter des photos<input type="file" accept="image/*" multiple hidden></label>'
     + '<div class="say" role="status"></div><div class="grid"></div>';
   document.body.appendChild(sec);
@@ -4139,8 +4139,10 @@ body.has-album #site > footer.f{display:none}
   post('event_album_rules', {p_slug: S.slug, p_preview: S.preview || null}).then(function (j) {
     if (!j) return; rules = j; var t = [];
     if (j.limit) t.push((j.per_pass || 5) + ' photos par invit\u00e9 : r\u00e9pondez d\u2019abord \u00e0 l\u2019invitation (ou r\u00e9servez votre billet) sur ce t\u00e9l\u00e9phone.');
+    if (!j.limit && j.open_quota) t.push('Ouvert \u00e0 tous : ' + j.open_quota + ' photo' + (j.open_quota > 1 ? 's' : '') + ' par personne.');
     if (j.review) t.push('Elles apparaissent une fois valid\u00e9es par l\u2019organisateur.');
     if (t.length) lead.textContent = t.join(' ');
+    fitPicker();
   }).catch(function () {});
   post('event_album', {p_slug: S.slug, p_preview: S.preview || null}).then(function (list) {
     (Array.isArray(list) ? list : []).forEach(function (p) { if (p && p.key) grid.appendChild(fig(pic(p.key) + '?w=400', p.guest)); });
@@ -4156,6 +4158,18 @@ body.has-album #site > footer.f{display:none}
     img.onerror = function () { done(null); }; img.src = url;
   };
   var refused = '';
+  // So many per phone (179): the photos this phone sent, counted here too, so the
+  // picker takes no more than are left; the name first, under each photo
+  var sentKey = 'mk-album-sent:' + S.slug;
+  var sent = function () { try { return +localStorage.getItem(sentKey) || 0; } catch (e) { return 0; } };
+  var left = function () { return !rules.limit && rules.open_quota ? Math.max(0, rules.open_quota - sent()) : null; };
+  var fitPicker = function () { var l = left(); input.multiple = l === null || l > 1; };
+  var noName = '\u00c9crivez d\u2019abord votre nom : il s\u2019affiche sous vos photos.';
+  var full = function () { return 'Vous avez d\u00e9j\u00e0 envoy\u00e9 vos ' + rules.open_quota + ' photo' + (rules.open_quota > 1 ? 's' : '') + ' : c\u2019est le maximum par personne.'; };
+  input.addEventListener('click', function (e) {
+    if (!who.value.trim()) { e.preventDefault(); say.textContent = noName; who.focus(); return; }
+    if (left() === 0) { e.preventDefault(); say.textContent = full(); }
+  });
   var send = function (file) {
     return new Promise(function (res) {
       if (!file.type || file.type.indexOf('image/') !== 0) return res(null);
@@ -4165,7 +4179,7 @@ body.has-album #site > footer.f{display:none}
         fetch(S.uploads + '/v1/events/' + encodeURIComponent(S.slug) + '/album?apercu=' + encodeURIComponent(S.preview || '') + '&invite=' + encodeURIComponent(name) + '&pass=' + encodeURIComponent(pass()) + '&device=' + encodeURIComponent(phoneId()), {
           method: 'POST', headers: {'Content-Type': 'image/jpeg'}, body: blob
         }).then(function (r) { return r.json().then(function (j) { if (!r.ok || !j || !j.key) throw new Error(j && j.error ? j.error : 'La photo n\u2019est pas pass\u00e9e. R\u00e9essayez.'); return j; }); })
-          .then(function (j) { if (!rules.review) grid.insertBefore(fig(src, name), grid.firstChild); res(j); },
+          .then(function (j) { try { localStorage.setItem(sentKey, String(sent() + 1)); } catch (e) {} if (!rules.review) grid.insertBefore(fig(src, name), grid.firstChild); res(j); },
                 function (e) { refused = say.textContent = e && e.message ? e.message : 'La photo n\u2019est pas pass\u00e9e. R\u00e9essayez.'; res(null); });
       });
     });
@@ -4173,6 +4187,12 @@ body.has-album #site > footer.f{display:none}
   input.addEventListener('change', function () {
     var files = Array.prototype.slice.call(input.files); input.value = '';
     if (!files.length) return;
+    if (!who.value.trim()) { say.textContent = noName; who.focus(); return; }
+    var l = left(), cut = '';
+    if (l !== null && files.length > l) {
+      if (l === 0) { say.textContent = full(); return; }
+      files = files.slice(0, l); cut = ' (vos ' + l + ' premi\u00e8re' + (l > 1 ? 's' : '') + ' seulement : ' + rules.open_quota + ' par personne)';
+    }
     say.textContent = files.length > 1 ? 'Envoi des photos\u2026' : 'Envoi de la photo\u2026';
     // one after the other (181): each counted after those before it
     refused = '';
@@ -4180,7 +4200,9 @@ body.has-album #site > footer.f{display:none}
       var k = r.filter(Boolean).length; if (!k) return;
       say.textContent = rules.review ? (k > 1 ? k + ' photos envoy\u00e9es : visibles apr\u00e8s validation' : 'Photo envoy\u00e9e : visible apr\u00e8s validation')
                                     : (k > 1 ? k + ' photos ajout\u00e9es \u00e0 l\u2019album' : 'Photo ajout\u00e9e \u00e0 l\u2019album');
+      if (cut) say.textContent += cut;
       if (refused) say.textContent += ' \u2014 ' + refused;
+      fitPicker();
     });
   });
 })();

@@ -473,7 +473,8 @@ class _NewEventSheetState extends State<NewEventSheet> {
     if (i == null) return;
     _title.text = i.title;
     _kind = i.kind;
-    final at = i.startsAt;
+    // on the card's own clock (« 10:00 » in Ouagadougou, not the phone's 05:00)
+    final at = i.startsWall;
     if (at != null) {
       _day = DateTime(at.year, at.month, at.day);
       _time = TimeOfDay(hour: at.hour, minute: at.minute);
@@ -788,7 +789,13 @@ class _EventScreenState extends State<EventScreen> {
     );
     if (draft == null || !mounted) return;
     try {
-      await widget.events.update(e.id, title: draft.title, kind: draft.kind, startsAt: draft.startsAt, place: draft.place);
+      // The hour was read and chosen on the card's own clock: back to an instant
+      // on that clock, the card's zone kept (it was set to the phone's — a save
+      // from Newark moved a card in Ouagadougou to New York's hour).
+      final off = eventZoneOffset(e.tz);
+      final w = draft.startsAt;
+      final at = w == null || off == null ? w : DateTime.utc(w.year, w.month, w.day, w.hour, w.minute).subtract(off);
+      await widget.events.update(e.id, title: draft.title, kind: draft.kind, startsAt: at, place: draft.place, keepZone: off != null);
     } catch (err) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AuthRepository.describeError(err))));
       return;
