@@ -574,12 +574,7 @@ class ShopFooter extends StatelessWidget {
                 runSpacing: 2,
                 children: [
                   const MaraWordmark(key: Key('mara-footer'), height: 22),
-                  Text(context.tr('Au Service du Peuple'),
-                      key: const Key('footer-slogan'),
-                      textAlign: TextAlign.center,
-                      style:
-                          const TextStyle(fontSize: 12, color: ShopStyle.mist)),
-                  // A plain link on the slogan's line: the band stays small,
+                  // A plain link beside the wordmark: the band stays small,
                   // at least 48 × 24 for a finger (the most the < 90 px band allows).
                   Semantics(
                     link: true,

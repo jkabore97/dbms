@@ -64,7 +64,7 @@ void main() {
 
   test('the tab, the install and the launcher say Marakaj', () {
     expect(File('web/index.html').readAsStringSync(),
-        contains('<title>Marakaj — Au Service du Peuple</title>'));
+        contains('<title>Marakaj — Les boutiques près de vous</title>'));
     expect(File('web/manifest.json').readAsStringSync(),
         contains('"short_name": "Marakaj"'));
     expect(File('android/app/src/main/AndroidManifest.xml').readAsStringSync(),

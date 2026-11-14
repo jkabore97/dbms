@@ -40,7 +40,7 @@ const COPY = {
     play: "Sur Android : Marakaj sur Google Play",
     question: "Une question ? Répondez simplement à cet e-mail.",
     privacy: "Confidentialité",
-    signature: "Marakaj — Au Service du Peuple · KAJ Consulting LLC",
+    signature: "Marakaj · KAJ Consulting LLC",
     logoAlt: "Marakaj",
     // Said when the language is not known: the person may not read French.
     english: "Welcome to Marakaj! Prefer English? Reply to this e-mail and we will help.",
@@ -59,7 +59,7 @@ const COPY = {
     play: "On Android: Marakaj on Google Play",
     question: "A question? Just reply to this e-mail.",
     privacy: "Privacy",
-    signature: "Marakaj — Au Service du Peuple · KAJ Consulting LLC",
+    signature: "Marakaj · KAJ Consulting LLC",
     logoAlt: "Marakaj",
     english: null,
   },
