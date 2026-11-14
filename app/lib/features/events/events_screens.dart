@@ -1034,8 +1034,8 @@ class _EventScreenState extends State<EventScreen> {
                         key: const Key('event-album-on'),
                         title: Text(context.tr('Album des invités ouvert')),
                         subtitle: Text(widget.org.isPro || e.albumOn
-                            ? context.tr('Les invités déposent leurs photos sur la carte ; elles arrivent ici.')
-                            : context.tr('Marakaj Pro : les invités déposent leurs photos sur la carte ; elles arrivent ici.')),
+                            ? context.tr('Les invités confirmés déposent leurs photos avec Marakaj ; elles arrivent ici et sur la carte.')
+                            : context.tr('Marakaj Pro : les invités confirmés déposent leurs photos avec Marakaj ; elles arrivent ici et sur la carte.')),
                         secondary: widget.org.isPro || e.albumOn ? null : const Icon(Icons.workspace_premium_outlined),
                         // an album already open (the server let it) stays as it is
                         value: e.albumOn,
@@ -1043,14 +1043,15 @@ class _EventScreenState extends State<EventScreen> {
                             ? _run(() => widget.events.setAlbumOn(e.id, v))
                             : GoRouter.of(context).push(Routes.inside(widget.org.id, 'kaj-pro')),
                       ),
-                      // The album's rules (164).
+                      // The album's rules: since 183 the five per guest are the
+                      // rule itself — the guests who confirmed their presence,
+                      // counted by account — and no longer a switch (164's).
                       if (e.albumOn) ...[
-                        SwitchListTile(
-                          key: const Key('event-album-limit'),
-                          title: Text(context.tr('5 photos par invité')),
-                          subtitle: Text(context.tr('Réservé à ceux qui ont répondu ou ont un billet : cinq photos chacun.')),
-                          value: e.albumLimit,
-                          onChanged: (v) => _run(() => widget.events.setAlbumRules(e.id, limit: v)),
+                        ListTile(
+                          key: const Key('event-album-guests'),
+                          leading: const Icon(Icons.photo_library_outlined),
+                          title: Text(context.tr('Les invités confirmés ajoutent jusqu’à 5 photos chacun')),
+                          subtitle: Text(context.tr('Sur la carte, « Confirmer ma présence » ; puis « Mes invitations » dans Marakaj. Tout le monde voit l’album et télécharge les photos.')),
                         ),
                         SwitchListTile(
                           key: const Key('event-album-review'),
@@ -1224,8 +1225,11 @@ class RsvpTile extends StatelessWidget {
         _ => '${context.tr('Vient')} · ${r.people}',
       },
       if (r.message != null && r.message!.isNotEmpty) r.message!,
+      // a confirmation with Marakaj (183): the account's name above, its number below
+      if (r.extra['account'] == true) context.tr('Présence confirmée avec Marakaj'),
       for (final x in r.extra.entries)
-        if (x.key != 'answers' && '${x.value}'.isNotEmpty) '${x.key == 'whatsapp' ? 'WhatsApp' : x.key} : ${x.value}',
+        if (!const {'answers', 'account', 'preview'}.contains(x.key) && '${x.value}'.isNotEmpty)
+          '${x.key == 'whatsapp' ? 'WhatsApp' : x.key} : ${x.value}',
       // the answers to the card's questions (173), in their order
       if (r.extra['answers'] is List)
         for (final (i, a) in (r.extra['answers'] as List).indexed)

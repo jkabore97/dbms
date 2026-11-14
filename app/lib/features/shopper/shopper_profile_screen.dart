@@ -282,6 +282,21 @@ class _ShopperProfileScreenState extends State<ShopperProfileScreen> {
           subtitle: context.tr('Les services réservés sur rendez-vous'),
           onTap: () => context.push(Routes.bookings),
         ),
+        // « Mes billets » and « Mes invitations » (183): the tickets, and the cards confirmed with their photos
+        _Row(
+          key: const Key('shopper-tickets'),
+          icon: Icons.confirmation_number_outlined,
+          title: context.tr('Mes billets'),
+          subtitle: context.tr('Vos billets et leurs QR codes, même sans connexion'),
+          onTap: () => context.push(Routes.myTickets),
+        ),
+        _Row(
+          key: const Key('shopper-invitations'),
+          icon: Icons.celebration_outlined,
+          title: context.tr('Mes invitations'),
+          subtitle: context.tr('Les cartes où vous avez confirmé votre présence, et vos photos'),
+          onTap: () => context.push(Routes.myInvitations),
+        ),
         _Row(
           key: const Key('shopper-favourites'),
           icon: Icons.favorite_border,

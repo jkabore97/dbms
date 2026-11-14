@@ -111,6 +111,24 @@ test("a card the server shows: the page under /cartes, the event in it, never ca
   assert.equal(u.searchParams.get("p_preview"), "f00dbabe");
 });
 
+test("183: the card's « Confirmer ma présence » goes to the app's /presence/<slug>, the preview carried; the address is the app's page", async () => {
+  answer = {
+    slug: "ines-thomas-ab12", kind: "mariage", card: "come", title: "Inès & Thomas",
+    starts_at: "2027-06-05T15:00:00+00:00", place: "Villa Serena", content: {},
+    rsvp_on: true, album_on: true, published: false, org_name: "Mariages d'Awa", preview: true,
+  };
+  const draft = await (await get("/e/ines-thomas-ab12?apercu=f00dbabe")).text();
+  assert.ok(draft.includes('"presence":"/presence/ines-thomas-ab12?apercu=f00dbabe"'), "a draft: its link carried");
+  answer = { ...answer, published: true };
+  const open = await (await get("/e/ines-thomas-ab12")).text();
+  assert.ok(open.includes('"presence":"/presence/ines-thomas-ab12"'), "published: the plain address");
+  const { presenceHref } = await import("../src/index.js");
+  assert.equal(presenceHref("a-b", ""), "/presence/a-b");
+  const app = await get("/presence/ines-thomas-ab12?apercu=f00dbabe");
+  assert.equal(app.status, 200);
+  assert.equal(await app.text(), PAGE, "the app's own page, as /achat-billets");
+});
+
 test("the card the event names; an unknown name falls back to the first", async () => {
   answer = { slug: "gala-x", kind: "gala", card: "gala", title: "Gala", content: {} };
   let html = await (await get("/e/gala-x")).text();

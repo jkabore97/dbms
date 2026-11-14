@@ -9,7 +9,7 @@
   }
   var ctx = {
     slug: B.slug, title: B.title || '', kind: B.kind, card: B.card, date: B.date, time: B.time, place: B.place || '',
-    rsvp_on: B.rsvp_on !== false, album_on: B.album_on !== false, tickets: B.tickets === true, preview: B.preview || null,
+    rsvp_on: B.rsvp_on !== false, album_on: B.album_on !== false, tickets: B.tickets === true, preview: B.preview || null, presence: B.presence || null,
     api: B.api || {}, uploads: B.uploads || null, editing: false, demo: B.demo === true
   };
   S.mount(root, doc, ctx);

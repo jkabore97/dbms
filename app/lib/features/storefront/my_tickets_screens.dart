@@ -87,7 +87,7 @@ class _StreetTicketsBarState extends State<StreetTicketsBar> {
 /// so it opens at the door with no signal. [keepId], from a link
 /// (`/billets/<id>`), is kept first.
 class MyTicketsScreen extends StatefulWidget {
-  const MyTicketsScreen({super.key, required this.store, this.keepId, this.now, this.open});
+  const MyTicketsScreen({super.key, required this.store, this.keepId, this.now, this.open, this.invitations});
 
   final MyTicketsStore store;
   final String? keepId;
@@ -95,6 +95,9 @@ class MyTicketsScreen extends StatefulWidget {
 
   /// Opens the ticket page on the site (the tests look).
   final Future<void> Function(Uri uri)? open;
+
+  /// « Mes invitations » next door (183): the cards confirmed, their photos.
+  final VoidCallback? invitations;
 
   @override
   State<MyTicketsScreen> createState() => _MyTicketsScreenState();
@@ -130,7 +133,16 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
     final theme = Theme.of(context);
     return Scaffold(
       backgroundColor: ShopStyle.paper,
-      appBar: AppBar(title: Text(context.tr('Mes billets')), actions: const [bellRoom]),
+      appBar: AppBar(title: Text(context.tr('Mes billets')), actions: [
+        if (widget.invitations != null)
+          TextButton.icon(
+            key: const Key('my-tickets-invitations'),
+            onPressed: widget.invitations,
+            icon: const Icon(Icons.celebration_outlined, size: 18),
+            label: Text(context.tr('Mes invitations')),
+          ),
+        bellRoom,
+      ]),
       body: mine == null
           ? const Center(child: CircularProgressIndicator())
           : mine.isEmpty

@@ -1,21 +1,9 @@
-// Shared by the twelve cards: the line icons, the RSVP (kept on this phone),
-// the guests' album (the pictures stay in this browser for the demo), the
+// Shared by the twelve cards: the line icons, « Confirmer ma présence » and
+// the guests' album to look at (183), the
 // countdown, the lightbox, the toast — and the editor: every text can be
 // rewritten, every picture replaced and reframed, and the card can be
 // turned to another kind of event (the words and the programme follow).
 (function () {
-  function oneByOne(xs, f) { return xs.reduce(function (p, x) { return p.then(function (acc) { return f(x).then(function (r) { acc.push(r); return acc; }); }); }, Promise.resolve([])); }
-  function phoneId() {
-    // this phone's own random identifier (179): the album counts its photos by it
-    try {
-      var v = localStorage.getItem('mk-phone');
-      if (!v || !/^[a-zA-Z0-9-]{16,64}$/.test(v)) {
-        v = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 14);
-        localStorage.setItem('mk-phone', v);
-      }
-      return v;
-    } catch (e) { return ''; }
-  }
   var sprite = '<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0" aria-hidden="true">' +
     '<symbol id="i-rings" viewBox="0 0 48 48"><circle cx="18" cy="28" r="11"/><circle cx="30" cy="28" r="11"/><path d="M26 10l-2 4-2-4 2-2z"/></symbol>' +
     '<symbol id="i-glass" viewBox="0 0 48 48"><path d="M15 7h18l-3 15a6 6 0 0 1-12 0z"/><path d="M24 28v11M17 39h14M18 14c4 3 8 3 12 0"/></symbol>' +
@@ -51,14 +39,44 @@
     toastT = setTimeout(function () { toastEl.classList.remove('on'); }, 2400);
   }
 
+  // A photo full size, with « Télécharger » (183): the uploads Worker is another
+  // address, so the file is fetched and saved under its name (an <a download> of
+  // another site is ignored); refused, the photo opens in a new tab instead.
   var lb = document.createElement('div');
   lb.className = 'lb';
-  lb.innerHTML = '<img alt=""><button type="button">Fermer</button>';
+  lb.setAttribute('role', 'dialog'); lb.setAttribute('aria-modal', 'true'); lb.setAttribute('aria-label', 'Photo');
+  lb.innerHTML = '<img alt=""><button type="button">Fermer</button><a class="lb-dl" href="#" download>Télécharger</a>';
   document.body.appendChild(lb);
   function close() { lb.classList.remove('on'); }
-  lb.addEventListener('click', close);
+  lb.addEventListener('click', function (e) {
+    var dl = e.target.closest && e.target.closest('.lb-dl');
+    if (!dl) { close(); return; }
+    e.preventDefault(); e.stopPropagation();
+    dl.textContent = 'Téléchargement…';
+    download(dl.getAttribute('href'), dl.getAttribute('download')).then(function () { dl.textContent = 'Télécharger'; });
+  });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
-  function lightbox(src) { lb.querySelector('img').src = src; lb.classList.add('on'); }
+  function lightbox(src, name) {
+    lb.querySelector('img').src = src;
+    var dl = lb.querySelector('.lb-dl');
+    dl.setAttribute('href', src);
+    dl.setAttribute('download', name || ((SERVER && SERVER.slug ? SERVER.slug + '-' : '') + (String(src).split('?')[0].split('/').pop().replace(/^events%2F[^%]+%2F/i, '') || 'photo.jpg')));
+    lb.classList.add('on');
+  }
+  function download(src, name) {
+    var open = function () { window.open(src, '_blank', 'noopener'); return false; };
+    if (!window.fetch || !window.URL || !URL.createObjectURL || /^(blob|data):/.test(src)) {
+      if (/^(blob|data):/.test(src)) { var a0 = document.createElement('a'); a0.href = src; a0.download = name || 'photo.jpg'; document.body.appendChild(a0); a0.click(); a0.remove(); return Promise.resolve(true); }
+      return Promise.resolve(open());
+    }
+    return fetch(src, { mode: 'cors' }).then(function (r) { if (!r.ok) throw new Error('refusé'); return r.blob(); }).then(function (blob) {
+      var u = URL.createObjectURL(blob), a = document.createElement('a');
+      a.href = u; a.download = name || 'photo.jpg'; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(u); }, 4000);
+      return true;
+    }).catch(open);
+  }
+  window.carteDownload = download;
 
   // ------------------------------------------------------------- server
   // On the site (/e/<slug>), the Worker writes the event into window.CARTE:
@@ -793,11 +811,10 @@
         return '<label class="ed-col"><input type="color" data-c="' + x[1] + '" value="' + now[x[1]] + '"><span>' + x[0] + '</span></label>';
       }).join('') + (C ? '<button type="button" class="ed-col-reset">Couleurs du modèle</button>' : '');
       // what the card shows: only what this card has
-      var sws = [['word', 'Le mot'], ['prog', 'Programme'], ['times', 'Horaires'], ['infos', 'Bon à savoir'], ['pics', 'Photos'], ['rsvp', 'Réponse des invités'], ['qr', 'Carte d’invité (QR)'], ['album', 'Album'], ['cd', 'Compte à rebours'], ['foot', 'Pied de page']];
+      var sws = [['word', 'Le mot'], ['prog', 'Programme'], ['times', 'Horaires'], ['infos', 'Bon à savoir'], ['pics', 'Photos'], ['rsvp', 'Confirmer ma présence'], ['album', 'Album'], ['cd', 'Compte à rebours'], ['foot', 'Pied de page']];
       bar.querySelector('.ed-sw').innerHTML = sws.filter(function (x) {
         if (x[0] === 'times') return !!document.querySelector('[data-prog] [data-t]');
         if (x[0] === 'cd') return !!document.querySelector('[data-count]');
-        if (x[0] === 'qr') return !!SERVER;
         return !!sectionOf(x[0]);
       }).map(function (x) { return '<label class="ed-s"><input type="checkbox" data-sw="' + x[0] + '"' + (off(x[0]) ? '' : ' checked') + '> ' + x[1] + '</label>'; }).join('');
     }
@@ -1012,112 +1029,46 @@
     });
   }
 
-  // ----------------------------------------------------------------- RSVP
+  // ------------------------------------------- « Confirmer ma présence »
+  // (183) The answer form, the guest's QR card and the album's upload gave
+  // way to one button: the guest signs in to Marakaj, confirms, and adds
+  // their photos from the app (five each). The form stays in the page,
+  // hidden — it marks the section the organiser may take off (t:hide rsvp)
+  // and where added texts stand.
+  function presenceHref() {
+    if (!SERVER || !SERVER.slug) return '#';
+    return SERVER.presence || '/presence/' + encodeURIComponent(SERVER.slug) + (SERVER.preview ? '?apercu=' + encodeURIComponent(SERVER.preview) : '');
+  }
   Array.prototype.forEach.call(document.querySelectorAll('form.rsvp'), function (f) {
-    var key = 'rsvp-' + (f.getAttribute('data-key') || id);
-    var ok = f.querySelector('.ok');
-    function show(d) {
-      var name = d.name || 'Merci';
-      var n = parseInt(d.n, 10) || 1;
-      ok.textContent = d.rep === 'non'
-        ? 'Merci ' + name + ', nous penserons à vous ce jour-là.'
-        : d.rep === 'mot'
-          ? 'Merci ' + name + '. Votre mot est transmis à la famille.'
-          : 'Merci ' + name + ' ! Votre présence est notée' + (n > 1 ? ' pour ' + n + ' personnes' : '') + '.';
-      ok.classList.add('on');
-      drawPass(d);
-    }
-    // The guest's pass (158): the answer's id, given by the server, drawn as
-    // a QR that opens /e/<slug>/invite/<id> — their name, how many, the
-    // event — for the door. Nothing on a sample or an answer kept before.
-    function drawPass(d) {
-      var old = f.querySelector('.pass'); if (old) old.parentNode.removeChild(old);
-      if (!d.pass || !SERVER || SERVER.demo || d.rep === 'non' || off('qr')) return;
-      var box = document.createElement('div'); box.className = 'pass';
-      box.innerHTML = '<div class="pass-qr" role="img" aria-label="QR code de votre carte d’invité"></div><div><b></b><br><small>Carte d’invité · à présenter à l’entrée</small></div>';
-      box.querySelector('b').textContent = d.name || 'Invité';
-      ok.parentNode.insertBefore(box, ok.nextSibling);
-      var draw = function () {
-        try {
-          var q = qrcode(0, 'M');
-          q.addData(location.origin + '/e/' + encodeURIComponent(SERVER.slug) + '/invite/' + d.pass); q.make();
-          box.querySelector('.pass-qr').innerHTML = q.createSvgTag({ cellSize: 3, margin: 0, scalable: true });
-        } catch (e) { box.querySelector('.pass-qr').textContent = 'QR'; }
-      };
-      if (window.qrcode) { draw(); return; }
-      var s = document.createElement('script');
-      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'; s.onload = draw;
-      document.head.appendChild(s);
-    }
-    // A card that sells tickets (161): the answer is a ticket, asked on the
-    // ticket page; the form gives way to its button.
+    var box = document.createElement('div'); box.className = 'presence';
+    var button = '<a class="btn presence-btn" data-presence href="' + presenceHref() + '"><span>Confirmer ma présence</span><small>pour ajouter vos photos</small></a>';
     if (SERVER && SERVER.tickets && !SERVER.demo) {
-      var tb = document.createElement('div'); tb.className = 'tickets';
-      tb.innerHTML = '<p>Cet événement se fait sur billet. Réservez vos places, payez l’organisateur, recevez vos billets avec leur QR code.</p>' +
-        '<a class="btn" href="/e/' + encodeURIComponent(SERVER.slug) + '/billets' + (SERVER.preview ? '?apercu=' + encodeURIComponent(SERVER.preview) : '') + '">Réserver mes billets</a>';
-      f.parentNode.insertBefore(tb, f); f.hidden = true; f.style.display = 'none';
-      return;
+      // a card that sells tickets (161): « Réserver » as before; the buyers confirm too, for their photos
+      box.innerHTML = '<p>Cet événement se fait sur billet. Réservez vos places, payez l’organisateur, recevez vos billets avec leur QR code.</p>' +
+        '<a class="btn" href="/e/' + encodeURIComponent(SERVER.slug) + '/billets' + (SERVER.preview ? '?apercu=' + encodeURIComponent(SERVER.preview) : '') + '">Réserver mes billets</a>' +
+        '<p class="presence-or">Vous avez votre billet ? Confirmez aussi votre présence pour ajouter vos photos.</p>' + button;
+    } else if (SERVER && SERVER.rsvp_on === false && !ORGANISER) {
+      box.innerHTML = '<p class="presence-closed">Les réponses sont fermées pour cet événement.</p>';
+    } else {
+      box.innerHTML = button;
     }
-    // The guest's WhatsApp, if they wish (159): the organiser's reminder
-    // the day before goes through it. Collected with the answer (extra).
-    if (SERVER && !SERVER.demo && !f.querySelector('[name=whatsapp]')) {
-      var submit = f.querySelector('button[type=submit]'), wa = document.createElement('label');
-      wa.className = 'f';
-      wa.innerHTML = 'WhatsApp, si vous voulez un rappel la veille <input name="whatsapp" inputmode="tel" autocomplete="tel" placeholder="+226 70 00 00 00" maxlength="24">';
-      if (submit) submit.parentNode.insertBefore(wa, submit); else f.appendChild(wa);
-    }
-    try { var saved = JSON.parse(localStorage.getItem(key) || 'null'); if (saved) show(saved); } catch (e) {}
-    if (SERVER && SERVER.rsvp_on === false) {
-      Array.prototype.forEach.call(f.querySelectorAll('input, select, textarea, button'), function (c) { c.disabled = true; });
-      ok.textContent = 'Les réponses sont fermées pour cet événement.';
-      ok.classList.add('on');
-    }
-    f.addEventListener('submit', function (e) {
+    f.parentNode.insertBefore(box, f); f.hidden = true; f.style.display = 'none';
+    var a = box.querySelector('[data-presence]');
+    if (a && (!SERVER || SERVER.demo || ORGANISER)) a.addEventListener('click', function (e) {
       e.preventDefault();
-      var fd = new FormData(f), d = {};
-      fd.forEach(function (v, k) { d[k] = String(v).trim(); });
-      // A design's sample (155c, SERVER.demo): the answer stays here.
-      if (!SERVER || SERVER.demo) {
-        show(d);
-        try { localStorage.setItem(key, JSON.stringify(d)); } catch (e2) {}
-        toast('Réponse envoyée');
-        return;
-      }
-      var extra = {};
-      Object.keys(d).forEach(function (k) { if (['name', 'n', 'rep', 'msg'].indexOf(k) < 0 && d[k]) extra[k] = d[k]; });
-      var btn = f.querySelector('button[type=submit]');
-      if (btn) btn.disabled = true;
-      fetch(SERVER.api.url.replace(/\/+$/, '') + '/rest/v1/rpc/event_rsvp', {
-        method: 'POST',
-        headers: { apikey: SERVER.api.key, Authorization: 'Bearer ' + SERVER.api.key, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          p_slug: SERVER.slug, p_preview: SERVER.preview || null, p_name: d.name || '',
-          p_people: parseInt(d.n, 10) || (d.rep === 'mot' ? 0 : 1), p_answer: d.rep || 'oui',
-          p_message: d.msg || null, p_extra: extra
-        })
-      }).then(function (r) {
-        if (r.ok) {
-          // The answer's id: the guest's pass (158).
-          return r.json().then(function (id) { if (typeof id === 'string') d.pass = id; }, function () {}).then(function () {
-            show(d); try { localStorage.setItem(key, JSON.stringify(d)); } catch (e2) {} toast('Réponse envoyée');
-          });
-        }
-        return r.json().then(function (j) { throw new Error(j && (j.message || j.hint) || 'La réponse n’est pas passée.'); });
-      }).catch(function (err) {
-        ok.textContent = err && err.message ? err.message : 'La réponse n’est pas passée. Réessayez.';
-        ok.classList.add('on');
-      }).then(function () { if (btn) btn.disabled = false; });
+      toast(ORGANISER ? 'Vos invités confirment leur présence avec Marakaj, puis ajoutent leurs photos.' : 'Aperçu : vos invités confirment leur présence sur la vraie carte.');
     });
   });
 
-  // ------------------------------------------------- the guests' album
+  // --------------------------------------- the guests' album, to look at
+  // (183) Every guest sees the photos, opens one full size and downloads
+  // it; confirmed guests add theirs from the app, five each.
   Array.prototype.forEach.call(document.querySelectorAll('.album-box'), function (box) {
-    var input = box.querySelector('input[type=file]');
     var grid = box.querySelector('.album');
     var count = box.querySelector('.count');
-    var who = box.querySelector('input[name=who]');
-    var drop = box.querySelector('.drop');
     var n = grid.querySelectorAll('figure').length;
+    Array.prototype.forEach.call(box.querySelectorAll('.drop, label.who'), function (x) { x.hidden = true; x.style.display = 'none'; });
+    var note = box.querySelector('.note');
     function counted() { if (count) count.textContent = n + (n > 1 ? ' photos' : ' photo'); }
     function figureFor(src, full, name) {
       var fig = document.createElement('figure');
@@ -1127,14 +1078,13 @@
       var cap = document.createElement('figcaption');
       cap.textContent = name || 'Un invité';
       fig.appendChild(cap);
+      fig.setAttribute('role', 'button'); fig.tabIndex = 0; fig.setAttribute('aria-label', 'Ouvrir la photo en grand');
       fig.addEventListener('click', function () { lightbox(full); });
+      fig.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); lightbox(full); } });
       return fig;
     }
-    if (SERVER) {
-      // The card's album (155): the guests' pictures live with the event,
-      // read from it and sent to the uploads Worker with the card's link.
-      // Closed by the organiser, or no Worker to send to: the box says so.
-      if (SERVER.demo) { box.hidden = true; return; }
+    if (SERVER && !SERVER.demo) {
+      // The card's album (155): the guests' pictures live with the event.
       if (SERVER.album_on === false || !SERVER.uploads) {
         box.hidden = true;
         box.insertAdjacentHTML('afterend', '<p class="note">' + (SERVER.album_on === false
@@ -1143,43 +1093,11 @@
         return;
       }
       grid.innerHTML = ''; n = 0; counted();
-      var note = box.querySelector('.note');
-      if (note) note.textContent = 'Vos photos arrivent dans l’album de l’événement, sous votre prénom, visibles par tous les invités.';
+      if (note) note.textContent = 'Les photos des invités. Touchez une photo pour l’ouvrir en grand et la télécharger. Pour ajouter les vôtres : « Confirmer ma présence ».';
       var meta = box.querySelectorAll('.album-meta > span');
       if (meta.length > 1) meta[meta.length - 1].textContent = 'Visibles par tous les invités';
-      var headers = { apikey: SERVER.api.key, Authorization: 'Bearer ' + SERVER.api.key, 'Content-Type': 'application/json' };
-      // The guest's pass (164): their answer on this card (158), or the
-      // tickets this browser booked for it (161) — five photos each when
-      // the organiser limits the album.
-      var passFor = function () {
-        try {
-          var f = document.querySelector('form.rsvp');
-          var saved = f && JSON.parse(localStorage.getItem('rsvp-' + (f.getAttribute('data-key') || '')) || 'null');
-          if (saved && saved.pass && saved.rep !== 'non') return saved.pass;
-        } catch (e) {}
-        try {
-          var b = JSON.parse(localStorage.getItem('mk-billets') || '[]');
-          for (var i = b.length - 1; i >= 0; i--) if (b[i] && b[i].slug === SERVER.slug && b[i].id) return b[i].id;
-        } catch (e) {}
-        return '';
-      };
-      var rules = { review: false, limit: false };
-      fetch(SERVER.api.url.replace(/\/+$/, '') + '/rest/v1/rpc/event_album_rules', {
-        method: 'POST', headers: headers,
-        body: JSON.stringify({ p_slug: SERVER.slug, p_preview: SERVER.preview || null })
-      }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
-        if (!j) return;
-        rules = j;
-        var said = [];
-        if (j.limit) said.push((j.per_pass || 5) + ' photos par invité : répondez d’abord à l’invitation (ou réservez votre billet) sur ce téléphone.');
-        if (!j.limit && j.open_quota) said.push('Ouvert à tous : ' + j.open_quota + ' photo' + (j.open_quota > 1 ? 's' : '') + ' par personne.');
-        if (j.review) said.push('Elles apparaissent dans l’album une fois validées par l’organisateur.');
-        fitPicker();
-        if (said.length && note) note.textContent = said.join(' ');
-        if (j.review && meta.length > 1) meta[meta.length - 1].textContent = 'Validées par l’organisateur';
-      }).catch(function () {});
       fetch(SERVER.api.url.replace(/\/+$/, '') + '/rest/v1/rpc/event_album', {
-        method: 'POST', headers: headers,
+        method: 'POST', headers: { apikey: SERVER.api.key, Authorization: 'Bearer ' + SERVER.api.key, 'Content-Type': 'application/json' },
         body: JSON.stringify({ p_slug: SERVER.slug, p_preview: SERVER.preview || null })
       }).then(function (r) { return r.ok ? r.json() : []; }).then(function (list) {
         (Array.isArray(list) ? list : []).forEach(function (p) {
@@ -1187,103 +1105,10 @@
         });
         counted();
       }).catch(function () {});
-      var refused = '';
-      // So many per phone (179): the photos this phone sent, counted here too, so the
-      // picker takes no more than are left; the name first, under each photo
-      var sentKey = 'mk-album-sent:' + SERVER.slug;
-      var sent = function () { try { return +localStorage.getItem(sentKey) || 0; } catch (e) { return 0; } };
-      var left = function () { return !rules.limit && rules.open_quota ? Math.max(0, rules.open_quota - sent()) : null; };
-      var fitPicker = function () { var l = left(); input.multiple = l === null || l > 1; };
-      var needName = function () {
-        if (who && !who.value.trim()) { toast('Écrivez d’abord votre nom : il s’affiche sous vos photos.'); who.focus(); return true; }
-        return false;
-      };
-      input.addEventListener('click', function (e) {
-        if (needName()) { e.preventDefault(); return; }
-        if (left() === 0) { e.preventDefault(); toast('Vous avez déjà envoyé vos ' + rules.open_quota + ' photo' + (rules.open_quota > 1 ? 's' : '') + ' : c’est le maximum par personne.'); }
-      });
-      var send = function (file) {
-        if (!file.type || file.type.indexOf('image/') !== 0) return Promise.resolve(null);
-        var name = (who && who.value.trim()) || '';
-        return new Promise(function (res) {
-          shrink(file, 1400, function (src, canvas) {
-            canvas.toBlob(function (blob) {
-              fetch(SERVER.uploads + '/v1/events/' + encodeURIComponent(SERVER.slug) + '/album?apercu=' + encodeURIComponent(SERVER.preview || '') + '&invite=' + encodeURIComponent(name) + '&pass=' + encodeURIComponent(passFor()) + '&device=' + encodeURIComponent(phoneId()), {
-                method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob
-              }).then(function (r) {
-                return r.json().then(function (j) {
-                  if (!r.ok || !j || !j.key) throw new Error(j && j.error ? j.error : 'La photo n’est pas passée. Réessayez.');
-                  return j;
-                }, function () { throw new Error('La photo n’est pas passée. Réessayez.'); });
-              }).then(function (j) {
-                try { localStorage.setItem(sentKey, String(sent() + 1)); } catch (e) {}
-                // Waiting for the organiser's yes (164): not in the album yet.
-                if (!rules.review) { grid.insertBefore(figureFor(src, picUrl(j.key), name), grid.firstChild); n++; counted(); }
-                res(j);
-              }, function (err) { refused = err && err.message ? err.message : 'La photo n’est pas passée. Réessayez.'; toast(refused); res(null); });
-            }, 'image/jpeg', 0.82);
-          });
-        });
-      };
-      var sendAll = function (files) {
-        if (!files.length) return;
-        if (needName()) return;
-        var l = left(), cut = '';
-        if (l !== null && files.length > l) {
-          if (l === 0) { toast('Vous avez déjà envoyé vos ' + rules.open_quota + ' photos : c’est le maximum par personne.'); return; }
-          files = files.slice(0, l); cut = ' (vos ' + l + ' première' + (l > 1 ? 's' : '') + ' seulement : ' + rules.open_quota + ' par personne)';
-        }
-        toast(files.length > 1 ? 'Envoi des photos…' : 'Envoi de la photo…');
-        // one after the other (181): each counted after those before it
-        refused = '';
-        oneByOne(files, send).then(function (r) {
-          var k = r.filter(Boolean).length, more = cut + (refused ? ' — ' + refused : '');
-          fitPicker();
-          if (k && rules.review) toast((k > 1 ? k + ' photos envoyées : visibles après validation' : 'Photo envoyée : visible après validation') + more);
-          else if (k) toast((k > 1 ? k + ' photos ajoutées à l’album' : 'Photo ajoutée à l’album') + more);
-        });
-      };
-      input.addEventListener('change', function () {
-        var files = Array.prototype.slice.call(input.files);
-        input.value = '';
-        sendAll(files);
-      });
-      if (drop) {
-        drop.addEventListener('dragover', function (e) { e.preventDefault(); drop.classList.add('over'); });
-        drop.addEventListener('dragleave', function () { drop.classList.remove('over'); });
-        drop.addEventListener('drop', function (e) {
-          e.preventDefault(); drop.classList.remove('over');
-          sendAll(Array.prototype.slice.call(e.dataTransfer.files));
-        });
-      }
       return;
     }
-    function add(file) {
-      if (!file.type || file.type.indexOf('image/') !== 0) return;
-      var url = URL.createObjectURL(file);
-      grid.insertBefore(figureFor(url, url, (who && who.value.trim()) || ''), grid.firstChild);
-      n++;
-    }
-    function done(k) {
-      counted();
-      toast(k > 1 ? k + ' photos ajoutées à l’album' : 'Photo ajoutée à l’album');
-    }
-    input.addEventListener('change', function () {
-      var files = Array.prototype.slice.call(input.files);
-      files.forEach(add);
-      input.value = '';
-      if (files.length) done(files.length);
-    });
-    if (drop) {
-      drop.addEventListener('dragover', function (e) { e.preventDefault(); drop.classList.add('over'); });
-      drop.addEventListener('dragleave', function () { drop.classList.remove('over'); });
-      drop.addEventListener('drop', function (e) {
-        e.preventDefault(); drop.classList.remove('over');
-        var files = Array.prototype.slice.call(e.dataTransfer.files);
-        files.forEach(add);
-        if (files.length) done(files.length);
-      });
-    }
+    // A design's sample: its own pictures, to look at.
+    if (note) note.textContent = 'Maquette : dans Marakaj, les invités confirmés ajoutent leurs photos ici, cinq chacun.';
     Array.prototype.forEach.call(grid.querySelectorAll('figure img'), function (img) {
       img.parentNode.addEventListener('click', function () { if (img.parentNode.contains(img)) lightbox(img.src); });
     });

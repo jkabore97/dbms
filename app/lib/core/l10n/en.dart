@@ -9327,4 +9327,81 @@ const enStrings = <String, String>{
       'Assistant texts per day',
   'J-{days}':
       'D-{days}',
+  // 183: « Confirmer ma présence », « Mes invitations »
+  'Présence confirmée à « {title} » : vous pouvez ajouter vos photos.':
+      'Presence confirmed at “{title}”: you can add your photos.',
+  '{name} a confirmé sa présence ({n} personnes) — {title}':
+      '{name} confirmed they are coming ({n} people) — {title}',
+  '{name} a confirmé sa présence (1 personne) — {title}':
+      '{name} confirmed they are coming (1 person) — {title}',
+  'Vos billets et leurs QR codes, même sans connexion':
+      'Your tickets and their QR codes, even offline',
+  'Mes invitations':
+      'My invitations',
+  'Les cartes où vous avez confirmé votre présence, et vos photos':
+      'The cards where you confirmed you are coming, and your photos',
+  'Cette carte n’est pas ouverte.':
+      'This card is not open.',
+  'Confirmer ma présence':
+      'Confirm I’m coming',
+  'Confirmer ma présence à {title}':
+      'Confirm I’m coming to {title}',
+  'Les réponses sont fermées pour cet événement.':
+      'Replies are closed for this event.',
+  'Vous avez déjà confirmé : changez le nombre ou le mot si besoin.':
+      'You have already confirmed: change the number or the note if needed.',
+  'Nombre de personnes':
+      'Number of people',
+  'Une de moins':
+      'One fewer',
+  'Une de plus':
+      'One more',
+  'Je confirme':
+      'I confirm',
+  'Une fois confirmé, vous ajoutez vos photos de la fête : 5 au plus, depuis « Mes invitations ».':
+      'Once confirmed, you add your photos of the party: up to 5, from “My invitations”.',
+  'L’organisateur saura que vous venez. Vos invitations confirmées s’affichent dans « Mes invitations ».':
+      'The organiser will know you are coming. Your confirmed invitations show in “My invitations”.',
+  'Votre présence est confirmée. Merci !':
+      'You are confirmed. Thank you!',
+  'Votre réponse est mise à jour.':
+      'Your reply is updated.',
+  'Vous pouvez maintenant ajouter vos photos de la fête : {n} au plus.':
+      'You can now add your photos of the party: up to {n}.',
+  'Ajouter des photos':
+      'Add photos',
+  'Les invités confirmés déposent leurs photos avec Marakaj ; elles arrivent ici et sur la carte.':
+      'Confirmed guests add their photos with Marakaj; they arrive here and on the card.',
+  'Marakaj Pro : les invités confirmés déposent leurs photos avec Marakaj ; elles arrivent ici et sur la carte.':
+      'Marakaj Pro: confirmed guests add their photos with Marakaj; they arrive here and on the card.',
+  'Les invités confirmés ajoutent jusqu’à 5 photos chacun':
+      'Confirmed guests add up to 5 photos each',
+  'Sur la carte, « Confirmer ma présence » ; puis « Mes invitations » dans Marakaj. Tout le monde voit l’album et télécharge les photos.':
+      'On the card, “Confirm I’m coming”; then “My invitations” in Marakaj. Everyone sees the album and downloads the photos.',
+  'Présence confirmée avec Marakaj':
+      'Confirmed with Marakaj',
+  'Vous avez déposé vos {n} photos : c’est le maximum par invité.':
+      'You have added your {n} photos: that is the most per guest.',
+  '{n} photos envoyées : visibles après validation.':
+      '{n} photos sent: shown once approved.',
+  'Photo envoyée : visible après validation.':
+      'Photo sent: shown once approved.',
+  '{n} photos ajoutées à l’album.':
+      '{n} photos added to the album.',
+  'Photo ajoutée à l’album.':
+      'Photo added to the album.',
+  'Aucune invitation confirmée pour le moment. Sur une carte, touchez « Confirmer ma présence » : elle s’affiche ici, avec vos photos.':
+      'No confirmed invitation yet. On a card, tap “Confirm I’m coming”: it shows here, with your photos.',
+  'Présence confirmée · {n} personnes':
+      'Confirmed · {n} people',
+  'Présence confirmée':
+      'Confirmed',
+  'L’album de cette carte est fermé.':
+      'This card’s album is closed.',
+  'Jusqu’à {n} photos chacun. Elles s’affichent sur la carte une fois validées par l’organisateur.':
+      'Up to {n} photos each. They show on the card once the organiser approves them.',
+  'Jusqu’à {n} photos chacun : elles s’affichent sur la carte, sous votre nom.':
+      'Up to {n} photos each: they show on the card, under your name.',
+  'Vos photos':
+      'Your photos',
 };

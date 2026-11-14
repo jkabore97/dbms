@@ -443,23 +443,25 @@
   function frDay(d) { var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d || ''); return m ? +m[3] + ' ' + ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'][+m[2] - 1] + ' ' + m[1] : ''; }
   function rsvpClosed(p) { if (!p || !/^\d{4}-\d{2}-\d{2}$/.test(p.closes || '')) return false; var n = new Date(), t = n.getFullYear() + '-' + ('0' + (n.getMonth() + 1)).slice(-2) + '-' + ('0' + n.getDate()).slice(-2); return t > p.closes; }
   S.frDay = frDay; S.rsvpClosed = rsvpClosed;
+  // « Confirmer ma présence » (183): the answer form, the guest's QR card and the album's
+  // upload gave way to one button — the guest signs in to Marakaj, confirms, and adds
+  // their photos from the app (five each). An old card's form (rsvp) draws as the button.
+  function presenceHref(ctx) { return ctx.presence || ('/presence/' + encodeURIComponent(ctx.slug || '') + (ctx.preview ? '?apercu=' + encodeURIComponent(ctx.preview) : '')); }
+  function presenceBtn(ctx) { return '<a class="st-btn st-presence" data-presence href="' + esc(presenceHref(ctx)) + '"><span>Confirmer ma présence</span><small>pour ajouter vos photos</small></a>'; }
+  S.presenceHref = presenceHref;
   B.rsvp = {
-    name: 'Réponse des invités', icon: 'heart', group: 'Les invités', desc: 'Le formulaire « Je viens / Je ne peux pas ».',
+    name: 'Confirmer ma présence', icon: 'heart', group: 'Les invités', desc: 'Le bouton « Confirmer ma présence » : l\'invité se connecte à Marakaj, confirme, puis ajoute ses photos.',
     variants: [['carte', 'Dans une carte'], ['simple', 'Simple']],
-    make: function () { return { title: 'Serez-vous des nôtres ?', lead: 'Merci de répondre avant le 1er du mois.', yes: 'Je viens', no: 'Je ne peux pas', askPhone: true, pass: false }; },
+    make: function () { return { title: 'Serez-vous des nôtres ?', lead: 'Confirmez votre présence : vous pourrez ensuite ajouter vos photos de la fête.' }; },
     draw: function (b, ctx) {
-      var p = b.props || {}, form;
-      if (ctx.tickets && !sample(ctx)) form = '<p class="st-lead">Cet événement se fait sur billet. Réservez vos places, payez l\'organisateur, recevez vos billets avec leur QR code.</p><a class="st-btn" href="/e/' + encodeURIComponent(ctx.slug || '') + '/billets' + (ctx.preview ? '?apercu=' + encodeURIComponent(ctx.preview) : '') + '">Réserver mes billets</a>';
-      else if (ctx.rsvp_on === false && !ctx.editing) form = '<p class="st-lead st-closed">Les réponses sont fermées pour cet événement.</p>';
-      else if (rsvpClosed(p) && !ctx.editing) form = '<p class="st-lead st-closed">Les réponses sont closes depuis le ' + esc(frDay(p.closes)) + '. Merci !</p>';
-      else form = '<form class="st-rsvp" novalidate><label>Votre nom<input name="name" autocomplete="name" maxlength="80"></label><label>Nombre de personnes<select name="n">' +
-        [1, 2, 3, 4, 5, 6].map(function (n) { return '<option>' + n + '</option>'; }).join('') + '</select></label>' +
-        (p.askPhone !== false && !sample(ctx) ? '<label>WhatsApp, si vous voulez un rappel la veille<input name="wa" inputmode="tel" autocomplete="tel" placeholder="+226 70 00 00 00" maxlength="24"></label>' : '') +
-        '<div class="st-choice"><button type="button" data-a="oui">' + esc(p.yes || 'Je viens') + '</button><button type="button" data-a="non">' + esc(p.no || 'Je ne peux pas') + '</button></div>' +
-        (p.questions || []).slice(0, 3).map(function (q, i) { return q && q.q ? '<label>' + esc(q.q) + '<input name="q' + i + '" maxlength="300"></label>' : ''; }).join('') +
-        (p.closes && /^\d{4}-\d{2}-\d{2}$/.test(p.closes) ? '<p class="st-lead st-by">Merci de répondre avant le ' + esc(frDay(p.closes)) + '.</p>' : '') +
-        '<label>Un mot (facultatif)<textarea name="msg" rows="2" maxlength="500"></textarea></label><button type="submit" class="st-btn">Envoyer ma réponse</button><p class="st-done" role="status"></p><div class="st-pass" hidden></div></form>';
-      return '<div class="st-box">' + F(b, ctx, 'title', 'h2', 'st-h2', 'Titre') + F(b, ctx, 'lead', 'p', 'st-lead', 'Un mot', true) + form + '</div>';
+      var p = b.props || {}, body;
+      if (ctx.rsvp_on === false && !ctx.tickets && !ctx.editing) body = '<p class="st-lead st-closed">Les réponses sont fermées pour cet événement.</p>';
+      else if (rsvpClosed(p) && !ctx.editing) body = '<p class="st-lead st-closed">Les réponses sont closes depuis le ' + esc(frDay(p.closes)) + '. Merci !</p>';
+      else body = presenceBtn(ctx) + (p.closes && /^\d{4}-\d{2}-\d{2}$/.test(p.closes) ? '<p class="st-lead st-by">Merci de confirmer avant le ' + esc(frDay(p.closes)) + '.</p>' : '');
+      // a card that sells tickets (161): « Réserver » as before, and the buyers confirm too (their photos)
+      if (ctx.tickets && !sample(ctx)) body = '<p class="st-lead">Cet événement se fait sur billet. Réservez vos places, payez l\'organisateur, recevez vos billets avec leur QR code.</p><a class="st-btn" href="/e/' + encodeURIComponent(ctx.slug || '') + '/billets' + (ctx.preview ? '?apercu=' + encodeURIComponent(ctx.preview) : '') + '">Réserver mes billets</a>' +
+        (rsvpClosed(p) && !ctx.editing ? '' : '<p class="st-lead st-by">Vous avez votre billet ? Confirmez aussi votre présence pour ajouter vos photos.</p>' + presenceBtn(ctx));
+      return '<div class="st-box st-presence-box">' + F(b, ctx, 'title', 'h2', 'st-h2', 'Titre') + F(b, ctx, 'lead', 'p', 'st-lead', 'Un mot', true) + body + '</div>';
     }
   };
   B.tickets = {
@@ -473,24 +475,25 @@
         (ctx.editing && !ctx.tickets ? '<p class="st-note">La billetterie n\'est pas ouverte pour cette carte : vos invités ne verront pas ce bloc.</p>' : '');
     }
   };
+  // The guests' album (155), to look at (183): every guest sees the photos, opens one full
+  // size and downloads it; confirmed guests add theirs from the app, five each.
   B.album = {
-    name: 'Album des invités', icon: 'camera', group: 'Les invités', desc: 'Les invités ajoutent leurs photos de la fête.',
+    name: 'Album des invités', icon: 'camera', group: 'Les invités', desc: 'Les photos des invités, à ouvrir en grand et télécharger. Les invités confirmés ajoutent les leurs dans Marakaj (5 chacun).',
     variants: [['grille', 'Grille']],
-    make: function () { return { title: 'Vos photos', lead: 'Ajoutez les photos que vous prenez : elles rejoignent l\'album de l\'événement, sous votre prénom.' }; },
+    make: function () { return { title: 'Vos photos', lead: 'Les photos de la fête, prises par les invités. Touchez une photo pour l\'ouvrir et la télécharger.' }; },
     draw: function (b, ctx) {
       var closed = ctx.album_on === false || !ctx.uploads || sample(ctx);
       return F(b, ctx, 'title', 'h2', 'st-h2', 'Titre') + F(b, ctx, 'lead', 'p', 'st-lead', 'Un mot', true) +
         (closed ? (ctx.editing ? '<p class="st-note">L\'album est fermé : vos invités verront « L\'album est fermé pour cet événement ».</p>' : '<p class="st-lead st-closed">L\'album est fermé pour cet événement.</p>')
-          : '<div class="st-album" data-album><label>Votre nom (sous la photo)<input name="who" maxlength="60"></label><label class="st-btn">' + icon('camera') + 'Ajouter des photos<input type="file" accept="image/*" multiple hidden></label><p class="st-done" role="status"></p><div class="st-album-g"></div></div>');
+          : '<div class="st-album" data-album>' + (ctx.editing ? '<p class="st-note">Les photos de vos invités s\'affichent ici. Les invités confirmés ajoutent les leurs dans Marakaj, 5 chacun.</p>' : '') + '<p class="st-done" role="status"></p><div class="st-album-g"></div></div>');
     }
   };
+  // The guest's QR card (158): gone with the form (183); an old card's block draws nothing.
   B.pass = {
-    name: 'Carte d\'invité (QR)', icon: 'star', group: 'Les invités', desc: 'Le QR de l\'invité qui a répondu, scanné à l\'entrée.',
+    name: 'Carte d\'invité (QR)', icon: 'star', group: 'Les invités', desc: 'Retiré : les invités confirment leur présence avec Marakaj.', retired: true,
     variants: [['carte', 'Carte']],
-    make: function () { return { title: 'Votre carte d\'invité', text: 'Présentez ce QR code à l\'entrée.' }; },
-    draw: function (b, ctx) {
-      return F(b, ctx, 'title', 'h2', 'st-h2', 'Titre') + F(b, ctx, 'text', 'p', 'st-lead', 'Un mot', true) + '<div class="st-pass" data-passbox>' + (ctx.editing ? '<p class="st-note">Le QR apparaît ici pour l\'invité qui a répondu « Je viens » sur son téléphone.</p>' : '') + '</div>';
-    }
+    make: function () { return {}; },
+    draw: function (b, ctx) { return ctx.editing ? '<p class="st-note">La carte d\'invité (QR) n\'existe plus : vos invités confirment leur présence avec Marakaj. Vous pouvez retirer ce bloc.</p>' : ''; }
   };
   B.video = {
     name: 'Vidéo', icon: 'play', group: 'Photos', desc: 'Une vidéo YouTube.',
@@ -740,19 +743,6 @@
     toast.t = setTimeout(function () { t.classList.remove('on'); }, Math.max(2600, String(msg).length * 60));   // time to read it
   }
   S.toast = toast;
-  function passKey(ctx) { return 'mk-pass-' + (ctx.slug || ''); }
-  function drawPass(box, ctx, id, name) {
-    if (!box || !id) return;
-    box.hidden = false;
-    box.innerHTML = '<div class="st-pass-qr" role="img" aria-label="QR code de votre carte d\'invité"></div><div><b></b><small>Carte d\'invité · à présenter à l\'entrée</small></div>';
-    box.querySelector('b').textContent = name || 'Invité';
-    var draw = function () {
-      try { var q = qrcode(0, 'M'); q.addData(location.origin + '/e/' + encodeURIComponent(ctx.slug) + '/invite/' + id); q.make(); box.querySelector('.st-pass-qr').innerHTML = q.createSvgTag({ cellSize: 3, margin: 0, scalable: true }); }
-      catch (e) { box.querySelector('.st-pass-qr').textContent = 'QR'; }
-    };
-    if (window.qrcode) { draw(); return; }
-    var s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'; s.onload = draw; document.head.appendChild(s);
-  }
   function shrink(file, max, done) {
     var url = URL.createObjectURL(file), im = new Image();
     im.onload = function () {
@@ -805,93 +795,68 @@
       var mu = e.target.closest('[data-music]');
       if (mu) { var au = mu._a || (mu._a = new Audio(mu.getAttribute('data-music'))); if (au.paused) { au.play(); mu.querySelector('span').textContent = 'Pause'; } else { au.pause(); mu.querySelector('span').textContent = 'Écouter'; } }
     });
-    // the answer (event_rsvp, 152): the pass (158) when « Je viens » and the card asks for it
-    var saved = null; try { saved = JSON.parse(localStorage.getItem(passKey(ctx)) || 'null'); } catch (e) { saved = null; }
-    var wantsPass = (doc.blocks || []).some(function (b) { return !b.hidden && ((b.type === 'rsvp' && b.props && b.props.pass) || b.type === 'pass'); });
-    Array.prototype.forEach.call(root.querySelectorAll('.st-rsvp'), function (form) {
-      var ans = null, out = form.querySelector('.st-done'), box = form.querySelector('.st-pass'), rb = form.closest('[data-bid]'), blk = (doc.blocks || []).filter(function (x) { return rb && x.id === rb.getAttribute('data-bid'); })[0] || {};
-      Array.prototype.forEach.call(form.querySelectorAll('[data-a]'), function (btn) {
-        btn.addEventListener('click', function () { ans = btn.getAttribute('data-a'); Array.prototype.forEach.call(form.querySelectorAll('[data-a]'), function (x) { x.setAttribute('aria-pressed', String(x === btn)); }); });
-      });
-      if (saved && saved.pass && blk.props && blk.props.pass) drawPass(box, ctx, saved.pass, saved.name);
-      form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        var name = form.elements.name.value.trim();
-        if (!name) { out.textContent = 'Écrivez votre nom, pour que nous sachions qui répond.'; return; }
-        if (!ans) { out.textContent = 'Dites-nous si vous venez : « ' + ((blk.props && blk.props.yes) || 'Je viens') + ' » ou « ' + ((blk.props && blk.props.no) || 'Je ne peux pas') + ' ».'; return; }
-        var thanks = ans === 'oui' ? 'Merci ' + name + ' ! Votre présence est notée.' : 'Merci ' + name + ', nous penserons à vous.';
-        if (ctx.demo || !ctx.slug) { out.textContent = thanks; return; }
-        var sub = form.querySelector('[type=submit]'); sub.disabled = true; out.textContent = 'Envoi…';
-        var wa = form.elements.wa && form.elements.wa.value.trim();
-        // the answers to the organiser's questions (173), in their order
-        var extra = wa ? { whatsapp: wa } : {}, qs = ((blk.props && blk.props.questions) || []).slice(0, 3);
-        if (qs.length) extra.answers = qs.map(function (q, i) { var f = form.elements['q' + i]; return f ? f.value.trim().slice(0, 300) : ''; });
-        api(ctx, 'event_rsvp', { p_slug: ctx.slug, p_preview: ctx.preview || null, p_name: name, p_people: parseInt(form.elements.n.value, 10) || 1, p_answer: ans, p_message: form.elements.msg.value.trim() || null, p_extra: extra })
-          .then(function (id) {
-            out.textContent = thanks;
-            if (typeof id === 'string' && ans === 'oui') {
-              try { localStorage.setItem(passKey(ctx), JSON.stringify({ pass: id, name: name })); } catch (e2) {}
-              if (blk.props && blk.props.pass) drawPass(box, ctx, id, name);
-              Array.prototype.forEach.call(root.querySelectorAll('[data-passbox]'), function (pb) { drawPass(pb, ctx, id, name); });
-            }
-          }, function (err) { sub.disabled = false; out.textContent = err && err.message ? err.message : 'La réponse n\'est pas passée. Réessayez.'; });
-      });
+    // « Confirmer ma présence » on a design's sample: the guests confirm on the real card
+    root.addEventListener('click', function (e) {
+      var a = e.target.closest('[data-presence]');
+      if (a && (ctx.demo || !ctx.slug)) { e.preventDefault(); toast(root, 'Aperçu : vos invités confirment leur présence sur la vraie carte.'); }
     });
-    if (wantsPass && saved && saved.pass) Array.prototype.forEach.call(root.querySelectorAll('[data-passbox]'), function (pb) { drawPass(pb, ctx, saved.pass, saved.name); });
-    function oneByOne(xs, f) { return xs.reduce(function (p, x) { return p.then(function (acc) { return f(x).then(function (r) { acc.push(r); return acc; }); }); }, Promise.resolve([])); }
-    function phoneId() {
-      // this phone's own random identifier (179): the album counts its photos by it
-      try {
-        var v = localStorage.getItem('mk-phone');
-        if (!v || !/^[a-zA-Z0-9-]{16,64}$/.test(v)) {
-          v = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 14);
-          localStorage.setItem('mk-phone', v);
-        }
-        return v;
-      } catch (e) { return ''; }
-    }
-    // the guests' album (155/164)
+    // the guests' album (155/183): to look at, each photo opened full size and downloaded
     Array.prototype.forEach.call(root.querySelectorAll('[data-album]'), function (box) {
-      var grid = box.querySelector('.st-album-g'), say = box.querySelector('.st-done'), input = box.querySelector('input[type=file]'), who = box.querySelector('input[name=who]'), rules = {};
-      var fig = function (src, name) { var d = document.createElement('figure'); d.innerHTML = '<img alt="" loading="lazy"><figcaption></figcaption>'; d.querySelector('img').src = src; d.querySelector('figcaption').textContent = name || 'Un invité'; return d; };
-      api(ctx, 'event_album_rules', { p_slug: ctx.slug, p_preview: ctx.preview || null }).then(function (j) { rules = j || {}; fitPicker(); if (rules.open_quota && !say.textContent) say.textContent = 'Ouvert à tous : ' + rules.open_quota + ' photo' + (rules.open_quota > 1 ? 's' : '') + ' par personne.'; }, function () {});
-      api(ctx, 'event_album', { p_slug: ctx.slug, p_preview: ctx.preview || null }).then(function (l) { (Array.isArray(l) ? l : []).forEach(function (p) { if (p && p.key) grid.appendChild(fig(picSrc({ key: p.key }, ctx, 400), p.guest)); }); }, function () {});
-      // So many per phone (179): the photos this phone sent, counted here too, so the
-      // picker takes no more than are left (a browser's picker has no number of its own)
-      var sentKey = 'mk-album-sent:' + ctx.slug;
-      var sent = function () { try { return +localStorage.getItem(sentKey) || 0; } catch (e) { return 0; } };
-      var left = function () { return rules.open_quota ? Math.max(0, rules.open_quota - sent()) : null; };
-      var fitPicker = function () { var l = left(); input.multiple = l === null || l > 1; };
-      // the name first: it goes under each photo (the owner: « name should be required »)
-      input.addEventListener('click', function (e) {
-        if (ctx.demo) return;
-        if (!who.value.trim()) { e.preventDefault(); say.textContent = 'Écrivez d’abord votre nom : il s’affiche sous vos photos.'; who.focus(); return; }
-        if (left() === 0) { e.preventDefault(); say.textContent = 'Vous avez déjà envoyé vos ' + rules.open_quota + ' photo' + (rules.open_quota > 1 ? 's' : '') + ' : c’est le maximum par personne.'; }
-      });
-      input.addEventListener('change', function () {
-        var files = Array.prototype.slice.call(input.files); input.value = '';
-        if (!files.length) return;
-        if (ctx.demo) { say.textContent = 'Aperçu : vos invités ajoutent leurs photos sur la vraie carte.'; return; }
-        if (!who.value.trim()) { say.textContent = 'Écrivez d’abord votre nom : il s’affiche sous vos photos.'; who.focus(); return; }
-        var l = left(), cut = '';
-        if (l !== null && files.length > l) { files = files.slice(0, l); cut = l === 0 ? '' : ' (vos ' + l + ' première' + (l > 1 ? 's' : '') + ' seulement : ' + rules.open_quota + ' par personne)'; }
-        if (!files.length) { say.textContent = 'Vous avez déjà envoyé vos ' + rules.open_quota + ' photos : c’est le maximum par personne.'; return; }
-        say.textContent = files.length > 1 ? 'Envoi des photos…' : 'Envoi de la photo…';
-        var pass = (function () { try { var s = JSON.parse(localStorage.getItem(passKey(ctx)) || 'null'); return s && s.pass || ''; } catch (e) { return ''; } })();
-        // one after the other (181): each counted after those before it
-        var refused = '';
-        oneByOne(files, function (file) {
-          return new Promise(function (res) {
-            shrink(file, 1400, function (blob) {
-              if (!blob) return res(null);
-              fetch(ctx.uploads + '/v1/events/' + encodeURIComponent(ctx.slug) + '/album?apercu=' + encodeURIComponent(ctx.preview || '') + '&invite=' + encodeURIComponent(who.value.trim()) + '&pass=' + encodeURIComponent(pass) + '&device=' + encodeURIComponent(phoneId()), { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob })
-                .then(function (r) { return r.json().then(function (j) { if (!r.ok || !j || !j.key) throw new Error(j && j.error ? j.error : 'La photo n\'est pas passée.'); return j; }); })
-                .then(function (j) { try { localStorage.setItem(sentKey, String(sent() + 1)); } catch (e) {} if (!rules.review) grid.insertBefore(fig(URL.createObjectURL(blob), who.value.trim()), grid.firstChild); res(j); }, function (err) { refused = err.message; say.textContent = err.message; res(null); });
-            });
-          });
-        }).then(function (r) { var k = r.filter(Boolean).length; if (k) say.textContent = rules.review ? (k > 1 ? k + ' photos envoyées : visibles après validation' : 'Photo envoyée : visible après validation') : (k > 1 ? k + ' photos ajoutées à l\'album' : 'Photo ajoutée à l\'album'); if (k && cut) say.textContent += cut; if (k && refused) say.textContent += ' — ' + refused; fitPicker(); });
-      });
+      var grid = box.querySelector('.st-album-g'), say = box.querySelector('.st-done');
+      var full = function (key) { return ctx.uploads + '/v1/public/objects/' + encodeURIComponent(key); };
+      api(ctx, 'event_album', { p_slug: ctx.slug, p_preview: ctx.preview || null }).then(function (l) {
+        var list = (Array.isArray(l) ? l : []).filter(function (p) { return p && p.key; });
+        if (!list.length) { say.textContent = 'Les photos des invités confirmés s’afficheront ici.'; return; }
+        list.forEach(function (p, i) {
+          var d = document.createElement('figure');
+          d.innerHTML = '<button type="button" class="st-album-open" aria-label="Ouvrir la photo en grand"><img alt="" loading="lazy"></button><figcaption></figcaption>';
+          d.querySelector('img').src = picSrc({ key: p.key }, ctx, 400);
+          d.querySelector('figcaption').textContent = p.guest || 'Un invité';
+          d.querySelector('button').addEventListener('click', function () { S.lightbox(list.map(function (x) { return { src: full(x.key), name: x.guest || 'Un invité', file: (ctx.slug || 'photo') + '-' + x.key.split('/').pop() }; }), i); });
+          grid.appendChild(d);
+        });
+      }, function () {});
     });
+  };
+  // A photo full size (183), with « Télécharger »: the uploads Worker is another address, so
+  // the file is fetched and saved under its name (an <a download> of another site is ignored);
+  // when the fetch is refused, the photo opens in a new tab, to be saved from there.
+  S.download = function (src, name) {
+    var open = function () { window.open(src, '_blank', 'noopener'); };
+    if (!window.fetch || !window.URL || !URL.createObjectURL) { open(); return Promise.resolve(false); }
+    return fetch(src, { mode: 'cors' }).then(function (r) { if (!r.ok) throw new Error('refusé'); return r.blob(); }).then(function (blob) {
+      var u = URL.createObjectURL(blob), a = document.createElement('a');
+      a.href = u; a.download = name || 'photo.jpg'; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(u); }, 4000);
+      return true;
+    }).catch(function () { open(); return false; });
+  };
+  S.lightbox = function (items, at) {
+    var lb = document.querySelector('.st-lb');
+    if (!lb) {
+      lb = document.createElement('div'); lb.className = 'st-lb'; lb.setAttribute('role', 'dialog'); lb.setAttribute('aria-modal', 'true'); lb.setAttribute('aria-label', 'Photo');
+      lb.innerHTML = '<img alt=""><p class="st-lb-n"></p><div class="st-lb-bar"><button type="button" data-lb="prev" aria-label="Photo précédente">‹</button><a href="#" data-lb="dl" class="st-lb-dl">Télécharger</a><button type="button" data-lb="next" aria-label="Photo suivante">›</button><button type="button" data-lb="close">Fermer</button></div>';
+      document.body.appendChild(lb);
+      lb.addEventListener('click', function (e) {
+        var k = e.target.closest('[data-lb]'), w = lb._w;
+        if (!k) { if (e.target === lb) lb.classList.remove('on'); return; }
+        e.preventDefault();
+        var what = k.getAttribute('data-lb');
+        if (what === 'close') lb.classList.remove('on');
+        else if (what === 'prev' || what === 'next') { w.at = (w.at + (what === 'next' ? 1 : w.items.length - 1)) % w.items.length; show(); }
+        else if (what === 'dl') { var it = w.items[w.at]; k.textContent = 'Téléchargement…'; S.download(it.src, it.file).then(function () { k.textContent = 'Télécharger'; }); }
+      });
+      document.addEventListener('keydown', function (e) { if (!lb.classList.contains('on')) return; if (e.key === 'Escape') lb.classList.remove('on'); if (e.key === 'ArrowRight') lb.querySelector('[data-lb=next]').click(); if (e.key === 'ArrowLeft') lb.querySelector('[data-lb=prev]').click(); });
+    }
+    var show = function () {
+      var w = lb._w, it = w.items[w.at];
+      lb.querySelector('img').src = it.src;
+      lb.querySelector('.st-lb-n').textContent = it.name || '';
+      var dl = lb.querySelector('[data-lb=dl]'); dl.setAttribute('href', it.src); dl.setAttribute('download', it.file || 'photo.jpg');
+      Array.prototype.forEach.call(lb.querySelectorAll('[data-lb=prev], [data-lb=next]'), function (x) { x.hidden = w.items.length < 2; });
+    };
+    lb._w = { items: items, at: at || 0 };
+    show(); lb.classList.add('on');
   };
   // Blocks appear as they come into view (motion « douce » and « vivante »).
   S.motion = function (root) {

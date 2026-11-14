@@ -27,6 +27,8 @@ import 'open_badge.dart';
 import 'street_events.dart';
 import 'my_tickets_screens.dart';
 import '../../core/events/my_tickets.dart';
+import '../../core/events/invitations_repository.dart';
+import 'my_invitations_screen.dart';
 import 'shop_style.dart';
 import 'package:kaj_app/core/l10n/tr.dart';
 
@@ -61,6 +63,7 @@ class DirectoryScreen extends StatefulWidget {
     required this.session,
     this.shopper,
     this.tickets,
+    this.invitations,
   });
 
   final StorefrontRepository storefront;
@@ -68,6 +71,10 @@ class DirectoryScreen extends StatefulWidget {
   /// The buyer's tickets on this phone (part 4): the slim bar over the
   /// street. Null: no bar.
   final MyTicketsStore? tickets;
+
+  /// The cards this account confirmed (183): their slim bar, under the
+  /// tickets'. Null, or signed out: no bar.
+  final InvitationsRepository? invitations;
 
   /// The shopper's follows (113), for the ♥ on each card. Null: no hearts.
   final ShopperRepository? shopper;
@@ -548,8 +555,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       brand: const MaraWordmark(key: Key('mara-header'), height: 34),
       announcements: ShopPage.street,
       trailing: _AccountCorner(session: widget.session),
-      body: widget.tickets == null ? _body(context) : Column(children: [
-        StreetTicketsBar(store: widget.tickets!),
+      body: widget.tickets == null && widget.invitations == null ? _body(context) : Column(children: [
+        if (widget.tickets != null) StreetTicketsBar(store: widget.tickets!),
+        // the cards confirmed (183), as the tickets
+        if (widget.invitations != null) StreetInvitationsBar(repo: widget.invitations!),
         Expanded(child: _body(context)),
       ]),
     );

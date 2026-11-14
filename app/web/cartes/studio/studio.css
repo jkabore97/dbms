@@ -290,3 +290,16 @@ html{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-
 
 /* petals over the whole card (181): above the card, under the editor's bars, never in the way of a touch */
 .st-fall{position:fixed;inset:0;width:100vw;height:100vh;z-index:60;pointer-events:none}
+/* « Confirmer ma présence » (183): the button and its line; the album to look at, full size, downloaded */
+.st-presence{flex-direction:column;gap:4px;min-height:58px;padding:10px 26px;line-height:1.15}
+.st-presence small{font:500 .78em/1.2 var(--st-body);letter-spacing:.04em;text-transform:none;opacity:.85}
+.st-album-open{display:block;width:100%;height:100%;padding:0;border:0;background:none;cursor:zoom-in}
+.st-album-open img{display:block}
+.st-lb{position:fixed;inset:0;z-index:80;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:max(16px,env(safe-area-inset-top,0px)) 16px max(16px,env(safe-area-inset-bottom,0px));background:rgba(8,8,8,.94);color:#fff}
+.st-lb.on{display:flex}
+.st-lb img{max-width:100%;max-height:calc(100% - 110px);object-fit:contain;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.st-lb-n{margin:0;font:500 14px/1.3 var(--st-body,system-ui);opacity:.85}
+.st-lb-bar{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.st-lb-bar button,.st-lb-bar a{min-height:44px;min-width:44px;padding:0 16px;display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.55);border-radius:999px;background:transparent;color:#fff;font:600 13px/1 var(--st-body,system-ui);letter-spacing:.08em;text-decoration:none;cursor:pointer}
+.st-lb-bar .st-lb-dl{background:#fff;color:#111;border-color:#fff}
+.st-lb-bar [hidden]{display:none}

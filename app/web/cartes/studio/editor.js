@@ -8,7 +8,7 @@
   var BOOT = window.CARTE || {};
   var ctx = {
     slug: BOOT.slug, title: BOOT.title || '', kind: BOOT.kind || 'autre', card: BOOT.card, family: BOOT.family || 'classique', date: BOOT.date, time: BOOT.time, place: BOOT.place || '',
-    rsvp_on: BOOT.rsvp_on !== false, album_on: BOOT.album_on !== false, tickets: BOOT.tickets === true, preview: BOOT.preview || null,
+    rsvp_on: BOOT.rsvp_on !== false, album_on: BOOT.album_on !== false, tickets: BOOT.tickets === true, preview: BOOT.preview || null, presence: BOOT.presence || null,
     api: BOOT.api || {}, uploads: BOOT.uploads || null, edit: BOOT.edit, content: BOOT.content || {}, editing: true, demo: false,
     // Marakaj Pro (172): true or false once the server says; unknown before (the save decides)
     pro: BOOT.pro === true ? true : BOOT.pro === false ? false : null
@@ -552,7 +552,7 @@
   // the library: a block to add
   function openLibrary() {
     var groups = {};
-    Object.keys(S.BLOCKS).forEach(function (t) { var d = S.BLOCKS[t]; (groups[d.group] = groups[d.group] || []).push(t); });
+    Object.keys(S.BLOCKS).forEach(function (t) { var d = S.BLOCKS[t]; if (d.retired) return; (groups[d.group] = groups[d.group] || []).push(t); });   // the QR card retired (183)
     var order = ['Essentiels', 'Le jour', 'Les invités', 'Photos', 'Textes', 'Mise en page'];
     openSheet('Ajouter un bloc', order.filter(function (g) { return groups[g]; }).map(function (g) {
       return '<p class="ed-lab">' + esc(g) + '</p><div class="ed-lib">' + groups[g].map(function (t) {
@@ -631,13 +631,9 @@
           '<button type="button" data-track="' + x.id + '" style="width:auto;padding:0 10px">' + (p.track === x.id ? 'Choisie ✓' : 'Choisir') + '</button></div>';
       }).join('') + '</div>' + field('url', 'Ou le lien de votre fichier audio (https)', 'url', 'https://…/chanson.mp3');
     if (b.type === 'programme') h += check('showTimes', 'Afficher les horaires', true);
-    if (b.type === 'rsvp') h += field('yes', 'Bouton « oui »', 'text', 'Je viens') + field('no', 'Bouton « non »', 'text', 'Je ne peux pas') + check('askPhone', 'Demander le WhatsApp pour le rappel de la veille', true) + check('pass', 'Carte d’invité (QR) après « Je viens »', false) +
-      // the organiser's questions and the closing day (173), held by the server too
-      '<p class="ed-lab">Vos questions aux invités (facultatif, trois au plus)</p>' + [0, 1, 2].map(function (i) {
-        var q = (p.questions || [])[i]; return '<label class="ed-field">Question ' + (i + 1) + '<input data-q="' + i + '" type="text" maxlength="140" value="' + esc((q && q.q) || '') + '" placeholder="' + esc(['Ex. : Votre plat préféré ?', 'Ex. : Une allergie ?', 'Ex. : Votre chanson pour danser ?'][i]) + '"></label>';
-      }).join('') +
-      field('closes', 'Répondre au plus tard le (facultatif)', 'date', '') +
-      '<p class="ed-help">Ce jour passé, le formulaire se ferme tout seul et vos invités le lisent.</p>' +
+    // « Confirmer ma présence » (183): the guests confirm with Marakaj; only the closing day is the card's
+    if (b.type === 'rsvp') h += field('closes', 'Confirmer au plus tard le (facultatif)', 'date', '') +
+      '<p class="ed-help">Le bouton mène vos invités à Marakaj : ils se connectent, confirment leur présence, puis ajoutent leurs photos (5 chacun). Ce jour passé, le bouton se ferme tout seul.</p>' +
 (ctx.rsvp_on === false ? '<p class="ed-lab">Les réponses sont fermées dans Marakaj : vos invités voient « Les réponses sont fermées ».</p>' : '');
     if (b.type === 'dresscode') h += '<p class="ed-lab">Les couleurs</p><div class="ed-row">' + (p.colors || []).map(function (c, i) { return '<input type="color" data-dc="' + i + '" value="' + esc(c) + '"><button type="button" class="ed-chip" data-dcdel="' + i + '">✕</button>'; }).join('') + '<button type="button" class="ed-chip" data-dcadd>+ Une couleur</button></div>';
     var L = LISTS[b.type];

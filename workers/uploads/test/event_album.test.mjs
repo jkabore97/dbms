@@ -207,3 +207,54 @@ test("179: the phone's identifier goes to Postgres when the page sends one, and 
     assert.equal("p_device" in asked[4].body, false, "a malformed one dropped");
   });
 });
+
+// 183: a confirmed guest's photo from the app, signed in — every question
+// asked as the guest, five per account counted by Postgres.
+const guestUpload = (e, { token = "jwt-nora", slug = "mariage-awa-183", type = "image/jpeg", bytes = PHOTO } = {}) =>
+  worker.fetch(new Request(`https://up.example/v1/events/${slug}/album/guest`, {
+    method: "POST",
+    headers: { "Content-Type": type, ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: bytes,
+  }), e);
+
+test("183: a confirmed guest's photo — minted and confirmed as the guest, the bytes put", async () => {
+  const e = env();
+  await withPostgres({
+    event_album_add_guest: (body, token) => token === "jwt-nora" && body.p_slug === "mariage-awa-183" && body.p_ext === "jpg" ? [200, KEY] : [403, { message: "no" }],
+    event_album_done: (body, token) => token === "jwt-nora" && body.p_key === KEY && body.p_preview === null && body.p_bytes === 3000 ? [200, true] : [403, { message: "Envoi inconnu." }],
+  }, async (asked) => {
+    const r = await guestUpload(e);
+    assert.equal(r.status, 201);
+    assert.equal((await r.json()).key, KEY);
+    assert.deepEqual(asked.map((a) => a.name), ["event_album_add_guest", "event_album_done"]);
+    assert.ok(asked.every((a) => a.token === "jwt-nora"), "asked as the guest, never the anonymous role");
+    assert.equal(e.UPLOADS.puts.length, 1);
+  });
+});
+
+test("183: the sixth photo — Postgres's words, nothing put; signed out — refused before Postgres", async () => {
+  const e = env();
+  await withPostgres({
+    event_album_add_guest: () => [400, { message: "Vous avez déposé vos 5 photos : c'est le maximum par invité." }],
+  }, async (asked) => {
+    const r = await guestUpload(e);
+    assert.equal(r.status, 403);
+    assert.equal((await r.json()).error, "Vous avez déposé vos 5 photos : c'est le maximum par invité.");
+    assert.equal(e.UPLOADS.puts.length, 0);
+    const out = await guestUpload(e, { token: null });
+    assert.equal(out.status, 401);
+    assert.equal(asked.length, 1, "signed out: Postgres not asked");
+  });
+});
+
+test("183: the confirmation refused — the bytes just written are deleted", async () => {
+  const e = env();
+  await withPostgres({
+    event_album_add_guest: () => [200, KEY],
+    event_album_done: () => [403, { message: "Envoi inconnu." }],
+  }, async () => {
+    const r = await guestUpload(e);
+    assert.equal(r.status, 403);
+    assert.deepEqual(e.UPLOADS.deletes, [KEY]);
+  });
+});

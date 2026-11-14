@@ -127,6 +127,14 @@ export default {
       // card's link is the key; Postgres mints and confirms every key.
       // The pass (164): the guest's answer or ticket request, five photos
       // each when the album is limited.
+      // POST /v1/events/<slug>/album/guest — a confirmed guest's photo from
+      // the app (183), signed in: Postgres, as the guest, counts the five
+      // per account (event_album_add_guest) and confirms the bytes.
+      const guestAlbum = url.pathname.match(/^\/v1\/events\/([a-z0-9-]+)\/album\/guest$/);
+      if (guestAlbum && request.method === "POST") {
+        return withCors(await putGuestAlbumPicture(request, env, guestAlbum[1]), cors);
+      }
+
       const album = url.pathname.match(/^\/v1\/events\/([a-z0-9-]+)\/album$/);
       if (album && request.method === "POST") {
         return withCors(await putAlbumPicture(request, env, album[1], url.searchParams.get("apercu") || "", url.searchParams.get("invite") || "", url.searchParams.get("pass") || "", url.searchParams.get("device") || ""), cors);
@@ -630,6 +638,21 @@ async function putAlbumPicture(request, env, slug, preview, guest, pass = "", de
     mint: (ext) => rpcAnonAsked(env, "event_album_add", { p_slug: slug, p_preview: link, p_ext: ext, p_guest: who || null, p_pass: card, ...(phone ? { p_device: phone } : {}) }),
     confirm: (key, bytes) => rpcAnonAsked(env, "event_album_done", { p_key: key, p_preview: link, p_bytes: bytes }),
     meta: { event: slug, guest: who },
+  });
+}
+
+// A confirmed guest's photo (183): signed in, every question asked as the
+// guest — they confirmed their presence, five photos each, the album open
+// and Marakaj Pro's — and the slot completed as its own account.
+async function putGuestAlbumPicture(request, env, slug) {
+  const token = bearer(request);
+  if (!token) {
+    return problem(401, "Sign in first.");
+  }
+  return storeEventPicture(request, env, {
+    mint: (ext) => rpcAs(env, token, "event_album_add_guest", { p_slug: slug, p_ext: ext }),
+    confirm: (key, bytes) => rpcAs(env, token, "event_album_done", { p_key: key, p_preview: null, p_bytes: bytes }),
+    meta: { event: slug, guest: "account" },
   });
 }
 
