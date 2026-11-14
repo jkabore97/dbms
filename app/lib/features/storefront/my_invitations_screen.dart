@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
@@ -8,6 +9,7 @@ import '../../core/events/events_repository.dart' show EventsException;
 import '../../core/events/invitations_repository.dart';
 import '../../core/events/street_event.dart' show eventCountdown;
 import '../../core/l10n/tr.dart';
+import '../../core/nav/router.dart' show Routes;
 import '../../core/notify/bell_room.dart';
 import '../events/events_screens.dart' show eventSiteOrigin, openSitePage;
 import 'my_tickets_screens.dart' show cancelledNotice;
@@ -175,12 +177,35 @@ class _MyInvitationsScreenState extends State<MyInvitationsScreen> {
     }
   }
 
+  /// Back, from « Mes invitations », is always the street's vitrines (the
+  /// owner): never the confirmation it came from, which would only say
+  /// « confirmé » again.
+  void _home() {
+    final router = GoRouter.maybeOf(context);
+    if (router != null) {
+      router.go(Routes.directory);
+    } else {
+      Navigator.of(context).maybePop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final mine = _mine;
-    return Scaffold(
+    final routed = GoRouter.maybeOf(context) != null;
+    return PopScope(
+      // the phone's own back too, when the app's router is there to go home
+      canPop: !routed,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _home();
+      },
+      child: Scaffold(
       backgroundColor: ShopStyle.paper,
-      appBar: AppBar(title: Text(context.tr('Mes invitations')), actions: const [bellRoom]),
+      appBar: AppBar(
+        leading: BackButton(key: const Key('my-invitations-back'), onPressed: _home),
+        title: Text(context.tr('Mes invitations')),
+        actions: const [bellRoom],
+      ),
       body: _problem != null && mine == null
           ? Center(
               child: Padding(
@@ -212,6 +237,7 @@ class _MyInvitationsScreenState extends State<MyInvitationsScreen> {
                         children: [for (final inv in mine) _card(context, inv)],
                       ),
                     ),
+      ),
     );
   }
 
