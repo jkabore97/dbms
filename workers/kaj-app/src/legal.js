@@ -281,8 +281,8 @@ export function legalPage(pathname, { email = DEFAULT_EMAIL, lang = null } = {})
   const html = sitePage({
     title: doc.title,
     description: english
-      ? `Marakaj's ${doc.title.toLowerCase()} — Au Service du Peuple.`
-      : `${doc.title} de Marakaj — Au Service du Peuple.`,
+      ? `Marakaj's ${doc.title.toLowerCase()}.`
+      : `${doc.title} de Marakaj.`,
     main: `<h1>${escape(doc.title)}</h1>\n${other}${body}`,
     lang: english ? "en" : "fr",
     style: "  .lang { color: #6B6660; font-size: 14px; }\n  .lang a { color: #8B5A3C; }\n",
@@ -332,7 +332,7 @@ ${head}<link rel="icon" type="image/png" href="/favicon.png">
 ${style}</style>
 </head>
 <body>
-<header><a href="/">Marakaj — Au Service du Peuple</a></header>
+<header><a href="/">Marakaj</a></header>
 <main>
 ${main}
 </main>

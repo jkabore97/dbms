@@ -11,6 +11,7 @@ import 'package:kaj_app/core/nav/router.dart' show Routes;
 import 'package:kaj_app/core/notify/notifications_repository.dart';
 import 'package:kaj_app/features/events/events_screens.dart';
 import 'package:kaj_app/features/notify/notification_text.dart';
+import 'package:kaj_app/features/storefront/directory_screen.dart' show streetGreeting;
 import 'package:kaj_app/features/storefront/my_invitations_screen.dart';
 import 'package:kaj_app/features/storefront/my_tickets_screens.dart';
 import 'package:kaj_app/l10n/strings.dart';
@@ -146,6 +147,7 @@ void main() {
   });
 
   backHome();
+  greeting();
 }
 
 /// The owner: from « Mes invitations », back is always the street's
@@ -181,6 +183,23 @@ void backHome() {
       expect(find.text('VITRINES'), findsOneWidget, reason: byPhone ? 'the phone\'s back' : 'the arrow');
       expect(find.text('MES INVITATIONS'), findsNothing, reason: 'not the confirmation');
       expect(router.routerDelegate.currentConfiguration.uri.path, Routes.directory);
+    }
+  });
+}
+
+/// The owner: the street greets by the hour in place of the slogan.
+void greeting() {
+  testWidgets('the street\'s greeting: « Bonjour » by day, « Bonsoir » in the evening; English by the hour', (tester) async {
+    for (final (lang, hour, want) in [
+      ('fr', 9, 'Bonjour'), ('fr', 17, 'Bonjour'), ('fr', 18, 'Bonsoir'), ('fr', 2, 'Bonsoir'),
+      ('en', 9, 'Good morning'), ('en', 14, 'Good afternoon'), ('en', 21, 'Good evening'),
+    ]) {
+      late String got;
+      await _pump(tester, Builder(builder: (context) {
+        got = streetGreeting(context, DateTime(2026, 11, 14, hour));
+        return const SizedBox();
+      }), lang: lang);
+      expect(got, want, reason: '$lang at $hour h');
     }
   });
 }

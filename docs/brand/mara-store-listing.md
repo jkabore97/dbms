@@ -7,7 +7,7 @@ crochets [ ] dépendent d'un interrupteur : la billetterie (`events_tickets`) à
 seulement une fois ouverte. Mis à jour pour 182 : l'Événementiel gratuit, Pro pour les
 modèles Premium, l'album des invités et les billets au-delà des gratuits.
 
-**Slogan** : Au Service du Peuple
+**Accueil de l'app** : « Bonjour » ou « Bonsoir » selon l'heure du téléphone (le slogan « Au Service du Peuple » retiré le 14 novembre 2026, de l'app, du site, des pages légales, de l'e-mail de bienvenue et des textes des stores).
 
 ## Google Play
 
@@ -60,7 +60,7 @@ Marakaj est conçue pour l'Afrique de l'Ouest : en français, sur téléphone, p
 **Sous-titre (30 car. max)** Boutiques, caisse, invitations
 **Mots-clés (100 car. max, sans accent pour tenir aussi en octets)**
 boutique,commerce,caisse,stock,livraison,vitrine,invitation,mariage,carte,evenement,Burkina,FCFA
-**Texte promotionnel (170 car. max)** Au Service du Peuple : les boutiques près de vous, et des cartes d'invitation animées que vous composez au doigt avec Studio.
+**Texte promotionnel (170 car. max)** Les boutiques près de chez vous, et des cartes d'invitation animées que vous composez au doigt avec Studio.
 **Description** : reprendre la description complète Google Play, mêmes lignes (Apple et Google doivent dire la même chose ; ce qui est écrit doit être visible par le compte de test).
 **Nouveautés de la version** : reprendre les Nouveautés Google Play.
 **Notes pour la revue (App Review Information › Notes)**

@@ -56,6 +56,18 @@ final Set<String> _arrivalLooked = {};
 @visibleForTesting
 void forgetStreetArrival() => _arrivalLooked.clear();
 
+/// The street's first words (the owner, in place of the slogan): « Bonjour »
+/// until six in the evening, « Bonsoir » after (and before five in the
+/// morning); in English, good morning, afternoon or evening.
+String streetGreeting(BuildContext context, DateTime now) {
+  final h = now.hour;
+  final evening = h >= 18 || h < 5;
+  if (context.trLanguage == 'en') {
+    return evening ? 'Good evening' : (h < 12 ? 'Good morning' : 'Good afternoon');
+  }
+  return evening ? context.tr('Bonsoir') : context.tr('Bonjour');
+}
+
 class DirectoryScreen extends StatefulWidget {
   const DirectoryScreen({
     super.key,
@@ -917,9 +929,10 @@ class _Street extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Mara's slogan, then what the street is.
+                // A greeting by the phone's hour (the owner), then what
+                // the street is.
                 Text(
-                  context.tr('Au Service du Peuple'),
+                  streetGreeting(context, DateTime.now()),
                   key: const Key('street-slogan'),
                   style: TextStyle(
                     fontSize: wide ? 32 : 24,

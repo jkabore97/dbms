@@ -9450,4 +9450,6 @@ const enStrings = <String, String>{
       'Guests see “Event cancelled” on the card; buyers and confirmed guests were told in Marakaj.',
   'Vous vendez, élevez, gérez une association ou organisez des événements ?':
       'Do you sell, farm, run an association or organise events?',
+  'Bonsoir':
+      'Good evening',
 };

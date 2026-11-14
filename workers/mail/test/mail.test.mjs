@@ -205,7 +205,7 @@ test("the e-mail, in French: the words, the three steps, the links, the colours,
   for (const s of ["Bienvenue sur Marakaj, Awa !", "Ajoutez vos articles", "Ouvrez votre vitrine",
                    "Faites votre première vente", "Ouvrir Marakaj",
                    "Une question ? Répondez simplement à cet e-mail.",
-                   "Marakaj — Au Service du Peuple · KAJ Consulting LLC"]) {
+                   "Marakaj · KAJ Consulting LLC"]) {
     assert.ok(m.html.replaceAll("&nbsp;", " ").includes(s), s);
     assert.ok(m.text.includes(s), `text: ${s}`);
   }
@@ -228,7 +228,7 @@ test("the e-mail, in English, equivalent", () => {
   assert.equal(m.subject, "Welcome to Marakaj, John!");
   for (const s of ["Welcome to Marakaj, John!", "Add your items", "Open your shop window",
                    "Make your first sale", "Open Marakaj", "A question? Just reply to this e-mail.",
-                   "Marakaj — Au Service du Peuple · KAJ Consulting LLC"]) {
+                   "Marakaj · KAJ Consulting LLC"]) {
     assert.ok(m.html.replaceAll("&nbsp;", " ").includes(s), s);
   }
   assert.match(m.html, /<html lang="en"/);
