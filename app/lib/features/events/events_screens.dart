@@ -14,6 +14,7 @@ import '../../core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import '../../core/theme/kaj_card.dart';
 import '../capture/barcode_sheet.dart';
+import '../storefront/my_tickets_screens.dart' show cancelledNotice;
 import 'street_picture_sheet.dart';
 import 'templates_gallery_screen.dart';
 import 'tickets_screens.dart';
@@ -354,7 +355,7 @@ class _EventTile extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    _StatusChip(published: event.published),
+                    _StatusChip(published: event.published, cancelled: event.cancelled),
                   ]),
                   const SizedBox(height: 6),
                   Text(
@@ -400,26 +401,38 @@ class _EventTile extends StatelessWidget {
 }
 
 class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.published});
+  const _StatusChip({required this.published, this.cancelled = false});
   final bool published;
+
+  /// 185: a cancelled event says « Annulé », whatever else.
+  final bool cancelled;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final color = published ? const Color(0xFF2E7D4F) : scheme.onSurfaceVariant;
+    final color = cancelled
+        ? const Color(0xFFB91C1C)
+        : published
+            ? const Color(0xFF2E7D4F)
+            : scheme.onSurfaceVariant;
+    final filled = published || cancelled;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
       decoration: BoxDecoration(
-        color: published ? color.withValues(alpha: 0.1) : Colors.transparent,
-        border: Border.all(color: color.withValues(alpha: published ? 0.0 : 0.5)),
+        color: filled ? color.withValues(alpha: 0.1) : Colors.transparent,
+        border: Border.all(color: color.withValues(alpha: filled ? 0.0 : 0.5)),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 5),
         Text(
-          published ? context.tr('Publiée') : context.tr('Brouillon'),
+          cancelled
+              ? context.tr('Annulé')
+              : published
+                  ? context.tr('Publiée')
+                  : context.tr('Brouillon'),
           style: theme.textTheme.labelSmall?.copyWith(color: color, fontWeight: FontWeight.w700),
         ),
       ]),
@@ -919,6 +932,14 @@ class _EventScreenState extends State<EventScreen> {
                       padding: const EdgeInsets.only(bottom: 10),
                       child: Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
                     ),
+                  // 185: cancelled — said on top, as the guests' card says it
+                  if (e.cancelled)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: cancelledNotice(context, e.cancelReason,
+                          more: context.tr('Les invités voient « Événement annulé » sur la carte ; les acheteurs et les invités confirmés ont été prévenus dans Marakaj.'),
+                          key: const Key('event-cancelled')),
+                    ),
                   KajCard(
                     child: Padding(
                       padding: const EdgeInsets.all(16),
@@ -930,7 +951,7 @@ class _EventScreenState extends State<EventScreen> {
                               style: theme.textTheme.bodyMedium,
                             ),
                           ),
-                          _StatusChip(published: e.published),
+                          _StatusChip(published: e.published, cancelled: e.cancelled),
                         ]),
                         const SizedBox(height: 8),
                         Text(
@@ -1105,7 +1126,7 @@ class _EventScreenState extends State<EventScreen> {
                   ),
                   if (_canSell) ...[
                     const SizedBox(height: 12),
-                    TicketsCard(tickets: widget.events.tickets, event: e, open: widget.open),
+                    TicketsCard(tickets: widget.events.tickets, event: e, open: widget.open, changed: _load),
                   ],
                   const SizedBox(height: 18),
                   Text(

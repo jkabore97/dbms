@@ -10,6 +10,7 @@ import '../../core/events/street_event.dart' show eventCountdown;
 import '../../core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import '../events/events_screens.dart' show eventSiteOrigin, openSitePage;
+import 'my_tickets_screens.dart' show cancelledNotice;
 import 'shop_style.dart';
 
 /// A photo chosen on the phone, ready to send.
@@ -219,7 +220,8 @@ class _MyInvitationsScreenState extends State<MyInvitationsScreen> {
     final wall = inv.startsWall;
     final picture = inv.cardPreview == null ? null : widget.repo.pictureUrl(inv.cardPreview!, width: 800);
     final sending = _sending == inv.id;
-    final albumOpen = inv.albumOn && inv.albumAllowed;
+    // a cancelled event takes no photo (185): its album's button goes
+    final albumOpen = inv.albumOn && inv.albumAllowed && !inv.cancelled;
     return Card(
       key: ValueKey('invitation-${inv.id}'),
       margin: const EdgeInsets.only(bottom: 18),
@@ -244,6 +246,10 @@ class _MyInvitationsScreenState extends State<MyInvitationsScreen> {
                   : context.tr('Présence confirmée'),
               style: theme.textTheme.bodySmall,
             ),
+            if (inv.cancelled) ...[
+              const SizedBox(height: 10),
+              cancelledNotice(context, inv.cancelReason, key: ValueKey('invitation-cancelled-${inv.id}')),
+            ],
             const SizedBox(height: 12),
             Wrap(spacing: 10, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
               OutlinedButton.icon(
@@ -266,7 +272,9 @@ class _MyInvitationsScreenState extends State<MyInvitationsScreen> {
                     key: ValueKey('invitation-count-${inv.id}'), style: const TextStyle(fontWeight: FontWeight.w700)),
             ]),
             const SizedBox(height: 6),
-            if (!albumOpen)
+            if (inv.cancelled)
+              const SizedBox.shrink()
+            else if (!albumOpen)
               Text(context.tr('L’album de cette carte est fermé.'), style: theme.textTheme.bodySmall)
             else if (photoDaysNote(context, inv, (widget.now ?? DateTime.now)()) case final note?)
               Text(note, key: ValueKey('invitation-days-${inv.id}'), style: theme.textTheme.bodySmall)

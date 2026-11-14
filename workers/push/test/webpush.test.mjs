@@ -398,3 +398,11 @@ test("183: a guest's confirmation opens « Mes invitations »; the organiser's, 
   // without its business, never a guess: the app's home
   assert.equal(payloadFor({ kind: "event_presence", message: "m", params: {} }, env).path, "/");
 });
+
+test("185: an event cancelled — the buyer's bell opens « Mes billets », the guest's « Mes invitations »", () => {
+  const env = { APP_ORIGIN: "https://app.example" };
+  assert.equal(payloadFor({ kind: "event_cancelled_buyer", message: "« Gala » est annulé.",
+    params: { to: "customer", event_id: "e1", slug: "gala" } }, env).path, "/billets");
+  assert.equal(payloadFor({ kind: "event_cancelled_guest", message: "« Gala » est annulé.",
+    params: { to: "customer", event_id: "e1", slug: "gala" } }, env).path, "/invitations");
+});

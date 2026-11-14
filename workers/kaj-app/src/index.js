@@ -1011,6 +1011,9 @@ async function cardPage(request, env, { slug, data, preview, edit, editor, demo,
     tickets: data.tickets === true,
     // « Confirmer ma présence » (183): where the card's button goes
     presence: presenceHref(data.slug || slug, preview),
+    // 185: the organiser cancelled the event — the page says so
+    cancelled: data.cancelled === true,
+    cancel_reason: data.cancelled === true && typeof data.cancel_reason === "string" ? data.cancel_reason : null,
     published: data.published === true,
     org_name: data.org_name || "",
     preview: preview || null,
@@ -1034,6 +1037,8 @@ async function cardPage(request, env, { slug, data, preview, edit, editor, demo,
   // 2026 à 10 h · Bazoulé ») — not the business's name, which read as the
   // kind (« Une invitation de Mariage Phanuel & Esperance » for a dot).
   const description = clip([
+    // 185: a cancelled event says it first, in the link's preview too
+    data.cancelled === true ? "Événement annulé" : null,
     EVENT_KINDS[data.kind] || null,
     when.date ? dayInFrench(when.date, when.time) : null,
     data.place,
@@ -1075,9 +1080,17 @@ async function cardPage(request, env, { slug, data, preview, edit, editor, demo,
             (wide ? `<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">` : "") +
             (image.startsWith(SITE) ? `<meta property="og:image:type" content="image/jpeg">` : "") : "") +
           `<meta name="robots" content="noindex">` +
-          `<script>window.CARTE=${json}</script>`,
+          `<script>window.CARTE=${json}</script>` +
+          (boot.cancelled ? CANCELLED_STYLE : ""),
           { html: true },
         );
+      },
+    })
+    // 185: a cancelled event — the banner over every kind of card (Studio,
+    // classic, animated), and no button to confirm or to book
+    .on("body", {
+      element(e) {
+        if (boot.cancelled) e.prepend(cancelledBanner(boot.cancel_reason), { html: true });
       },
     })
     .transform(page);
@@ -1085,6 +1098,22 @@ async function cardPage(request, env, { slug, data, preview, edit, editor, demo,
   headers.set("Cache-Control", demo ? "public, max-age=3600" : "no-store");
   headers.set("Content-Type", "text/html; charset=utf-8");
   return new Response(rewritten.body, { status: 200, headers });
+}
+
+// 185: what a cancelled event's card shows — on top of the card, whatever
+// its kind, and its buttons to confirm or to book hidden (the server refuses
+// both anyway).
+const CANCELLED_STYLE =
+  "<style>" +
+  ".kaj-cancelled{position:sticky;top:0;z-index:2147483000;margin:0;padding:14px 18px;background:#7f1d1d;color:#fff;" +
+  "font:600 16px/1.35 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.25)}" +
+  ".kaj-cancelled small{display:block;font-weight:400;font-size:14px;opacity:.92;margin-top:3px}" +
+  "[data-presence],.presence,.album-presence,a[href*='/billets']{display:none!important}" +
+  "</style>";
+
+function cancelledBanner(reason) {
+  return `<div class="kaj-cancelled" role="status" data-cancelled>Événement annulé` +
+    (reason ? `<small>${escapeHtml(reason)}</small>` : "") + `</div>`;
 }
 
 // The picture WhatsApp and the rest show under a shared card's link (173):

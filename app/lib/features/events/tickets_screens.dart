@@ -20,11 +20,14 @@ import 'package:kaj_app/features/common/phone_field.dart' show PhoneInput;
 /// so many tickets, 182 —, or Marakaj's own before): the server says so,
 /// and refuses the rest anyway.
 class TicketsCard extends StatelessWidget {
-  const TicketsCard({super.key, required this.tickets, required this.event, this.open});
+  const TicketsCard({super.key, required this.tickets, required this.event, this.open, this.changed});
 
   final TicketsRepository tickets;
   final EventSummary event;
   final Future<void> Function(Uri uri)? open;
+
+  /// The card's screen read again, after a change made here (185).
+  final Future<void> Function()? changed;
 
   @override
   Widget build(BuildContext context) {
@@ -117,11 +120,13 @@ class TicketsCard extends StatelessWidget {
           trailing: const Icon(Icons.chevron_right),
           onTap: () => go(TicketJournalScreen(tickets: tickets, eventId: event.id)),
         ),
+        // once cancelled (185), nothing more to cancel
+        if (!event.cancelled)
         ListTile(
           key: const Key('tickets-cancel'),
           leading: Icon(Icons.event_busy_outlined, color: theme.colorScheme.error),
           title: Text(context.tr('Annuler l’événement'), style: TextStyle(color: theme.colorScheme.error)),
-          onTap: () => cancelEvent(context, tickets, event, open: open),
+          onTap: () => cancelEvent(context, tickets, event, open: open, after: changed),
         ),
       ]),
     );

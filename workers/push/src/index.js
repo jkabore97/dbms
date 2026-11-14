@@ -161,6 +161,10 @@ export function payloadFor(row, env) {
   // photos go; the organiser's (and 159's reminder) « Invités » — as the
   // app's notificationTarget does.
   else if (kind === "event_presence_guest") path = "/invitations";
+  // 185: an event cancelled — the buyer's opens « Mes billets », the
+  // confirmed guest's « Mes invitations »
+  else if (kind === "event_cancelled_buyer") path = "/billets";
+  else if (kind === "event_cancelled_guest") path = "/invitations";
   else if ((kind === "event_presence" || kind === "event_tomorrow") && row.org_id) {
     path = `/o/${row.org_id}/evenements/invites`;
   }

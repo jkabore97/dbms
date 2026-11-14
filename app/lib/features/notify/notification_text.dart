@@ -134,6 +134,12 @@ String notificationLine(BuildContext context, NotificationRow n) {
     // 183: « Confirmer ma présence » — the guest's bell, the organiser's.
     case 'event_presence_guest':
       return context.tr('Présence confirmée à « {title} » : vous pouvez ajouter vos photos.', {'title': s('title')});
+    // 185: an event cancelled, its buyers' and its confirmed guests'
+    case 'event_cancelled_buyer':
+    case 'event_cancelled_guest':
+      return s('reason').isEmpty
+          ? context.tr('« {title} » est annulé.', {'title': s('title')})
+          : context.tr('« {title} » est annulé ({reason}).', {'title': s('title'), 'reason': s('reason')});
     case 'event_presence':
       final n = number('people')?.toInt() ?? 1;
       return n > 1
@@ -554,6 +560,11 @@ String? notificationTarget(
       return slug is String && slug.isNotEmpty ? Routes.storefront(slug) : null;
     // 183: the guest's confirmation opens « Mes invitations », where the photos go.
     case 'event_presence_guest':
+      return Routes.myInvitations;
+    // 185: the cancelled event's ticket, or its invitation
+    case 'event_cancelled_buyer':
+      return Routes.myTickets;
+    case 'event_cancelled_guest':
       return Routes.myInvitations;
   }
   if (org == null) return null;

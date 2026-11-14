@@ -171,6 +171,8 @@ class MyInvitation {
     this.photosFrom,
     this.photosUntil,
     this.photosOpen = true,
+    this.cancelled = false,
+    this.cancelReason,
   });
 
   factory MyInvitation.fromJson(Map<String, dynamic> j) => MyInvitation(
@@ -198,7 +200,13 @@ class MyInvitation {
         photosUntil: _day(j['photos_until']),
         // a server of before 184 says nothing: any day, as then
         photosOpen: j['photos_open'] != false,
+        cancelled: j['cancelled'] == true,
+        cancelReason: j['cancel_reason'] as String?,
       );
+
+  /// The organiser cancelled the event (185).
+  final bool cancelled;
+  final String? cancelReason;
 
   static DateTime? _day(Object? v) {
     final d = v == null ? null : DateTime.tryParse('$v');
@@ -251,7 +259,7 @@ class MyInvitation {
     return DateTime(w.year, w.month, w.day).isBefore(from);
   }
 
-  bool get canAddPhotos => albumOn && albumAllowed && photosOpen && photosUsed < photosLimit;
+  bool get canAddPhotos => !cancelled && albumOn && albumAllowed && photosOpen && photosUsed < photosLimit;
   int get photosLeft => (photosLimit - photosUsed).clamp(0, photosLimit);
 
   /// When it starts on the card's own clock, as EventSummary.startsWall.

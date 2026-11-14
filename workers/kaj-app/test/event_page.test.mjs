@@ -129,6 +129,25 @@ test("183: the card's « Confirmer ma présence » goes to the app's /presence/<
   assert.equal(await app.text(), PAGE, "the app's own page, as /achat-billets");
 });
 
+test("185: a cancelled event — the banner on top, its reason escaped, no button to confirm or book; the link's preview says it", async () => {
+  answer = {
+    slug: "gala-185", kind: "gala", card: "come", title: "Gala",
+    starts_at: "2027-06-05T15:00:00+00:00", place: "Ouaga", content: {},
+    rsvp_on: true, album_on: true, published: true, org_name: "Awa", cancelled: true, cancel_reason: "La salle <fermée>",
+  };
+  const html = await (await get("/e/gala-185")).text();
+  assert.ok(html.includes('<div class="kaj-cancelled" role="status" data-cancelled>Événement annulé<small>La salle &lt;fermée&gt;</small></div>'), "the banner, first in the body");
+  assert.ok(html.indexOf("kaj-cancelled\" role") > html.indexOf("<body"), "inside the body");
+  assert.ok(html.includes("[data-presence],.presence,.album-presence,a[href*='/billets']{display:none!important}"), "the buttons hidden");
+  assert.ok(html.includes('"cancelled":true') && html.includes('"cancel_reason":"La salle \\u003cfermée>"'), "the page told");
+  assert.ok(/og:description" content="Événement annulé · /.test(html), "the link's preview says it first");
+
+  answer = { ...answer, cancelled: false, cancel_reason: null };
+  const open = await (await get("/e/gala-185")).text();
+  assert.ok(!open.includes("kaj-cancelled"), "not cancelled: no banner, no hiding");
+  assert.ok(open.includes('"cancelled":false'));
+});
+
 test("the card the event names; an unknown name falls back to the first", async () => {
   answer = { slug: "gala-x", kind: "gala", card: "gala", title: "Gala", content: {} };
   let html = await (await get("/e/gala-x")).text();
