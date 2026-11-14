@@ -34,6 +34,11 @@ class _PresenceScreenState extends State<PresenceScreen> {
   String? _problem;
   int _people = 1;
   final _message = TextEditingController();
+
+  /// « Rappel WhatsApp la veille »: the number goes to the organiser only
+  /// when the guest turns it on (off by default; a confirmation of before
+  /// that shared it starts on).
+  bool _sharePhone = false;
   bool _busy = false;
   String? _error;
 
@@ -63,10 +68,21 @@ class _PresenceScreenState extends State<PresenceScreen> {
         setState(() => _problem = context.tr('Cette carte n’est pas ouverte.'));
         return;
       }
+      // Confirmed, and the answers since closed: the photos and « Mes
+      // invitations » still, not only « fermées ».
+      MyInvitation? mine;
+      if (c.confirmed && !c.open) {
+        try {
+          mine = (await widget.repo.mine()).where((x) => x.slug == widget.slug).firstOrNull;
+        } catch (_) {}
+        if (!mounted) return;
+      }
       setState(() {
         _card = c;
+        _mine = mine ?? _mine;
         if (c.myPeople != null) _people = c.myPeople!.clamp(1, 10);
         if ((c.myMessage ?? '').isNotEmpty) _message.text = c.myMessage!;
+        _sharePhone = c.hasPhone && c.mySharePhone;
       });
     } on PostgrestException catch (e) {
       if (mounted) setState(() => _problem = e.message);
@@ -82,7 +98,8 @@ class _PresenceScreenState extends State<PresenceScreen> {
       _error = null;
     });
     try {
-      final r = await widget.repo.confirm(widget.slug, widget.preview, people: _people, message: _message.text);
+      final r = await widget.repo.confirm(widget.slug, widget.preview,
+          people: _people, message: _message.text, sharePhone: (_card?.hasPhone ?? false) && _sharePhone);
       MyInvitation? mine;
       try {
         mine = (await widget.repo.mine()).where((x) => x.slug == widget.slug).firstOrNull;
@@ -123,9 +140,10 @@ class _PresenceScreenState extends State<PresenceScreen> {
       go();
       return;
     }
+    // pushed, not gone to: Back returns here
     final router = GoRouter.maybeOf(context);
     if (router != null) {
-      router.go('/invitations');
+      context.push('/invitations');
     } else {
       Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => MyInvitationsScreen(repo: widget.repo)));
     }
@@ -151,7 +169,11 @@ class _PresenceScreenState extends State<PresenceScreen> {
                     if (c.orgName != null && c.orgName!.isNotEmpty)
                       Text(context.tr('Organisé par {name}', {'name': c.orgName!}), style: theme.textTheme.bodySmall),
                     const SizedBox(height: 18),
-                    if (_first != null) ..._done(context) else if (!c.open)
+                    if (_first != null || (!c.open && c.confirmed && !c.cancelled))
+                      ..._done(context)
+                    else if (c.cancelled)
+                      Text(context.tr('Cet événement est annulé.'), key: const Key('presence-cancelled'), style: theme.textTheme.titleMedium)
+                    else if (!c.open)
                       Text(context.tr('Les réponses sont fermées pour cet événement.'), style: theme.textTheme.titleMedium)
                     else
                       ..._form(context, c),
@@ -194,6 +216,16 @@ class _PresenceScreenState extends State<PresenceScreen> {
         textCapitalization: TextCapitalization.sentences,
         decoration: InputDecoration(labelText: context.tr('Un mot (facultatif)'), border: const OutlineInputBorder()),
       ),
+      // the number only by the guest's choice, and only if the account has one
+      if (c.hasPhone)
+        SwitchListTile(
+          key: const Key('presence-share-phone'),
+          contentPadding: EdgeInsets.zero,
+          value: _sharePhone,
+          onChanged: _busy ? null : (v) => setState(() => _sharePhone = v),
+          title: Text(context.tr('Rappel WhatsApp la veille')),
+          subtitle: Text(context.tr('L’organisateur verra votre numéro pour vous écrire.')),
+        ),
       if (_error != null)
         Padding(
           padding: const EdgeInsets.only(top: 6),
@@ -233,13 +265,23 @@ class _PresenceScreenState extends State<PresenceScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                _first == true ? context.tr('Votre présence est confirmée. Merci !') : context.tr('Votre réponse est mise à jour.'),
+                switch (_first) {
+                  true => context.tr('Votre présence est confirmée. Merci !'),
+                  false => context.tr('Votre réponse est mise à jour.'),
+                  // confirmed before, the answers since closed
+                  null => context.tr('Vous avez confirmé votre présence.'),
+                },
                 style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
             ),
           ]),
         ),
       ),
+      if (_first == null)
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(context.tr('Les réponses sont fermées pour cet événement.'), style: theme.textTheme.bodySmall),
+        ),
       const SizedBox(height: 14),
       if (album) ...[
         Text(context.tr('Vous pouvez maintenant ajouter vos photos de la fête : {n} au plus.', {'n': inv.photosLimit}),

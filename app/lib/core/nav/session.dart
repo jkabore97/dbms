@@ -427,14 +427,56 @@ class SessionController extends ChangeNotifier {
   /// own redirect, which is already navigating.
   String? _returnTo;
 
+  /// Confirming one's presence and buying tickets (183) are kept on the
+  /// device too, as Google's return is ([_googleReturnKey]): a new account
+  /// made by e-mail confirms its address in another tab, or after the page
+  /// was closed — memory is gone by the time the person signs in. Fresh
+  /// for a day; taken (and cleared) once used.
+  static const _returnKey = 'return_to_after_sign_in';
+  static const _returnFresh = Duration(days: 1);
+  static bool _keptOnDevice(String location) =>
+      location.startsWith('/presence/') || location.startsWith('/achat-billets/');
+  bool _returnOnDevice = false;
+
   void stashReturnTo(String location) {
     _returnTo = location;
+    // Written without waiting: this runs inside the router's redirect. Any
+    // other page stashed clears what a page of before left on the device.
+    final keep = _keptOnDevice(location);
+    if (keep || _returnOnDevice) {
+      _returnOnDevice = keep;
+      unawaited(db
+          .writePref(_returnKey, keep ? '${DateTime.now().toIso8601String()}|$location' : null)
+          .catchError((_) {}));
+    }
   }
 
   String? takeReturnTo() {
     final location = _returnTo;
     _returnTo = null;
+    if (_returnOnDevice) {
+      _returnOnDevice = false;
+      unawaited(db.writePref(_returnKey, null).catchError((_) {}));
+    }
     return location;
+  }
+
+  /// At sign-in, with nothing in memory: the page the device kept, if fresh.
+  Future<void> _restoreReturnTo() async {
+    if (_returnTo != null) return;
+    try {
+      final kept = await db.readPref(_returnKey);
+      if (kept == null) return;
+      final bar = kept.indexOf('|');
+      final at = bar < 0 ? null : DateTime.tryParse(kept.substring(0, bar));
+      final to = bar < 0 ? '' : kept.substring(bar + 1);
+      if (at != null && DateTime.now().difference(at) <= _returnFresh && _keptOnDevice(to)) {
+        _returnTo = to;
+        _returnOnDevice = true;
+      } else {
+        await db.writePref(_returnKey, null);
+      }
+    } catch (_) {}
   }
 
   /// A business to open as soon as this person has it: the one an
@@ -787,6 +829,10 @@ class SessionController extends ChangeNotifier {
     await db.saveIdentity(identity);
     _identity = identity;
 
+    // A confirmation or a ticket purchase that sent the person to make an
+    // account by e-mail (183): back to it, even after a reload.
+    await _restoreReturnTo();
+
     // The code, if any, is asked by the resolve: only of somebody who
     // belongs to a business (108).
     await resolveOrgs();
@@ -909,6 +955,11 @@ class SessionController extends ChangeNotifier {
     _dialKept.clear();
     _lastOrgId = null;
     _landOn = null;
+    // what a gate kept on the device is the person's of before
+    _returnOnDevice = false;
+    try {
+      await db.writePref(_returnKey, null);
+    } catch (_) {}
     _notice = null;
     _isPlatformAdmin = false;
     _eventsPublic = false;

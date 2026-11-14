@@ -1093,7 +1093,18 @@
         return;
       }
       grid.innerHTML = ''; n = 0; counted();
-      if (note) note.textContent = 'Les photos des invités. Touchez une photo pour l’ouvrir en grand et la télécharger. Pour ajouter les vôtres : « Confirmer ma présence ».';
+      // the way to add one's own: the card's button when it shows; the
+      // answers' block off (or gone), the button drawn here instead — never
+      // a note pointing at a button the page does not have
+      var shownBtn = Array.prototype.some.call(document.querySelectorAll('[data-presence]'), function (a) { return !a.closest('.is-off, [hidden]'); }) && !off('rsvp');
+      var canConfirm = SERVER.rsvp_on !== false || !!SERVER.tickets;
+      if (note) note.textContent = 'Les photos des invités. Touchez une photo pour l’ouvrir en grand et la télécharger.' +
+        (shownBtn ? ' Pour ajouter les vôtres : « Confirmer ma présence ».' : canConfirm ? ' Pour ajouter les vôtres, confirmez votre présence :' : '');
+      if (!shownBtn && canConfirm) {
+        var own = document.createElement('div'); own.className = 'presence album-presence';
+        own.innerHTML = '<a class="btn presence-btn" data-presence href="' + presenceHref() + '"><span>Confirmer ma présence</span><small>pour ajouter vos photos</small></a>';
+        (note || grid).insertAdjacentElement(note ? 'afterend' : 'beforebegin', own);
+      }
       var meta = box.querySelectorAll('.album-meta > span');
       if (meta.length > 1) meta[meta.length - 1].textContent = 'Visibles par tous les invités';
       fetch(SERVER.api.url.replace(/\/+$/, '') + '/rest/v1/rpc/event_album', {

@@ -17,13 +17,15 @@ typedef PickedPhoto = ({Uint8List bytes, String type});
 
 /// The phone's gallery (183): at most [limit] photos, made smaller first —
 /// a party's photo reads well at 1600 px, and a market's line carries it.
+/// A browser's picker ignores the limit: one more than it is read then, so
+/// the caller knows some were left out and says so.
 Future<List<PickedPhoto>> pickGuestPhotos(int limit) async {
   final picker = ImagePicker();
   final files = limit >= 2
       ? await picker.pickMultiImage(maxWidth: 1600, imageQuality: 80, limit: limit)
       : [?await picker.pickImage(source: ImageSource.gallery, maxWidth: 1600, imageQuality: 80)];
   return [
-    for (final f in files.take(limit))
+    for (final f in files.take(limit + 1))
       (
         bytes: await f.readAsBytes(),
         type: switch (f.mimeType ?? '') {
@@ -59,6 +61,7 @@ Future<int> addInvitationPhotos(
       : (n > 1 ? context.tr('{n} photos ajoutées à l’album.', {'n': n}) : context.tr('Photo ajoutée à l’album.'));
   void say(String m) => messenger?.showSnackBar(SnackBar(content: Text(m)));
   final left = inv.photosLeft;
+  final cutSaid = context.tr('Seules vos {n} premières photos sont envoyées (5 par invité).', {'n': left});
   if (left == 0) {
     say(full);
     return 0;
@@ -84,8 +87,10 @@ Future<int> addInvitationPhotos(
       break;
     }
   }
+  // more chosen than are left (a browser's picker has no limit): said
+  final cut = files.length > left && refused == null ? cutSaid : null;
   if (sent > 0) {
-    say(refused == null ? said(sent) : '${said(sent)} — $refused');
+    say(refused == null ? (cut == null ? said(sent) : '${said(sent)} — $cut') : '${said(sent)} — $refused');
   } else if (refused != null) {
     say(refused);
   }

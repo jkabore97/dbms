@@ -9404,4 +9404,14 @@ const enStrings = <String, String>{
       'Up to {n} photos each: they show on the card, under your name.',
   'Vos photos':
       'Your photos',
+  'Rappel WhatsApp la veille':
+      'WhatsApp reminder the day before',
+  'L’organisateur verra votre numéro pour vous écrire.':
+      'The organiser will see your number to message you.',
+  'Vous avez confirmé votre présence.':
+      'You confirmed you are coming.',
+  'Seules vos {n} premières photos sont envoyées (5 par invité).':
+      'Only your first {n} photos are sent (5 per guest).',
+  'Cet événement est annulé.':
+      'This event is cancelled.',
 };

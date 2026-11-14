@@ -157,6 +157,13 @@ export function payloadFor(row, env) {
     path = `/o/${row.org_id}/aide`;
   }
   else if (kind === "courier_refused" || kind === "courier_photo") path = "/devenir-livreur";
+  // 183: the guest's confirmation opens « Mes invitations », where the
+  // photos go; the organiser's (and 159's reminder) « Invités » — as the
+  // app's notificationTarget does.
+  else if (kind === "event_presence_guest") path = "/invitations";
+  else if ((kind === "event_presence" || kind === "event_tomorrow") && row.org_id) {
+    path = `/o/${row.org_id}/evenements/invites`;
+  }
   // 111: an older app's request answered at once opens the creation.
   else if (kind === "application_update_app") path = "/creer-mon-activite";
   // 115: the dossier received opens its progress; the platform's own

@@ -1335,10 +1335,11 @@ class _GuestsScreenState extends State<GuestsScreen> {
     await _load();
   }
 
-  /// At the door (158): the guest's QR scanned with the phone, the answer
-  /// it names found among the business's, the arrival marked.
+  /// At the door (158, 161): a ticket's QR scanned with the phone and
+  /// checked — since 183 the guests have no QR card of their own (a card of
+  /// before still marks its guest arrived, so the scanner says « billet »).
   Future<void> _scan() async {
-    final text = await BarcodeSheet.scan(context, title: context.tr('La carte d’invité'));
+    final text = await BarcodeSheet.scan(context, title: context.tr('Scanner un billet'));
     if (!mounted || text == null) return;
     await _arrivedFromPass(text);
   }
@@ -1418,12 +1419,12 @@ class _GuestsScreenState extends State<GuestsScreen> {
                     child: ListView(
                       padding: EdgeInsets.fromLTRB(12, 12, 12, 24 + MediaQuery.viewPaddingOf(context).bottom),
                       children: [
-                        // The door (158): a guest's QR scanned, their arrival marked.
+                        // The door (161): a ticket scanned (a guest's card of before too).
                         OutlinedButton.icon(
                           key: const Key('guests-scan'),
                           onPressed: _scan,
                           icon: const Icon(Icons.qr_code_scanner),
-                          label: Text(context.tr('Scanner une carte d’invité')),
+                          label: Text(context.tr('Scanner un billet')),
                         ),
                         const SizedBox(height: 10),
                         Padding(

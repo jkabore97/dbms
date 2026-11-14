@@ -258,3 +258,26 @@ test("183: the confirmation refused — the bytes just written are deleted", asy
     assert.deepEqual(e.UPLOADS.deletes, [KEY]);
   });
 });
+
+test("183: the guest's photo is read before a place is taken — empty or too heavy costs none; signed out says it in French", async () => {
+  const e = env();
+  await withPostgres({
+    event_album_add_guest: () => [200, KEY],
+    event_album_done: () => [200, true],
+  }, async (asked) => {
+    const empty = await guestUpload(e, { bytes: new Uint8Array(0) });
+    assert.equal(empty.status, 400);
+    const heavy = await guestUpload(e, { bytes: new Uint8Array(8 * 1024 * 1024 + 1) });
+    assert.equal(heavy.status, 413);
+    assert.equal(asked.length, 0, "no slot minted for a photo that was never going in");
+    assert.equal(e.UPLOADS.puts.length, 0);
+    const out = await guestUpload(e, { token: null });
+    assert.equal(out.status, 401);
+    const said = await out.json();
+    assert.equal(said.error, "Connectez-vous d'abord.");
+    assert.equal(said.detail, "Connectez-vous d'abord.");
+    // and a good one still mints, then puts, then confirms
+    assert.equal((await guestUpload(e)).status, 201);
+    assert.deepEqual(asked.map((a) => a.name), ["event_album_add_guest", "event_album_done"]);
+  });
+});

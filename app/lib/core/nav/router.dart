@@ -362,9 +362,12 @@ GoRouter buildRouter(SessionController session) {
     // Where a gate brings the person back (183): the address with its query
     // for buying tickets and confirming one's presence — a draft card's
     // `?apercu=` is its key, and without it the page said the card was
-    // not open. Elsewhere the address alone, as before.
-    String backHere() =>
-        at(Routes.presence) || at(Routes.buyTickets) ? state.uri.toString() : here;
+    // not open. Elsewhere the address alone, as before. The path and query
+    // only: a cold start from a universal link carries the site's origin
+    // (https://marakaj.com/presence/…), which is no address to go back to.
+    String backHere() => at(Routes.presence) || at(Routes.buyTickets)
+        ? Uri(path: state.uri.path, query: state.uri.hasQuery ? state.uri.query : null).toString()
+        : here;
 
     // A location worth coming back to after a gate. The gates themselves and
     // the splash are not destinations; everything else is somebody's place.

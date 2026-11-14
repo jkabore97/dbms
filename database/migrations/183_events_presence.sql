@@ -20,11 +20,15 @@
 --     organiser hears of it the first time only.
 --   * event_presence_info(slug, preview): the card as the confirmation
 --     screen shows it, and the account's own answer if any.
---   * event_presence_confirm(slug, preview, people, message): signed in,
---     the card visible to the caller (event_visible, as every door), its
---     answers open (or its tickets on sale: a buyer confirms too). The
---     name is the account's, its phone the organiser's WhatsApp reminder
---     (extra.whatsapp, read as before). Two bells: the guest's
+--   * event_presence_confirm(slug, preview, people, message, share_phone):
+--     signed in, the card visible to the caller (event_visible, as every
+--     door), not cancelled, its answers open (or its tickets on sale: a
+--     buyer confirms too). The name is the account's — never its phone:
+--     the name goes on the guest's photos, which the album shows to
+--     everyone; nameless, « Invité ». The phone reaches the organiser
+--     (extra.whatsapp, the WhatsApp reminder, read as before) only when
+--     the guest says so (« Rappel WhatsApp la veille », off by default);
+--     a later confirmation without it takes it back. Two bells: the guest's
 --     (« Présence confirmée à … : vous pouvez ajouter vos photos. »), the
 --     business's admins' (« Awa a confirmé sa présence (2 personnes) —
 --     Mariage »).
@@ -37,12 +41,21 @@
 --     then « Vous avez déposé vos 5 photos : c'est le maximum par
 --     invité. » — the album's 300 and the day's 200 (179) kept, the card
 --     taken first (181), the album on and Marakaj Pro's (182; its
---     trigger stands too). event_album_done (155) completes it, as the
+--     trigger stands too); never on a cancelled card, nor on a draft but
+--     for a guest who confirmed through its link (or its organiser). A
+--     slot not completed within ten minutes no longer counts (the Worker
+--     reads the photo before it asks for one, so a failed upload gives
+--     the guest's place back soon). event_album_done (155) completes it, as the
 --     card's link did before, and now also for the slot's own account.
 --   * event_album_add (181), the signed-out door of the old upload: the
 --     pages no longer send to it; it says what to do instead, so a page
 --     kept open from before cannot fill an album past the five per guest.
 --     event_rsvp (152), the signed-out answer, stays for such a page.
+--
+--   * notification_type_of (115, 125): the two new bells under switches
+--     the person can turn off — the organiser's under « Commandes de la
+--     vitrine » (a guest who comes is the organiser's order), the guest's
+--     under « Mes réservations ». Every mapping of before verbatim.
 --
 -- The doors (063): the four new functions closed to public and anon,
 -- open to authenticated. No view.
@@ -59,7 +72,8 @@ alter table event_pictures add column if not exists user_id uuid references auth
 create index if not exists event_pictures_guest_user_idx on event_pictures (event_id, user_id) where user_id is not null;
 
 -- ------------------------------------------------------------
--- The account's name and number, as the organiser reads them
+-- The account's name and number: the name for everyone who sees the
+-- answer or a photo, the number for the organiser only, when shared
 -- ------------------------------------------------------------
 create or replace function event_presence_who(p_user uuid)
 returns jsonb
@@ -69,8 +83,10 @@ security definer
 set search_path = public, auth
 as $$
     select jsonb_build_object(
+        -- never the phone: the name is written on the guest's photos,
+        -- which the album shows to everyone
         'name', left(coalesce(nullif(btrim(p.full_name), ''), nullif(btrim(u.raw_user_meta_data ->> 'full_name'), ''),
-                              nullif(btrim(p.phone), ''), nullif(btrim(u.phone), ''), 'Invité'), 80),
+                              'Invité'), 80),
         'phone', (select '+' || d from (select regexp_replace(coalesce(nullif(u.phone, ''), p.phone, ''), '\D', '', 'g') as d) x
                    where length(d) between 8 and 15))
       from auth.users u left join profiles p on p.id = u.id
@@ -108,18 +124,25 @@ begin
         'date_fr', case when e.starts_at is not null then event_date_fr(e.starts_at, e.tz) end,
         'place', e.place,
         'org_name', (select name from orgs where id = e.org_id),
-        'open', (e.rsvp_on or e.tickets_on)
+        'cancelled', e.cancelled_at is not null,
+        'open', e.cancelled_at is null and (e.rsvp_on or e.tickets_on)
                 and (event_rsvp_closes(e) is null
                      or (now() at time zone coalesce(e.tz, 'Africa/Ouagadougou'))::date <= event_rsvp_closes(e)),
         'album', e.album_on and event_album_allowed(e.org_id),
-        'mine', case when r.id is not null then jsonb_build_object('people', r.people, 'message', r.message) end);
+        -- the account has a number to share (« Rappel WhatsApp la veille »)
+        'phone', (event_presence_who(auth.uid()) ->> 'phone') is not null,
+        'mine', case when r.id is not null then jsonb_build_object('people', r.people, 'message', r.message,
+                                                                   'share_phone', r.extra ? 'whatsapp') end);
 end;
 $$;
 
 -- ------------------------------------------------------------
 -- « Je confirme »
 -- ------------------------------------------------------------
-create or replace function event_presence_confirm(p_slug text, p_preview text, p_people integer, p_message text)
+-- the four-argument one of before (never live): gone, not overloaded
+drop function if exists event_presence_confirm(text, text, integer, text);
+create or replace function event_presence_confirm(p_slug text, p_preview text, p_people integer, p_message text,
+                                                  p_share_phone boolean default false)
 returns jsonb
 language plpgsql
 security definer
@@ -144,6 +167,9 @@ begin
     if not found or not event_visible(e, v_preview) then
         raise exception 'Cette carte n''est pas ouverte.';
     end if;
+    if e.cancelled_at is not null then
+        raise exception 'Cet événement est annulé.';
+    end if;
     -- the answers open, or the tickets on sale (a buyer confirms too)
     if not (e.rsvp_on or e.tickets_on) then
         raise exception 'Les réponses sont fermées pour cet événement.';
@@ -161,7 +187,8 @@ begin
     v_who := event_presence_who(v_me);
     v_name := coalesce(v_who ->> 'name', 'Invité');
     v_extra := jsonb_strip_nulls(jsonb_build_object(
-        'whatsapp', v_who ->> 'phone',
+        -- the number, only by the guest's choice
+        'whatsapp', case when coalesce(p_share_phone, false) then v_who ->> 'phone' end,
         'account', true,
         -- the draft's link the guest came through: « Mes invitations » opens it again
         'preview', case when v_preview is not null and v_preview = e.preview_token then v_preview end));
@@ -175,7 +202,8 @@ begin
     values (e.id, v_me, v_name, p_people, 'oui', v_message, v_extra)
     on conflict (event_id, user_id) where user_id is not null do update
        set people = excluded.people, message = excluded.message, answer = 'oui', name = excluded.name,
-           extra = r.extra || excluded.extra
+           -- not shared this time: the number given before is taken back
+           extra = (r.extra - 'whatsapp') || excluded.extra
     returning r.id, (xmax = 0) into v_id, v_first;
 
     if v_first then
@@ -224,7 +252,7 @@ as $$
         'album_review', e.album_review,
         'photos_used', (select count(*) from event_pictures p
                          where p.event_id = e.id and p.user_id = r.user_id and p.source = 'guest'
-                           and (p.state = 'stored' or p.created_at > now() - interval '1 hour')),
+                           and (p.state = 'stored' or p.created_at > now() - interval '10 minutes')),
         'photos_limit', 5,
         'photos', coalesce((select jsonb_agg(jsonb_build_object('key', p.key, 'approved', p.approved) order by p.done_at desc)
                               from event_pictures p
@@ -249,6 +277,7 @@ declare
     v_me uuid := auth.uid();
     v_ext text := lower(btrim(coalesce(p_ext, '')));
     v_name text;
+    v_link text;
     v_key text;
 begin
     if v_me is null then
@@ -258,9 +287,18 @@ begin
     if not found then
         raise exception 'Cette carte n''est pas ouverte.';
     end if;
-    select name into v_name from event_rsvps where event_id = e.id and user_id = v_me and answer = 'oui';
+    select name, extra ->> 'preview' into v_name, v_link from event_rsvps where event_id = e.id and user_id = v_me and answer = 'oui';
     if not found then
         raise exception 'Confirmez d''abord votre présence pour ajouter vos photos.';
+    end if;
+    if e.cancelled_at is not null then
+        raise exception 'Cet événement est annulé.';
+    end if;
+    -- the card still the guest's to see: published, or the draft's link they
+    -- confirmed through still its link (a new one shuts them out too), or
+    -- the organiser's own
+    if not (e.published or (v_link is not null and v_link = e.preview_token) or is_org_admin(e.org_id)) then
+        raise exception 'Cette carte n''est pas ouverte.';
     end if;
     if not e.album_on then
         raise exception 'L''album est fermé pour cet événement.';
@@ -274,9 +312,11 @@ begin
         raise exception 'Photos uniquement (JPEG, PNG ou WebP).';
     end if;
     -- the five, counted by account: those stored, and those on their way
+    -- (ten minutes: the Worker has the photo in hand before it asks, so a
+    -- slot older than that is an upload that failed)
     if (select count(*) from event_pictures
          where event_id = e.id and user_id = v_me and source = 'guest'
-           and (state = 'stored' or created_at > now() - interval '1 hour')) >= 5 then
+           and (state = 'stored' or created_at > now() - interval '10 minutes')) >= 5 then
         raise exception 'Vous avez déposé vos 5 photos : c''est le maximum par invité.';
     end if;
     if (select count(*) from event_pictures where event_id = e.id and source = 'guest') >= 300 then
@@ -307,6 +347,8 @@ declare
 begin
     select * into p from event_pictures
      where key = p_key and state = 'slot' and source = 'guest' and created_at > now() - interval '1 hour'
+       -- an account's slot, within the ten minutes it is counted for
+       and (user_id is null or created_at > now() - interval '10 minutes')
      for update;
     if not found then
         raise exception 'Envoi inconnu.';
@@ -336,11 +378,49 @@ end;
 $$;
 
 -- ------------------------------------------------------------
+-- The bell's switches (115, 125): the two new bells can be turned off
+-- ------------------------------------------------------------
+create or replace function notification_type_of(p_kind text, p_params jsonb)
+returns text
+language sql
+immutable
+set search_path = public
+as $$
+    select case
+        -- 183: a guest's confirmation, the organiser's (a guest who comes is
+        -- the organiser's order) and the guest's own (their reservation).
+        when p_kind = 'event_presence' then 'shop_orders'
+        when p_kind = 'event_presence_guest' then 'bookings'
+        when p_kind = 'vitrine_news' then 'vitrine_news'
+        when p_kind = 'report_handled' then 'reports'
+        when p_kind = 'delivery_available' then 'delivery_nearby'
+        when p_kind in ('delivery_cancelled', 'courier_shop_added') then 'delivery_updates'
+        when p_kind = 'courier_cash_received' then 'courier_cash'
+        when p_kind = 'courier_idle' then 'courier_idle'
+        -- 125: confirmed, proposed, declined (the customer's); accepted
+        -- (the business's).
+        when p_kind like 'booking\_%'
+            then case when p_params ->> 'to' = 'shop' then 'shop_orders' else 'bookings' end
+        when p_params ->> 'to' = 'customer'
+             and (p_kind like 'order\_%' or p_kind like 'delivery\_%')
+            then case when p_params ->> 'booking' = 'true' then 'bookings'
+                      else 'order_updates' end
+        when p_params ->> 'to' = 'shop'
+             and (p_kind = 'new_order' or p_kind like 'order\_%' or p_kind like 'delivery\_%')
+            then 'shop_orders'
+        when p_kind = 'low_stock' then 'shop_stock'
+        when p_kind = 'member_joined' then 'shop_team'
+        when p_kind in ('debt_settled', 'tontine_ready') then 'shop_money'
+        when p_kind = 'cauris_board' then 'shop_league'
+    end;
+$$;
+
+-- ------------------------------------------------------------
 -- The doors (063)
 -- ------------------------------------------------------------
 revoke execute on function event_presence_who(uuid) from public;
 revoke execute on function event_presence_info(text, text) from public;
-revoke execute on function event_presence_confirm(text, text, integer, text) from public;
+revoke execute on function event_presence_confirm(text, text, integer, text, boolean) from public;
 revoke execute on function my_event_invitations() from public;
 revoke execute on function event_album_add_guest(text, text) from public;
 revoke execute on function event_album_done(text, text, integer) from public;
@@ -350,7 +430,7 @@ begin
     if exists (select 1 from pg_roles where rolname = 'anon') then
         revoke execute on function event_presence_who(uuid) from anon;
         revoke execute on function event_presence_info(text, text) from anon;
-        revoke execute on function event_presence_confirm(text, text, integer, text) from anon;
+        revoke execute on function event_presence_confirm(text, text, integer, text, boolean) from anon;
         revoke execute on function my_event_invitations() from anon;
         revoke execute on function event_album_add_guest(text, text) from anon;
         -- as before (155, 181): the street's doors, a page of before kept open
@@ -360,7 +440,7 @@ begin
     if exists (select 1 from pg_roles where rolname = 'authenticated') then
         revoke execute on function event_presence_who(uuid) from authenticated;
         grant execute on function event_presence_info(text, text) to authenticated;
-        grant execute on function event_presence_confirm(text, text, integer, text) to authenticated;
+        grant execute on function event_presence_confirm(text, text, integer, text, boolean) to authenticated;
         grant execute on function my_event_invitations() to authenticated;
         grant execute on function event_album_add_guest(text, text) to authenticated;
         grant execute on function event_album_done(text, text, integer) to authenticated;

@@ -41,12 +41,17 @@ class InvitationsRepository {
 
   /// « Je confirme »: [first] is false when the account had confirmed
   /// before (the people and the word changed, nobody told again).
-  Future<({String title, bool first})> confirm(String slug, String? preview, {required int people, String? message}) async {
+  /// [sharePhone]: the account's number goes to the organiser for the
+  /// WhatsApp reminder — only when the guest says so; false takes back a
+  /// number shared before.
+  Future<({String title, bool first})> confirm(String slug, String? preview,
+      {required int people, String? message, bool sharePhone = false}) async {
     final r = await _require().rpc('event_presence_confirm', params: {
       'p_slug': slug,
       'p_preview': preview,
       'p_people': people,
       'p_message': (message ?? '').trim().isEmpty ? null : message!.trim(),
+      'p_share_phone': sharePhone,
     });
     final m = r is Map ? r : const {};
     return (title: '${m['title'] ?? ''}', first: m['first'] == true);
@@ -92,9 +97,12 @@ class PresenceCard {
     this.place,
     this.orgName,
     this.open = true,
+    this.cancelled = false,
     this.album = false,
+    this.hasPhone = false,
     this.myPeople,
     this.myMessage,
+    this.mySharePhone = false,
   });
 
   factory PresenceCard.fromJson(Map<String, dynamic> j) {
@@ -105,9 +113,12 @@ class PresenceCard {
       place: j['place'] as String?,
       orgName: j['org_name'] as String?,
       open: j['open'] != false,
+      cancelled: j['cancelled'] == true,
       album: j['album'] == true,
+      hasPhone: j['phone'] == true,
       myPeople: (mine?['people'] as num?)?.toInt(),
       myMessage: mine?['message'] as String?,
+      mySharePhone: mine?['share_phone'] == true,
     );
   }
 
@@ -119,12 +130,21 @@ class PresenceCard {
   /// The answers open (or the tickets on sale).
   final bool open;
 
+  /// The organiser cancelled the event.
+  final bool cancelled;
+
   /// The album takes the guests' photos (on, and Marakaj Pro's).
   final bool album;
+
+  /// The account has a phone number it may share with the organiser.
+  final bool hasPhone;
 
   /// The account's own confirmation, when there is one.
   final int? myPeople;
   final String? myMessage;
+
+  /// Its number shared with the organiser at the last confirmation.
+  final bool mySharePhone;
   bool get confirmed => myPeople != null;
 }
 

@@ -647,9 +647,13 @@ async function putAlbumPicture(request, env, slug, preview, guest, pass = "", de
 async function putGuestAlbumPicture(request, env, slug) {
   const token = bearer(request);
   if (!token) {
-    return problem(401, "Sign in first.");
+    return problem(401, "Connectez-vous d'abord.");
   }
   return storeEventPicture(request, env, {
+    // The photo read and checked before one of the guest's five is taken:
+    // a body that never arrives, or is too heavy, costs no place (and a
+    // slot that fails after this stops counting after ten minutes, 183).
+    bodyFirst: true,
     mint: (ext) => rpcAs(env, token, "event_album_add_guest", { p_slug: slug, p_ext: ext }),
     confirm: (key, bytes) => rpcAs(env, token, "event_album_done", { p_key: key, p_preview: null, p_bytes: bytes }),
     meta: { event: slug, guest: "account" },
@@ -659,7 +663,7 @@ async function putGuestAlbumPicture(request, env, slug) {
 // The one shape of a card's upload: Postgres mints the key, the Worker
 // puts the bytes, Postgres confirms them — and a refusal there deletes
 // what was just written, so nothing stays behind unreferenced.
-async function storeEventPicture(request, env, { mint, confirm, meta, after }) {
+async function storeEventPicture(request, env, { mint, confirm, meta, after, bodyFirst = false }) {
   const contentType = (request.headers.get("Content-Type") || "")
     .split(";")[0]
     .trim()
@@ -672,6 +676,19 @@ async function storeEventPicture(request, env, { mint, confirm, meta, after }) {
     return refusal(413, "Cette image est trop lourde (8 Mo au plus).");
   }
 
+  const readBody = async () => {
+    const bytes = await request.arrayBuffer();
+    if (bytes.byteLength === 0) {
+      return { bad: problem(400, "There was nothing in the upload.") };
+    }
+    if (bytes.byteLength > EVENT_MAX_BYTES) {
+      return { bad: refusal(413, "Cette image est trop lourde (8 Mo au plus).") };
+    }
+    return { bytes };
+  };
+  let read = bodyFirst ? await readBody() : null;
+  if (read?.bad) return read.bad;
+
   const slot = await mint(EXTENSIONS[contentType]);
   if (!slot.ok) {
     return refused(slot);
@@ -680,13 +697,9 @@ async function storeEventPicture(request, env, { mint, confirm, meta, after }) {
     return problem(500, "Unexpected key.");
   }
 
-  const body = await request.arrayBuffer();
-  if (body.byteLength === 0) {
-    return problem(400, "There was nothing in the upload.");
-  }
-  if (body.byteLength > EVENT_MAX_BYTES) {
-    return refusal(413, "Cette image est trop lourde (8 Mo au plus).");
-  }
+  if (!read) read = await readBody();
+  if (read.bad) return read.bad;
+  const body = read.bytes;
 
   await env.UPLOADS.put(slot.value, body, {
     httpMetadata: { contentType },
