@@ -10,6 +10,7 @@ import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'core/auth/memory_auth_storage.dart';
 import 'core/storefront/hidden_vitrines.dart';
 import 'core/auth/two_step.dart';
 import 'core/nav/app_scope.dart';
@@ -170,11 +171,24 @@ Future<void> _startup() async {
       // access_token / refresh_token somebody put in a link
       // (core/auth/auth_callback.dart). Google's return and an e-mail
       // confirmation asked from here both come back with that code.
-      authOptions: const FlutterAuthClientOptions(
-        autoRefreshToken: true,
-        authFlowType: AuthFlowType.pkce,
-        detectSessionInUriPredicate: isPkceAuthCallback,
-      ),
+      //
+      // A browser that refuses the page its storage (« Bloquer les données
+      // des sites », some apps' built-in browsers) made Supabase's own
+      // storage throw at start, and the app never opened: there the session
+      // stays in memory instead (core/auth/memory_auth_storage.dart).
+      authOptions: keepSessionInMemory()
+          ? FlutterAuthClientOptions(
+              autoRefreshToken: true,
+              authFlowType: AuthFlowType.pkce,
+              detectSessionInUriPredicate: isPkceAuthCallback,
+              localStorage: MemoryLocalStorage(),
+              pkceAsyncStorage: MemoryAsyncStorage(),
+            )
+          : const FlutterAuthClientOptions(
+              autoRefreshToken: true,
+              authFlowType: AuthFlowType.pkce,
+              detectSessionInUriPredicate: isPkceAuthCallback,
+            ),
     );
     client = Supabase.instance.client;
   }
