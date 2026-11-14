@@ -417,6 +417,10 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch182.sql
+      - name: Batch 183 — « Confirmer ma présence », five photos per guest from the app
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch183.sql
 
       # The bell: the right people hear the right events and nobody else,
       # a threshold rings on the crossing rather than on every sale below

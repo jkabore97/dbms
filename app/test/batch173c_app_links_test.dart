@@ -22,6 +22,8 @@ void main() {
     expect(m, contains('<data android:scheme="https" android:host="marakaj.com"/>'));
     expect(m, contains('<data android:pathPrefix="/achat-billets/"/>'));
     expect(m, contains('<data android:path="/billets"/>'));
+    // 183: « Confirmer ma présence »
+    expect(m, contains('<data android:pathPrefix="/presence/"/>'));
     expect(m, isNot(contains('android:pathPrefix="/e/"')), reason: 'the cards stay web pages');
   });
 
@@ -29,5 +31,6 @@ void main() {
     final src = File('lib/core/nav/router.dart').readAsStringSync();
     expect(src, contains("static const buyTickets = '/achat-billets';"));
     expect(src, contains("static const myTickets = '/billets';"));
+    expect(src, contains("static const presence = '/presence';"));
   });
 }

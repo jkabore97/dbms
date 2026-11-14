@@ -527,6 +527,7 @@ export const APPLE_APP_LINKS = {
         { "/": "/achat-billets/*", comment: "buying tickets (172)" },
         { "/": "/billets", comment: "my tickets" },
         { "/": "/billets/*", comment: "one request of my tickets" },
+        { "/": "/presence/*", comment: "confirming one's presence (183)" },
       ],
     }],
   },
@@ -655,6 +656,8 @@ export async function studioPage(request, env, slug, preview, edit) {
     rsvp_on: data.rsvp_on !== false,
     album_on: data.album_on !== false,
     tickets: data.tickets === true,
+    // « Confirmer ma présence » (183): where the card's button goes
+    presence: presenceHref(data.slug || slug, preview),
     published: data.published === true,
     org_name: data.org_name || "",
     preview: preview || null,
@@ -815,6 +818,12 @@ function jsonForScript(value) {
 // person's name. The purchase itself is the app's /achat-billets/<slug>.
 export function buyHref(slug, preview) {
   return `/achat-billets/${encodeURIComponent(slug)}` + (preview ? `?apercu=${encodeURIComponent(preview)}` : "");
+}
+// « Confirmer ma présence » (183): the card's one button for its guests —
+// the app's /presence/<slug> (signed in, then straight to the
+// confirmation), served as the app's page like /achat-billets.
+export function presenceHref(slug, preview) {
+  return `/presence/${encodeURIComponent(slug)}` + (preview ? `?apercu=${encodeURIComponent(preview)}` : "");
 }
 export async function ticketsPage(env, slug, preview) {
   if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) return ticketResponse(ticketShell("Billets", `<div class="card"><h2>La billetterie n’est pas disponible.</h2></div>`), 404);
@@ -1000,6 +1009,8 @@ async function cardPage(request, env, { slug, data, preview, edit, editor, demo,
     rsvp_on: data.rsvp_on !== false,
     album_on: data.album_on !== false,
     tickets: data.tickets === true,
+    // « Confirmer ma présence » (183): where the card's button goes
+    presence: presenceHref(data.slug || slug, preview),
     published: data.published === true,
     org_name: data.org_name || "",
     preview: preview || null,

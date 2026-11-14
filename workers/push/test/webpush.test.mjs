@@ -386,3 +386,15 @@ test("a booking's ring opens that booking: the customer's card, the business's s
   assert.equal(payloadFor({ kind: "booking_confirmed", org_id: "o1", message: "m",
     params: { to: "customer", order_id: "../x" } }, env).path, "/mes-commandes");
 });
+
+test("183: a guest's confirmation opens « Mes invitations »; the organiser's, « Invités »", () => {
+  const env = { APP_ORIGIN: "https://app.example" };
+  assert.equal(payloadFor({ kind: "event_presence_guest", message: "m",
+    params: { to: "customer", event_id: "e1", slug: "mariage" } }, env).url, "https://app.example/invitations");
+  assert.equal(payloadFor({ kind: "event_presence", org_id: "o1", message: "m",
+    params: { to: "shop", event_id: "e1" } }, env).path, "/o/o1/evenements/invites");
+  assert.equal(payloadFor({ kind: "event_tomorrow", org_id: "o1", message: "m",
+    params: { to: "shop", event_id: "e1" } }, env).path, "/o/o1/evenements/invites");
+  // without its business, never a guess: the app's home
+  assert.equal(payloadFor({ kind: "event_presence", message: "m", params: {} }, env).path, "/");
+});

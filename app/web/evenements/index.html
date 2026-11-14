@@ -26,6 +26,9 @@ p{margin:0;line-height:1.7}
 .g{padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
 .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 24px;border:1px solid var(--accent);color:var(--deep);background:transparent;text-decoration:none;font:600 12px "Montserrat",sans-serif;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;border-radius:999px}
 .btn.solid{background:var(--accent);color:var(--bg)}
+.presence{display:grid;gap:14px;justify-items:center;width:100%;max-width:420px;margin:0 auto;text-align:center}
+.presence-btn{flex-direction:column;gap:5px;min-height:60px;padding:10px 28px;line-height:1.2}
+.presence-btn small{font:500 11px/1.2 "Montserrat",sans-serif;letter-spacing:.04em;text-transform:none;opacity:.9}
 .btn[aria-pressed="true"]{background:var(--accent);color:var(--bg)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .char,.w{display:inline-block}
@@ -894,7 +897,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
   <input type="file" id="fUp" accept="image/*" multiple class="sr" aria-label="Ajouter des photos">
   <div id="paneInfo" hidden>
     <h3>Quatre réponses, c'est tout</h3>
-    <p class="sub">Le compte à rebours, le programme et la carte d'invité se remplissent tout seuls. Tout reste modifiable ensuite.</p>
+    <p class="sub">Le compte à rebours, le programme et le bouton « Confirmer ma présence » se remplissent tout seuls. Tout reste modifiable ensuite.</p>
     <div class="fields">
       <label for="fType">C'est pour
         <select id="fType">
@@ -932,7 +935,6 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script>
 (function () {
   var RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1081,19 +1083,29 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
     labels = labels || ['jours', 'heures', 'min', 'sec'];
     return '<div class="' + wrapCls + '" data-cd>' + labels.map(function (l, i) { return '<div><b class="cd" data-u="' + i + '">0</b><span>' + l + '</span></div>'; }).join('') + '</div>';
   }
+  // « Confirmer ma présence » (183): the answer form, the guest's QR card and the album's
+  // upload gave way to one button — the guest signs in to Marakaj, confirms, and adds their
+  // photos from the app (five each). #rsvp marks the section, as the form did (t:hide rsvp).
+  function presenceHref() {
+    if (!SERVER || !SERVER.slug) return '#';
+    return SERVER.presence || '/presence/' + encodeURIComponent(SERVER.slug) + (SERVER.preview ? '?apercu=' + encodeURIComponent(SERVER.preview) : '');
+  }
   function rsvpHTML() {
-    return '<form class="rsvp" id="rsvp" novalidate><label for="rName">Votre nom<input id="rName" autocomplete="name"></label>' +
-      '<label for="rCount">Nombre de personnes<select id="rCount"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>' +
-      (SERVER && !SERVER.demo ? '<label for="rPhone">WhatsApp, si vous voulez un rappel la veille<input id="rPhone" inputmode="tel" autocomplete="tel" placeholder="+226 70 00 00 00" maxlength="24"></label>' : '') +
-      '<div class="choice"><button type="button" class="btn" id="rYes" aria-pressed="false">Je viens</button><button type="button" class="btn" id="rNo" aria-pressed="false">Je ne peux pas</button></div>' +
-      '<button type="submit" class="btn solid">Envoyer ma réponse</button></form><div class="done" id="rDone" aria-live="polite"></div>';
+    var button = '<a class="btn solid presence-btn" data-presence href="' + presenceHref() + '"><span>Confirmer ma présence</span><small>pour ajouter vos photos</small></a>', inner;
+    if (SERVER && SERVER.tickets && !SERVER.demo) {
+      // a card that sells tickets (161): « Réserver » as before; the buyers confirm too, for their photos
+      inner = '<p style="margin:0">Cet événement se fait sur billet. Réservez vos places, payez l’organisateur, recevez vos billets avec leur QR code.</p>' +
+        '<a class="btn solid" href="/e/' + encodeURIComponent(SERVER.slug) + '/billets' + (SERVER.preview ? '?apercu=' + encodeURIComponent(SERVER.preview) : '') + '">Réserver mes billets</a>' +
+        '<p style="margin:0;font-size:14px;opacity:.85">Vous avez votre billet ? Confirmez aussi votre présence pour ajouter vos photos.</p>' + button;
+    } else if (SERVER && SERVER.rsvp_on === false && !(SERVER.editor === true && SERVER.edit)) {
+      inner = '<p class="rsvp-closed">Les réponses sont fermées pour cet événement.</p>';
+    } else {
+      inner = button;
+    }
+    return '<div class="presence" id="rsvp">' + inner + '</div><div class="done" id="rDone" aria-live="polite"></div>';
   }
-  function passHTML(w, d, extra) {
-    return '<div class="pass" data-pass>' + (extra || '') + '<div style="font:600 10px Montserrat;letter-spacing:.3em;text-transform:uppercase;color:var(--accent)">' + w.plain + '</div>' +
-      '<div class="qr" id="qr" role="img" aria-label="QR code de la carte d\'invité"></div><div style="font-size:24px;color:var(--deep)" id="passName">Invité</div>' +
-      '<div style="font-size:13px;opacity:.85;margin-top:4px">' + d.day + ' ' + d.n + ' ' + d.month + ' ' + d.yyyy + ' · ' + w.place + '</div>' +
-      '<div style="font-size:12px;opacity:.7;margin-top:8px;line-height:1.5">Option : réservée aux invités connectés à Marakaj, scannée à l\'entrée.</div></div>';
-  }
+  // the guest's QR card (158): gone with the form (183)
+  function passHTML() { return ''; }
   function slot(id, cls, def, tag) {
     tag = tag || 'div';
     return '<' + tag + ' class="slot ' + cls + '" data-slot="' + id + '" role="button" tabindex="0" aria-label="Changer la photo"><div class="def">' + (def || '') + '</div>' + '<span class="cam" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="#fff" d="M9 4 7.5 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3.5L15 4H9zm3 4.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9z"/></svg></span>' + '</' + tag + '>';
@@ -3403,64 +3415,15 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
     }
     u(); timer = setInterval(u, 1000);
   }
-  function qr(name) {
-    var box = document.getElementById('qr'); if (!box) return;
-    if (typeof qrcode === 'undefined') { box.textContent = 'QR'; return; }
-    var q = qrcode(0, 'M'); q.addData(PASS && SERVER ? location.origin + '/e/' + encodeURIComponent(SERVER.slug) + '/invite/' + PASS : 'MARAKAJ-EVENT|demo|' + name); q.make(); box.innerHTML = q.createSvgTag({cellSize: 4, margin: 0, scalable: true});
-  }
   function wire() {
-    var y = document.getElementById('rYes'), n = document.getElementById('rNo'), f = document.getElementById('rsvp'), out = document.getElementById('rDone'), ans = null;
-    if (!y || !n || !f || !out) return;   // the organiser took the answers off the card (170)
-    function pick(v) { ans = v; y.setAttribute('aria-pressed', v === 'yes'); n.setAttribute('aria-pressed', v === 'no'); }
-    y.onclick = function () { pick('yes'); }; n.onclick = function () { pick('no'); };
-    if (SERVER && SERVER.tickets && !SERVER.demo) {
-      f.hidden = true; f.style.display = 'none';
-      out.innerHTML = '<p style="margin:0 0 14px">Cet événement se fait sur billet. Réservez vos places, payez l’organisateur, recevez vos billets avec leur QR code.</p>' + '<a class="btn solid" href="/e/' + encodeURIComponent(SERVER.slug) + '/billets' + (SERVER.preview ? '?apercu=' + encodeURIComponent(SERVER.preview) : '') + '">Réserver mes billets</a>';
-      return;
-    }
-    if (SERVER && SERVER.rsvp_on === false) {
-      f.hidden = true;
-      out.className = 'rsvp-closed'; out.textContent = 'Les réponses sont fermées pour cet événement.';
-      return;
-    }
-    f.onsubmit = function (e) {
-      e.preventDefault(); var nm = document.getElementById('rName').value.trim();
-      if (!nm) { out.textContent = 'Écrivez votre nom, pour que nous sachions qui répond.'; return; }
-      if (!ans) { out.textContent = 'Dites-nous si vous venez : « Je viens » ou « Je ne peux pas ».'; return; }
-      var thanks = ans === 'yes' ? 'Merci ' + nm + ' ! Votre carte d\'invité est prête, juste en dessous.' : 'Merci ' + nm + ', nous penserons à vous.';
-      if (!SERVER || SERVER.demo) {
-        out.textContent = thanks;
-        if (ans === 'yes') { document.getElementById('passName').textContent = nm; qr(nm); }
-        return;
-      }
-      // The card's: the answer goes to the server (event_rsvp, 152).
-      var api = SERVER.api || {}, btn = f.querySelector('button[type=submit]');
-      if (!api.url || !api.key) { out.textContent = 'Impossible d\'envoyer la réponse pour le moment.'; return; }
-      if (btn) btn.disabled = true;
-      out.textContent = 'Envoi…';
-      fetch(api.url + '/rest/v1/rpc/event_rsvp', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json', apikey: api.key, Authorization: 'Bearer ' + api.key},
-        body: JSON.stringify({p_slug: SERVER.slug, p_preview: SERVER.preview || null, p_name: nm,
-          p_people: parseInt(document.getElementById('rCount').value, 10) || 1,
-          p_answer: ans === 'yes' ? 'oui' : 'non', p_message: null,
-          p_extra: (function () { var el = document.getElementById('rPhone'), ph = el && el.value ? String(el.value).trim() : ''; return ph ? {whatsapp: ph} : {}; })()})
-      }).then(function (r) {
-        // The answer's id is the guest's pass (158): the QR opens it.
-        if (r.ok) return r.json().then(function (id) { return {id: typeof id === 'string' ? id : null}; }, function () { return {id: null}; });
-        return r.json().then(function (j) { return (j && (j.message || j.hint)) || 'Réponse refusée.'; }, function () { return 'Réponse refusée.'; });
-      }).then(function (res) {
-        if (btn) btn.disabled = false;
-        if (typeof res === 'string') { out.textContent = res; return; }
-        PASS = res && res.id; if (PASS) { document.body.dataset.pass = PASS; try { localStorage.setItem('mk-pass-' + SERVER.slug, PASS); } catch (e2) {} }
-        out.textContent = thanks;
-        if (ans === 'yes') { document.getElementById('passName').textContent = nm; qr(nm); }
-        if (btn) btn.disabled = true;
-      }, function () {
-        if (btn) btn.disabled = false;
-        out.textContent = 'Pas de réseau : réessayez dans un instant.';
-      });
-    };
+    var out = document.getElementById('rDone');
+    Array.prototype.forEach.call(document.querySelectorAll('[data-presence]'), function (a) {
+      // a design's sample, the organiser's own page: the guests confirm on the real card
+      if (!SERVER || SERVER.demo || ORG) a.onclick = function (e) {
+        e.preventDefault();
+        if (out) out.textContent = ORG ? 'Vos invités confirment leur présence avec Marakaj, puis ajoutent leurs photos.' : 'Aperçu : vos invités confirment leur présence sur la vraie carte.';
+      };
+    });
   }
 
   function render() {
@@ -3478,7 +3441,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
     var w = W(), d = D();
     document.getElementById('site').innerHTML = (L.isPrem ? premiumHTML(w, d, L) : L.arch ? ARCH[L.arch](w, d, L) : R[L.id](w, d)) + '<footer class="f">' + w.plain + ' · ' + d.dd + '.' + d.mm + '.' + d.yyyy + '<br><br>Créé avec Marakaj</footer>';
     decorate(w);
-    qr('Invité'); wire(); tick(); animate(); attachScenes(); applySlots(); if (L.isPrem) startCinema(L);
+    wire(); tick(); animate(); attachScenes(); applySlots(); if (L.isPrem) startCinema(L);
     if (ORG) wireEdit();
   }
 
@@ -3501,7 +3464,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
 
   // ================= photos =================
   // Kept in this phone's memory only, for the prototype; the real version stores them with the event.
-  var PH = [], KEYS = [], SL = {}, curSlot = null, PASS = null;
+  var PH = [], KEYS = [], SL = {}, curSlot = null;
   // The card's pictures (154): content's p:<slot> = {key}, read by key.
   if (SERVER && SERVER.uploads) (function (ct) {
     Object.keys(ct).forEach(function (k) {
@@ -3962,7 +3925,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
       '<div class="lab">Couleurs</div><div class="row">' + col(0, 'Fond') + col(1, 'Texte') + col(2, 'Accent') +
       (colorsOf() ? '<button type="button" data-act="colors-reset">Celles du modèle</button>' : '') + '</div>' +
       '<div class="row xpal">' + XPALS.map(function (p, i) { return '<button type="button" data-xp="' + i + '" title="' + p[0] + '" aria-label="' + p[0] + '" style="background:linear-gradient(135deg,' + p[1] + ' 0 50%,' + p[3] + ' 50% 75%,' + p[2] + ' 75%)"></button>'; }).join('') + '</div>' +
-      '<div class="lab">Sur la carte</div><div class="row">' + sw('rsvp', 'Réponse des invités') + sw('qr', 'Carte d\'invité (QR)') + sw('cd', 'Compte à rebours') + sw('times', 'Horaires du programme') + sw('place', 'Le lieu') + sw('foot', 'Pied de page') + '</div>' +
+      '<div class="lab">Sur la carte</div><div class="row">' + sw('rsvp', 'Confirmer ma présence') + sw('cd', 'Compte à rebours') + sw('times', 'Horaires du programme') + sw('place', 'Le lieu') + sw('foot', 'Pied de page') + '</div>' +
       '<div class="lab">Itinéraire</div><div class="row"><input type="url" inputmode="url" data-map placeholder="Lien Google Maps du lieu (facultatif)" value="' + esc(TX.map || '') + '"></div>' +
       '<div class="hint">Dans Google Maps : touchez le lieu, « Partager », « Copier le lien », puis collez-le ici. Sans lien, l’itinéraire cherche le lieu de l’événement.</div>' +
       '<div class="lab">Programme</div><div class="row"><button type="button" data-act="prog-less" aria-label="Une étape de moins"' + (n ? '' : ' disabled') + '>−</button><span>' + (n ? n + (n > 1 ? ' étapes' : ' étape') : 'Sans') + '</span><button type="button" data-act="prog-more" aria-label="Une étape de plus"' + (n < 8 ? '' : ' disabled') + '>+</button></div>' +
@@ -4084,127 +4047,85 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
 .album-anime{max-width:980px;margin:0 auto;padding:64px 20px 80px;text-align:center}
 .album-anime h2{font-family:"Cormorant Garamond",serif;font-weight:500;font-size:clamp(30px,6vw,44px);margin:0 0 8px;color:var(--deep)}
 .album-anime p{margin:0 auto 18px;max-width:520px;line-height:1.6}
-.album-anime .who{display:block;max-width:320px;margin:0 auto 14px;text-align:left;font-size:13px}
-.album-anime .who input{width:100%;margin-top:6px;padding:12px 14px;border:1px solid var(--soft);border-radius:12px;background:transparent;color:var(--ink);font:inherit}
 .album-anime .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:26px}
 .album-anime figure{margin:0;position:relative;aspect-ratio:1;overflow:hidden;border-radius:14px;background:var(--soft)}
+.album-anime figure button{display:block;width:100%;height:100%;padding:0;border:0;background:none;cursor:zoom-in}
 .album-anime img{width:100%;height:100%;object-fit:cover;display:block}
-.album-anime figcaption{position:absolute;left:0;right:0;bottom:0;padding:6px 8px;font-size:12px;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.55));text-align:left}
+.album-anime figcaption{position:absolute;left:0;right:0;bottom:0;padding:6px 8px;font-size:12px;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.55));text-align:left;pointer-events:none}
 .album-anime .say{min-height:22px;margin-top:12px;font-size:14px}
 body.has-album #site > footer.f{display:none}
+.ev-lb{position:fixed;inset:0;z-index:90;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:max(16px,env(safe-area-inset-top,0px)) 16px max(16px,env(safe-area-inset-bottom,0px));background:rgba(8,8,8,.94);color:#fff}
+.ev-lb.on{display:flex}
+.ev-lb img{max-width:100%;max-height:calc(100% - 110px);object-fit:contain}
+.ev-lb p{margin:0;font:500 14px/1.3 "Montserrat",sans-serif;opacity:.85}
+.ev-lb .bar{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.ev-lb .bar button,.ev-lb .bar a{min-height:44px;min-width:44px;padding:0 16px;display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.55);border-radius:999px;background:transparent;color:#fff;font:600 12px/1 "Montserrat",sans-serif;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;cursor:pointer}
+.ev-lb .bar a{background:#fff;color:#111;border-color:#fff}
+.ev-lb .bar [hidden]{display:none}
 </style>
 <script>
+// The guests' album, to look at (155/183): every guest sees the photos, opens one full
+// size and downloads it; confirmed guests add theirs from the app, five each.
 (function () {
-  function oneByOne(xs, f) { return xs.reduce(function (p, x) { return p.then(function (acc) { return f(x).then(function (r) { acc.push(r); return acc; }); }); }, Promise.resolve([])); }
-  function phoneId() {
-    // this phone's own random identifier (179): the album counts its photos by it
-    try {
-      var v = localStorage.getItem('mk-phone');
-      if (!v || !/^[a-zA-Z0-9-]{16,64}$/.test(v)) {
-        v = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 14);
-        localStorage.setItem('mk-phone', v);
-      }
-      return v;
-    } catch (e) { return ''; }
-  }
   var S = (window.CARTE && typeof window.CARTE === 'object' && window.CARTE.slug) ? window.CARTE : null;
   if (!S || S.demo || S.editor || S.album_on === false || !S.uploads || !S.api || !S.api.url) return;
   var api = S.api.url.replace(/\/+$/, ''), H = {apikey: S.api.key, Authorization: 'Bearer ' + S.api.key, 'Content-Type': 'application/json'};
   var pic = function (k) { return S.uploads + '/v1/public/objects/' + encodeURIComponent(k); };
   var sec = document.createElement('section');
   sec.className = 'album-anime'; sec.id = 'album';
-  sec.innerHTML = '<h2>Vos photos</h2><p class="lead">Ajoutez les photos que vous prenez : elles rejoignent l\u2019album de l\u2019\u00e9v\u00e9nement, sous votre pr\u00e9nom.</p>'
-    + '<label class="who">Votre nom (sous la photo)<input name="who" maxlength="60"></label>'
-    + '<label class="btn solid">Ajouter des photos<input type="file" accept="image/*" multiple hidden></label>'
+  sec.innerHTML = '<h2>Vos photos</h2><p class="lead">Les photos des invit\u00e9s. Touchez une photo pour l\u2019ouvrir en grand et la t\u00e9l\u00e9charger. Pour ajouter les v\u00f4tres\u00a0: \u00ab\u00a0Confirmer ma pr\u00e9sence\u00a0\u00bb.</p>'
     + '<div class="say" role="status"></div><div class="grid"></div>';
   document.body.appendChild(sec);
   // The page's foot under the album, not above it: the drawn page keeps
   // its own (hidden), redrawn as it likes.
   var foot = document.querySelector('#site > footer.f');
   if (foot) { var f2 = foot.cloneNode(true); document.body.appendChild(f2); document.body.classList.add('has-album'); }
-  var grid = sec.querySelector('.grid'), say = sec.querySelector('.say'), lead = sec.querySelector('.lead');
-  var input = sec.querySelector('input[type=file]'), who = sec.querySelector('input[name=who]');
-  var rules = {review: false, limit: false};
-  var fig = function (src, name) {
-    var f = document.createElement('figure'), i = new Image(); i.src = src; i.alt = ''; i.loading = 'lazy'; f.appendChild(i);
-    var c = document.createElement('figcaption'); c.textContent = name || 'Un invit\u00e9'; f.appendChild(c); return f;
+  var grid = sec.querySelector('.grid'), say = sec.querySelector('.say');
+  // « Télécharger »: the uploads Worker is another address, so the file is fetched and
+  // saved under its name (an <a download> of another site is ignored); refused, a new tab.
+  var download = function (src, name) {
+    var open = function () { window.open(src, '_blank', 'noopener'); };
+    if (!window.fetch || !window.URL || !URL.createObjectURL) { open(); return Promise.resolve(false); }
+    return fetch(src, {mode: 'cors'}).then(function (r) { if (!r.ok) throw new Error('refus\u00e9'); return r.blob(); }).then(function (blob) {
+      var u = URL.createObjectURL(blob), a = document.createElement('a');
+      a.href = u; a.download = name || 'photo.jpg'; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(u); }, 4000); return true;
+    }).catch(function () { open(); return false; });
   };
-  var pass = function () {
-    if (document.body.dataset.pass) return document.body.dataset.pass;
-    try { var p = localStorage.getItem('mk-pass-' + S.slug); if (p) return p; } catch (e) {}
-    try { var b = JSON.parse(localStorage.getItem('mk-billets') || '[]'); for (var i = b.length - 1; i >= 0; i--) if (b[i] && b[i].slug === S.slug && b[i].id) return b[i].id; } catch (e) {}
-    return '';
+  var lb = document.createElement('div'), items = [], at = 0;
+  lb.className = 'ev-lb'; lb.setAttribute('role', 'dialog'); lb.setAttribute('aria-modal', 'true'); lb.setAttribute('aria-label', 'Photo');
+  lb.innerHTML = '<img alt=""><p></p><div class="bar"><button type="button" data-lb="prev" aria-label="Photo pr\u00e9c\u00e9dente">\u2039</button><a href="#" data-lb="dl">T\u00e9l\u00e9charger</a><button type="button" data-lb="next" aria-label="Photo suivante">\u203a</button><button type="button" data-lb="close">Fermer</button></div>';
+  document.body.appendChild(lb);
+  var show = function () {
+    var it = items[at]; lb.querySelector('img').src = it.src; lb.querySelector('p').textContent = it.name;
+    var dl = lb.querySelector('[data-lb=dl]'); dl.setAttribute('href', it.src); dl.setAttribute('download', it.file);
+    Array.prototype.forEach.call(lb.querySelectorAll('[data-lb=prev], [data-lb=next]'), function (x) { x.hidden = items.length < 2; });
+    lb.classList.add('on');
   };
-  var post = function (fn, body) { return fetch(api + '/rest/v1/rpc/' + fn, {method: 'POST', headers: H, body: JSON.stringify(body)}).then(function (r) { return r.ok ? r.json() : null; }); };
-  post('event_album_rules', {p_slug: S.slug, p_preview: S.preview || null}).then(function (j) {
-    if (!j) return; rules = j; var t = [];
-    if (j.limit) t.push((j.per_pass || 5) + ' photos par invit\u00e9 : r\u00e9pondez d\u2019abord \u00e0 l\u2019invitation (ou r\u00e9servez votre billet) sur ce t\u00e9l\u00e9phone.');
-    if (!j.limit && j.open_quota) t.push('Ouvert \u00e0 tous : ' + j.open_quota + ' photo' + (j.open_quota > 1 ? 's' : '') + ' par personne.');
-    if (j.review) t.push('Elles apparaissent une fois valid\u00e9es par l\u2019organisateur.');
-    if (t.length) lead.textContent = t.join(' ');
-    fitPicker();
-  }).catch(function () {});
-  post('event_album', {p_slug: S.slug, p_preview: S.preview || null}).then(function (list) {
-    (Array.isArray(list) ? list : []).forEach(function (p) { if (p && p.key) grid.appendChild(fig(pic(p.key) + '?w=400', p.guest)); });
-  }).catch(function () {});
-  var shrink = function (file, done) {
-    var img = new Image(), url = URL.createObjectURL(file);
-    img.onload = function () {
-      var m = 1400, w = img.naturalWidth, h = img.naturalHeight, k = Math.min(1, m / Math.max(w, h));
-      var c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
-      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
-      c.toBlob(function (b) { done(b, c.toDataURL('image/jpeg', .7)); }, 'image/jpeg', .82);
-    };
-    img.onerror = function () { done(null); }; img.src = url;
-  };
-  var refused = '';
-  // So many per phone (179): the photos this phone sent, counted here too, so the
-  // picker takes no more than are left; the name first, under each photo
-  var sentKey = 'mk-album-sent:' + S.slug;
-  var sent = function () { try { return +localStorage.getItem(sentKey) || 0; } catch (e) { return 0; } };
-  var left = function () { return !rules.limit && rules.open_quota ? Math.max(0, rules.open_quota - sent()) : null; };
-  var fitPicker = function () { var l = left(); input.multiple = l === null || l > 1; };
-  var noName = '\u00c9crivez d\u2019abord votre nom : il s\u2019affiche sous vos photos.';
-  var full = function () { return 'Vous avez d\u00e9j\u00e0 envoy\u00e9 vos ' + rules.open_quota + ' photo' + (rules.open_quota > 1 ? 's' : '') + ' : c\u2019est le maximum par personne.'; };
-  input.addEventListener('click', function (e) {
-    if (!who.value.trim()) { e.preventDefault(); say.textContent = noName; who.focus(); return; }
-    if (left() === 0) { e.preventDefault(); say.textContent = full(); }
+  lb.addEventListener('click', function (e) {
+    var k = e.target.closest('[data-lb]');
+    if (!k) { if (e.target === lb) lb.classList.remove('on'); return; }
+    e.preventDefault();
+    var w = k.getAttribute('data-lb');
+    if (w === 'close') lb.classList.remove('on');
+    else if (w === 'prev' || w === 'next') { at = (at + (w === 'next' ? 1 : items.length - 1)) % items.length; show(); }
+    else { k.textContent = 'T\u00e9l\u00e9chargement\u2026'; download(items[at].src, items[at].file).then(function () { k.textContent = 'T\u00e9l\u00e9charger'; }); }
   });
-  var send = function (file) {
-    return new Promise(function (res) {
-      if (!file.type || file.type.indexOf('image/') !== 0) return res(null);
-      var name = who.value.trim();
-      shrink(file, function (blob, src) {
-        if (!blob) return res(null);
-        fetch(S.uploads + '/v1/events/' + encodeURIComponent(S.slug) + '/album?apercu=' + encodeURIComponent(S.preview || '') + '&invite=' + encodeURIComponent(name) + '&pass=' + encodeURIComponent(pass()) + '&device=' + encodeURIComponent(phoneId()), {
-          method: 'POST', headers: {'Content-Type': 'image/jpeg'}, body: blob
-        }).then(function (r) { return r.json().then(function (j) { if (!r.ok || !j || !j.key) throw new Error(j && j.error ? j.error : 'La photo n\u2019est pas pass\u00e9e. R\u00e9essayez.'); return j; }); })
-          .then(function (j) { try { localStorage.setItem(sentKey, String(sent() + 1)); } catch (e) {} if (!rules.review) grid.insertBefore(fig(src, name), grid.firstChild); res(j); },
-                function (e) { refused = say.textContent = e && e.message ? e.message : 'La photo n\u2019est pas pass\u00e9e. R\u00e9essayez.'; res(null); });
+  document.addEventListener('keydown', function (e) { if (lb.classList.contains('on') && e.key === 'Escape') lb.classList.remove('on'); });
+  fetch(api + '/rest/v1/rpc/event_album', {method: 'POST', headers: H, body: JSON.stringify({p_slug: S.slug, p_preview: S.preview || null})})
+    .then(function (r) { return r.ok ? r.json() : null; }).then(function (list) {
+      list = (Array.isArray(list) ? list : []).filter(function (p) { return p && p.key; });
+      if (!list.length) { say.textContent = 'Les photos des invit\u00e9s confirm\u00e9s s\u2019afficheront ici.'; return; }
+      items = list.map(function (p) { return {src: pic(p.key), name: p.guest || 'Un invit\u00e9', file: S.slug + '-' + p.key.split('/').pop()}; });
+      list.forEach(function (p, i) {
+        var f = document.createElement('figure');
+        f.innerHTML = '<button type="button" aria-label="Ouvrir la photo en grand"><img alt="" loading="lazy"></button><figcaption></figcaption>';
+        f.querySelector('img').src = pic(p.key) + '?w=400';
+        f.querySelector('figcaption').textContent = p.guest || 'Un invit\u00e9';
+        f.querySelector('button').addEventListener('click', function () { at = i; show(); });
+        grid.appendChild(f);
       });
-    });
-  };
-  input.addEventListener('change', function () {
-    var files = Array.prototype.slice.call(input.files); input.value = '';
-    if (!files.length) return;
-    if (!who.value.trim()) { say.textContent = noName; who.focus(); return; }
-    var l = left(), cut = '';
-    if (l !== null && files.length > l) {
-      if (l === 0) { say.textContent = full(); return; }
-      files = files.slice(0, l); cut = ' (vos ' + l + ' premi\u00e8re' + (l > 1 ? 's' : '') + ' seulement : ' + rules.open_quota + ' par personne)';
-    }
-    say.textContent = files.length > 1 ? 'Envoi des photos\u2026' : 'Envoi de la photo\u2026';
-    // one after the other (181): each counted after those before it
-    refused = '';
-    oneByOne(files, send).then(function (r) {
-      var k = r.filter(Boolean).length; if (!k) return;
-      say.textContent = rules.review ? (k > 1 ? k + ' photos envoy\u00e9es : visibles apr\u00e8s validation' : 'Photo envoy\u00e9e : visible apr\u00e8s validation')
-                                    : (k > 1 ? k + ' photos ajout\u00e9es \u00e0 l\u2019album' : 'Photo ajout\u00e9e \u00e0 l\u2019album');
-      if (cut) say.textContent += cut;
-      if (refused) say.textContent += ' \u2014 ' + refused;
-      fitPicker();
-    });
-  });
+    }).catch(function () {});
 })();
 </script>
 </body>

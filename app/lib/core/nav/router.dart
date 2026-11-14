@@ -24,6 +24,9 @@ import '../../features/auth/profile_form_screen.dart';
 import '../../features/storefront/directory_screen.dart';
 import '../../features/storefront/my_tickets_screens.dart';
 import '../../features/events/buy_tickets_screen.dart';
+import '../../features/events/presence_screen.dart';
+import '../../features/storefront/my_invitations_screen.dart';
+import '../events/invitations_repository.dart';
 import '../../features/storefront/storefront_screen.dart';
 import '../../features/notify/notifications_screen.dart' show NotificationsScreen;
 import '../../features/notify/push_prompt.dart' show PushPromptQuiet;
@@ -186,6 +189,13 @@ abstract final class Routes {
   /// Buying tickets (172), signed in: `/achat-billets/<slug>`.
   static const buyTickets = '/achat-billets';
 
+  /// « Confirmer ma présence » (183), signed in: `/presence/<slug>`, the
+  /// card's one button; the sign-in brings a stranger straight back.
+  static const presence = '/presence';
+
+  /// « Mes invitations » (183): the cards the person confirmed, their photos.
+  static const myInvitations = '/invitations';
+
   /// « Vitrines masquées » (batch 150): the vitrines hidden on this device,
   /// public like the street — the hiding needs no account.
   static const hiddenVitrines = '/vitrines/masquees';
@@ -239,6 +249,8 @@ bool _shopperPath(String location) =>
       Routes.picker,
       Routes.myOrders,
       Routes.buyTickets,
+      Routes.presence,
+      Routes.myInvitations,
       Routes.shopperProfile,
       Routes.language,
       Routes.payment,
@@ -347,6 +359,16 @@ GoRouter buildRouter(SessionController session) {
       return null;
     }
 
+    // Where a gate brings the person back (183): the address with its query
+    // for buying tickets and confirming one's presence — a draft card's
+    // `?apercu=` is its key, and without it the page said the card was
+    // not open. Elsewhere the address alone, as before. The path and query
+    // only: a cold start from a universal link carries the site's origin
+    // (https://marakaj.com/presence/…), which is no address to go back to.
+    String backHere() => at(Routes.presence) || at(Routes.buyTickets)
+        ? Uri(path: state.uri.path, query: state.uri.hasQuery ? state.uri.query : null).toString()
+        : here;
+
     // A location worth coming back to after a gate. The gates themselves and
     // the splash are not destinations; everything else is somebody's place.
     bool isDestination() =>
@@ -388,7 +410,7 @@ GoRouter buildRouter(SessionController session) {
         // Remember where this reload was headed. The sign-in page is a gate,
         // not a destination: once the person is back in, the redirect below
         // returns them here instead of to the home it would otherwise pick.
-        if (isDestination()) session.stashReturnTo(here);
+        if (isDestination()) session.stashReturnTo(backHere());
         return Routes.signIn;
 
       case SessionPhase.locked:
@@ -396,14 +418,14 @@ GoRouter buildRouter(SessionController session) {
         if (at(Routes.pin)) return null;
         // Same as the sign-in gate: refreshing a deep page on a device with
         // a code must unlock back into that page, not into the home screen.
-        if (isDestination()) session.stashReturnTo(here);
+        if (isDestination()) session.stashReturnTo(backHere());
         return Routes.pin;
 
       case SessionPhase.twoStep:
         // A platform admin's second step (077). Like the code screen, a
         // gate: the page it interrupted is given back once it is passed.
         if (at(Routes.twoStep)) return null;
-        if (isDestination()) session.stashReturnTo(here);
+        if (isDestination()) session.stashReturnTo(backHere());
         return Routes.twoStep;
 
       case SessionPhase.noOrg:
@@ -421,6 +443,9 @@ GoRouter buildRouter(SessionController session) {
             // buying tickets (172): every signed-in person, business or not —
             // missing here, the redirect sent a signed-in buyer to the street
             at(Routes.buyTickets) ||
+            // « Confirmer ma présence » and « Mes invitations » (183): the same
+            at(Routes.presence) ||
+            at(Routes.myInvitations) ||
             at(Routes.shopperProfile) ||
             at(Routes.security) ||
             at(Routes.payment) ||
@@ -469,6 +494,9 @@ GoRouter buildRouter(SessionController session) {
             // buying tickets (172): every signed-in person, business or not —
             // missing here, the redirect sent a signed-in buyer to the street
             at(Routes.buyTickets) ||
+            // « Confirmer ma présence » and « Mes invitations » (183): the same
+            at(Routes.presence) ||
+            at(Routes.myInvitations) ||
             at(Routes.shopperProfile) ||
             at(Routes.security) ||
             at(Routes.payment) ||
@@ -506,6 +534,9 @@ GoRouter buildRouter(SessionController session) {
             // buying tickets (172): every signed-in person, business or not —
             // missing here, the redirect sent a signed-in buyer to the street
             at(Routes.buyTickets) ||
+            // « Confirmer ma présence » and « Mes invitations » (183): the same
+            at(Routes.presence) ||
+            at(Routes.myInvitations) ||
             at(Routes.shopperProfile) ||
             at(Routes.security) ||
             at(Routes.payment) ||
@@ -708,6 +739,7 @@ GoRouter buildRouter(SessionController session) {
             session: scope.session,
             shopper: ShopperRepository(scope.auth.client),
             tickets: MyTicketsStore(scope.auth.client, scope.db),
+            invitations: InvitationsRepository(scope.auth.client),
           ));
         },
       ),
@@ -718,7 +750,11 @@ GoRouter buildRouter(SessionController session) {
         path: Routes.myTickets,
         builder: (context, _) {
           final scope = AppScope.of(context);
-          return MyTicketsScreen(store: MyTicketsStore(scope.auth.client, scope.db));
+          return MyTicketsScreen(
+            store: MyTicketsStore(scope.auth.client, scope.db),
+            // « Mes invitations » beside them (183), for a signed-in person
+            invitations: scope.auth.client?.auth.currentUser == null ? null : () => context.push(Routes.myInvitations),
+          );
         },
         routes: [
           GoRoute(
@@ -727,7 +763,11 @@ GoRouter buildRouter(SessionController session) {
               final scope = AppScope.of(context);
               final id = state.pathParameters['id']!;
               final ok = RegExp(r'^[0-9a-fA-F-]{36}$').hasMatch(id);
-              return MyTicketsScreen(store: MyTicketsStore(scope.auth.client, scope.db), keepId: ok ? id : null);
+              return MyTicketsScreen(
+                store: MyTicketsStore(scope.auth.client, scope.db),
+                keepId: ok ? id : null,
+                invitations: scope.auth.client?.auth.currentUser == null ? null : () => context.push(Routes.myInvitations),
+              );
             },
           ),
         ],
@@ -747,6 +787,25 @@ GoRouter buildRouter(SessionController session) {
             store: MyTicketsStore(scope.auth.client, scope.db),
           );
         },
+      ),
+      // « Confirmer ma présence » (183): signed in — the redirect sends a
+      // stranger through sign-in (or a new account) and straight back here,
+      // its ?apercu= kept; then the photos, from here or « Mes invitations ».
+      GoRoute(
+        path: '${Routes.presence}/:slug',
+        builder: (context, state) {
+          final scope = AppScope.of(context);
+          final slug = state.pathParameters['slug']!;
+          return PresenceScreen(
+            repo: InvitationsRepository(scope.auth.client),
+            slug: RegExp(r'^[a-z0-9-]{1,80}$').hasMatch(slug) ? slug : '-',
+            preview: state.uri.queryParameters['apercu'],
+          );
+        },
+      ),
+      GoRoute(
+        path: Routes.myInvitations,
+        builder: (context, _) => MyInvitationsScreen(repo: InvitationsRepository(AppScope.of(context).auth.client)),
       ),
       // « Vitrines masquées » (150): public like the street — the hiding is
       // the device's and needs no account.

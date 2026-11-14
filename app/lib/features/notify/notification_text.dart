@@ -131,6 +131,14 @@ String notificationLine(BuildContext context, NotificationRow n) {
     case 'event_tomorrow':
       return context.tr('Demain : « {title} » — {yes} invités ont dit oui ({people} personnes). Rappelez-les depuis Invités.',
           {'title': s('title'), 'yes': s('yes'), 'people': s('people')});
+    // 183: « Confirmer ma présence » — the guest's bell, the organiser's.
+    case 'event_presence_guest':
+      return context.tr('Présence confirmée à « {title} » : vous pouvez ajouter vos photos.', {'title': s('title')});
+    case 'event_presence':
+      final n = number('people')?.toInt() ?? 1;
+      return n > 1
+          ? context.tr('{name} a confirmé sa présence ({n} personnes) — {title}', {'name': s('name'), 'n': n, 'title': s('title')})
+          : context.tr('{name} a confirmé sa présence (1 personne) — {title}', {'name': s('name'), 'title': s('title')});
     case 'booking_confirmed':
       return context.tr('Votre rendez-vous chez {shop} est confirmé : {when}',
           {'shop': s('shop'), 'when': when('at')});
@@ -544,6 +552,9 @@ String? notificationTarget(
     case 'vitrine_news':
       final slug = p['slug'];
       return slug is String && slug.isNotEmpty ? Routes.storefront(slug) : null;
+    // 183: the guest's confirmation opens « Mes invitations », where the photos go.
+    case 'event_presence_guest':
+      return Routes.myInvitations;
   }
   if (org == null) return null;
   // The booking itself (125): its card in « Mes commandes », or its next
@@ -559,7 +570,7 @@ String? notificationTarget(
     case 'new_order' || 'order_withdrawn' || 'delivery_taken':
       return inside('commandes');
     // 159: the reminder opens « Invités », where each guest with a number has WhatsApp.
-    case 'event_tomorrow':
+    case 'event_tomorrow' || 'event_presence':
       return inside('evenements/invites');
     case 'low_stock':
       if (profileOf?.call(org) == 'farm') return inside('a-vendre');

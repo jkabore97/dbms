@@ -599,7 +599,10 @@ void main() {
       expect(repo.calls.last, 'remove:events/e1/aaaa.jpg');
       expect(find.text('Album des invités · 1'), findsOneWidget);
       expect(find.text('Tanti Rose'), findsNothing);
-      await tester.ensureVisible(find.byKey(const Key('event-album-on')));
+      // in the middle of the screen (183: the album's lines below it grew, and
+      // a plain ensureVisible left it under the bar)
+      await Scrollable.ensureVisible(tester.element(find.byKey(const Key('event-album-on'))), alignment: 0.5);
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('event-album-on')));
       await tester.pumpAndSettle();
       expect(repo.calls.last, 'album:${e.id}=false');
