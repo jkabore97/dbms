@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kaj_app/core/auth/models.dart';
 import 'package:kaj_app/core/events/events_repository.dart';
 import 'package:kaj_app/core/events/invitations_repository.dart';
 import 'package:kaj_app/core/events/my_tickets.dart';
 import 'package:kaj_app/core/events/tickets_repository.dart';
+import 'package:kaj_app/core/nav/router.dart' show Routes;
 import 'package:kaj_app/core/notify/notifications_repository.dart';
 import 'package:kaj_app/features/events/events_screens.dart';
 import 'package:kaj_app/features/notify/notification_text.dart';
@@ -141,5 +143,44 @@ void main() {
     }
     expect(notificationTarget(buyer), '/billets');
     expect(notificationTarget(guest), '/invitations');
+  });
+
+  backHome();
+}
+
+/// The owner: from « Mes invitations », back is always the street's
+/// vitrines — not the confirmation it was opened from.
+void backHome() {
+  testWidgets('« Mes invitations »: back goes to the vitrines, by the arrow and by the phone', (tester) async {
+    for (final byPhone in [false, true]) {
+      final router = GoRouter(initialLocation: '/presence/x', routes: [
+        GoRoute(path: Routes.directory, builder: (_, _) => const Scaffold(body: Text('VITRINES'))),
+        GoRoute(
+            path: '/presence/x',
+            builder: (context, _) => Scaffold(
+                body: TextButton(onPressed: () => context.push(Routes.myInvitations), child: const Text('MES INVITATIONS')))),
+        GoRoute(path: Routes.myInvitations, builder: (_, _) => MyInvitationsScreen(repo: _Invitations(const []))),
+      ]);
+      await tester.pumpWidget(MaterialApp.router(
+        key: UniqueKey(),
+        routerConfig: router,
+        locale: const Locale('fr'),
+        localizationsDelegates: Strings.localizationsDelegates,
+        supportedLocales: Strings.supportedLocales,
+      ));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('MES INVITATIONS'));
+      await tester.pumpAndSettle();
+      expect(find.byType(MyInvitationsScreen), findsOneWidget);
+      if (byPhone) {
+        await tester.binding.handlePopRoute();
+      } else {
+        await tester.tap(find.byKey(const Key('my-invitations-back')));
+      }
+      await tester.pumpAndSettle();
+      expect(find.text('VITRINES'), findsOneWidget, reason: byPhone ? 'the phone\'s back' : 'the arrow');
+      expect(find.text('MES INVITATIONS'), findsNothing, reason: 'not the confirmation');
+      expect(router.routerDelegate.currentConfiguration.uri.path, Routes.directory);
+    }
   });
 }

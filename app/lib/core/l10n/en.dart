@@ -9448,4 +9448,6 @@ const enStrings = <String, String>{
       'The organiser will get back to you about the refund.',
   'Les invités voient « Événement annulé » sur la carte ; les acheteurs et les invités confirmés ont été prévenus dans Marakaj.':
       'Guests see “Event cancelled” on the card; buyers and confirmed guests were told in Marakaj.',
+  'Vous vendez, élevez, gérez une association ou organisez des événements ?':
+      'Do you sell, farm, run an association or organise events?',
 };
