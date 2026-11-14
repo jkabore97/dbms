@@ -493,6 +493,8 @@ class MyTickets {
     this.place,
     this.dateFr,
     this.ref = '',
+    this.cancelled = false,
+    this.cancelReason,
   });
 
   factory MyTickets.fromJson(Map<String, dynamic> j) => MyTickets(
@@ -508,7 +510,13 @@ class MyTickets {
           for (final t in (j['tickets'] as List? ?? const []))
             (id: '${(t as Map)['id']}', type: '${t['type'] ?? ''}', holder: '${t['holder'] ?? ''}', status: '${t['status'] ?? 'valid'}'),
         ],
+        cancelled: j['cancelled'] == true,
+        cancelReason: j['cancel_reason'] as String?,
       );
+
+  /// The organiser cancelled the event (185); the refund is theirs.
+  final bool cancelled;
+  final String? cancelReason;
 
   final String requestId;
   final String slug;
@@ -530,6 +538,8 @@ class MyTickets {
         'place': place,
         'date_fr': dateFr,
         'tickets': [for (final t in tickets) {'id': t.id, 'type': t.type, 'holder': t.holder, 'status': t.status}],
+        'cancelled': cancelled,
+        'cancel_reason': cancelReason,
       };
 
   /// What the QR of a ticket carries.

@@ -32,27 +32,26 @@ Pour les commerçants :
 
 Pour les organisateurs d'événements (mariage, dot, baptême, anniversaire, gala, concert…) :
 • Des cartes d'invitation en ligne, classiques ou animées, envoyées par un simple lien — avec un bel aperçu dans WhatsApp
-• Studio : composez votre carte au doigt, bloc par bloc — textes, couleurs, polices (vues avant de choisir), photos, fonds animés, pétales qui tombent
-• Les réponses de vos invités au fur et à mesure, et la veille un rappel sur WhatsApp en un geste
-• Une carte d'invité avec QR code, à présenter à l'entrée
+• Studio : composez votre carte au doigt, bloc par bloc — textes, couleurs, polices, photos, fonds animés, pétales qui tombent
+• Vos invités confirment leur présence d'un geste, et vous suivez les réponses au fur et à mesure ; la veille, un rappel sur WhatsApp
+• L'album de la fête : chaque invité ajoute ses photos depuis l'app, tout le monde les voit et les télécharge
 • La carte en PDF, à imprimer
 [Seulement une fois `events_tickets` ouvert :]
 • La billetterie : vos invités réservent sur la carte et paient directement chez vous (Orange Money, Moov…) ; billets avec QR code, contrôle à l'entrée même sans réseau
 
 Gratuit pour l'essentiel. Marakaj Pro (abonnement mensuel ou annuel) ajoute :
 • Pour les commerces : la livraison, le paiement en ligne, l'équipe, la comptabilité et plus
-• Pour les événements : les modèles et décors animés Premium, l'album photo des invités (avec validation des photos) et la billetterie sans limite[ — seulement si la billetterie est ouverte]
+• Pour les événements : les modèles et décors animés Premium, et l'album photo des invités[, et la billetterie sans limite — seulement si la billetterie est ouverte]
 
 Marakaj est conçue pour l'Afrique de l'Ouest : en français, sur téléphone, pour le commerce de quartier comme pour les grands jours.
 
 **Catégorie** Shopping (ou Entreprise)
 
-**Nouveautés (500 car. max)**
-• Studio : choisissez une police en la voyant, pétales de toutes les couleurs sur toute la carte, chaque section animée
-• Un bel aperçu de votre carte quand vous partagez son lien sur WhatsApp
+**Nouveautés (500 car. max)** — envoyées pour 1.0.2 (sur Play, entre `<fr-FR>` et `</fr-FR>`)
+• Confirmez votre présence d'un geste, puis ajoutez vos photos dans « Mes invitations » (5 par invité), du jour de l'événement à 7 jours après
+• Studio : polices visibles avant de choisir, pétales sur toute la carte, chaque section animée
+• Un bel aperçu de votre carte sur WhatsApp
 • L'heure de vos événements toujours à l'heure du lieu
-• Vos cartes présentées avec leur image
-• Les fenêtres et champs restent visibles au-dessus du clavier
 • L'Événementiel gratuit ; Marakaj Pro pour les modèles Premium et l'album des invités
 
 ## App Store

@@ -9440,4 +9440,12 @@ const enStrings = <String, String>{
       'default: the day of the event and the 7 days after',
   'Billetterie ouverte à tous les Événementiels (sinon : celui de Marakaj seulement)':
       'Ticketing open to every Événementiel (otherwise: Marakaj\'s own only)',
+  '« {title} » est annulé.':
+      '“{title}” is cancelled.',
+  '« {title} » est annulé ({reason}).':
+      '“{title}” is cancelled ({reason}).',
+  'L’organisateur revient vers vous pour le remboursement.':
+      'The organiser will get back to you about the refund.',
+  'Les invités voient « Événement annulé » sur la carte ; les acheteurs et les invités confirmés ont été prévenus dans Marakaj.':
+      'Guests see “Event cancelled” on the card; buyers and confirmed guests were told in Marakaj.',
 };

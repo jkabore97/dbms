@@ -373,7 +373,7 @@ Future<void> showDoorSale(BuildContext context, TicketsRepository tickets, Strin
 
 /// « Annuler l'événement »: asked twice, then the holders to write to.
 Future<void> cancelEvent(BuildContext context, TicketsRepository tickets, EventSummary event,
-    {Future<void> Function(Uri uri)? open}) async {
+    {Future<void> Function(Uri uri)? open, Future<void> Function()? after}) async {
   final why = await showDialog<String>(
     context: context,
     builder: (ctx) => NoteDialog(
@@ -389,6 +389,8 @@ Future<void> cancelEvent(BuildContext context, TicketsRepository tickets, EventS
   if (why == null || !context.mounted) return;
   try {
     final holders = await tickets.cancel(event.id, reason: why.isEmpty ? null : why);
+    // the card's screen read again (185): « Annulé » on it at once
+    await after?.call();
     final currency = await tickets.currency(event.id);
     if (!context.mounted) return;
     await Navigator.of(context).push(MaterialPageRoute<void>(

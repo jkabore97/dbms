@@ -476,6 +476,8 @@ class EventSummary {
     this.cardPreview,
     this.albumFrom,
     this.albumUntil,
+    this.cancelledAt,
+    this.cancelReason,
   });
 
   factory EventSummary.fromJson(Map<String, dynamic> j) => EventSummary(
@@ -502,7 +504,14 @@ class EventSummary {
         cardPreview: j['card_preview'] as String?,
         albumFrom: _day(j['album_from']),
         albumUntil: _day(j['album_until']),
+        cancelledAt: j['cancelled_at'] == null ? null : DateTime.tryParse('${j['cancelled_at']}')?.toLocal(),
+        cancelReason: j['cancel_reason'] as String?,
       );
+
+  /// The event cancelled (163), and why (185 shows it).
+  final DateTime? cancelledAt;
+  final String? cancelReason;
+  bool get cancelled => cancelledAt != null;
 
   static DateTime? _day(Object? v) {
     final d = v == null ? null : DateTime.tryParse('$v');

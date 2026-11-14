@@ -169,7 +169,12 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
                         if (r.dateFr != null) Text(r.dateFr!, style: const TextStyle(fontSize: 15)),
                         if (r.place != null && r.place!.isNotEmpty) Text(r.place!, style: const TextStyle(color: ShopStyle.mist)),
                         const SizedBox(height: 10),
-                        if (r.status != 'paid')
+                        // 185: the event cancelled — said, and no code to show at a door
+                        if (r.cancelled)
+                          cancelledNotice(context, r.cancelReason,
+                              more: context.tr('L’organisateur revient vers vous pour le remboursement.'),
+                              key: ValueKey('ticket-cancelled-${r.requestId}'))
+                        else if (r.status != 'paid')
                           Card(
                             child: ListTile(
                               key: ValueKey('pending-${r.requestId}'),
@@ -220,3 +225,25 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
     );
   }
 }
+
+/// « Événement annulé » (185), its reason, and what comes next — on a
+/// ticket, an invitation, the organiser's card.
+Widget cancelledNotice(BuildContext context, String? reason, {String? more, Key? key}) => Container(
+      key: key,
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: const Color(0xFFFDECEC), borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFB91C1C))),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Icon(Icons.event_busy, color: Color(0xFFB91C1C)),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(context.tr('Événement annulé'),
+                style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF7F1D1D), fontSize: 16)),
+            if (reason != null && reason.isNotEmpty) Text(reason, style: const TextStyle(color: Color(0xFF7F1D1D))),
+            if (more != null) Padding(padding: const EdgeInsets.only(top: 4), child: Text(more, style: const TextStyle(fontSize: 13))),
+          ]),
+        ),
+      ]),
+    );
