@@ -727,6 +727,28 @@ class _EventScreenState extends State<EventScreen> {
     }
   }
 
+  /// « Jours pour ajouter les photos » (184): the calendar, from the days
+  /// as they stand (the default filled in).
+  Future<void> _chooseAlbumDays(EventSummary e) async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final opens = e.albumOpens ?? today;
+    final closes = e.albumCloses ?? opens.add(const Duration(days: 7));
+    final first = (opens.isBefore(today) ? opens : today).subtract(const Duration(days: 365));
+    final last = (closes.isAfter(today) ? closes : today).add(const Duration(days: 730));
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: first,
+      lastDate: last,
+      initialDateRange: DateTimeRange(start: opens, end: closes.isBefore(opens) ? opens : closes),
+      helpText: context.tr('Jours pour ajouter les photos'),
+      saveText: context.tr('Enregistrer'),
+    );
+    if (picked == null || !mounted) return;
+    await _run(() => widget.events.setAlbumDays(e.id, picked.start, picked.end),
+        done: context.tr('Jours des photos enregistrés'));
+  }
+
   /// « Photo sur la rue » (175): the card's own pictures read first (none
   /// before 155), then the choice written.
   Future<void> _chooseStreetPicture(EventSummary e) async {
@@ -1052,6 +1074,24 @@ class _EventScreenState extends State<EventScreen> {
                           leading: const Icon(Icons.photo_library_outlined),
                           title: Text(context.tr('Les invités confirmés ajoutent jusqu’à 5 photos chacun')),
                           subtitle: Text(context.tr('Sur la carte, « Confirmer ma présence » ; puis « Mes invitations » dans Marakaj. Tout le monde voit l’album et télécharge les photos.')),
+                        ),
+                        // The days (184): by default the event's and the
+                        // seven after, on the card's clock; the organiser's own.
+                        ListTile(
+                          key: const Key('event-album-days'),
+                          leading: const Icon(Icons.date_range_outlined),
+                          title: Text(context.tr('Jours pour ajouter les photos')),
+                          subtitle: Text(albumDaysLabel(context, e)),
+                          trailing: e.albumFrom != null || e.albumUntil != null
+                              ? IconButton(
+                                  key: const Key('event-album-days-reset'),
+                                  tooltip: context.tr('Revenir au réglage par défaut'),
+                                  icon: const Icon(Icons.restart_alt),
+                                  onPressed: () => _run(() => widget.events.setAlbumDays(e.id, null, null),
+                                      done: context.tr('Le jour de l’événement et les 7 jours suivants')),
+                                )
+                              : const Icon(Icons.chevron_right),
+                          onTap: () => _chooseAlbumDays(e),
                         ),
                         SwitchListTile(
                           key: const Key('event-album-review'),
@@ -1521,4 +1561,20 @@ class EventDashboard extends StatelessWidget {
       ),
     );
   }
+}
+
+
+/// The album's days in words (184): « Du samedi 21 novembre au samedi 28
+/// novembre », and « (par défaut) » when the organiser set none.
+String albumDaysLabel(BuildContext context, EventSummary e) {
+  final opens = e.albumOpens;
+  final closes = e.albumCloses;
+  if (opens == null || closes == null) {
+    return context.tr('Tous les jours : la carte n’a pas de date.');
+  }
+  String day(DateTime d) => DateFormat('EEEE d MMMM', context.trLocale).format(d);
+  final span = context.tr('Du {from} au {until}', {'from': day(opens), 'until': day(closes)});
+  return e.albumFrom == null && e.albumUntil == null
+      ? '$span — ${context.tr('par défaut : le jour de l’événement et les 7 jours suivants')}'
+      : span;
 }

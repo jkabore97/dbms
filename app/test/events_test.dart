@@ -540,7 +540,7 @@ void main() {
       // The second answer sits below the fold: the list builds it on scroll.
       await tester.scrollUntilVisible(find.text('Ne viendra pas'), 200, scrollable: find.byType(Scrollable).first);
       expect(find.text('Ne viendra pas'), findsOneWidget);
-      await tester.drag(find.byType(Scrollable).first, const Offset(0, 800));
+      await tester.scrollUntilVisible(find.byKey(const Key('event-preview')), -200, scrollable: find.byType(Scrollable).first);
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.byKey(const Key('event-preview')));
       await tester.pumpAndSettle();
@@ -682,7 +682,11 @@ void main() {
       expect(def.type, SettingType.flag);
       expect(def.group, 'events');
       expect(settingCardOf('events_public')?.key, 'evenements');
-      expect(platformSettingDefs.last.key, 'events_public', reason: 'appended, as in test_batch105\'s list');
+      // 184's fix: the ticketing switch beside it, appended as in test_batch105's list
+      final tickets = platformSettingDefs.firstWhere((d) => d.key == 'events_tickets');
+      expect(tickets.type, SettingType.flag);
+      expect(settingCardOf('events_tickets')?.key, 'evenements');
+      expect(platformSettingDefs.last.key, 'events_tickets', reason: 'appended, as in test_batch105\'s list');
     });
 
     test('the kinds and the cards: every card belongs to a kind the presets know', () {

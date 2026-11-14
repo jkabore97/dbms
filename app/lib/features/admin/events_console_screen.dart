@@ -110,7 +110,7 @@ class _EventsConsoleScreenState extends State<EventsConsoleScreen> {
                     labelText: context.tr('Billets gratuits par carte'),
                     helperText: c.ticketsOn
                         ? context.tr('Au-delà, la carte ne vend plus en ligne sans Marakaj Pro.')
-                        : context.tr('La vente de billets est encore fermée à tous (réglage events_tickets).'),
+                        : context.tr('La vente de billets est encore fermée à tous (Réglages › Événementiel › Billetterie).'),
                   ),
                 ),
                 const SizedBox(height: 10),

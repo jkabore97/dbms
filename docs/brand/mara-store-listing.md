@@ -73,7 +73,7 @@ Compte de démonstration : celui de `store_review_account`. Il ouvre une boutiqu
 2. **La billetterie** : ne la citer que si `events_tickets` est ouvert (Console › Événementiel l'indique).
 3. **Marakaj Pro** : l'abonnement des stores (`store_billing_on`) est ouvert ; les prix des produits d'abonnement dans App Store Connect et la Play Console doivent correspondre à ceux de la Console › Pro.
 4. **Captures d'écran** : refaire celles des cartes (nouvelle liste « Cartes », Studio, aperçu WhatsApp) — elles doivent montrer l'app actuelle.
-5. **Version** : augmenter le numéro de version et de build (`app/pubspec.yaml`) avant la compilation Codemagic et la construction Android.
+5. **Version** : 1.0.2 (`app/pubspec.yaml`, `appVersion` dans main.dart) — fait le 14 novembre 2026 ; le numéro de build vient de Codemagic.
 6. **iPhone** : Associated Domains (applinks:marakaj.com) dans le profil de l'identifiant bf.kaj.app, sinon les liens de billets n'ouvrent pas l'app (ce n'est pas bloquant pour la revue).
 7. **Assistant d'écriture** : la clé `ANTHROPIC_API_KEY` doit être ajoutée dans Cloudflare (par vous) ; sans elle Studio répond « pas disponible » — retirer « assistant » des textes tant qu'elle manque.
 8. **Notifications du compte de test** : pendant la revue, les testeurs se connectent et envoient des notifications test ; c'est normal.
