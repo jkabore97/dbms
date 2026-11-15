@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../auth/welcome_gate.dart' show MissingPage;
 import '../notify/notifications_screen.dart' show ShopperBell;
 import 'dart:convert';
 import 'dart:math' as math;
@@ -1378,11 +1379,16 @@ class _StorefrontScreenState extends State<StorefrontScreen> {
               ),
             )
           : shop == null
-          ? ShopNotice(
-              text: context.tr('Cette vitrine n\'existe pas, ou n\'est pas ouverte.'),
-              action: OutlinedButton(
-                onPressed: _directory,
-                child: Text(context.tr('Voir les autres vitrines')),
+          // 404 (the owner): no welcome sheet over it — the stranger reads
+          // that the vitrine is not there, with the way to the others.
+          ? MissingPage(
+              child: ShopNotice(
+                key: const Key('vitrine-missing'),
+                text: context.tr('Erreur 404 — cette vitrine n\'existe pas, ou n\'est pas ouverte.'),
+                action: OutlinedButton(
+                  onPressed: _directory,
+                  child: Text(context.tr('Voir les autres vitrines')),
+                ),
               ),
             )
           : _hiddenFromStreet == true && _ownOrg != null

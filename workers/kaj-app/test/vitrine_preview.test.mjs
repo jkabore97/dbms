@@ -30,7 +30,8 @@ test("/s/<slug> asks for the shop and its articles with GET, kept five minutes",
   };
   try {
     const r = await site.fetch(new Request("https://marakaj.com/s/tony-pizza"), env);
-    assert.equal(r.status, 200);
+    // the server's clear « no such vitrine »: the app's page, with 404
+    assert.equal(r.status, 404);
   } finally {
     globalThis.fetch = real;
   }

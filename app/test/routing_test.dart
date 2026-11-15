@@ -421,6 +421,27 @@ void main() {
         findsNothing);
   });
 
+  testWidgets('an address that matches no page: « Erreur 404 », no sign-in page, no welcome sheet; home to the vitrines',
+      (tester) async {
+    // The owner: failed pages show 404. A signed-out visitor used to be
+    // sent to sign in for a page that does not exist.
+    await pumpApp(tester);
+    final router = tester.widget<MaterialApp>(find.byType(MaterialApp)).routerConfig as GoRouter;
+    for (final lost in ['/nimportequoi', '/s/x/y/z', '/vitrines/rien/du/tout']) {
+      router.go(lost);
+      await flush(tester);
+      expect(find.byKey(const Key('not-found')), findsOneWidget, reason: lost);
+      expect(find.text('ERREUR 404'), findsOneWidget);
+      expect(find.text("Cette page n'existe pas"), findsOneWidget);
+      expect(find.byKey(const Key('welcome-gate')), findsNothing, reason: 'no sheet over a dead link');
+      expect(find.text('Connectez-vous pour ouvrir votre activité.'), findsNothing, reason: 'not the sign-in page');
+    }
+    await tester.tap(find.byKey(const Key('not-found-home')));
+    await flush(tester);
+    expect(router.routerDelegate.currentConfiguration.uri.path, '/vitrines');
+    expect(find.byKey(const Key('welcome-gate')), findsOneWidget, reason: 'the street keeps its sheet');
+  });
+
   testWidgets('entering the business world leaves the street behind',
       (tester) async {
     // The owner's complaint: from the picker, the console or a store, back

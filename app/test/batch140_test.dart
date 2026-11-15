@@ -1139,7 +1139,7 @@ void main() {
       expect(find.text('Ouvrir ou régler la vitrine'), findsOneWidget);
       // A stranger: as before.
       await open(null, null, const []);
-      expect(find.text('Cette vitrine n\'existe pas, ou n\'est pas ouverte.'), findsOneWidget);
+      expect(find.text('Erreur 404 — cette vitrine n\'existe pas, ou n\'est pas ouverte.'), findsOneWidget);
     });
   });
 
@@ -1309,7 +1309,7 @@ void main() {
       )));
       await _settle(tester);
       expect(find.text('Votre vitrine n\'est pas encore visible des clients'), findsNothing);
-      expect(find.text('Cette vitrine n\'existe pas, ou n\'est pas ouverte.'), findsOneWidget);
+      expect(find.text('Erreur 404 — cette vitrine n\'existe pas, ou n\'est pas ouverte.'), findsOneWidget);
     });
 
     Future<void> openSheet(WidgetTester tester, {required bool mine, required AdminRepository admin}) async {
