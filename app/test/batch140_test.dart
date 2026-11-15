@@ -35,6 +35,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart' show FontLoader;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kaj_app/features/auth/welcome_gate.dart' show WelcomeGate;
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kaj_app/core/accounting/accounting_repository.dart';
@@ -1137,9 +1138,13 @@ void main() {
       await open(null, const VitrineChecklist(open: false, published: 7), [own]);
       expect(find.text('Votre vitrine n\'est pas encore visible des clients'), findsOneWidget);
       expect(find.text('Ouvrir ou régler la vitrine'), findsOneWidget);
-      // A stranger: as before.
+      // A stranger: « Erreur 404 », marked as a missing page, so the
+      // welcome sheet stays off it (the owner: failed pages show 404).
       await open(null, null, const []);
       expect(find.text('Erreur 404 — cette vitrine n\'existe pas, ou n\'est pas ouverte.'), findsOneWidget);
+      expect(find.byKey(const Key('vitrine-missing')), findsOneWidget);
+      await tester.pump();
+      expect(WelcomeGate.missing.value, 1, reason: 'the sheet stays off a missing vitrine');
     });
   });
 
