@@ -79,8 +79,15 @@ class WelcomeGate extends StatefulWidget {
   /// keep it on. The app never touches this.
   static bool enabled = true;
 
+  /// How many « page not found » screens are showing (a [MissingPage]):
+  /// the sheet never stands over one (the owner: failed pages show 404) —
+  /// a stranger who followed a dead link reads that it is dead, with the
+  /// way to the street, rather than an invitation to sign up for nothing.
+  static final ValueNotifier<int> missing = ValueNotifier(0);
+
   /// Whether the sheet is up right now (main.dart's back).
   static bool isUp(SessionController session, GoRouter router) =>
+      missing.value == 0 &&
       welcomeGateShows(session.phase, router.routerDelegate.currentConfiguration.uri.path);
 
   /// Android's back while the sheet is up (main.dart, through BackFirst,
@@ -181,9 +188,9 @@ class _WelcomeGateState extends State<WelcomeGate> {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: widget.session,
+      listenable: Listenable.merge([widget.session, WelcomeGate.missing]),
       builder: (context, _) {
-        final up = welcomeGateShows(widget.session.phase, _path);
+        final up = WelcomeGate.missing.value == 0 && welcomeGateShows(widget.session.phase, _path);
         return Stack(
           fit: StackFit.expand,
           children: [
@@ -424,4 +431,41 @@ class _WelcomeSheet extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Marks the page under it as « not found » while it shows: the welcome
+/// sheet stays off it (see [WelcomeGate.missing]). Told after the frame —
+/// the gate is an ancestor, and may not be rebuilt in the middle of one.
+class MissingPage extends StatefulWidget {
+  const MissingPage({super.key, required this.child});
+  final Widget child;
+
+  @override
+  State<MissingPage> createState() => _MissingPageState();
+}
+
+class _MissingPageState extends State<MissingPage> {
+  bool _counted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _counted = true;
+      WelcomeGate.missing.value++;
+    });
+  }
+
+  @override
+  void dispose() {
+    if (_counted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => WelcomeGate.missing.value--);
+      WidgetsBinding.instance.ensureVisualUpdate();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

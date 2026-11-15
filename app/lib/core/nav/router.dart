@@ -18,6 +18,7 @@ import '../../features/account/legal_screens.dart';
 import '../../features/auth/join_or_apply_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/auth/no_org_screen.dart';
+import '../../features/auth/welcome_gate.dart' show MissingPage;
 import '../../features/auth/org_picker_screen.dart';
 import '../../features/auth/pin_screen.dart';
 import '../../features/auth/profile_form_screen.dart';
@@ -328,6 +329,12 @@ GoRouter buildRouter(SessionController session) {
     // replaced it, whatever the phase (signed out, the sign-in brings the
     // person back here, then on to it).
     if (state.uri.path == Routes.oldApplyForBusiness) return Routes.createBusiness;
+
+    // An address that matches no page (a mistyped link, an old bookmark):
+    // « Cette page n'existe pas » for everyone, signed in or not — no gate
+    // first. Before, a signed-out visitor was sent to sign in for a page
+    // that does not exist (the owner: failed pages show 404).
+    if (state.error != null) return null;
 
     // The language screen answers to no phase: the person who most needs it
     // is the one who cannot read whatever screen their phase would show. The
@@ -2533,7 +2540,10 @@ class NotFoundScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
+    // 404 (the owner): said as such, and the welcome sheet stays off it.
+    return MissingPage(
+      child: Scaffold(
+      key: const Key('not-found'),
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -2543,6 +2553,9 @@ class NotFoundScreen extends StatelessWidget {
               children: [
                 const MaraMark(size: 72),
                 const SizedBox(height: 24),
+                Text(context.tr('ERREUR 404'),
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, letterSpacing: 2.2, color: Color(0xFFB08A5A))),
+                const SizedBox(height: 8),
                 Text(context.tr('Cette page n\'existe pas'),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.titleLarge),
@@ -2555,7 +2568,8 @@ class NotFoundScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
                 FilledButton(
-                  onPressed: () => context.go('/'),
+                  key: const Key('not-found-home'),
+                  onPressed: () => context.go(Routes.directory),
                   child: Text(context.tr('Retour à l\'accueil')),
                 ),
               ],
@@ -2563,6 +2577,7 @@ class NotFoundScreen extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }

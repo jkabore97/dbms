@@ -19,6 +19,8 @@ const files = {
   "/cartes/come.html": [CARD, "text/html; charset=utf-8"],
   "/cartes/gala.html": [CARD.replaceAll("Inès", "Gala"), "text/html; charset=utf-8"],
   "/cartes/shared.css": ["body{}", "text/css"],
+  // a card's preview picture, as the real binding serves it
+  "/cartes/apercu/come.jpg": ["JPEG", "image/jpeg"],
   "/evenements/index.html": [ANIME, "text/html; charset=utf-8"],
 };
 const env = {
@@ -146,6 +148,24 @@ test("185: a cancelled event — the banner on top, its reason escaped, no butto
   const open = await (await get("/e/gala-185")).text();
   assert.ok(!open.includes("kaj-cancelled"), "not cancelled: no banner, no hiding");
   assert.ok(open.includes('"cancelled":false'));
+});
+
+test("404: a card that leads nowhere is Marakaj's own page, not bare text; an unknown address answers 404 with the app's page; the app's own addresses 200", async () => {
+  answer = null;
+  const r = await get("/e/nope-404");
+  assert.equal(r.status, 404);
+  assert.match(r.headers.get("Content-Type"), /text\/html/);
+  const html = await r.text();
+  assert.ok(html.includes("ERREUR 404") && html.includes("Cette carte n’est pas ouverte") && html.includes('href="/vitrines"'), "the branded page");
+  assert.equal((await get("/modele/nope")).status, 404);
+  assert.ok((await (await get("/modele/nope")).text()).includes("ERREUR 404"));
+
+  const lost = await get("/nimportequoi");
+  assert.equal(lost.status, 404, "an address the app has no page for");
+  assert.ok((await lost.text()).includes("<title>Marakaj</title>"), "the app's page still, which draws its own 404");
+  for (const ok of ["/", "/vitrines", "/connexion", "/o/abc/commandes", "/presence/x", "/invitations", "/billets", "/console/reglages"]) {
+    assert.equal((await get(ok)).status, 200, ok);
+  }
 });
 
 test("the card the event names; an unknown name falls back to the first", async () => {

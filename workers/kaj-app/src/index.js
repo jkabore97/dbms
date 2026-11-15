@@ -223,8 +223,58 @@ async function serve(request, env, ctx) {
         // Mara's own preview rather than no page.
       }
     }
-    return cacheFor(url.pathname, await env.ASSETS.fetch(request));
+    const shell = cacheFor(url.pathname, await env.ASSETS.fetch(request));
+    // An address the app has no page for (the owner: failed pages show
+    // 404): the app's own page still answers — it draws « Erreur 404 —
+    // Cette page n'existe pas » — but with the status 404, so a browser, a
+    // link preview and a search engine know it too.
+    if (request.method === "GET" && !appPathKnown(url.pathname)
+        && (shell.headers.get("Content-Type") || "").startsWith("text/html")) {
+      return withStatus(shell, 404);
+    }
+    return shell;
   }
+}
+
+// The app's pages, by their first segment (core/nav/router.dart; the
+// app's test app_paths_test keeps the two lists the same): anything else
+// is answered 404.
+export const APP_PATHS = new Set([
+  "", "achat-billets", "aide", "bienvenue", "billets", "chargement-impossible", "code",
+  "conditions", "confidentialite", "connexion", "console", "creer-mon-activite",
+  "demander-une-entreprise", "demandes", "demarrage", "deux-etapes", "devenir-livreur",
+  "entreprises", "formateur", "invitations", "langue", "livreur", "mes-commandes",
+  "mon-compte", "mon-profil", "nouvelle-entreprise", "o", "paiement", "presence",
+  "rejoindre", "s", "securite", "vitrines",
+  // the page itself, by its own name
+  "index.html",
+]);
+
+export function appPathKnown(pathname) {
+  return APP_PATHS.has(pathname.split("/")[1] || "");
+}
+
+function withStatus(response, status) {
+  return new Response(response.body, { status, headers: response.headers });
+}
+
+// A page the guest reaches by a link that leads nowhere (a card, a pass, a
+// design): Marakaj's own « 404 » page, not a line of bare text.
+function notFoundPage(title, text) {
+  const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8">` +
+    `<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">` +
+    `<title>${escapeHtml(title)} · Marakaj</title><style>` +
+    `body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f4f1ea;color:#1c1917;` +
+    `font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:24px;box-sizing:border-box}` +
+    `main{max-width:420px;text-align:center}.code{font-weight:800;letter-spacing:.18em;color:#b08a5a;font-size:13px}` +
+    `h1{font-size:24px;margin:10px 0 8px}p{color:#57534e;margin:0 0 22px}` +
+    `a{display:inline-block;background:#1c1917;color:#fff;text-decoration:none;padding:12px 22px;border-radius:999px;font-weight:700}` +
+    `</style></head><body><main><div class="code">ERREUR 404</div><h1>${escapeHtml(title)}</h1>` +
+    `<p>${escapeHtml(text)}</p><a href="/vitrines">Aller sur Marakaj</a></main></body></html>`;
+  return new Response(html, {
+    status: 404,
+    headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
+  });
 }
 
 // /app/<hash>/, /ck/<hash>/, /a/<hash>/ — written by the deploy.
@@ -277,6 +327,9 @@ async function vitrinePage(request, env, slug) {
     rpc(env, "storefront_products", { p_slug: slug }),
   ]);
   const s = Array.isArray(rows) ? rows[0] : null;
+  // No such vitrine (or not open): the app says so; the status says 404.
+  // Only on the server's clear answer — an error keeps the page as it is.
+  if (Array.isArray(rows) && rows.length === 0) return withStatus(page, 404);
   if (!s || !s.name) return page;
 
   const style = s.style || {};
@@ -449,10 +502,8 @@ function localParts(iso, tz) {
 // editor: the server says « editor », the page shows its bar, saves to
 // the server and uploads its pictures through the uploads Worker.
 export async function eventPage(request, env, slug, preview, edit, ctx) {
-  const gone = () => new Response("Cette carte n'est pas ouverte.", {
-    status: 404,
-    headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
-  });
+  const gone = () => notFoundPage("Cette carte n’est pas ouverte",
+    "Elle n’existe pas, n’est pas encore publiée, ou son lien est incomplet. Demandez le lien à l’organisateur.");
   if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) return gone();
   let data = null;
   try {
@@ -693,10 +744,7 @@ export async function studioPage(request, env, slug, preview, edit) {
 // whoever holds the QR: the guest at the door, the organiser who scans
 // it. Never cached.
 export async function passPage(env, slug, id) {
-  const gone = (text) => new Response(text, {
-    status: 404,
-    headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
-  });
+  const gone = (text) => notFoundPage(text, "Demandez le lien à l’organisateur.");
   // The id is an answer's uuid; anything else is no pass, asked of nobody.
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(id)) return gone("Cette carte d'invité n'existe pas.");
   if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) return gone("Cette carte d'invité n'est pas disponible.");
@@ -942,10 +990,7 @@ const DEMO_TITLE = {
 export async function demoPage(request, env, key) {
   const animated = ANIMATED.test(key);
   if (!animated && !EVENT_CARDS.has(key)) {
-    return new Response("Introuvable.", {
-      status: 404,
-      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
-    });
+    return notFoundPage("Ce modèle n’existe pas", "Choisissez un modèle dans l’app, onglet Cartes.");
   }
   const kind = DEMO_KIND[key] || "mariage";
   const starts = new Date(Date.now() + 45 * 864e5);
@@ -972,10 +1017,8 @@ export async function demoPage(request, env, key) {
 // The card's page, the event written in: /e/<slug> (152) and the designs'
 // samples (/modele/<key>, 155c) share it.
 async function cardPage(request, env, { slug, data, preview, edit, editor, demo, classic = false }) {
-  const gone = () => new Response("Cette carte n'est pas ouverte.", {
-    status: 404,
-    headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
-  });
+  const gone = () => notFoundPage("Cette carte n’est pas ouverte",
+    "Elle n’existe pas, n’est pas encore publiée, ou son lien est incomplet. Demandez le lien à l’organisateur.");
   // Two families of design (153): the twelve cards under /cartes, each its
   // own page; the animated layouts, one page under /evenements that draws
   // the layout the event names (window.CARTE.lay). A card made in Studio

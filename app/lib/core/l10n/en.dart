@@ -9452,4 +9452,8 @@ const enStrings = <String, String>{
       'Do you sell, farm, run an association or organise events?',
   'Bonsoir':
       'Good evening',
+  'ERREUR 404':
+      'ERROR 404',
+  'Erreur 404 — cette vitrine n\'existe pas, ou n\'est pas ouverte.':
+      'Error 404 — this shop window does not exist, or is not open.',
 };
