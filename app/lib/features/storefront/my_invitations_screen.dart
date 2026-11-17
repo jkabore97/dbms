@@ -182,10 +182,24 @@ class _MyInvitationsScreenState extends State<MyInvitationsScreen> {
   /// « confirmé » again.
   void _home() {
     final router = GoRouter.maybeOf(context);
+    final nav = Navigator.of(context);
+    // Opened over a page (the street's bar, the confirmation's fallback:
+    // a route pushed by hand, not one of the router's pages), the screen
+    // is closed first — `go` to the address already under it changed
+    // nothing, and the arrow seemed dead (the owner's screenshot).
+    final pushedByHand = ModalRoute.of(context)?.settings is! Page;
+    if (pushedByHand && nav.canPop()) {
+      nav.pop();
+      if (router != null) {
+        // then the vitrines, from wherever it was opened
+        WidgetsBinding.instance.addPostFrameCallback((_) => router.go(Routes.directory));
+      }
+      return;
+    }
     if (router != null) {
       router.go(Routes.directory);
     } else {
-      Navigator.of(context).maybePop();
+      nav.maybePop();
     }
   }
 

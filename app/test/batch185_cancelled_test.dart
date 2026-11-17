@@ -147,6 +147,7 @@ void main() {
   });
 
   backHome();
+  backFromBar();
   greeting();
 }
 
@@ -182,6 +183,54 @@ void backHome() {
       await tester.pumpAndSettle();
       expect(find.text('VITRINES'), findsOneWidget, reason: byPhone ? 'the phone\'s back' : 'the arrow');
       expect(find.text('MES INVITATIONS'), findsNothing, reason: 'not the confirmation');
+      expect(router.routerDelegate.currentConfiguration.uri.path, Routes.directory);
+    }
+  });
+}
+
+/// The owner's screenshot: opened from the street's bar (a screen pushed
+/// over the street, not a router page), the arrow did nothing — the
+/// vitrines were already the address under it. Closed first, then home.
+void backFromBar() {
+  testWidgets('« Mes invitations » opened over a page: back closes it and lands on the vitrines, by the arrow and by the phone', (tester) async {
+    for (final (from, byPhone) in [(Routes.directory, false), (Routes.directory, true), ('/billets', false)]) {
+      final router = GoRouter(initialLocation: from, routes: [
+        GoRoute(
+            path: Routes.directory,
+            builder: (context, _) => Scaffold(body: Column(children: [
+                  const Text('VITRINES'),
+                  TextButton(
+                      onPressed: () => Navigator.of(context)
+                          .push(MaterialPageRoute<void>(builder: (_) => MyInvitationsScreen(repo: _Invitations(const [])))),
+                      child: const Text('BARRE')),
+                ]))),
+        GoRoute(
+            path: '/billets',
+            builder: (context, _) => Scaffold(
+                body: TextButton(
+                    onPressed: () => Navigator.of(context)
+                        .push(MaterialPageRoute<void>(builder: (_) => MyInvitationsScreen(repo: _Invitations(const [])))),
+                    child: const Text('BARRE')))),
+      ]);
+      await tester.pumpWidget(MaterialApp.router(
+        key: UniqueKey(),
+        routerConfig: router,
+        locale: const Locale('fr'),
+        localizationsDelegates: Strings.localizationsDelegates,
+        supportedLocales: Strings.supportedLocales,
+      ));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('BARRE'));
+      await tester.pumpAndSettle();
+      expect(find.byType(MyInvitationsScreen), findsOneWidget);
+      if (byPhone) {
+        await tester.binding.handlePopRoute();
+      } else {
+        await tester.tap(find.byKey(const Key('my-invitations-back')));
+      }
+      await tester.pumpAndSettle();
+      expect(find.byType(MyInvitationsScreen), findsNothing, reason: 'closed ($from, ${byPhone ? 'phone' : 'arrow'})');
+      expect(find.text('VITRINES'), findsOneWidget);
       expect(router.routerDelegate.currentConfiguration.uri.path, Routes.directory);
     }
   });
