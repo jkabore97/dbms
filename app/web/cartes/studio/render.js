@@ -374,7 +374,12 @@
       var p = b.props || {}, l = items(b, 'items'), times = p.showTimes !== false;
       return F(b, ctx, 'title', 'h2', 'st-h2', 'Titre') + F(b, ctx, 'intro', 'p', 'st-lead', 'Une phrase d\'introduction', true) +
         '<ol class="st-prog' + (times ? '' : ' no-times') + '">' + l.map(function (it, i) {
-          return '<li data-i="' + i + '">' + (times ? F(b, ctx, 'items.' + i + '.time', 'span', 'st-prog-t', 'Heure') : '') + '<span class="st-prog-dot">' + icon(it && it.icon || 'star') + '</span>' +
+          // a step with no time among timed ones keeps its column (an
+          // empty cell): the words were squeezed into the time's column
+          // (the owner's « Accueil » and « La dot », 18 November)
+          var t = times ? F(b, ctx, 'items.' + i + '.time', 'span', 'st-prog-t', 'Heure') : '';
+          if (times && !t) t = '<span class="st-prog-t" aria-hidden="true"></span>';
+          return '<li data-i="' + i + '">' + t + '<span class="st-prog-dot">' + icon(it && it.icon || 'star') + '</span>' +
             '<div class="st-prog-w">' + F(b, ctx, 'items.' + i + '.title', 'b', 'st-prog-n', 'Étape') + F(b, ctx, 'items.' + i + '.detail', 'span', 'st-prog-d', 'Détail') + '</div></li>';
         }).join('') + '</ol>' + addBtn(ctx, b, 'items', '+ Une étape');
     }

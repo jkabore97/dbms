@@ -191,6 +191,28 @@ void main() {
       expect(reloaded.phase, SessionPhase.choosingPin);
     });
 
+    test('the web reload with the note lost on the way: the live session is still taken (the owner, 18 November)', () async {
+      // The note is written as the page leaves for Google; in a browser it
+      // may never reach the database. Google and the server signed the
+      // person in all the same: boot takes the session, not the sign-in page.
+      final server = _Server();
+      await sessionOn(server).signInWithGoogle();
+      await db.writePref('google_pending', null);
+      server
+        ..live = true
+        ..user = _awa;
+      final reloaded = sessionOn(server);
+      await reloaded.boot();
+      expect(reloaded.phase, SessionPhase.choosingPin, reason: 'signed in, on to the code as with the note');
+      expect(server.fetched, greaterThan(0), reason: 'the businesses asked: the resolve ran');
+    });
+
+    test('no live session and nobody on the device: the sign-in page, as before', () async {
+      final session = sessionOn(_Server());
+      await session.boot();
+      expect(session.phase, SessionPhase.signedOut);
+    });
+
     test('a password sign-in is never taken for Google', () async {
       final server = _Server()
         ..live = true

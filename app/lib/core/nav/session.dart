@@ -598,6 +598,30 @@ class SessionController extends ChangeNotifier {
       final identity = await db.loadIdentity().timeout(resolveTimeout);
 
       if (identity == null) {
+        // A live session and nobody on the device: back from Google (or an
+        // e-mail link) whose note was lost on the way — on the web the note
+        // is written to the browser's database just as the page leaves for
+        // Google, and may not have reached it. The owner, 18 November: the
+        // laptop came back to the sign-in page every time although Google
+        // and the server had signed him in. The session is the proof; the
+        // note was only ever a hint. Sign-out clears both, so this is never
+        // somebody who left.
+        final user = auth.currentUser;
+        if (user != null && auth.hasLiveSession) {
+          try {
+            final back = await db.readPref(_googleReturnKey);
+            await db.writePref(_googleReturnKey, null);
+            if (back != null && back.startsWith('/') && _returnTo == null) stashReturnTo(back);
+          } catch (_) {}
+          try {
+            await handleSignedIn(user);
+          } catch (error) {
+            _signInProblem = AuthRepository.describeError(error);
+            _phase = SessionPhase.signedOut;
+            _emit();
+          }
+          return;
+        }
         _phase = SessionPhase.signedOut;
         _emit();
         return;
