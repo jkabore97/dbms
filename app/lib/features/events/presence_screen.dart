@@ -6,6 +6,7 @@ import '../../core/events/invitations_repository.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import '../storefront/my_invitations_screen.dart';
+import '../../core/nav/router.dart' show Routes;
 
 /// « Confirmer ma présence » (183): the card's one button opens
 /// `/presence/<slug>`; signed out, the sign-in brings the person straight
@@ -149,12 +150,49 @@ class _PresenceScreenState extends State<PresenceScreen> {
     }
   }
 
+  /// Back (the owner: the page had none). Opened over another screen — the
+  /// event's page in the app — back returns to it; opened from a link (the
+  /// card on the web, WhatsApp), it is the first page and the arrow goes to
+  /// the street's vitrines, as « Mes invitations » does.
+  void _back() {
+    final nav = Navigator.of(context);
+    if (nav.canPop()) {
+      nav.pop();
+      return;
+    }
+    final router = GoRouter.maybeOf(context);
+    if (router != null) {
+      if (router.canPop()) {
+        router.pop();
+      } else {
+        router.go(Routes.directory);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final c = _card;
+    final first = !Navigator.of(context).canPop() && !(GoRouter.maybeOf(context)?.canPop() ?? false);
+    return PopScope(
+      // the phone's own back, on the first page: the vitrines rather than
+      // out of the app
+      canPop: !(first && GoRouter.maybeOf(context) != null),
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _back();
+      },
+      child: _page(context, theme, c),
+    );
+  }
+
+  Widget _page(BuildContext context, ThemeData theme, PresenceCard? c) {
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Confirmer ma présence')), actions: const [bellRoom]),
+      appBar: AppBar(
+        leading: BackButton(key: const Key('presence-back'), onPressed: _back),
+        title: Text(context.tr('Confirmer ma présence')),
+        actions: const [bellRoom],
+      ),
       body: _problem != null
           ? Center(child: Padding(padding: const EdgeInsets.all(28), child: Text(_problem!, key: const Key('presence-problem'), textAlign: TextAlign.center)))
           : c == null

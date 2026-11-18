@@ -225,6 +225,45 @@ void main() {
     expect(opened, isTrue);
   });
 
+  testWidgets('back (the owner: the page had none): opened from a link, the arrow and the phone go to the vitrines; over the event\'s page, back to it', (tester) async {
+    final repo = _Invitations(cardAnswer: const PresenceCard(title: 'Mariage Awa'));
+    tester.view.physicalSize = const Size(420, 2200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    GoRouter router(String at) => GoRouter(initialLocation: at, routes: [
+          GoRoute(path: Routes.directory, builder: (_, _) => const Scaffold(body: Text('les vitrines'))),
+          GoRoute(path: '/evenement', builder: (_, _) => const Scaffold(body: Text('la page de l’événement'))),
+          GoRoute(path: '${Routes.presence}/:slug', builder: (_, s) => PresenceScreen(repo: repo, slug: s.pathParameters['slug']!)),
+        ]);
+    Future<GoRouter> pump(String at) async {
+      final r = router(at);
+      await tester.pumpWidget(MaterialApp.router(key: UniqueKey(), routerConfig: r));
+      await tester.pumpAndSettle();
+      return r;
+    }
+
+    // the first page (a link): the arrow is there and goes to the vitrines
+    await pump('${Routes.presence}/mariage-awa-183');
+    expect(find.byKey(const Key('presence-back')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('presence-back')));
+    await tester.pumpAndSettle();
+    expect(find.text('les vitrines'), findsOneWidget);
+
+    // the phone's back on the first page: the vitrines too, not out of the app
+    await pump('${Routes.presence}/mariage-awa-183');
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('les vitrines'), findsOneWidget);
+
+    // over the event's page in the app: back returns to it
+    final r = await pump('/evenement');
+    r.push('${Routes.presence}/mariage-awa-183');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('presence-back')));
+    await tester.pumpAndSettle();
+    expect(find.text('la page de l’événement'), findsOneWidget);
+  });
+
   testWidgets('the confirmation: already confirmed, the numbers are the account\'s; ten at most; a card not open says so', (tester) async {
     final repo = _Invitations(cardAnswer: const PresenceCard(title: 'Mariage Awa', myPeople: 9, myMessage: 'À samedi'));
     await _pump(tester, PresenceScreen(repo: repo, slug: 'mariage-awa-183'));
