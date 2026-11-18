@@ -75,8 +75,11 @@ class _Admin extends AdminRepository {
 }
 
 class _Step extends TwoStep {
-  _Step({this.required = true, this.enrolled = false, this.fails = false})
+  _Step({this.required = true, this.enrolled = false, this.fails = false, this.slow = Duration.zero})
     : super(null);
+
+  /// A real network's answer time (the street drawn meanwhile showed the flicker).
+  final Duration slow;
 
   final bool required;
   bool enrolled;
@@ -97,6 +100,7 @@ class _Step extends TwoStep {
 
   @override
   Future<TwoStepStatus> status() async {
+    if (slow > Duration.zero) await Future<void>.delayed(slow);
     if (fails) throw Exception('no signal');
     return TwoStepStatus(
       required: required,
@@ -400,6 +404,57 @@ void main() {
     await flush();
     expect(find.text('Code de votre application'), findsNothing);
     expect(find.byKey(const Key('mara-header')), findsOneWidget);
+  });
+  testWidgets('an admin\'s phone opens on the code screen, never the street first (no flicker)', (
+    tester,
+  ) async {
+    tester.platformDispatcher.localesTestValue = [const Locale('fr')];
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+    // A phone that knows this admin's businesses and that it is an admin's:
+    // before, it settled on the street at once, then jumped to the code.
+    await tester.runAsync(() async {
+      final salt = PinCodec.newSalt();
+      await db.saveIdentity(
+        LocalIdentity(
+          userId: 'admin-1',
+          displayName: 'Plateforme',
+          pinSalt: salt,
+          pinHash: PinCodec.hash('1379', salt),
+          orgsRefreshedAt: DateTime.now(),
+        ),
+      );
+      await db.cacheOrgs(const [
+        OrgSummary(id: 'o1', name: 'Boutique Awa', profile: 'retail', roles: ['owner']),
+      ]);
+      await db.writePref('platform_admin_device', 'admin-1');
+    });
+    final step = _Step(enrolled: true, slow: const Duration(milliseconds: 400));
+    await tester.pumpWidget(
+      KajApp(
+        db: db,
+        auth: _Server(),
+        admin: _Admin(),
+        reports: ReportsRepository(null),
+        accounting: AccountingRepository(null),
+        console: ConsoleRepository(null),
+        farm: FarmRepository(null),
+        invoicing: InvoicingRepository(null),
+        retail: RetailRepository(null),
+        staff: StaffRepository(null),
+        capture: CaptureRepository(null, db: db),
+        onboarding: OnboardingRepository(null),
+        twoStep: step,
+      ),
+    );
+    var streetSeen = false;
+    for (var i = 0; i < 40; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 40)));
+      if (find.text('Code de votre application').evaluate().isNotEmpty) break;
+      if (find.byKey(const Key('mara-header')).evaluate().isNotEmpty) streetSeen = true;
+    }
+    expect(find.text('Code de votre application'), findsOneWidget);
+    expect(streetSeen, isFalse, reason: 'the street was drawn, then the code screen: a flicker');
   });
   testWidgets('the real app: a vitrine opened before the second step waits for it', (
     tester,

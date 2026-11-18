@@ -1035,7 +1035,11 @@ class SessionController extends ChangeNotifier {
       // second step first (a platform admin below aal2 is refused by the
       // server anyway; asked, the page is stashed and the code screen
       // shown), then a forced refresh for the list, the plan and the role.
-      if (coldStart) {
+      // Not on a platform admin's device: there the server may want the
+      // second step, and settling first drew the street (as no admin), then
+      // jumped to the code screen and back — the owner's « flickering at
+      // sign in ». An admin's opening asks first, as a sign-in does.
+      if (coldStart && !await _adminOnDevice()) {
         final cached = await _cachedOrgsSafe();
         if (cached.isNotEmpty) {
           await _settle(cached, fromCache: true, platformAdmin: false, notice: null);

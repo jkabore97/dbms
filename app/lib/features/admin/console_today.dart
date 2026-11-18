@@ -122,7 +122,7 @@ class ConsoleTodayState extends State<ConsoleToday> {
           child: OutlinedButton.icon(
             onPressed: _write,
             icon: const Icon(Icons.campaign_outlined),
-            label: Text(context.tr('Écrire aux boutiques')),
+            label: Text(context.tr('Envoyer un message')),
           ),
         ),
         const SizedBox(height: 20),
@@ -234,6 +234,18 @@ class _MessageDialogState extends State<_MessageDialog> {
   bool _busy = false;
   String? _error;
 
+  /// 'admins', 'team' or 'everyone' (187).
+  String _audience = 'admins';
+  Map<String, int>? _reach;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.admin.messageReach().then((r) {
+      if (mounted) setState(() => _reach = r);
+    });
+  }
+
   @override
   void dispose() {
     _text.dispose();
@@ -246,7 +258,7 @@ class _MessageDialogState extends State<_MessageDialog> {
       _error = null;
     });
     try {
-      final n = await widget.admin.sendPlatformMessage(null, _text.text);
+      final n = await widget.admin.sendPlatformMessage(null, _text.text, audience: _audience);
       if (mounted) Navigator.of(context).pop(n);
     } catch (error) {
       if (!mounted) return;
@@ -257,18 +269,47 @@ class _MessageDialogState extends State<_MessageDialog> {
     }
   }
 
+  String _who(BuildContext context) {
+    final r = _reach;
+    switch (_audience) {
+      case 'everyone':
+        if (r == null) return context.tr('Le message arrive dans la cloche de chaque compte Marakaj — clients, livreurs, entreprises — et en notification sur leurs téléphones et navigateurs.');
+        return context.tr('Le message arrive dans la cloche des {n} comptes Marakaj — clients, livreurs, entreprises. {push} d\'entre eux le reçoivent aussi en notification sur leur téléphone ou navigateur ; les autres le voient en ouvrant Marakaj.',
+            {'n': r['everyone'] ?? 0, 'push': r['everyone_push'] ?? 0});
+      case 'team':
+        return r == null
+            ? context.tr('Le message arrive dans la cloche de chaque membre de chaque entreprise.')
+            : context.tr('Le message arrive dans la cloche des {n} membres des entreprises.', {'n': r['team'] ?? 0});
+      default:
+        return r == null
+            ? context.tr('Le message arrive dans la cloche des propriétaires et administrateurs de chaque entreprise.')
+            : context.tr('Le message arrive dans la cloche des {n} propriétaires et administrateurs des entreprises.', {'n': r['admins'] ?? 0});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       // The keyboard up on a small phone: the dialog scrolls (A6).
       scrollable: true,
-      title: Text(context.tr('Écrire aux boutiques')),
+      title: Text(context.tr('Envoyer un message')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-              context.tr('Le message arrive dans la cloche des propriétaires et administrateurs de chaque entreprise.')),
+          SegmentedButton<String>(
+            key: const Key('message-audience'),
+            showSelectedIcon: false,
+            segments: [
+              ButtonSegment(value: 'admins', label: Text(context.tr('Responsables'))),
+              ButtonSegment(value: 'team', label: Text(context.tr('Équipes'))),
+              ButtonSegment(value: 'everyone', label: Text(context.tr('Tout le monde'))),
+            ],
+            selected: {_audience},
+            onSelectionChanged: _busy ? null : (v) => setState(() => _audience = v.first),
+          ),
+          const SizedBox(height: 12),
+          Text(_who(context), key: const Key('message-reach')),
           const SizedBox(height: 12),
           TextField(
             controller: _text,
@@ -277,7 +318,9 @@ class _MessageDialogState extends State<_MessageDialog> {
             maxLength: 500,
             decoration: InputDecoration(
               border: const OutlineInputBorder(),
-              hintText: context.tr('Nouveau : mettez un article en avant…'),
+              hintText: _audience == 'everyone'
+                  ? context.tr('Une nouvelle version de Marakaj est disponible : mettez à jour l\'application.')
+                  : context.tr('Nouveau : mettez un article en avant…'),
             ),
           ),
           if (_error != null)
@@ -291,6 +334,7 @@ class _MessageDialogState extends State<_MessageDialog> {
           child: Text(context.tr('Annuler')),
         ),
         FilledButton(
+          key: const Key('message-send'),
           onPressed: _busy ? null : _send,
           child: Text(context.tr('Envoyer')),
         ),
