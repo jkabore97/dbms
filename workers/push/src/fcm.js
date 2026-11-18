@@ -118,6 +118,15 @@ export async function sendFcm(token, payload, sa, fetchImpl = fetch) {
             // The app's own channel, made at its start (MainActivity.kt).
             notification: { tag: payload.tag || undefined, channel_id: "mara_alerts" },
           },
+          // An iPhone (188): shown at once, with its sound; one bell
+          // replaces itself as on Android.
+          apns: {
+            headers: {
+              "apns-priority": "10",
+              ...(payload.tag ? { "apns-collapse-id": String(payload.tag).slice(0, 64) } : {}),
+            },
+            payload: { aps: { sound: "default" } },
+          },
         },
       }),
     },

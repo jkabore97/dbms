@@ -5,15 +5,17 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'push_client.dart';
 
-/// Everywhere that is not a browser — the Android app (115): Firebase Cloud
-/// Messaging. Firebase starts only in a build that carries
-/// android/app/google-services.json (the Gradle plugin is applied only
-/// then); without it initializeApp fails, [available] stays false, and the
-/// app offers no push rather than a switch that never rings. Off Android
-/// (a test on the host) it is never started.
+/// Everywhere that is not a browser — the Android app (115) and, since 188,
+/// the iPhone app: Firebase Cloud Messaging. Firebase starts only in a build
+/// that carries its file — android/app/google-services.json (the Gradle
+/// plugin is applied only then), ios/Runner/GoogleService-Info.plist
+/// (written by Codemagic); without it initializeApp fails, [available]
+/// stays false, and the app offers no push rather than a switch that never
+/// rings. Elsewhere (a test on the host) it is never started.
 class PushPlatform {
   const PushPlatform._();
 
@@ -40,14 +42,23 @@ class PushPlatform {
     return prepare();
   }
 
+  /// A phone this runs on: Android, or an iPhone (188).
+  static bool get _phone => Platform.isAndroid || Platform.isIOS;
+
   static Future<void> _start() async {
     // The real phone, not the platform a test pretends to be.
-    if (!Platform.isAndroid) return;
+    if (!_phone) return;
     try {
       // No options: they come from the resources the google-services
       // Gradle plugin generates from android/app/google-services.json. A
       // build made without the file has none, and this throws.
       if (Firebase.apps.isEmpty) await Firebase.initializeApp();
+      if (Platform.isIOS) {
+        // An iPhone shows a bell that arrives while Marakaj is open, as
+        // Android does.
+        await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+            alert: true, badge: true, sound: true);
+      }
       _ready = true;
       _error = null;
       if (!_listening) {
@@ -117,12 +128,23 @@ class PushPlatform {
   static Future<PushSubscriptionInfo?> current() async {
     if (!_ready) return null;
     try {
+      if (Platform.isIOS) {
+        // An iPhone's Firebase token needs Apple's first, which comes a
+        // moment after the permission: asked a few times, then given up.
+        String? apns;
+        for (var i = 0; i < 6 && apns == null; i++) {
+          apns = await FirebaseMessaging.instance.getAPNSToken();
+          if (apns == null) await Future<void>.delayed(const Duration(milliseconds: 500));
+        }
+        if (apns == null) return null;
+      }
       // Offline, getToken() waits for Google without end (PushClient.wait).
       final token =
           await FirebaseMessaging.instance.getToken().timeout(PushClient.wait);
+      // The label says which phone (188's save_fcm_token reads « iPhone »).
       return token == null || token.isEmpty
           ? null
-          : PushSubscriptionInfo.fcm(token, userAgent: 'Android');
+          : PushSubscriptionInfo.fcm(token, userAgent: Platform.isIOS ? 'iPhone' : 'Android');
     } catch (_) {
       return null;
     }
@@ -140,6 +162,20 @@ class PushPlatform {
   }
 
   static Future<PushPermission> permission() async {
+    if (Platform.isIOS) {
+      // The iPhone says it plainly: never asked, refused, or allowed.
+      if (!_ready) return PushPermission.unsupported;
+      try {
+        final s = await FirebaseMessaging.instance.getNotificationSettings();
+        return switch (s.authorizationStatus) {
+          AuthorizationStatus.authorized || AuthorizationStatus.provisional => PushPermission.granted,
+          AuthorizationStatus.denied => PushPermission.blocked,
+          _ => PushPermission.prompt,
+        };
+      } catch (_) {
+        return PushPermission.prompt;
+      }
+    }
     if (!Platform.isAndroid) return PushPermission.unsupported;
     try {
       return switch (await _channel.invokeMethod<String>('permission')) {
@@ -154,6 +190,14 @@ class PushPlatform {
   }
 
   static Future<bool> openSettings() async {
+    if (Platform.isIOS) {
+      // Marakaj's own page in the iPhone's Réglages.
+      try {
+        return await launchUrl(Uri.parse('app-settings:'));
+      } catch (_) {
+        return false;
+      }
+    }
     if (!Platform.isAndroid) return false;
     try {
       return await _channel.invokeMethod<bool>('openSettings') ?? false;
@@ -163,12 +207,12 @@ class PushPlatform {
   }
 
   static Future<PushDeviceFacts> facts() async {
-    if (!Platform.isAndroid) {
+    if (!_phone) {
       return PushDeviceFacts(platform: Platform.operatingSystem);
     }
     await prepare();
     return PushDeviceFacts(
-      platform: 'Android',
+      platform: Platform.isIOS ? 'iPhone' : 'Android',
       firebaseReady: _ready,
       firebaseError: _error,
     );

@@ -69,6 +69,10 @@
 	<string>Marakaj utilise votre position, seulement quand l'application est ouverte, pour montrer les boutiques et les livraisons près de vous.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Marakaj utilise Face ID pour se déverrouiller à la place du code de l'appareil.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
