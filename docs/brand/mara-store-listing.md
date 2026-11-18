@@ -47,7 +47,13 @@ Marakaj est conçue pour l'Afrique de l'Ouest : en français, sur téléphone, p
 
 **Catégorie** Shopping (ou Entreprise)
 
-**Nouveautés (500 car. max)** — envoyées pour 1.0.2 (sur Play, entre `<fr-FR>` et `</fr-FR>`)
+**Nouveautés (500 car. max)** — pour 1.0.3 (sur Play, entre `<fr-FR>` et `</fr-FR>`)
+• Les notifications arrivent aussi sur iPhone
+• Plus de clignotement à l'ouverture ni sur la page d'un événement
+• Un bouton retour sur « Confirmer ma présence »
+• Corrections et améliorations
+
+Envoyées pour 1.0.2 :
 • Confirmez votre présence d'un geste, puis ajoutez vos photos dans « Mes invitations » (5 par invité), du jour de l'événement à 7 jours après
 • Studio : polices visibles avant de choisir, pétales sur toute la carte, chaque section animée
 • Un bel aperçu de votre carte sur WhatsApp
@@ -72,7 +78,7 @@ Compte de démonstration : celui de `store_review_account`. Il ouvre une boutiqu
 2. **La billetterie** : ne la citer que si `events_tickets` est ouvert (Console › Événementiel l'indique).
 3. **Marakaj Pro** : l'abonnement des stores (`store_billing_on`) est ouvert ; les prix des produits d'abonnement dans App Store Connect et la Play Console doivent correspondre à ceux de la Console › Pro.
 4. **Captures d'écran** : refaire celles des cartes (nouvelle liste « Cartes », Studio, aperçu WhatsApp) — elles doivent montrer l'app actuelle.
-5. **Version** : 1.0.2 (`app/pubspec.yaml`, `appVersion` dans main.dart) — fait le 14 novembre 2026 ; le numéro de build vient de Codemagic.
+5. **Version** : 1.0.3 (`app/pubspec.yaml`, `appVersion` dans main.dart) — le 18 novembre 2026, 1.0.2 ayant été approuvée par Apple (un envoi doit porter une version plus haute) ; le numéro de build vient de Codemagic.
 6. **iPhone** : Associated Domains (applinks:marakaj.com) dans le profil de l'identifiant bf.kaj.app, sinon les liens de billets n'ouvrent pas l'app (ce n'est pas bloquant pour la revue).
 7. **Assistant d'écriture** : la clé `ANTHROPIC_API_KEY` doit être ajoutée dans Cloudflare (par vous) ; sans elle Studio répond « pas disponible » — retirer « assistant » des textes tant qu'elle manque.
 8. **Notifications du compte de test** : pendant la revue, les testeurs se connectent et envoient des notifications test ; c'est normal.
