@@ -287,6 +287,8 @@ test("deliver rings browsers and phones; phones stay dormant without the secret"
     { endpoint: "https://p/alive", platform: "web", p256dh: "a", auth: "b", fcm_token: null },
     { endpoint: "fcm:tok-ok", platform: "android", p256dh: null, auth: null, fcm_token: "tok-ok" },
     { endpoint: "fcm:tok-gone", platform: "android", p256dh: null, auth: null, fcm_token: "tok-gone" },
+    // 188: an iPhone, through Firebase like a phone
+    { endpoint: "fcm:tok-ios", platform: "ios", p256dh: null, auth: null, fcm_token: "tok-ios" },
   ];
   const calls = [];
   const fetchStub = async (url, init) => {
@@ -297,7 +299,7 @@ test("deliver rings browsers and phones; phones stay dormant without the secret"
     }
     if (url.startsWith("https://fcm.googleapis.com/v1/projects/mara-test/messages:send")) {
       const msg = JSON.parse(init.body).message;
-      return msg.token === "tok-ok"
+      return msg.token === "tok-ok" || msg.token === "tok-ios"
         ? new Response("{}", { status: 200 })
         : new Response(JSON.stringify({ error: { status: "NOT_FOUND", message: "UNREGISTERED" } }), { status: 404 });
     }
@@ -320,9 +322,14 @@ test("deliver rings browsers and phones; phones stay dormant without the secret"
 
   calls.length = 0;
   result = await deliver(row, { ...env, FCM_SERVICE_ACCOUNT: json }, { sendPush: async () => 201, fetch: fetchStub });
-  assert.deepEqual(result, { sent: 2, dropped: 1, failed: 0 });
+  assert.deepEqual(result, { sent: 3, dropped: 1, failed: 0 });
   const sends = calls.filter((c) => c.url.includes("messages:send"));
-  assert.equal(sends.length, 2);
+  assert.equal(sends.length, 3);
+  // the iPhone's message carries Apple's part: shown at once, with a sound
+  const ios = sends.map((c) => JSON.parse(c.init.body).message).find((m) => m.token === "tok-ios");
+  assert.deepEqual(ios.apns.payload, { aps: { sound: "default" } });
+  assert.equal(ios.apns.headers["apns-priority"], "10");
+  assert.equal(ios.apns.headers["apns-collapse-id"], "kaj-n1");
   assert.ok(sends.every((c) => c.init.headers.Authorization === "Bearer ya29.test"));
   const sent = JSON.parse(sends[0].init.body).message;
   assert.deepEqual(sent.notification, { title: "Marakaj", body: "Prête" });

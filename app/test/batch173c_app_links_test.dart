@@ -16,6 +16,14 @@ void main() {
     expect(proj, contains('PRODUCT_BUNDLE_IDENTIFIER = bf.kaj.app;'));
   });
 
+  test('188: the iPhone app takes notifications (production APNs, woken in the background)', () {
+    final ent = File('ios/Runner/Runner.entitlements').readAsStringSync();
+    expect(ent, contains('<key>aps-environment</key>\n\t<string>production</string>'));
+    final info = File('ios/Runner/Info.plist').readAsStringSync();
+    expect(info, contains('<key>UIBackgroundModes</key>'));
+    expect(info, contains('<string>remote-notification</string>'));
+  });
+
   test('the Android app claims the same two addresses on marakaj.com, verified, and nothing else', () {
     final m = File('android/app/src/main/AndroidManifest.xml').readAsStringSync();
     expect(m, contains('<intent-filter android:autoVerify="true">'));

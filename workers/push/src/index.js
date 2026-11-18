@@ -85,7 +85,9 @@ export async function deliver(row, env, io = { sendPush, sendFcm, fetch }) {
   if (!Array.isArray(targets) || targets.length === 0) return { sent: 0, dropped: 0, failed: 0 };
 
   const browsers = targets.filter((t) => (t.platform || "web") === "web");
-  const phones = targets.filter((t) => t.platform === "android" && t.fcm_token);
+  // Android phones and, since 188, iPhones: both through Firebase.
+  const isPhone = (t) => (t.platform === "android" || t.platform === "ios") && t.fcm_token;
+  const phones = targets.filter(isPhone);
   const vapid = browsers.length === 0 ? null : {
     publicKey: env.VAPID_PUBLIC_KEY,
     privateKey: await importVapidPrivateKey(env.VAPID_PRIVATE_KEY),
@@ -101,12 +103,12 @@ export async function deliver(row, env, io = { sendPush, sendFcm, fetch }) {
   let tokenFailed = false;
   for (const target of [...browsers, ...(account ? phones : [])]) {
     let status;
-    if (target.platform === "android" && tokenFailed) {
+    if (isPhone(target) && tokenFailed) {
       failed++;
       continue;
     }
     try {
-      status = target.platform === "android"
+      status = isPhone(target)
         ? await (io.sendFcm || sendFcm)(target.fcm_token, payload, account, io.fetch)
         : await io.sendPush(target, payload, vapid);
     } catch (e) {
