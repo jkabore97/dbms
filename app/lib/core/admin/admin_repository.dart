@@ -1284,12 +1284,34 @@ class AdminRepository {
 
   /// Writes to the admins of one business, or of every live one with a null
   /// [orgId], through their bell. Returns how many people it reached.
-  Future<int> sendPlatformMessage(String? orgId, String message) async {
-    final v = await _requireClient().rpc('send_platform_message', params: {
-      'p_org_id': orgId,
-      'p_message': message.trim(),
-    });
+  ///
+  /// [audience] (115, 187): 'admins' (the owners and admins, 072's), 'team'
+  /// (every member) or 'everyone' (every account, shoppers included, in
+  /// their own bell — pushed to each phone and browser).
+  Future<int> sendPlatformMessage(String? orgId, String message, {String audience = 'admins'}) async {
+    final v = audience == 'admins'
+        ? await _requireClient().rpc('send_platform_message', params: {
+            'p_org_id': orgId,
+            'p_message': message.trim(),
+          })
+        : await _requireClient().rpc('platform_message_send', params: {
+            'p_org_id': orgId,
+            'p_message': message.trim(),
+            'p_audience': audience,
+          });
     return v is num ? v.toInt() : int.tryParse('$v') ?? 0;
+  }
+
+  /// How far each audience goes (187): accounts per audience, and how many
+  /// of everyone have a phone or browser that takes pushes. Null before 187.
+  Future<Map<String, int>?> messageReach() async {
+    try {
+      final v = await _requireClient().rpc('platform_message_reach');
+      if (v is! Map) return null;
+      return {for (final e in v.entries) '${e.key}': (e.value as num?)?.toInt() ?? 0};
+    } catch (_) {
+      return null;
+    }
   }
 
   /// The platform's yes or no on a spot.

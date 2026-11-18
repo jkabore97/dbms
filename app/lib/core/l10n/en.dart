@@ -2,6 +2,20 @@
 /// by the French. test/tr_coverage_test.dart fails when a phrase in the
 /// code has no line here.
 const enStrings = <String, String>{
+  'Une nouvelle version de Marakaj est disponible : mettez à jour l\'application.':
+      'A new version of Marakaj is out: update the app.',
+  'Équipes':
+      'Teams',
+  'Le message arrive dans la cloche des {n} propriétaires et administrateurs des entreprises.':
+      'The message reaches the bell of the businesses\' {n} owners and admins.',
+  'Le message arrive dans la cloche des {n} membres des entreprises.':
+      'The message reaches the bell of the businesses\' {n} members.',
+  'Le message arrive dans la cloche de chaque membre de chaque entreprise.':
+      'The message reaches the bell of every member of every business.',
+  'Le message arrive dans la cloche des {n} comptes Marakaj — clients, livreurs, entreprises. {push} d\'entre eux le reçoivent aussi en notification sur leur téléphone ou navigateur ; les autres le voient en ouvrant Marakaj.':
+      'The message reaches the bell of all {n} Marakaj accounts — customers, couriers, businesses. {push} of them also get it as a notification on their phone or browser; the others see it when they open Marakaj.',
+  'Le message arrive dans la cloche de chaque compte Marakaj — clients, livreurs, entreprises — et en notification sur leurs téléphones et navigateurs.':
+      'The message reaches the bell of every Marakaj account — customers, couriers, businesses — and as a notification on their phones and browsers.',
   'Ce compte ouvre la console de la plateforme. Pour l\'ouvrir, il faudra désormais votre mot de passe et un code à 6 chiffres donné par une application sur votre téléphone.':
       'This account opens the platform\'s console. To open it, you will now need your password and a 6-digit code given by an app on your phone.',
   'Ce n\'est pas votre compte ? Se déconnecter':

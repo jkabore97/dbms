@@ -147,13 +147,27 @@ class _LazyPhotoState extends State<LazyPhoto> {
   @override
   Widget build(BuildContext context) {
     final future = _bytes;
-    if (future == null) return widget.placeholder;
+    // The photo fades in over its placeholder rather than replacing it in
+    // one frame (the owner: the event's page « flickering » — a drawing,
+    // then a photo, then the card, each a cut). The placeholder goes once
+    // the photo is in.
+    Widget fade(Widget child) => AnimatedSwitcher(
+          duration: const Duration(milliseconds: 220),
+          layoutBuilder: (current, previous) => Stack(
+            fit: StackFit.passthrough,
+            children: [...previous, ?current],
+          ),
+          child: child,
+        );
+    Widget wait() => KeyedSubtree(key: const ValueKey('lazy-wait'), child: widget.placeholder);
+    if (future == null) return fade(wait());
     return FutureBuilder<Uint8List>(
       future: future,
       builder: (context, snapshot) {
         final bytes = snapshot.data;
-        if (bytes == null) return widget.placeholder;
-        return widget.builder(context, bytes, _pixelWidth);
+        return fade(bytes == null
+            ? wait()
+            : KeyedSubtree(key: const ValueKey('lazy-photo'), child: widget.builder(context, bytes, _pixelWidth)));
       },
     );
   }

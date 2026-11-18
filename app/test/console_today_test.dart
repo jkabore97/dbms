@@ -17,10 +17,14 @@ class _Admin extends AdminRepository {
   Future<PlatformToday?> platformToday() async => today;
 
   @override
-  Future<int> sendPlatformMessage(String? orgId, String message) async {
-    sent.add('${orgId ?? 'all'}:$message');
-    return 12;
+  Future<int> sendPlatformMessage(String? orgId, String message, {String audience = 'admins'}) async {
+    sent.add('${orgId ?? 'all'}:$audience:$message');
+    return audience == 'everyone' ? 68 : 12;
   }
+
+  @override
+  Future<Map<String, int>?> messageReach() async =>
+      const {'everyone': 68, 'everyone_push': 19, 'admins': 20, 'team': 26};
 }
 
 PlatformToday _day() =>
@@ -70,15 +74,34 @@ void main() {
     expect(find.text('Ce mois'), findsNothing);
   });
 
-  testWidgets('Écrire aux boutiques sends to every business', (tester) async {
+  testWidgets('« Envoyer un message » sends to every business', (tester) async {
     final admin = await pump(tester, _day());
-    await tester.ensureVisible(find.text('Écrire aux boutiques'));
-    await tester.tap(find.text('Écrire aux boutiques'));
+    await tester.ensureVisible(find.text('Envoyer un message'));
+    await tester.tap(find.text('Envoyer un message'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'Ajoutez vos photos');
     await tester.tap(find.text('Envoyer'));
     await tester.pumpAndSettle();
-    expect(admin.sent, ['all:Ajoutez vos photos']);
+    expect(admin.sent, ['all:admins:Ajoutez vos photos']);
     expect(find.text('Message envoyé à 12 personnes.'), findsOneWidget);
+  });
+
+  testWidgets('« Tout le monde » (187): every account, the reach said before sending', (tester) async {
+    final admin = await pump(tester, _day());
+    await tester.ensureVisible(find.text('Envoyer un message'));
+    await tester.tap(find.text('Envoyer un message'));
+    await tester.pumpAndSettle();
+    expect(find.text('Le message arrive dans la cloche des 20 propriétaires et administrateurs des entreprises.'), findsOneWidget);
+    await tester.tap(find.text('Tout le monde'));
+    await tester.pumpAndSettle();
+    expect(
+        find.text('Le message arrive dans la cloche des 68 comptes Marakaj — clients, livreurs, entreprises. '
+            '19 d\'entre eux le reçoivent aussi en notification sur leur téléphone ou navigateur ; les autres le voient en ouvrant Marakaj.'),
+        findsOneWidget);
+    await tester.enterText(find.byType(TextField), 'Mettez à jour Marakaj');
+    await tester.tap(find.byKey(const Key('message-send')));
+    await tester.pumpAndSettle();
+    expect(admin.sent, ['all:everyone:Mettez à jour Marakaj']);
+    expect(find.text('Message envoyé à 68 personnes.'), findsOneWidget);
   });
 }
