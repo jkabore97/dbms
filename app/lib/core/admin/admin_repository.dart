@@ -573,18 +573,36 @@ class AdminRepository {
   Future<bool> isPlatformAdmin() async {
     final client = _client;
     final userId = currentUserId;
+    platformSections = null;
     if (client == null || userId == null) return false;
+    Map<String, dynamic>? row;
     try {
-      final row = await client
+      row = await client
           .from('profiles')
-          .select('is_platform_admin')
+          .select('is_platform_admin, platform_access')
           .eq('id', userId)
           .maybeSingle();
-      return row?['is_platform_admin'] == true;
     } catch (_) {
-      return false;
+      // A database before 186 has no platform_access: the flag alone.
+      try {
+        row = await client
+            .from('profiles')
+            .select('is_platform_admin')
+            .eq('id', userId)
+            .maybeSingle();
+      } catch (_) {
+        return false;
+      }
     }
+    final access = row?['platform_access'];
+    platformSections = access is List ? {for (final s in access) s as String} : null;
+    return row?['is_platform_admin'] == true;
   }
+
+  /// The console sections the last [isPlatformAdmin] read (186): null for
+  /// all of them — an admin of everything, or a database before 186. The
+  /// server holds them; this only hides what would be refused.
+  Set<String>? platformSections;
 
   /// Whether Événementiel is open to every business (152's switch,
   /// events_options): false when it cannot be asked, and against a

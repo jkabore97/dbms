@@ -2,6 +2,80 @@
 /// by the French. test/tr_coverage_test.dart fails when a phrase in the
 /// code has no line here.
 const enStrings = <String, String>{
+  'Ce compte ouvre la console de la plateforme. Pour l\'ouvrir, il faudra désormais votre mot de passe et un code à 6 chiffres donné par une application sur votre téléphone.':
+      'This account opens the platform\'s console. To open it, you will now need your password and a 6-digit code given by an app on your phone.',
+  'Ce n\'est pas votre compte ? Se déconnecter':
+      'Not your account? Sign out',
+  'Téléphone perdu ou changé ? Un administrateur qui gère les accès peut réinitialiser votre application (Réglages › Administrateurs) : un nouveau QR code vous sera montré à la connexion.':
+      'Lost or changed phone? An administrator who manages access can reset your app (Settings › Administrators): a new QR code will be shown at sign-in.',
+  'Compte : {account}':
+      'Account: {account}',
+  'Pas administrateur':
+      'Not an administrator',
+  'Administrateur Marakaj — choisir ses sections':
+      'Marakaj administrator — choose their sections',
+  'Qui est administrateur, et pour quelles sections.':
+      'Who is an administrator, and for which sections.',
+  'Un administrateur qui gère les accès peut vous l\'ouvrir.':
+      'An administrator who manages access can open it for you.',
+  '« {place} » ne vous est pas ouvert.':
+      '« {place} » is not open to you.',
+  'Personne ne porte ce nom.':
+      'Nobody has that name.',
+  'Nom, téléphone ou e-mail':
+      'Name, phone or email',
+  'Nommer un administrateur':
+      'Appoint an administrator',
+  'Application d\'authentification pas encore configurée':
+      'Authenticator app not set up yet',
+  'Application d\'authentification configurée':
+      'Authenticator app set up',
+  '{label} (vous)':
+      '{label} (you)',
+  'Chaque administrateur ne voit que ses sections ; le serveur refuse le reste. Chaque changement est écrit dans le Journal.':
+      'Each administrator sees only their sections; the server refuses the rest. Every change is written in the Journal.',
+  'Son application n\'est pas encore configurée : le QR code lui sera montré à la connexion.':
+      'Their app is not set up yet: the QR code will be shown at sign-in.',
+  'Pour un téléphone perdu ou changé : un nouveau QR code à la prochaine connexion.':
+      'For a lost or changed phone: a new QR code at the next sign-in.',
+  'Réinitialiser son application d\'authentification':
+      'Reset their authenticator app',
+  'Sections choisies':
+      'Chosen sections',
+  'Toutes les sections, et nommer d\'autres administrateurs.':
+      'Every section, and appointing other administrators.',
+  'Ouvre la console de la plateforme.':
+      'Opens the platform\'s console.',
+  'Administrateur Marakaj':
+      'Marakaj administrator',
+  'Seul un administrateur complet modifie un administrateur complet.':
+      'Only a full administrator can change a full administrator.',
+  'Accès à la console':
+      'Console access',
+  'Application réinitialisée : un nouveau QR code à la prochaine connexion.':
+      'App reset: a new QR code at the next sign-in.',
+  'Réinitialiser':
+      'Reset',
+  'Son application d\'authentification actuelle ne marchera plus. À sa prochaine connexion, Marakaj lui montrera un nouveau QR code à scanner.':
+      'Their current authenticator app will stop working. At their next sign-in, Marakaj will show them a new QR code to scan.',
+  'Réinitialiser l\'application de {label} ?':
+      'Reset {label}\'s app?',
+  'Aucune section':
+      'No section',
+  'Nommer les administrateurs et choisir leurs sections.':
+      'Appoint administrators and choose their sections.',
+  'Les règles de la plateforme, les types d\'activité, le journal.':
+      'The platform\'s rules, the business types, the journal.',
+  'À la une, les exemples, les signalements.':
+      'Featured, examples, reports.',
+  'Pro, Événementiel, paiements, règlements, cauris.':
+      'Pro, Events, payments, settlements, cauris.',
+  'Les entreprises, les personnes, les livreurs, les formateurs — et ouvrir n\'importe quelle entreprise.':
+      'Businesses, people, couriers, trainers — and opening any business.',
+  'Le travail du jour, les analyses.':
+      'Today\'s work, the analytics.',
+  'Administrateurs':
+      'Administrators',
   ' — encore {_missing} à gagner':
       ' — {_missing} more to earn',
   '+{delta}':

@@ -442,6 +442,52 @@ class PlatformPerson {
   }
 }
 
+/// The console's sections an admin can be given (186): the command
+/// center's five places, and « Administrateurs » (who is admin).
+const platformSections = ['today', 'clients', 'money', 'street', 'settings', 'admins'];
+
+/// One platform admin (186's platform_admins): their sections — null for
+/// all of them — and whether their authenticator is set up.
+class PlatformAdminEntry {
+  const PlatformAdminEntry({
+    required this.userId,
+    this.name,
+    this.email,
+    this.phone,
+    this.access,
+    this.twoStep = false,
+    this.me = false,
+  });
+
+  final String userId;
+  final String? name;
+  final String? email;
+  final String? phone;
+
+  /// The sections given; null: everything.
+  final Set<String>? access;
+  final bool twoStep;
+  final bool me;
+
+  bool get everything => access == null;
+
+  String get label {
+    final n = name?.trim();
+    if (n != null && n.isNotEmpty) return n;
+    return email ?? phone ?? translate(trCurrent, 'Sans nom');
+  }
+
+  factory PlatformAdminEntry.fromJson(Map<String, dynamic> j) => PlatformAdminEntry(
+        userId: j['user_id'] as String,
+        name: j['name'] as String?,
+        email: j['email'] as String?,
+        phone: j['phone'] as String?,
+        access: j['access'] is List ? {for (final s in j['access'] as List) s as String} : null,
+        twoStep: j['two_step'] == true,
+        me: j['me'] == true,
+      );
+}
+
 /// One business a person belongs to, and their role in it — the footprint a
 /// moderator reads before acting on the account.
 class PersonOrg {

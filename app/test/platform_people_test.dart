@@ -78,7 +78,7 @@ void main() {
     await tester.pump(); // resolve userOrgs
 
     expect(find.text('Boutique A'), findsOneWidget);
-    expect(find.text('Accès plateforme (Marakaj)'), findsOneWidget);
+    expect(find.text('Accès à la console'), findsOneWidget);
     // The account Worker is not configured here, so the reset/delete buttons
     // are replaced by the note that says so.
     expect(find.textContaining('service de comptes'), findsOneWidget);

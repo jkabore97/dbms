@@ -26,10 +26,15 @@ class TwoStepScreen extends StatefulWidget {
     required this.enrolled,
     required this.onPassed,
     required this.onSignOut,
+    this.account,
   });
 
   final TwoStep twoStep;
   final bool enrolled;
+
+  /// The signed-in account, said at the top (186): a code asked of the
+  /// wrong account is seen at once.
+  final String? account;
   final Future<void> Function() onPassed;
   final Future<void> Function() onSignOut;
 
@@ -160,11 +165,34 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
                       const SizedBox(height: 8),
                       Text(
                         _enrolling
-                            ? context.tr('Ce compte gère toutes les entreprises. Pour l\'ouvrir, il faudra désormais votre mot de passe et un code à 6 chiffres donné par une application sur votre téléphone.')
+                            ? context.tr('Ce compte ouvre la console de la plateforme. Pour l\'ouvrir, il faudra désormais votre mot de passe et un code à 6 chiffres donné par une application sur votre téléphone.')
                             : context.tr('Ouvrez votre application d\'authentification et entrez le code à 6 chiffres affiché pour Marakaj.'),
                         textAlign: TextAlign.center,
                         style: t.textTheme.bodyMedium,
                       ),
+                      if (widget.account != null) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          key: const Key('two-step-account'),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: t.colorScheme.surfaceContainerHigh,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.account_circle_outlined, size: 20),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  context.tr('Compte : {account}', {'account': widget.account!}),
+                                  style: t.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 20),
                       if (_enrolling && _enrollment != null)
                         ..._enrollSteps(t, _enrollment!),
@@ -218,14 +246,17 @@ class _TwoStepScreenState extends State<TwoStepScreen> {
                       Text(
                         _enrolling
                             ? context.tr('À l’activation, les autres appareils connectés à ce compte sont déconnectés.')
-                            : context.tr('Téléphone perdu ? Dans le tableau de bord Supabase : Authentication › Users › ce compte › supprimez son facteur. Marakaj proposera alors d\'en ajouter un nouveau.'),
+                            : context.tr('Téléphone perdu ou changé ? Un administrateur qui gère les accès peut réinitialiser votre application (Réglages › Administrateurs) : un nouveau QR code vous sera montré à la connexion.'),
                         textAlign: TextAlign.center,
                         style: t.textTheme.bodySmall,
                       ),
                       const SizedBox(height: 8),
                       TextButton(
+                        key: const Key('two-step-sign-out'),
                         onPressed: _busy ? null : widget.onSignOut,
-                        child: Text(context.tr('Se déconnecter')),
+                        child: Text(widget.account != null
+                            ? context.tr('Ce n\'est pas votre compte ? Se déconnecter')
+                            : context.tr('Se déconnecter')),
                       ),
                     ],
                   ),

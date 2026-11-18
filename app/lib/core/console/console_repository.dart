@@ -296,6 +296,35 @@ class ConsoleRepository {
     });
   }
 
+  /// The platform's admins and their sections (186): an admin given
+  /// « Administrateurs »'s; the server checks.
+  Future<List<PlatformAdminEntry>> admins() async {
+    final client = _requireClient();
+    final v = await client.rpc('platform_admins');
+    return [
+      for (final r in (v as List? ?? const []))
+        PlatformAdminEntry.fromJson(Map<String, dynamic>.from(r as Map)),
+    ];
+  }
+
+  /// Makes [userId] an admin of [sections] — null for everything — or no
+  /// admin at all (186); a line in the journal, with its undo.
+  Future<void> setAdminAccess(String userId, {required bool on, Set<String>? sections}) async {
+    final client = _requireClient();
+    await client.rpc('platform_set_admin_access', params: {
+      'p_user_id': userId,
+      'p_on': on,
+      'p_access': sections == null ? null : [for (final s in platformSections) if (sections.contains(s)) s],
+    });
+  }
+
+  /// Removes an admin's authenticator (186): their next sign-in shows the
+  /// QR code again. Journaled.
+  Future<void> resetTwoStep(String userId) async {
+    final client = _requireClient();
+    await client.rpc('platform_reset_two_step', params: {'p_user_id': userId});
+  }
+
   SupabaseClient _requireClient() {
     final client = _client;
     if (client == null) {

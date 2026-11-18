@@ -127,6 +127,7 @@ List<CenterSection> centerSections(BuildContext context) => [
       Routes.consoleJournal,
       Routes.consoleAudit,
       Routes.consoleTerms,
+      Routes.consoleAdmins,
     ],
   ),
 ];
@@ -177,7 +178,7 @@ String? centerParent(String path) {
   if (path == Routes.platformAnalytics || path == Routes.consoleNotifications) {
     return Routes.console;
   }
-  if (path.startsWith('${Routes.consoleSettings}/')) return Routes.consoleSettings;
+  if (path.startsWith('${Routes.consoleSettings}/') || path == Routes.consoleAdmins) return Routes.consoleSettings;
   if (path == Routes.consoleKinds || path == Routes.consoleRequestForm) {
     return Routes.consoleSettingsCard('creation');
   }
@@ -213,6 +214,7 @@ class CommandCenterShell extends StatefulWidget {
     required this.center,
     required this.child,
     this.platformAdmin,
+    this.sections,
     this.location,
   });
 
@@ -221,6 +223,9 @@ class CommandCenterShell extends StatefulWidget {
 
   /// Whether to open (tests say it outright); null reads the session.
   final bool? platformAdmin;
+
+  /// A test's sections given (186), beside [platformAdmin]; null: all.
+  final Set<String>? sections;
 
   /// The address shown (tests); null reads the router.
   final String? location;
@@ -332,11 +337,29 @@ class _CommandCenterShellState extends State<CommandCenterShell> {
     );
   }
 
+  /// The places this admin is given (186's levels): all of them for an
+  /// admin of everything. « Réglages » also holds « Administrateurs ».
+  bool _given(CenterSection s) {
+    final session = AppScope.maybeOf(context)?.session;
+    bool can(String key) {
+      if (widget.platformAdmin != null) return widget.sections == null || widget.sections!.contains(key);
+      return session == null || session.platformCan(key);
+    }
+
+    return can(s.key) || (s.key == 'settings' && can('admins'));
+  }
+
   Widget _frame(BuildContext context) {
     final wide = MediaQuery.sizeOf(context).width >= centerWideFrom;
-    final sections = centerSections(context);
+    final all = centerSections(context);
     final path = _path(context);
-    final current = sectionFor(sections, path);
+    final at = sectionFor(all, path);
+    final sections = all.where(_given).toList();
+    if (sections.isEmpty) return const _NotForYou();
+    // A place not given: the page stays out of sight, the first given one
+    // a tap away (the server refuses its calls regardless).
+    final notGiven = !sections.contains(at);
+    final current = notGiven ? sections.first : at;
     final parent = centerParent(path);
     // The keyboard up: the page keeps the height, the money card waits.
     final typing = MediaQuery.viewInsetsOf(context).bottom > 0;
@@ -405,7 +428,9 @@ class _CommandCenterShellState extends State<CommandCenterShell> {
               context: inside,
               removeTop: true,
               // « The list continues » (122) on every center page.
-              child: ScrollHint(child: widget.child),
+              child: notGiven
+                  ? _NotGiven(place: at.label, onGo: () => _go(current))
+                  : ScrollHint(child: widget.child),
             ),
           ),
         ),
@@ -428,12 +453,16 @@ class _CommandCenterShellState extends State<CommandCenterShell> {
           )
         : Scaffold(
             body: body,
-            bottomNavigationBar: _PhoneBar(
-              sections: sections,
-              current: current,
-              badge: _badge,
-              onTap: _go,
-            ),
+            // One place given (186): nothing to switch between — and a
+            // bar of one is refused by Material.
+            bottomNavigationBar: sections.length < 2
+                ? null
+                : _PhoneBar(
+                    sections: sections,
+                    current: current,
+                    badge: _badge,
+                    onTap: _go,
+                  ),
           );
     return CallbackShortcuts(
       bindings: {
@@ -1035,6 +1064,44 @@ class _PhoneBar extends StatelessWidget {
 
 /// Anybody else at a center address: a word and the way back. The server
 /// refuses every one of its functions to them anyway.
+/// A place of the console this admin is not given (186).
+class _NotGiven extends StatelessWidget {
+  const _NotGiven({required this.place, required this.onGo});
+
+  final String place;
+  final VoidCallback onGo;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      key: const Key('center-not-given'),
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.lock_outline, size: 44),
+            const SizedBox(height: 14),
+            Text(
+              context.tr('« {place} » ne vous est pas ouvert.', {'place': place}),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              context.tr('Un administrateur qui gère les accès peut vous l\'ouvrir.'),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 18),
+            FilledButton(onPressed: onGo, child: Text(context.tr('Continuer'))),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _NotForYou extends StatelessWidget {
   const _NotForYou();
 

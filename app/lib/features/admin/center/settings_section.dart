@@ -774,8 +774,19 @@ class _SettingsSectionState extends State<SettingsSection> {
     final values = _values;
     final card = settingCardByKey(widget.card);
     final title = card == null ? context.tr('Réglages') : settingCardTitle(context, card.key);
+    final session = AppScope.maybeOf(context)?.session;
+    // 186's levels: an admin given « Administrateurs » without « Réglages »
+    // sees the one tile; the rules stay the others'.
+    final canAdmins = session?.platformCan('admins') ?? false;
+    final canSettings = session == null || session.platformCan('settings');
     final Widget body;
-    if (_error != null) {
+    if (!canSettings && card == null) {
+      body = ListView(
+        key: const Key('settings-hub'),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+        children: [if (canAdmins) _adminsTile(context)],
+      );
+    } else if (_error != null) {
       body = Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -873,6 +884,10 @@ class _SettingsSectionState extends State<SettingsSection> {
         ),
         const SizedBox(height: 14),
         if (q.isEmpty) ...[
+          if (AppScope.maybeOf(context)?.session.platformCan('admins') ?? false) ...[
+            _adminsTile(context),
+            const SizedBox(height: 10),
+          ],
           LayoutBuilder(builder: (context, box) {
             final per = box.maxWidth >= 900 ? 4 : box.maxWidth >= 560 ? 3 : 2;
             final w = (box.maxWidth - (per - 1) * 10) / per;
@@ -902,6 +917,25 @@ class _SettingsSectionState extends State<SettingsSection> {
             _rows(context, e.value, values),
           ],
       ],
+    );
+  }
+
+  /// « Administrateurs » (186): who is admin, with which sections.
+  Widget _adminsTile(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      key: const Key('settings-admins'),
+      color: theme.colorScheme.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(16),
+      child: ListTile(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        minVerticalPadding: 14,
+        leading: const Icon(Icons.admin_panel_settings_outlined, color: maraBrown),
+        title: Text(context.tr('Administrateurs'), style: const TextStyle(fontWeight: FontWeight.w800)),
+        subtitle: Text(context.tr('Qui est administrateur, et pour quelles sections.')),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => _open(Routes.consoleAdmins),
+      ),
     );
   }
 

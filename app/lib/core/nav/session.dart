@@ -513,6 +513,23 @@ class SessionController extends ChangeNotifier {
   bool _isPlatformAdmin = false;
   bool get isPlatformAdmin => _isPlatformAdmin;
 
+  /// Whether this admin is given [section] of the console (186's levels):
+  /// every section for an admin of everything. The server refuses the
+  /// rest on its own; this only keeps it out of sight.
+  bool platformCan(String section) {
+    if (!_isPlatformAdmin) return false;
+    final given = _platformSections;
+    return given == null || given.contains(section);
+  }
+
+  Set<String>? _platformSections;
+
+  /// The sections given (186); null for all of them.
+  Set<String>? get platformSectionsGiven => _platformSections;
+
+  static bool _sameSections(Set<String>? a, Set<String>? b) =>
+      (a == null && b == null) || (a != null && b != null && a.length == b.length && a.containsAll(b));
+
   /// Whether Événementiel is open to every business (152): the platform's
   /// switch, asked with the admin flag on every resolve and refresh. A
   /// platform admin has the module whatever this says.
@@ -1137,6 +1154,7 @@ class SessionController extends ChangeNotifier {
     _access.clear();
     _orgsFromCache = fromCache;
     _isPlatformAdmin = platformAdmin;
+    _platformSections = platformAdmin ? admin.platformSections : null;
     _adminDevice = platformAdmin || await _adminOnDevice();
     _notice = notice;
 
@@ -1309,10 +1327,12 @@ class SessionController extends ChangeNotifier {
 
       final changed = !_sameOrgs(_orgs, orgs) ||
           platformAdmin != _isPlatformAdmin ||
+          !_sameSections(platformAdmin ? admin.platformSections : null, _platformSections) ||
           _orgsFromCache;
       if (changed) {
         _orgs = orgs;
         _isPlatformAdmin = platformAdmin;
+        _platformSections = platformAdmin ? admin.platformSections : null;
         _orgsFromCache = false;
         _notice = null;
         // A business no longer in the list takes its dial with it.
