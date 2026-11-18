@@ -5,6 +5,7 @@ import '../theme/mara_mark.dart';
 import '../cauris/cauris_repository.dart';
 import '../console/command_center.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show User;
 import 'business_screens.dart' deferred as biz;
 import '../events/events_repository.dart';
 import '../events/my_tickets.dart';
@@ -163,6 +164,9 @@ abstract final class Routes {
   /// Réglages › Sécurité › « Conditions d'utilisation » (142, batch 147):
   /// the documents' versions, who accepted them, a new version.
   static const consoleTerms = '/console/conditions';
+
+  /// « Administrateurs » (186): who is admin, with which sections.
+  static const consoleAdmins = '/console/administrateurs';
   /// The platform's bell (115).
   static const consoleNotifications = '/console/notifications';
   static const language = '/langue';
@@ -887,6 +891,9 @@ GoRouter buildRouter(SessionController session) {
           return TwoStepScreen(
             twoStep: step,
             enrolled: scope.session.twoStepEnrolled,
+            // Whose account this is, said — the screen once showed nobody,
+            // and the wrong account went unnoticed.
+            account: _accountWords(scope.auth.currentUser),
             onPassed: scope.session.twoStepPassed,
             onSignOut: scope.session.signOut,
           );
@@ -1165,6 +1172,10 @@ GoRouter buildRouter(SessionController session) {
                 center: CommandCenterRepository(AppScope.of(context).auth.client),
               )),
           _centerPage(Routes.consoleTerms, (_, _) => biz.TermsAdminScreen()),
+          _centerPage(Routes.consoleAdmins, (context, _) {
+            final scope = AppScope.of(context);
+            return biz.AdminsScreen(console: scope.console, mine: scope.session.platformSectionsGiven);
+          }),
           _centerPage(Routes.consoleJournal, (context, _) => biz.JournalSection(
                 center: CommandCenterRepository(AppScope.of(context).auth.client),
               )),
@@ -2233,6 +2244,24 @@ Widget _businessFrame(
 
 /// A page of the command center: a section, reached with `go`, drawn in
 /// place rather than slid in.
+/// The signed-in account in a few words: its e-mail, else its phone,
+/// with its name when it has one (186).
+String? _accountWords(User? user) {
+  if (user == null) return null;
+  final meta = user.userMetadata ?? const {};
+  final name = (meta['full_name'] ?? meta['name']) as String?;
+  final email = user.email?.trim();
+  final phone = user.phone?.trim();
+  final id = (email != null && email.isNotEmpty)
+      ? email
+      : (phone != null && phone.isNotEmpty)
+          ? '+${phone.replaceFirst('+', '')}'
+          : null;
+  final n = name?.trim();
+  if (n != null && n.isNotEmpty) return id == null ? n : '$n · $id';
+  return id;
+}
+
 GoRoute _centerPage(
   String path,
   Widget Function(BuildContext context, GoRouterState state) build,

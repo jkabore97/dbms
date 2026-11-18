@@ -17,6 +17,7 @@ import 'package:kaj_app/core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import 'package:kaj_app/core/theme/mara_sheet.dart';
 import 'add_to_business_sheet.dart';
+import 'admin_access_sheet.dart';
 import 'merge_accounts_sheet.dart';
 import '../common/copy_text.dart';
 
@@ -230,6 +231,7 @@ class PersonSheet extends StatefulWidget {
     required this.admin,
     required this.help,
     this.terms,
+    this.canAdmins,
   });
 
   final PlatformPerson person;
@@ -240,6 +242,10 @@ class PersonSheet extends StatefulWidget {
   /// The documents this person accepted (142); the app's server unless a
   /// test gives one.
   final TermsApi? terms;
+
+  /// Whether « Accès à la console » is offered (186); a test's, else the
+  /// session's « Administrateurs ».
+  final bool? canAdmins;
 
   @override
   State<PersonSheet> createState() => _PersonSheetState();
@@ -458,36 +464,40 @@ class _PersonSheetState extends State<PersonSheet> {
     }
   }
 
-  Future<void> _togglePlatform() async {
-    final next = !_isPlatformAdmin;
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        // The keyboard up on a small phone: the dialog scrolls (A6).
-        scrollable: true,
-        title: Text(next
-            ? context.tr('Donner l\'accès plateforme ?')
-            : context.tr('Retirer l\'accès plateforme ?')),
-        content: Text(next
-            ? context.tr('{label} pourra voir et gérer toutes les entreprises de la plateforme.', {'label': widget.person.label})
-            : context.tr('{label} perdra l\'accès à la plateforme.', {'label': widget.person.label})),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(context.tr('Annuler'))),
-          FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(context.tr('Confirmer'))),
-        ],
-      ),
-    );
-    if (ok != true) return;
+  bool get _canAdmins =>
+      widget.canAdmins ?? (AppScope.maybeOf(context)?.session.platformCan('admins') ?? true);
+
+  /// « Accès à la console » (186): admin or not, and which sections.
+  Future<void> _openAdminAccess() async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    PlatformAdminEntry? current;
+    try {
+      final admins = await widget.console.admins();
+      current = admins.where((a) => a.userId == widget.person.userId).firstOrNull;
+    } catch (e) {
+      if (mounted) setState(() => _error = AuthRepository.describeError(e));
+      return;
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
     if (!mounted) return;
-    await _run(
-      () => widget.console.setPlatformAdmin(widget.person.userId, next),
-      next ? context.tr('Accès plateforme accordé') : context.tr('Accès plateforme retiré'),
+    final changed = await openAdminAccess(
+      context,
+      console: widget.console,
+      userId: widget.person.userId,
+      label: widget.person.label,
+      current: current,
+      mine: AppScope.maybeOf(context)?.session.platformSectionsGiven,
     );
-    if (mounted) setState(() => _isPlatformAdmin = next);
+    if (!changed || !mounted) return;
+    _changed = true;
+    try {
+      final admins = await widget.console.admins();
+      if (mounted) setState(() => _isPlatformAdmin = admins.any((a) => a.userId == widget.person.userId));
+    } catch (_) {}
   }
 
   Future<void> _resetPassword() async {
@@ -701,15 +711,19 @@ class _PersonSheetState extends State<PersonSheet> {
             // 143: « Formateur Mara », chosen here by the platform.
             _trainerSwitch(context),
 
-            // Platform access — never on oneself.
-            if (!_isSelf)
-              SwitchListTile(
+            // Platform access (186's levels) — never on oneself, and only
+            // for an admin given « Administrateurs ».
+            if (!_isSelf && _canAdmins)
+              ListTile(
+                key: const Key('person-admin-access'),
                 contentPadding: EdgeInsets.zero,
-                value: _isPlatformAdmin,
-                onChanged: _busy ? null : (_) => _togglePlatform(),
-                title: Text(context.tr('Accès plateforme (Marakaj)')),
-                subtitle: Text(
-                    context.tr('Voir et gérer toutes les entreprises de la plateforme.')),
+                leading: const Icon(Icons.admin_panel_settings_outlined),
+                title: Text(context.tr('Accès à la console')),
+                subtitle: Text(_isPlatformAdmin
+                    ? context.tr('Administrateur Marakaj — choisir ses sections')
+                    : context.tr('Pas administrateur')),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: _busy ? null : _openAdminAccess,
               ),
 
             // 168: two accounts of one person (Apple, then Google), one.
