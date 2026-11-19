@@ -18,7 +18,16 @@ import '../common/phone_field.dart';
 /// account's), a WhatsApp for the organiser, and the request is the
 /// account's from the start; « Mes billets » opens on it.
 class BuyTicketsScreen extends StatefulWidget {
-  const BuyTicketsScreen({super.key, required this.client, required this.slug, this.preview, this.store, this.rpc, this.myName, this.myPhone});
+  const BuyTicketsScreen({super.key, required this.client, required this.slug, this.preview, this.store, this.rpc, this.myName, this.myPhone, this.onSessionLost, this.signedIn});
+
+  /// « Me reconnecter » when the online session is gone (the owner's
+  /// « permission denied »): the router's signing out, which sends the
+  /// person through sign-in and back to this page.
+  final Future<void> Function()? onSessionLost;
+
+  /// For the tests: whether the online session is there (else the
+  /// client's own).
+  final bool? signedIn;
 
   final SupabaseClient? client;
 
@@ -70,6 +79,15 @@ class _BuyTicketsScreenState extends State<BuyTicketsScreen> {
   }
 
   bool get _online => widget.rpc != null || widget.client != null;
+
+  /// The app keeps a person signed in on the device (their code works with
+  /// no network) while the online session may have lapsed — renewed
+  /// elsewhere first, or expired. A ticket is the account's: without the
+  /// session the server refuses it (« permission denied »).
+  bool get _sessionLive => widget.signedIn ?? (widget.client == null || widget.client!.auth.currentSession != null);
+
+  /// The session found gone: the page says so, and offers to sign in again.
+  bool _lost = false;
 
   @override
   void initState() {
@@ -182,6 +200,10 @@ class _BuyTicketsScreenState extends State<BuyTicketsScreen> {
       setState(() => _error = waProblem);
       return;
     }
+    if (!_sessionLive) {
+      setState(() => _lost = true);
+      return;
+    }
     setState(() => _busy = true);
     try {
       final r = await _call('event_ticket_request', {
@@ -206,7 +228,13 @@ class _BuyTicketsScreenState extends State<BuyTicketsScreen> {
         Navigator.of(context).maybePop(id);
       }
     } on PostgrestException catch (e) {
-      if (mounted) setState(() => _error = e.message);
+      if (!mounted) return;
+      // refused as nobody (the session lapsed while the page was open)
+      if (e.code == '42501' || e.code == '401' || e.message.contains('permission denied')) {
+        setState(() => _lost = true);
+      } else {
+        setState(() => _error = e.message);
+      }
     } catch (_) {
       if (mounted) setState(() => _error = context.tr('Pas de réseau : réessayez.'));
     } finally {
@@ -319,6 +347,13 @@ class _BuyTicketsScreenState extends State<BuyTicketsScreen> {
                           padding: const EdgeInsets.only(top: 10),
                           child: Text(_error!, key: const Key('buy-error'), style: TextStyle(color: theme.colorScheme.error)),
                         ),
+                      if (_lost || !_sessionLive) ...[
+                        const SizedBox(height: 12),
+                        SessionLostCard(
+                          text: context.tr('Votre connexion à Marakaj a expiré. Reconnectez-vous pour demander vos billets : vous reviendrez sur cette page.'),
+                          onReconnect: widget.onSessionLost,
+                        ),
+                      ],
                       const SizedBox(height: 14),
                       ConstrainedBox(
                         constraints: const BoxConstraints(minHeight: 52),
@@ -337,6 +372,39 @@ class _BuyTicketsScreenState extends State<BuyTicketsScreen> {
                     ],
                   ],
                 ),
+    );
+  }
+}
+
+/// The online session gone while the device still knows the person (the
+/// owner's « permission denied »): said plainly, with the way back in.
+class SessionLostCard extends StatelessWidget {
+  const SessionLostCard({super.key, required this.text, this.onReconnect});
+
+  final String text;
+  final Future<void> Function()? onReconnect;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      key: const Key('session-lost'),
+      color: theme.colorScheme.errorContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Text(text, style: TextStyle(color: theme.colorScheme.onErrorContainer, fontWeight: FontWeight.w600)),
+          if (onReconnect != null) ...[
+            const SizedBox(height: 10),
+            FilledButton.icon(
+              key: const Key('session-reconnect'),
+              onPressed: () => onReconnect!(),
+              icon: const Icon(Icons.login),
+              label: Text(context.tr('Me reconnecter')),
+            ),
+          ],
+        ]),
+      ),
     );
   }
 }

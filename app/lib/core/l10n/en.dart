@@ -2,6 +2,10 @@
 /// by the French. test/tr_coverage_test.dart fails when a phrase in the
 /// code has no line here.
 const enStrings = <String, String>{
+  'Votre connexion à Marakaj a expiré. Reconnectez-vous pour confirmer votre présence : vous reviendrez sur cette page.':
+      'Your Marakaj sign-in has expired. Sign in again to confirm your presence: you will come back to this page.',
+  'Votre connexion à Marakaj a expiré. Reconnectez-vous pour demander vos billets : vous reviendrez sur cette page.':
+      'Your Marakaj sign-in has expired. Sign in again to request your tickets: you will come back to this page.',
   'Une nouvelle version de Marakaj est disponible : mettez à jour l\'application.':
       'A new version of Marakaj is out: update the app.',
   'Équipes':

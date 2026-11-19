@@ -6,6 +6,7 @@ import '../../core/events/invitations_repository.dart';
 import '../../core/l10n/tr.dart';
 import '../../core/notify/bell_room.dart';
 import '../storefront/my_invitations_screen.dart';
+import 'buy_tickets_screen.dart' show SessionLostCard;
 import '../../core/nav/router.dart' show Routes;
 
 /// « Confirmer ma présence » (183): the card's one button opens
@@ -14,7 +15,11 @@ import '../../core/nav/router.dart' show Routes;
 /// confirme » — then their photos, five each, from here or « Mes
 /// invitations ». Confirming again changes the numbers, nothing more.
 class PresenceScreen extends StatefulWidget {
-  const PresenceScreen({super.key, required this.repo, required this.slug, this.preview, this.pick, this.toInvitations});
+  const PresenceScreen({super.key, required this.repo, required this.slug, this.preview, this.pick, this.toInvitations, this.onSessionLost});
+
+  /// « Me reconnecter » when the online session is gone: the router's
+  /// signing out, which brings the person back here through sign-in.
+  final Future<void> Function()? onSessionLost;
 
   final InvitationsRepository repo;
   final String slug;
@@ -61,7 +66,18 @@ class _PresenceScreenState extends State<PresenceScreen> {
     super.dispose();
   }
 
+  /// The online session gone while the device still knows the person:
+  /// the server answers « permission denied » to nobody.
+  bool _lost = false;
+
+  static bool _refusedAsNobody(PostgrestException e) =>
+      e.code == '42501' || e.code == '401' || e.message.contains('permission denied');
+
   Future<void> _load() async {
+    if (!widget.repo.signedIn) {
+      setState(() => _lost = true);
+      return;
+    }
     try {
       final c = await widget.repo.card(widget.slug, widget.preview);
       if (!mounted) return;
@@ -86,7 +102,7 @@ class _PresenceScreenState extends State<PresenceScreen> {
         _sharePhone = c.hasPhone && c.mySharePhone;
       });
     } on PostgrestException catch (e) {
-      if (mounted) setState(() => _problem = e.message);
+      if (mounted) setState(() => _refusedAsNobody(e) ? _lost = true : _problem = e.message);
     } catch (_) {
       if (mounted) setState(() => _problem = context.tr('Pas de réseau : réessayez.'));
     }
@@ -111,7 +127,7 @@ class _PresenceScreenState extends State<PresenceScreen> {
         _mine = mine;
       });
     } on PostgrestException catch (e) {
-      if (mounted) setState(() => _error = e.message);
+      if (mounted) setState(() => _refusedAsNobody(e) ? _lost = true : _error = e.message);
     } catch (_) {
       if (mounted) setState(() => _error = context.tr('Pas de réseau : réessayez.'));
     } finally {
@@ -193,7 +209,17 @@ class _PresenceScreenState extends State<PresenceScreen> {
         title: Text(context.tr('Confirmer ma présence')),
         actions: const [bellRoom],
       ),
-      body: _problem != null
+      body: _lost
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: SessionLostCard(
+                  text: context.tr('Votre connexion à Marakaj a expiré. Reconnectez-vous pour confirmer votre présence : vous reviendrez sur cette page.'),
+                  onReconnect: widget.onSessionLost,
+                ),
+              ),
+            )
+          : _problem != null
           ? Center(child: Padding(padding: const EdgeInsets.all(28), child: Text(_problem!, key: const Key('presence-problem'), textAlign: TextAlign.center)))
           : c == null
               ? const Center(child: CircularProgressIndicator())

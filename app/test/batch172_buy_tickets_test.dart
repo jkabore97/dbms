@@ -7,6 +7,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 import 'package:kaj_app/features/events/buy_tickets_screen.dart';
 import 'package:kaj_app/l10n/strings.dart';
 
@@ -136,5 +137,62 @@ void main() {
     await tester.tap(find.byKey(const Key('buy-send')));
     await tester.pumpAndSettle();
     expect(calls.lastWhere((c) => c['fn'] == 'event_ticket_request')['p_whatsapp'], '+2250707123456');
+  });
+
+  Future<(List<String>, List<int>)> lost(WidgetTester tester, {required bool? signedIn, bool refuse = false}) async {
+    final calls = <String>[];
+    final reconnect = <int>[];
+    tester.view.physicalSize = const Size(400, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(MaterialApp(
+      key: UniqueKey(),
+      locale: const Locale('fr'),
+      localizationsDelegates: Strings.localizationsDelegates,
+      supportedLocales: Strings.supportedLocales,
+      home: BuyTicketsScreen(
+        client: null,
+        slug: 'anniv',
+        myName: 'Wendtoin Kabore',
+        myPhone: '+22670443328',
+        signedIn: signedIn,
+        onSessionLost: () async => reconnect.add(1),
+        rpc: (fn, p) async {
+          calls.add(fn);
+          if (fn == 'event_ticket_offer') return offer;
+          if (refuse) throw const PostgrestException(message: 'permission denied for function event_ticket_request', code: '42501');
+          return {'id': 'x'};
+        },
+      ),
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('buy-more-vip')));
+    await tester.pumpAndSettle();
+    return (calls, reconnect);
+  }
+
+  testWidgets('the online session gone (the owner\'s « permission denied »): said at once, nothing sent, « Me reconnecter »', (tester) async {
+    final (calls, reconnect) = await lost(tester, signedIn: false);
+    expect(find.byKey(const Key('session-lost')), findsOneWidget);
+    expect(find.textContaining('Votre connexion à Marakaj a expiré'), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('buy-send')));
+    await tester.tap(find.byKey(const Key('buy-send')));
+    await tester.pumpAndSettle();
+    expect(calls, isNot(contains('event_ticket_request')), reason: 'not sent as nobody');
+    expect(find.text('permission denied for function event_ticket_request'), findsNothing);
+    await tester.ensureVisible(find.byKey(const Key('session-reconnect')));
+    await tester.tap(find.byKey(const Key('session-reconnect')));
+    expect(reconnect, [1]);
+  });
+
+  testWidgets('the session lapsing while the page is open: the server\'s refusal becomes the same notice', (tester) async {
+    final (calls, _) = await lost(tester, signedIn: true, refuse: true);
+    expect(find.byKey(const Key('session-lost')), findsNothing);
+    await tester.ensureVisible(find.byKey(const Key('buy-send')));
+    await tester.tap(find.byKey(const Key('buy-send')));
+    await tester.pumpAndSettle();
+    expect(calls, contains('event_ticket_request'));
+    expect(find.byKey(const Key('session-lost')), findsOneWidget);
+    expect(find.text('permission denied for function event_ticket_request'), findsNothing);
   });
 }

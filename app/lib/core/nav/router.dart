@@ -796,6 +796,8 @@ GoRouter buildRouter(SessionController session) {
             slug: RegExp(r'^[a-z0-9-]{1,80}$').hasMatch(slug) ? slug : '-',
             preview: state.uri.queryParameters['apercu'],
             store: MyTicketsStore(scope.auth.client, scope.db),
+            // the online session lapsed: out, and through sign-in back here
+            onSessionLost: scope.session.signOut,
           );
         },
       ),
@@ -811,6 +813,7 @@ GoRouter buildRouter(SessionController session) {
             repo: InvitationsRepository(scope.auth.client),
             slug: RegExp(r'^[a-z0-9-]{1,80}$').hasMatch(slug) ? slug : '-',
             preview: state.uri.queryParameters['apercu'],
+            onSessionLost: scope.session.signOut,
           );
         },
       ),
