@@ -197,6 +197,22 @@ void main() {
     expect(find.text('Vente ouverte : le bouton « Réserver » est sur la carte.'), findsOneWidget);
   });
 
+  testWidgets('the places taken (the owner: « isn\'t the number supposed to decrease? »): said beside the total; never below what is taken', (tester) async {
+    final t = _Tickets();
+    t.types.add(const TicketType(id: 't1', name: 'Ticket Standard', price: 6000, capacity: 40, taken: 3));
+    await _pump(tester, TicketSetupScreen(tickets: t, event: _event));
+    expect(find.textContaining('40 places · 3 prises · 37 restantes'), findsOneWidget);
+    await tester.tap(find.textContaining('Ticket Standard'));
+    await tester.pumpAndSettle();
+    expect(find.text('Places au total'), findsOneWidget);
+    expect(find.text('3 déjà prises. Vide : illimité.'), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('ticket-type-places')), '2');
+    await tester.tap(find.byKey(const Key('ticket-type-ok')));
+    await tester.pumpAndSettle();
+    expect(find.text('3 places sont déjà prises : pas moins.'), findsOneWidget);
+    expect(t.calls, isEmpty);
+  });
+
   testWidgets('« Où payer » with the keyboard up on a phone: the whole dialog scrolls, nothing squeezed', (tester) async {
     // the owner's screenshot: the keyboard up, only a sliver of « Orange Money » left
     final t = _Tickets();

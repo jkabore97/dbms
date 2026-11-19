@@ -88,6 +88,14 @@ class _Invitations extends InvitationsRepository {
   String? pictureUrl(String key, {int width = 400}) => null;
 }
 
+/// The device still knows the person; the online session is gone.
+class _Lapsed extends _Invitations {
+  _Lapsed() : super();
+
+  @override
+  bool get signedIn => false;
+}
+
 MyInvitation _inv({int used = 0, bool allowed = true, String? preview, DateTime? at, String tz = 'Africa/Niamey'}) => MyInvitation.fromJson({
       'id': '18318318-2222-0000-0000-000000000001',
       'slug': 'mariage-awa-183',
@@ -223,6 +231,17 @@ void main() {
     expect(find.text('2 photos ajoutées à l’album.'), findsOneWidget);
     await tester.tap(find.byKey(const Key('presence-invitations')));
     expect(opened, isTrue);
+  });
+
+  testWidgets('the online session gone: « Confirmer ma présence » says so and offers « Me reconnecter », no raw refusal', (tester) async {
+    final repo = _Lapsed();
+    var reconnect = 0;
+    await _pump(tester, PresenceScreen(repo: repo, slug: 'mariage-awa-183', onSessionLost: () async => reconnect++));
+    expect(find.byKey(const Key('session-lost')), findsOneWidget);
+    expect(find.textContaining('Reconnectez-vous pour confirmer votre présence'), findsOneWidget);
+    expect(repo.calls, isEmpty, reason: 'nothing asked as nobody');
+    await tester.tap(find.byKey(const Key('session-reconnect')));
+    expect(reconnect, 1);
   });
 
   testWidgets('back (the owner: the page had none): opened from a link, the arrow and the phone go to the vitrines; over the event\'s page, back to it', (tester) async {

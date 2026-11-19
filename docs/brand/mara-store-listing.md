@@ -47,7 +47,14 @@ Marakaj est conçue pour l'Afrique de l'Ouest : en français, sur téléphone, p
 
 **Catégorie** Shopping (ou Entreprise)
 
-**Nouveautés (500 car. max)** — pour 1.0.3 (sur Play, entre `<fr-FR>` et `</fr-FR>`)
+**Nouveautés (500 car. max)** — pour 1.0.4 (sur Play, entre `<fr-FR>` et `</fr-FR>`)
+• Contrôle à l'entrée : le scanner lit le QR code des billets
+• Vente de billets : les places prises et restantes de chaque type
+• Billets et présence : si votre connexion a expiré, Marakaj vous le dit et vous reconnecte
+• Les notifications arrivent aussi sur iPhone
+• Plus de clignotement à l'ouverture ni sur la page d'un événement
+
+Pour 1.0.3 (envoyée le 18 novembre, non publiée si 1.0.4 la remplace) :
 • Les notifications arrivent aussi sur iPhone
 • Plus de clignotement à l'ouverture ni sur la page d'un événement
 • Un bouton retour sur « Confirmer ma présence »
@@ -78,7 +85,7 @@ Compte de démonstration : celui de `store_review_account`. Il ouvre une boutiqu
 2. **La billetterie** : ne la citer que si `events_tickets` est ouvert (Console › Événementiel l'indique).
 3. **Marakaj Pro** : l'abonnement des stores (`store_billing_on`) est ouvert ; les prix des produits d'abonnement dans App Store Connect et la Play Console doivent correspondre à ceux de la Console › Pro.
 4. **Captures d'écran** : refaire celles des cartes (nouvelle liste « Cartes », Studio, aperçu WhatsApp) — elles doivent montrer l'app actuelle.
-5. **Version** : 1.0.3 (`app/pubspec.yaml`, `appVersion` dans main.dart) — le 18 novembre 2026, 1.0.2 ayant été approuvée par Apple (un envoi doit porter une version plus haute) ; le numéro de build vient de Codemagic.
+5. **Version** : 1.0.4 (`app/pubspec.yaml`, `appVersion` dans main.dart) — le 19 novembre 2026, pour le scanner des billets ; 1.0.3 envoyée la veille sans lui. Le numéro de build vient de Codemagic.
 6. **iPhone** : Associated Domains (applinks:marakaj.com) dans le profil de l'identifiant bf.kaj.app, sinon les liens de billets n'ouvrent pas l'app (ce n'est pas bloquant pour la revue).
 7. **Assistant d'écriture** : la clé `ANTHROPIC_API_KEY` doit être ajoutée dans Cloudflare (par vous) ; sans elle Studio répond « pas disponible » — retirer « assistant » des textes tant qu'elle manque.
 8. **Notifications du compte de test** : pendant la revue, les testeurs se connectent et envoient des notifications test ; c'est normal.

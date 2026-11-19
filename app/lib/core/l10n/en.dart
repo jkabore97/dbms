@@ -2,6 +2,22 @@
 /// by the French. test/tr_coverage_test.dart fails when a phrase in the
 /// code has no line here.
 const enStrings = <String, String>{
+  'Placez le QR code du billet dans le cadre.':
+      'Place the ticket\'s QR code in the frame.',
+  '{taken} places sont déjà prises : pas moins.':
+      '{taken} places are already taken: not fewer.',
+  '{taken} déjà prises. Vide : illimité.':
+      '{taken} already taken. Empty: unlimited.',
+  'Places au total':
+      'Total places',
+  '{n} restantes':
+      '{n} left',
+  '{n} prises':
+      '{n} taken',
+  'Votre connexion à Marakaj a expiré. Reconnectez-vous pour confirmer votre présence : vous reviendrez sur cette page.':
+      'Your Marakaj sign-in has expired. Sign in again to confirm your presence: you will come back to this page.',
+  'Votre connexion à Marakaj a expiré. Reconnectez-vous pour demander vos billets : vous reviendrez sur cette page.':
+      'Your Marakaj sign-in has expired. Sign in again to request your tickets: you will come back to this page.',
   'Une nouvelle version de Marakaj est disponible : mettez à jour l\'application.':
       'A new version of Marakaj is out: update the app.',
   'Équipes':

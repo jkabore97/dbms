@@ -78,8 +78,19 @@ class TicketsRepository {
         .eq('id', eventId)
         .single();
     final types = await c.from('event_ticket_types').select().eq('event_id', eventId).order('sort').order('created_at');
-    return TicketSettings.fromJson(Map<String, dynamic>.from(row),
-        [for (final t in types) TicketType.fromJson(Map<String, dynamic>.from(t))]);
+    // the places gone, each type's (the owner: « isn't the number of
+    // tickets supposed to decrease? » — the list said only the total)
+    final list = <TicketType>[];
+    for (final t in types) {
+      final type = TicketType.fromJson(Map<String, dynamic>.from(t));
+      int? taken;
+      try {
+        final n = await c.rpc('event_ticket_taken', params: {'p_type': type.id});
+        taken = n is num ? n.toInt() : int.tryParse('$n');
+      } catch (_) {}
+      list.add(type.withTaken(taken));
+    }
+    return TicketSettings.fromJson(Map<String, dynamic>.from(row), list);
   }
 
   /// The sale turned on or off, where to pay, how long a request holds its
@@ -328,6 +339,7 @@ class TicketType {
     this.capacity,
     this.sort = 0,
     this.active = true,
+    this.taken,
   });
 
   factory TicketType.fromJson(Map<String, dynamic> j) => TicketType(
@@ -347,6 +359,16 @@ class TicketType {
   final int? capacity;
   final int sort;
   final bool active;
+
+  /// Places gone (161's event_ticket_taken): paid, or held by a request
+  /// still within its days. Null when it could not be asked.
+  final int? taken;
+
+  /// What is still on sale; null with no limit or no count.
+  int? get left => capacity == null || taken == null ? null : (capacity! - taken!).clamp(0, capacity!);
+
+  TicketType withTaken(int? n) =>
+      TicketType(id: id, name: name, price: price, capacity: capacity, sort: sort, active: active, taken: n);
 }
 
 class TicketSettings {

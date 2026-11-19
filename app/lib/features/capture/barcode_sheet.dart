@@ -17,19 +17,38 @@ import 'package:kaj_app/core/theme/mara_sheet.dart';
 ///
 /// Returns the barcode as a string, or null if the person backed out.
 class BarcodeSheet extends StatefulWidget {
-  const BarcodeSheet({super.key, this.title = 'Scanner un code'});
+  const BarcodeSheet({super.key, this.title = 'Scanner un code', this.qr = false});
 
   final String title;
 
-  /// Opens it and hands back what was read.
-  static Future<String?> scan(BuildContext context, {String? title}) {
+  /// A QR code — a ticket at the door — rather than a product's barcode
+  /// (the owner: « your code scanner do not work »: the door's scanner was
+  /// the counter's, which read the shop's barcodes and no QR code at all).
+  final bool qr;
+
+  /// The shop's barcodes (EAN, UPC, Code 128 and 39).
+  static const productFormats = [
+    BarcodeFormat.ean13,
+    BarcodeFormat.ean8,
+    BarcodeFormat.upcA,
+    BarcodeFormat.upcE,
+    BarcodeFormat.code128,
+    BarcodeFormat.code39,
+  ];
+
+  /// What the camera looks for: a ticket's QR code, or a product's barcode.
+  static List<BarcodeFormat> formatsFor({required bool qr}) =>
+      qr ? const [BarcodeFormat.qrCode] : productFormats;
+
+  /// Opens it and hands back what was read; [qr] for a ticket's QR code.
+  static Future<String?> scan(BuildContext context, {String? title, bool qr = false}) {
     return showMaraSheet<String>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
       // Its own « X » beside its title.
       closeButton: false,
-      builder: (_) => BarcodeSheet(title: title ?? context.tr('Scanner un code')),
+      builder: (_) => BarcodeSheet(title: title ?? context.tr('Scanner un code'), qr: qr),
     );
   }
 
@@ -38,18 +57,11 @@ class BarcodeSheet extends StatefulWidget {
 }
 
 class _BarcodeSheetState extends State<BarcodeSheet> {
-  final _controller = MobileScannerController(
+  late final _controller = MobileScannerController(
     // One code, then close. Continuous detection re-reads the same label
     // dozens of times a second and the first one is always the answer.
     detectionSpeed: DetectionSpeed.noDuplicates,
-    formats: const [
-      BarcodeFormat.ean13,
-      BarcodeFormat.ean8,
-      BarcodeFormat.upcA,
-      BarcodeFormat.upcE,
-      BarcodeFormat.code128,
-      BarcodeFormat.code39,
-    ],
+    formats: BarcodeSheet.formatsFor(qr: widget.qr),
   );
 
   bool _handled = false;
@@ -132,7 +144,9 @@ class _BarcodeSheetState extends State<BarcodeSheet> {
             ),
             const SizedBox(height: 12),
             Text(
-              context.tr('Placez le code-barres dans le cadre.'),
+              widget.qr
+                  ? context.tr('Placez le QR code du billet dans le cadre.')
+                  : context.tr('Placez le code-barres dans le cadre.'),
               style: theme.textTheme.bodySmall,
             ),
           ],
