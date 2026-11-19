@@ -1400,7 +1400,7 @@ class _GuestsScreenState extends State<GuestsScreen> {
   /// checked — since 183 the guests have no QR card of their own (a card of
   /// before still marks its guest arrived, so the scanner says « billet »).
   Future<void> _scan() async {
-    final text = await BarcodeSheet.scan(context, title: context.tr('Scanner un billet'));
+    final text = await BarcodeSheet.scan(context, title: context.tr('Scanner un billet'), qr: true);
     if (!mounted || text == null) return;
     await _arrivedFromPass(text);
   }

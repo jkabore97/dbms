@@ -311,7 +311,9 @@ class _TicketSetupScreenState extends State<TicketSetupScreen> {
                     child: ListTile(
                       title: Text(t.name),
                       subtitle: Text(
-                          '${money.format(t.price)} · ${t.capacity == null ? context.tr('places illimitées') : context.tr('{n} places', {'n': t.capacity})}'),
+                          '${money.format(t.price)} · ${t.capacity == null ? context.tr('places illimitées') : context.tr('{n} places', {'n': t.capacity})}'
+                          '${t.taken == null ? '' : ' · ${context.tr('{n} prises', {'n': t.taken})}'}'
+                          '${t.left == null ? '' : ' · ${context.tr('{n} restantes', {'n': t.left})}'}'),
                       onTap: () => _editType(t),
                       trailing: IconButton(
                         tooltip: context.tr('Retirer'),
@@ -457,6 +459,10 @@ class _TypeDialogState extends State<_TypeDialog> {
     if (_places.text.trim().isNotEmpty && (places == null || places < 1)) {
       return setState(() => _problem = context.tr('Un nombre de places, ou rien pour illimité.'));
     }
+    final taken = widget.initial?.taken ?? 0;
+    if (places != null && places < taken) {
+      return setState(() => _problem = context.tr('{taken} places sont déjà prises : pas moins.', {'taken': taken}));
+    }
     final i = widget.initial;
     Navigator.pop(
       context,
@@ -485,7 +491,13 @@ class _TypeDialogState extends State<_TypeDialog> {
           key: const Key('ticket-type-places'),
           controller: _places,
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(labelText: context.tr('Places'), helperText: context.tr('Vide : illimité')),
+          decoration: InputDecoration(
+            labelText: context.tr('Places au total'),
+            // what is already gone, so the total is not read as what is left
+            helperText: (widget.initial?.taken ?? 0) > 0
+                ? context.tr('{taken} déjà prises. Vide : illimité.', {'taken': widget.initial!.taken})
+                : context.tr('Vide : illimité'),
+          ),
         ),
         if (_problem != null)
           Padding(
@@ -932,7 +944,7 @@ class _TicketDoorScreenState extends State<TicketDoorScreen> {
   }
 
   Future<void> _scan() async {
-    final text = await (widget.scan ?? (c) => BarcodeSheet.scan(c, title: c.tr('Un billet')))(context);
+    final text = await (widget.scan ?? (c) => BarcodeSheet.scan(c, title: c.tr('Un billet'), qr: true))(context);
     if (!mounted || text == null) return;
     final id = TicketsRepository.ticketIdFrom(text);
     if (id == null) {
