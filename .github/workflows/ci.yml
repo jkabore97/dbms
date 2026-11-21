@@ -441,6 +441,10 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch188.sql
+      - name: Batch 189 — the guests hear that the album is open (once, from 9 h on the card's clock)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch189.sql
 
       # The bell: the right people hear the right events and nobody else,
       # a threshold rings on the crossing rather than on every sale below
