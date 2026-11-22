@@ -68,19 +68,23 @@ class _Events extends EventsRepository {
     );
   }
 
-  ({DateTime? startsAt, bool keepZone})? lastUpdate;
+  ({DateTime? startsAt, String? tz})? lastUpdate;
+  String? lastCreateTz;
 
   @override
-  Future<void> update(String id, {required String title, required String kind, DateTime? startsAt, String? place, bool keepZone = false}) async {
+  Future<void> update(String id, {required String title, required String kind, DateTime? startsAt, String? place, String? tz}) async {
     calls.add('update:$id');
-    lastUpdate = (startsAt: startsAt, keepZone: keepZone);
+    lastUpdate = (startsAt: startsAt, tz: tz);
+    // as the server keeps it: the instant on the zone's clock
+    final zoned = EventsRepository.onZone(startsAt, tz);
+    startsAt = zoned.$1?.toLocal();
     final i = rows.indexWhere((r) => r.id == id);
     if (i < 0) return;
     final r = rows[i];
     rows[i] = EventSummary(
       id: r.id, orgId: r.orgId, kind: kind, card: r.card, slug: r.slug, previewToken: r.previewToken,
       editToken: r.editToken, title: title, startsAt: startsAt, place: place, content: r.content, rsvpOn: r.rsvpOn,
-      albumOn: r.albumOn, published: r.published, createdAt: r.createdAt,
+      albumOn: r.albumOn, published: r.published, createdAt: r.createdAt, tz: zoned.$2 ?? r.tz,
     );
   }
 
@@ -115,8 +119,11 @@ class _Events extends EventsRepository {
     required String card,
     DateTime? startsAt,
     String? place,
+    String? tz,
   }) async {
     calls.add('create:$title/$kind/$card/${startsAt?.toIso8601String() ?? '-'}/${place ?? '-'}');
+    lastCreateTz = tz;
+    startsAt = EventsRepository.onZone(startsAt, tz).$1?.toLocal();
     final e = EventSummary(
       id: 'e${rows.length + 1}',
       orgId: orgId,
@@ -128,6 +135,7 @@ class _Events extends EventsRepository {
       title: title,
       startsAt: startsAt,
       place: place,
+      tz: tz,
       content: {'type': kind, 't:names': title},
       rsvpOn: true,
       albumOn: true,
@@ -429,8 +437,63 @@ void main() {
       expect(find.textContaining('samedi 21 novembre 2026 · 10:00'), findsWidgets, reason: 'the card\'s own hour in the form');
       await tester.tap(find.byKey(const Key('event-save')));
       await tester.pumpAndSettle();
-      expect(repo.lastUpdate!.startsAt!.toUtc(), DateTime.utc(2026, 11, 21, 10), reason: 'the same moment saved back');
-      expect(repo.lastUpdate!.keepZone, isTrue, reason: 'the card keeps Ouagadougou\'s clock');
+      final w = repo.lastUpdate!.startsAt!;
+      expect([w.year, w.month, w.day, w.hour, w.minute], [2026, 11, 21, 10, 0], reason: 'the hour as read, on the card\'s clock');
+      expect(repo.lastUpdate!.tz, 'Africa/Ouagadougou', reason: 'the card keeps Ouagadougou\'s clock');
+      expect(EventsRepository.onZone(w, repo.lastUpdate!.tz).$1, DateTime.utc(2026, 11, 21, 10), reason: 'the same moment saved back');
+    });
+
+    testWidgets('« Nouvelle carte »: Ouagadougou\'s clock by default, another zone or the phone\'s on choice', (tester) async {
+      EventDraft? got;
+      await _pump(tester, Builder(builder: (context) => Scaffold(body: Center(child: TextButton(
+          onPressed: () async {
+            got = await showModalBottomSheet<EventDraft>(
+                context: context, isScrollControlled: true, builder: (_) => const NewEventSheet(org: _org, card: 'come'));
+          },
+          child: const Text('open'))))));
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      expect(find.text('Fuseau horaire'), findsOneWidget);
+      expect(find.text('GMT · Ouagadougou, Abidjan, Dakar, Bamako, Lomé, Accra'), findsOneWidget, reason: 'the default');
+      await tester.enterText(find.byKey(const Key('event-title')), 'Inès & Thomas');
+      await tester.tap(find.byKey(const Key('event-save')));
+      await tester.pumpAndSettle();
+      expect(got!.tz, isNull, reason: 'no day, no zone');
+
+      // with a day: the zone goes with it
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('event-title')), 'Inès & Thomas');
+      await tester.tap(find.byKey(const Key('event-day')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('event-zone')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('L’heure de ce téléphone (GMT'), findsWidgets);
+      await tester.tap(find.text('GMT+1 · Niamey, Cotonou, Lagos, Douala, Kinshasa, Libreville').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('event-save')));
+      await tester.pumpAndSettle();
+      expect(got!.startsAt, isNotNull);
+      expect(got!.tz, 'Africa/Lagos');
+    });
+
+    testWidgets('« Modifier les infos » on a card saved on a phone\'s US offset: kept, said, changeable', (tester) async {
+      final repo = _Events();
+      final made = await repo.create(orgId: 'o1', title: 'Elena', kind: 'anniversaire', card: 'anniv',
+          startsAt: DateTime(2026, 12, 19, 15), place: 'New York', tz: '-05:00');
+      await _pump(tester, EventScreen(events: repo, org: _org, eventId: made.id, open: (u) async {}));
+      await tester.tap(find.byKey(const Key('event-info-edit')));
+      await tester.pumpAndSettle();
+      expect(find.text('Fuseau de la carte (GMT-5)'), findsOneWidget, reason: 'its own zone, said');
+      expect(find.textContaining('samedi 19 décembre 2026 · 15:00'), findsWidgets, reason: 'its hour on its clock');
+      await tester.tap(find.byKey(const Key('event-save')));
+      await tester.pumpAndSettle();
+      expect(repo.lastUpdate!.tz, '-05:00', reason: 'kept when untouched');
+      expect(EventsRepository.onZone(repo.lastUpdate!.startsAt, repo.lastUpdate!.tz).$1, DateTime.utc(2026, 12, 19, 20));
     });
 
     testWidgets('« Modifier les infos » on a card: its title, kind, day and place changed from the app', (tester) async {
@@ -660,6 +723,22 @@ void main() {
       expect(s, matches(RegExp(r'^[+-]\d\d:\d\d$')));
       final utc = DateTime.utc(2026, 12, 12, 23);
       expect(EventsRepository.offsetOf(utc), '+00:00');
+    });
+
+    test('a card\'s hour is read on its zone\'s clock, never the phone\'s', () {
+      // the owner, in New York: a card in Ouagadougou at 15 h was saved on New York's 15 h
+      final wall = DateTime(2026, 12, 19, 15);
+      expect(EventsRepository.onZone(wall, 'Africa/Ouagadougou'), (DateTime.utc(2026, 12, 19, 15), 'Africa/Ouagadougou'));
+      expect(EventsRepository.onZone(wall, 'Africa/Lagos').$1, DateTime.utc(2026, 12, 19, 14), reason: 'GMT+1');
+      expect(EventsRepository.onZone(wall, '-05:00').$1, DateTime.utc(2026, 12, 19, 20), reason: 'an offset, as saved by a phone');
+      expect(EventsRepository.onZone(wall, null), (wall.toUtc(), EventsRepository.offsetOf(wall)), reason: 'none: the phone\'s, as before');
+      expect(EventsRepository.onZone(null, 'Africa/Ouagadougou'), (null, null));
+      for (final z in eventZones) {
+        expect(eventZoneOffset(z.$1), isNotNull, reason: '${z.$1}: a zone the app reads back');
+      }
+      expect(gmtLabel(Duration.zero), 'GMT');
+      expect(gmtLabel(const Duration(hours: -5)), 'GMT-5');
+      expect(gmtLabel(const Duration(hours: 5, minutes: 30)), 'GMT+5:30');
     });
 
     test('the fifty templates the app knows: fifteen cards, twenty-one layouts, fourteen Premium', () {

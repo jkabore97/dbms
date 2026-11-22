@@ -205,6 +205,28 @@
   var DAYS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
   function hourText(t) { if (!t) return ''; var m = /^(\d{1,2}):(\d{2})/.exec(t); if (!m) return t; return (+m[1]) + '\u00a0h' + (m[2] === '00' ? '' : '\u00a0' + m[2]); }
   // « 10 h » never split by the end of a line (a narrow phone showed « H » alone)
+  // A day and an hour on the event's own clock — its offset (« +00:00 », the phone's at creation),
+  // its zone's name, or Ouagadougou's — as the one instant it is everywhere. The viewer's phone
+  // has no say: a guest in New York counts down to 10 h in Ouagadougou, not 10 h in New York.
+  function offsetMin(ms, tz) {
+    var o = /^([+-])(\d{2}):(\d{2})$/.exec(tz || '');
+    if (o) return (o[1] === '-' ? -1 : 1) * (+o[2] * 60 + +o[3]);
+    var zones = [tz, 'Africa/Ouagadougou'];
+    for (var i = 0; i < zones.length; i++) {
+      if (!zones[i]) continue;
+      try {
+        var q = {}, parts = new Intl.DateTimeFormat('en-CA', { timeZone: zones[i], year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(ms));
+        parts.forEach(function (x) { q[x.type] = +x.value; });
+        return Math.round((Date.UTC(q.year, q.month - 1, q.day, q.hour, q.minute) - Math.floor(ms / 6e4) * 6e4) / 6e4);
+      } catch (e) { /* an unknown zone: the next */ }
+    }
+    return 0;
+  }
+  function onEventClock(y, mo, d, h, mi, tz) {
+    var wall = Date.UTC(y, mo, d, h, mi), ms = wall - offsetMin(wall, tz) * 6e4;
+    return new Date(wall - offsetMin(ms, tz) * 6e4);   // twice: right across a change of hour
+  }
+  S.onEventClock = onEventClock;
   function facts(ctx) {
     var d = null, p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ctx.date || '');
     if (p) d = new Date(+p[1], +p[2] - 1, +p[3]);
@@ -214,7 +236,7 @@
       f.long = f.day + ' ' + (f.n === 1 ? '1er' : f.n) + ' ' + f.month + ' ' + f.year;
       f.short = ('0' + f.n).slice(-2) + ' · ' + ('0' + (d.getMonth() + 1)).slice(-2) + ' · ' + f.year;
       var tm = /^(\d{1,2}):(\d{2})/.exec(ctx.time || '') || [0, 15, 0];
-      f.start = new Date(+p[1], +p[2] - 1, +p[3], +tm[1], +tm[2]);
+      f.start = onEventClock(+p[1], +p[2] - 1, +p[3], +tm[1], +tm[2], ctx.tz);
     }
     return f;
   }
@@ -446,7 +468,7 @@
   };
   // the answers' closing day (173): « YYYY-MM-DD », closed the day after (on the guest's clock; the server holds it too)
   function frDay(d) { var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d || ''); return m ? +m[3] + ' ' + ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'][+m[2] - 1] + ' ' + m[1] : ''; }
-  function rsvpClosed(p) { if (!p || !/^\d{4}-\d{2}-\d{2}$/.test(p.closes || '')) return false; var n = new Date(), t = n.getFullYear() + '-' + ('0' + (n.getMonth() + 1)).slice(-2) + '-' + ('0' + n.getDate()).slice(-2); return t > p.closes; }
+  function rsvpClosed(p, tz) { if (!p || !/^\d{4}-\d{2}-\d{2}$/.test(p.closes || '')) return false; var n = new Date(Date.now() + offsetMin(Date.now(), tz) * 6e4), t = n.getUTCFullYear() + '-' + ('0' + (n.getUTCMonth() + 1)).slice(-2) + '-' + ('0' + n.getUTCDate()).slice(-2); return t > p.closes; }
   S.frDay = frDay; S.rsvpClosed = rsvpClosed;
   // « Confirmer ma présence » (183): the answer form, the guest's QR card and the album's
   // upload gave way to one button — the guest signs in to Marakaj, confirms, and adds
@@ -461,11 +483,11 @@
     draw: function (b, ctx) {
       var p = b.props || {}, body;
       if (ctx.rsvp_on === false && !ctx.tickets && !ctx.editing) body = '<p class="st-lead st-closed">Les réponses sont fermées pour cet événement.</p>';
-      else if (rsvpClosed(p) && !ctx.editing) body = '<p class="st-lead st-closed">Les réponses sont closes depuis le ' + esc(frDay(p.closes)) + '. Merci !</p>';
+      else if (rsvpClosed(p, ctx.tz) && !ctx.editing) body = '<p class="st-lead st-closed">Les réponses sont closes depuis le ' + esc(frDay(p.closes)) + '. Merci !</p>';
       else body = presenceBtn(ctx) + (p.closes && /^\d{4}-\d{2}-\d{2}$/.test(p.closes) ? '<p class="st-lead st-by">Merci de confirmer avant le ' + esc(frDay(p.closes)) + '.</p>' : '');
       // a card that sells tickets (161): « Réserver » as before, and the buyers confirm too (their photos)
       if (ctx.tickets && !sample(ctx)) body = '<p class="st-lead">Cet événement se fait sur billet. Réservez vos places, payez l\'organisateur, recevez vos billets avec leur QR code.</p><a class="st-btn" href="/e/' + encodeURIComponent(ctx.slug || '') + '/billets' + (ctx.preview ? '?apercu=' + encodeURIComponent(ctx.preview) : '') + '">Réserver mes billets</a>' +
-        (rsvpClosed(p) && !ctx.editing ? '' : '<p class="st-lead st-by">Vous avez votre billet ? Confirmez aussi votre présence pour ajouter vos photos.</p>' + presenceBtn(ctx));
+        (rsvpClosed(p, ctx.tz) && !ctx.editing ? '' : '<p class="st-lead st-by">Vous avez votre billet ? Confirmez aussi votre présence pour ajouter vos photos.</p>' + presenceBtn(ctx));
       return '<div class="st-box st-presence-box">' + F(b, ctx, 'title', 'h2', 'st-h2', 'Titre') + F(b, ctx, 'lead', 'p', 'st-lead', 'Un mot', true) + body + '</div>';
     }
   };
@@ -761,7 +783,8 @@
   function ics(ctx, f) {
     if (!f.start) return null;
     var p = function (n) { return ('0' + n).slice(-2); }, d = f.start, e = new Date(d.getTime() + 4 * 3600e3);
-    var fmt = function (x) { return x.getFullYear() + p(x.getMonth() + 1) + p(x.getDate()) + 'T' + p(x.getHours()) + p(x.getMinutes()) + '00'; };
+    // in UTC (« Z »): the phone's calendar shows it at its own hour — 10 h in Ouagadougou is 5 h in New York
+    var fmt = function (x) { return x.getUTCFullYear() + p(x.getUTCMonth() + 1) + p(x.getUTCDate()) + 'T' + p(x.getUTCHours()) + p(x.getUTCMinutes()) + '00Z'; };
     return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Marakaj//Carte//FR', 'BEGIN:VEVENT', 'UID:' + (ctx.slug || 'carte') + '@marakaj.com', 'DTSTAMP:' + fmt(new Date()),
       'DTSTART:' + fmt(d), 'DTEND:' + fmt(e), 'SUMMARY:' + (ctx.title || 'Invitation').replace(/[,;]/g, ' '), 'LOCATION:' + (ctx.place || '').replace(/[,;]/g, ' '),
       'URL:' + location.origin + '/e/' + (ctx.slug || ''), 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');

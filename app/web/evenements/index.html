@@ -964,6 +964,7 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
       S.b = two.length > 1 ? two.slice(1).join(' & ').trim() : '';
       if (c.date) S.date = String(c.date);
       if (c.time) S.time = String(c.time);
+      if (c.tz) S.tz = String(c.tz);
       if (c.place) S.place = String(c.place);
       if (c.lay) S.lay = String(c.lay);
       var ct = c.content && typeof c.content === 'object' ? c.content : {};
@@ -3405,10 +3406,29 @@ section,.loom,.cover,.bandc,.slot{isolation:isolate}
   function stopCinema() { lxStop(); thrStop(); }
 
   // ================= countdown, RSVP, QR =================
+  function offsetMin(ms, tz) {
+    var o = /^([+-])(\d{2}):(\d{2})$/.exec(tz || '');
+    if (o) return (o[1] === '-' ? -1 : 1) * (+o[2] * 60 + +o[3]);
+    var zones = [tz, 'Africa/Ouagadougou'];
+    for (var i = 0; i < zones.length; i++) {
+      if (!zones[i]) continue;
+      try {
+        var q = {}, parts = new Intl.DateTimeFormat('en-CA', {timeZone: zones[i], year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'}).formatToParts(new Date(ms));
+        parts.forEach(function (x) { q[x.type] = +x.value; });
+        return Math.round((Date.UTC(q.year, q.month - 1, q.day, q.hour, q.minute) - Math.floor(ms / 6e4) * 6e4) / 6e4);
+      } catch (e) { /* an unknown zone: the next */ }
+    }
+    return 0;
+  }
+  function onEventClock(y, mo, d, h, mi, tz) {
+    var wall = Date.UTC(y, mo, d, h, mi), ms = wall - offsetMin(wall, tz) * 6e4;
+    return new Date(wall - offsetMin(ms, tz) * 6e4);
+  }
   var timer = 0;
   function tick() {
     clearInterval(timer);
-    var d = D(), tm = (S.time || '15:00').split(':'), target = new Date(d.d.getFullYear(), d.m, d.n, +tm[0] || 0, +tm[1] || 0);
+    // on the event's own clock (its offset or zone, else Ouagadougou's) — never the viewer's phone's
+    var d = D(), tm = (S.time || '15:00').split(':'), target = onEventClock(d.d.getFullYear(), d.m, d.n, +tm[0] || 0, +tm[1] || 0, S.tz);
     function u() {
       var ms = Math.max(0, target - Date.now()), v = [Math.floor(ms / 864e5), Math.floor(ms / 36e5) % 24, Math.floor(ms / 6e4) % 60, Math.floor(ms / 1e3) % 60];
       Array.prototype.forEach.call(document.querySelectorAll('[data-cd] .cd'), function (b) { var i = +b.dataset.u; b.textContent = i ? String(v[i]).padStart(2, '0') : v[i]; });
