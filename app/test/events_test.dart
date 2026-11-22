@@ -454,7 +454,7 @@ void main() {
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
       expect(find.text('Fuseau horaire'), findsOneWidget);
-      expect(find.text('Ouagadougou, Abidjan, Dakar, Bamako, Lomé, Accra (GMT)'), findsOneWidget, reason: 'the default');
+      expect(find.text('GMT · Ouagadougou, Abidjan, Dakar, Bamako, Lomé, Accra'), findsOneWidget, reason: 'the default');
       await tester.enterText(find.byKey(const Key('event-title')), 'Inès & Thomas');
       await tester.tap(find.byKey(const Key('event-save')));
       await tester.pumpAndSettle();
@@ -473,7 +473,7 @@ void main() {
       await tester.tap(find.byKey(const Key('event-zone')));
       await tester.pumpAndSettle();
       expect(find.textContaining('L’heure de ce téléphone (GMT'), findsWidgets);
-      await tester.tap(find.text('Niamey, Cotonou, Lagos, Douala, Kinshasa, Libreville (GMT+1)').last);
+      await tester.tap(find.text('GMT+1 · Niamey, Cotonou, Lagos, Douala, Kinshasa, Libreville').last);
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('event-save')));
       await tester.pumpAndSettle();

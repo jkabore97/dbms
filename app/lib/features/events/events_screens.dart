@@ -66,10 +66,10 @@ class EventDraft {
 /// The zones a card may be on (none changes its clock in summer), the
 /// first the default. « L'heure de ce téléphone » is added by the form.
 const eventZones = <(String, String)>[
-  ('Africa/Ouagadougou', 'Ouagadougou, Abidjan, Dakar, Bamako, Lomé, Accra (GMT)'),
-  ('Africa/Lagos', 'Niamey, Cotonou, Lagos, Douala, Kinshasa, Libreville (GMT+1)'),
-  ('Africa/Johannesburg', 'Kigali, Lubumbashi, Johannesburg (GMT+2)'),
-  ('Africa/Nairobi', 'Nairobi, Addis-Abeba (GMT+3)'),
+  ('Africa/Ouagadougou', 'GMT · Ouagadougou, Abidjan, Dakar, Bamako, Lomé, Accra'),
+  ('Africa/Lagos', 'GMT+1 · Niamey, Cotonou, Lagos, Douala, Kinshasa, Libreville'),
+  ('Africa/Johannesburg', 'GMT+2 · Kigali, Lubumbashi, Johannesburg'),
+  ('Africa/Nairobi', 'GMT+3 · Nairobi, Addis-Abeba'),
 ];
 
 /// « GMT », « GMT+1 », « GMT-5 », « GMT+5:30 »
