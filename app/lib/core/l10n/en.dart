@@ -8757,6 +8757,10 @@ const enStrings = <String, String>{
       'Published',
   'Donnez un nom à l’événement : les prénoms, le nom de la fête.':
       'Give the event a name: the first names, the name of the party.',
+  'Fuseau horaire': 'Time zone',
+  'L’heure de l’événement, là où il a lieu.': 'The event’s time, where it takes place.',
+  'Fuseau de la carte ({gmt})': 'The card’s time zone ({gmt})',
+  'L’heure de ce téléphone ({gmt})': 'This phone’s time ({gmt})',
   'Choisir le jour et l’heure':
       'Choose the day and time',
   'Nom de l’événement':

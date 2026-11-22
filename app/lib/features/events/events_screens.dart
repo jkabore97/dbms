@@ -45,13 +45,39 @@ class EventDraft {
     this.startsAt,
     this.place,
     this.card,
+    this.tz,
   });
 
   final String title;
   final String kind;
+
+  /// The day and hour as chosen, on the clock of [tz] (« 15 h » in Ouagadougou).
   final DateTime? startsAt;
   final String? place;
   final String? card;
+
+  /// The card's time zone, chosen with the hour: a zone's name
+  /// (« Africa/Ouagadougou ») or an offset (« -05:00 »). Ouagadougou unless
+  /// the organiser says otherwise — never silently the phone's (an
+  /// organiser in New York made a card in Ouagadougou on New York's hour).
+  final String? tz;
+}
+
+/// The zones a card may be on (none changes its clock in summer), the
+/// first the default. « L'heure de ce téléphone » is added by the form.
+const eventZones = <(String, String)>[
+  ('Africa/Ouagadougou', 'Ouagadougou, Abidjan, Dakar, Bamako, Lomé, Accra (GMT)'),
+  ('Africa/Lagos', 'Niamey, Cotonou, Lagos, Douala, Kinshasa, Libreville (GMT+1)'),
+  ('Africa/Johannesburg', 'Kigali, Lubumbashi, Johannesburg (GMT+2)'),
+  ('Africa/Nairobi', 'Nairobi, Addis-Abeba (GMT+3)'),
+];
+
+/// « GMT », « GMT+1 », « GMT-5 », « GMT+5:30 »
+String gmtLabel(Duration off) {
+  if (off == Duration.zero) return 'GMT';
+  final sign = off.isNegative ? '-' : '+';
+  final h = off.inHours.abs(), m = off.inMinutes.abs() % 60;
+  return 'GMT$sign$h${m == 0 ? '' : ':${m.toString().padLeft(2, '0')}'}';
 }
 
 /// « Nouvelle carte », start to finish: the sheet for the words, then the
@@ -84,6 +110,7 @@ Future<EventSummary?> startNewCard(
       card: draft.card!,
       startsAt: draft.startsAt,
       place: draft.place,
+      tz: draft.tz,
     );
   } catch (e) {
     if (context.mounted) {
@@ -477,6 +504,11 @@ class _NewEventSheetState extends State<NewEventSheet> {
   String _kind = 'mariage';
   DateTime? _day;
   TimeOfDay _time = const TimeOfDay(hour: 15, minute: 0);
+
+  /// The card's zone (« Africa/Ouagadougou »), or [_phoneZone] for the
+  /// phone's own offset, or the card's own when it is none of the list.
+  String _zone = eventZones.first.$1;
+  static const _phoneZone = 'phone';
   String? _error;
 
   @override
@@ -493,6 +525,14 @@ class _NewEventSheetState extends State<NewEventSheet> {
       _time = TimeOfDay(hour: at.hour, minute: at.minute);
     }
     _place.text = i.place ?? '';
+    final tz = i.tz?.trim();
+    // a card of before 152 has no zone: it was read on this phone's clock, so kept on it
+    if (tz == null || tz.isEmpty) _zone = _phoneZone;
+    if (tz != null && tz.isNotEmpty) {
+      final named = eventZones.where((z) => z.$1 == tz).isNotEmpty;
+      // « +00:00 », saved by a phone in Ouagadougou: Ouagadougou's
+      _zone = named ? tz : (eventZoneOffset(tz) == Duration.zero ? eventZones.first.$1 : tz);
+    }
   }
 
   @override
@@ -534,6 +574,7 @@ class _NewEventSheetState extends State<NewEventSheet> {
       startsAt: starts,
       place: _place.text.trim().isEmpty ? null : _place.text.trim(),
       card: widget.card,
+      tz: starts == null ? null : (_zone == _phoneZone ? EventsRepository.offsetOf(starts) : _zone),
     ));
   }
 
@@ -598,6 +639,37 @@ class _NewEventSheetState extends State<NewEventSheet> {
               onPressed: _pickDay,
               icon: const Icon(Icons.event_outlined),
               label: Align(alignment: Alignment.centerLeft, child: Text(dayText)),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              key: const Key('event-zone'),
+              initialValue: _zone,
+              isExpanded: true,
+              decoration: InputDecoration(
+                labelText: context.tr('Fuseau horaire'),
+                helperText: context.tr('L’heure de l’événement, là où il a lieu.'),
+                border: const OutlineInputBorder(),
+              ),
+              items: [
+                for (final z in eventZones)
+                  DropdownMenuItem(value: z.$1, child: Text(z.$2, overflow: TextOverflow.ellipsis)),
+                // the card's own, saved before (« -05:00 »): kept as it was
+                if (_zone != _phoneZone && eventZones.where((z) => z.$1 == _zone).isEmpty)
+                  DropdownMenuItem(
+                      value: _zone,
+                      child: Text(
+                          context.tr('Fuseau de la carte ({gmt})',
+                              {'gmt': eventZoneOffset(_zone) == null ? _zone : gmtLabel(eventZoneOffset(_zone)!)}),
+                          overflow: TextOverflow.ellipsis)),
+                DropdownMenuItem(
+                    value: _phoneZone,
+                    child: Text(context.tr('L’heure de ce téléphone ({gmt})', {'gmt': gmtLabel(_now().timeZoneOffset)}),
+                        overflow: TextOverflow.ellipsis)),
+              ],
+              onChanged: (v) {
+                if (v == null) return;
+                setState(() => _zone = v);
+              },
             ),
             const SizedBox(height: 12),
             TextField(
@@ -827,10 +899,8 @@ class _EventScreenState extends State<EventScreen> {
       // The hour was read and chosen on the card's own clock: back to an instant
       // on that clock, the card's zone kept (it was set to the phone's — a save
       // from Newark moved a card in Ouagadougou to New York's hour).
-      final off = eventZoneOffset(e.tz);
-      final w = draft.startsAt;
-      final at = w == null || off == null ? w : DateTime.utc(w.year, w.month, w.day, w.hour, w.minute).subtract(off);
-      await widget.events.update(e.id, title: draft.title, kind: draft.kind, startsAt: at, place: draft.place, keepZone: off != null);
+      // The zone chosen with it (the card's own unless changed).
+      await widget.events.update(e.id, title: draft.title, kind: draft.kind, startsAt: draft.startsAt, place: draft.place, tz: draft.tz ?? e.tz);
     } catch (err) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AuthRepository.describeError(err))));
       return;

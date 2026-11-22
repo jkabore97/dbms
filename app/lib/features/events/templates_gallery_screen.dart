@@ -342,6 +342,7 @@ class _TemplatePreviewScreenState extends State<TemplatePreviewScreen> {
           card: t.key,
           startsAt: draft.startsAt,
           place: draft.place,
+          tz: draft.tz,
         );
         if (!mounted) return;
         Navigator.of(context).pop(made);

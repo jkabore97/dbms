@@ -75,8 +75,8 @@ class EventsRepository {
 
   /// A new event: its address and preview token come from the server
   /// (event_create, bound by the policies as a direct write would be).
-  /// [startsAt] is the organiser's local time; its offset for that day goes
-  /// with it (153), so the hour typed is the hour the card shows.
+  /// [startsAt] is the day and hour as chosen, on [tz]'s clock (« 15 h » in
+  /// Ouagadougou); without [tz], the phone's (153), its offset going with it.
   Future<EventSummary> create({
     required String orgId,
     required String title,
@@ -84,15 +84,17 @@ class EventsRepository {
     required String card,
     DateTime? startsAt,
     String? place,
+    String? tz,
   }) async {
+    final zoned = onZone(startsAt, tz);
     final r = await _require().rpc('event_create', params: {
       'p_org': orgId,
       'p_title': title,
       'p_kind': kind,
       'p_card': card,
-      'p_starts_at': startsAt?.toUtc().toIso8601String(),
+      'p_starts_at': zoned.$1?.toIso8601String(),
       'p_place': place,
-      'p_tz': startsAt == null ? null : offsetOf(startsAt),
+      'p_tz': zoned.$2,
     });
     return EventSummary.fromJson(Map<String, dynamic>.from(r as Map));
   }
@@ -154,15 +156,26 @@ class EventsRepository {
   /// the place — the row's, changed by the business's admins as 152's
   /// policy allows; the pages read them at their next opening. The offset
   /// goes with the hour, as at creation.
-  /// With [keepZone], the card keeps its own zone (the hour was chosen on it).
-  Future<void> update(String id, {required String title, required String kind, DateTime? startsAt, String? place, bool keepZone = false}) async {
+  /// [startsAt] is read on [tz]'s clock, as at creation.
+  Future<void> update(String id, {required String title, required String kind, DateTime? startsAt, String? place, String? tz}) async {
+    final zoned = onZone(startsAt, tz);
     await _require().from('events').update({
       'title': title,
       'kind': kind,
-      'starts_at': startsAt?.toUtc().toIso8601String(),
+      'starts_at': zoned.$1?.toIso8601String(),
       'place': place,
-      if (startsAt != null && !keepZone) 'tz': offsetOf(startsAt),
+      if (zoned.$2 != null) 'tz': zoned.$2,
     }).eq('id', id);
+  }
+
+  /// A day and hour as chosen (its fields, whatever the phone's zone) read
+  /// on [tz]'s clock: the instant in UTC, and the zone saved with it. A zone
+  /// this does not know, or none: the phone's clock and its offset (153).
+  static (DateTime?, String?) onZone(DateTime? wall, String? tz) {
+    if (wall == null) return (null, null);
+    final off = eventZoneOffset(tz);
+    if (tz == null || off == null) return (wall.toUtc(), offsetOf(wall));
+    return (DateTime.utc(wall.year, wall.month, wall.day, wall.hour, wall.minute).subtract(off), tz.trim());
   }
 
   /// The guests' album open or closed (155).
