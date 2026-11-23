@@ -593,6 +593,15 @@
       '<p class="ed-lab">Le voile, pour lire les mots</p>' + chips('veil', [['', 'Selon le fond'], ['light', 'Clair'], ['dark', 'Sombre']], st.veil || '') +
       '<label class="ed-field">Force du voile<input class="ed-range" type="range" min="0" max="85" data-dim value="' + Math.round(v.dim * 100) + '"></label>';
   }
+  // the card's films: a loop behind the block, its veil to read the words
+  function filmPicker(st) {
+    var v = S.sceneVeil(st);
+    return '<p class="ed-lab">Le film</p><div class="ed-row ed-scenes">' + S.filmsFor(ctx.slug).map(function (x) {
+      return '<button type="button" class="ed-chip' + (st.film === x.id ? ' on' : '') + '" data-film="' + x.id + '" aria-pressed="' + (st.film === x.id) + '">' + esc(x.name) + '</button>';
+    }).join('') + '</div>' +
+      '<p class="ed-lab">Le voile, pour lire les mots</p>' + chips('veil', [['', 'Selon le film'], ['light', 'Clair'], ['dark', 'Sombre']], st.veil || '') +
+      '<label class="ed-field">Force du voile<input class="ed-range" type="range" min="0" max="85" data-dim value="' + Math.round(v.dim * 100) + '"></label>';
+  }
   function openSettings(id) {
     var b = blockById(id); if (!b) return;
     var d = S.BLOCKS[b.type], p = b.props || {}, st = b.style || {}, h = '';
@@ -649,10 +658,13 @@
     }
     // the look of the block
     var bg = st.bg || '', bgs = [['', 'Du modèle'], ['paper', 'Papier'], ['soft', 'Doux'], ['accent', 'Accent'], ['back', 'Fond de page'], ['ink', 'Sombre'], ['none', 'Transparent'], ['custom', 'Couleur…'], ['photo', 'Photo…'], ['scene', 'Animé…']];
+    // a card's own films (its filmed places), offered on that card
+    if (S.filmsFor(ctx.slug).length) bgs.push(['film', 'Film…']);
     h += '<p class="ed-lab">Fond du bloc</p>' + chips('bg', bgs, U.isHex(bg) ? 'custom' : bg) +
       (U.isHex(bg) ? '<div class="ed-row" style="margin-top:8px"><input type="color" data-bgc value="' + bg + '"></div>' : '') +
       (bg === 'photo' ? '<div class="ed-row" style="margin-top:8px">' + photoBtn('style.bgPhoto', 'Choisir la photo de fond') + '</div><label class="ed-field">Voile sur la photo<input class="ed-range" type="range" min="0" max="85" data-dim value="' + Math.round((st.dim != null ? st.dim : 0.45) * 100) + '"></label>' : '') +
-      (bg === 'scene' ? scenePicker(st) : '');
+      (bg === 'scene' ? scenePicker(st) : '') +
+      (bg === 'film' ? filmPicker(st) : '');
     if (canvas.querySelector('[data-bid="' + b.id + '"] .st-btn')) h += '<p class="ed-lab">Boutons</p><div class="ed-row"><button type="button" class="ed-chip" data-openbtn>Couleur et style des boutons…</button></div>';
     h += '<p class="ed-lab">Alignement</p>' + chips('al', [['', 'Du modèle'], ['left', 'À gauche'], ['center', 'Centré'], ['right', 'À droite']], st.align || '') +
       '<p class="ed-lab">Espace autour</p>' + chips('pad', [['S', 'Serré'], ['', 'Normal'], ['L', 'Large']], st.pad || '') +
@@ -754,9 +766,15 @@
           bb.style = bb.style || {};
           if (v === 'custom') bb.style.bg = U.isHex(bb.style.bg) ? bb.style.bg : '#c2185b'; else if (v) bb.style.bg = v; else delete bb.style.bg;
           // a scene to start with: the card's own (its design's), else the garden
+          if (v === 'film' && !(bb.style.film && S.FILM[bb.style.film])) bb.style.film = S.filmsFor(ctx.slug)[0].id;
           if (v === 'scene' && !(bb.style.scene && S.SCENE[bb.style.scene])) bb.style.scene = (doc.theme && doc.theme.scene && S.SCENE[doc.theme.scene] && !(S.SCENE[doc.theme.scene].premium && ctx.pro === false)) ? doc.theme.scene : 'garden';
         });
         re(); if (v === 'photo' && !(bb.style && bb.style.bgPhoto)) openPhoto(id, 'style.bgPhoto'); return;
+      }
+      if (t.hasAttribute('data-film')) {
+        var fm = t.getAttribute('data-film');
+        commit(function () { bb.style = bb.style || {}; bb.style.bg = 'film'; bb.style.film = fm; });
+        re(); return;
       }
       if (t.hasAttribute('data-scene')) {
         if (t.hasAttribute('data-locked')) { toast('Ce fond animé fait partie de Marakaj Pro.'); return; }
@@ -916,6 +934,7 @@
       }).join('') +
       '<p class="ed-lab">Motif</p>' + chips('motif', [['', 'Aucun']].concat(Object.keys(S.MOTIFS).map(function (k) { return [k, S.MOTIFS[k].name]; })), th.motif && th.motif.id || '') +
       (th.motif && th.motif.id ? '<label class="ed-field">Intensité<input class="ed-range" type="range" min="4" max="40" data-mo value="' + Math.round((th.motif.opacity != null ? th.motif.opacity : 0.12) * 100) + '"></label><label class="ed-check"><input type="checkbox" data-moall' + (th.motif.all ? ' checked' : '') + '>Sur toute la carte</label>' : '') +
+      '<p class="ed-lab">Ouverture</p><label class="ed-check"><input type="checkbox" data-intro' + (th.intro === 'enveloppe' ? ' checked' : '') + '>La carte arrive dans une enveloppe scellée : l’invité la touche pour l’ouvrir (et lancer la musique)</label>' +
       '<p class="ed-lab">Pétales</p><label class="ed-check"><input type="checkbox" data-fall' + (th.fall === 'petales' ? ' checked' : '') + '>Pétales de toutes les couleurs qui tombent sur toute la carte</label>' +
       '<p class="ed-lab">Mouvement</p>' + chips('motion', [['aucune', 'Aucun'], ['douce', 'Doux'], ['vivante', 'Vivant']], th.motion || 'douce') +
       '<p class="ed-lab">Coins</p>' + chips('corners', [['droit', 'Droits'], ['doux', 'Doux'], ['rond', 'Ronds']], th.corners || 'doux') +
@@ -959,6 +978,7 @@
         if (t.hasAttribute('data-font')) { commit(function () { th.fonts = Object.assign({}, th.fonts || {}); th.fonts[t.getAttribute('data-font')] = t.value; }); return; }
         if (t.hasAttribute('data-mo')) { commit(function () { th.motif.opacity = (+t.value) / 100; }); return; }
         if (t.hasAttribute('data-fall')) { commit(function () { if (t.checked) th.fall = 'petales'; else delete th.fall; }); return; }
+        if (t.hasAttribute('data-intro')) { commit(function () { if (t.checked) th.intro = 'enveloppe'; else delete th.intro; }); return; }
         if (t.hasAttribute('data-moall')) { commit(function () { th.motif.all = t.checked; }); }
       });
     }, null, true);
