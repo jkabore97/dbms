@@ -223,6 +223,12 @@ async function serve(request, env, ctx) {
         // Mara's own preview rather than no page.
       }
     }
+    // A card's films and songs (Studio): a phone asks for them in parts —
+    // an iPhone plays no video whose server ignores « Range » — and the
+    // assets binding answers the whole file; the part is cut here.
+    if (MEDIA.test(url.pathname) && (request.method === "GET" || request.method === "HEAD")) {
+      return ranged(request, await env.ASSETS.fetch(request));
+    }
     const shell = cacheFor(url.pathname, await env.ASSETS.fetch(request));
     // An address the app has no page for (the owner: failed pages show
     // 404): the app's own page still answers — it draws « Erreur 404 —
@@ -287,6 +293,34 @@ const ALWAYS_ASK = new Set([
   "/flutter_service_worker.js",
   "/version.json",
 ]);
+
+// The cards' films and songs, answered in parts (« Range ») when asked so.
+const MEDIA = /^\/cartes\/(films|musique)\/[a-z0-9-]+\.(mp4|mp3)$/;
+async function ranged(request, res) {
+  const type = res.headers.get("Content-Type") || "";
+  if (res.status !== 200 || type.startsWith("text/html")) {
+    return new Response("Introuvable.", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } });
+  }
+  const headers = new Headers(res.headers);
+  headers.set("Accept-Ranges", "bytes");
+  headers.set("Cache-Control", "public, max-age=86400");
+  const m = /^bytes=(\d*)-(\d*)$/.exec((request.headers.get("Range") || "").trim());
+  if (!m || (m[1] === "" && m[2] === "")) {
+    return new Response(request.method === "HEAD" ? null : res.body, { status: 200, headers });
+  }
+  const all = await res.arrayBuffer(), size = all.byteLength;
+  let start, end;
+  if (m[1] === "") { start = Math.max(0, size - Number(m[2])); end = size - 1; }
+  else { start = Number(m[1]); end = m[2] === "" ? size - 1 : Math.min(Number(m[2]), size - 1); }
+  if (start >= size || start > end) {
+    headers.set("Content-Range", `bytes */${size}`);
+    headers.delete("Content-Length");
+    return new Response(null, { status: 416, headers });
+  }
+  headers.set("Content-Range", `bytes ${start}-${end}/${size}`);
+  headers.set("Content-Length", String(end - start + 1));
+  return new Response(request.method === "HEAD" ? null : all.slice(start, end + 1), { status: 206, headers });
+}
 
 function cacheFor(path, response) {
   const type = response.headers.get("Content-Type") || "";
