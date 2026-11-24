@@ -445,6 +445,10 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch189.sql
+      - name: Batch 190 — Studio saves a card with its envelope (intro, seal)
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f database/tests/test_batch190.sql
 
       # The bell: the right people hear the right events and nobody else,
       # a threshold rings on the crossing rather than on every sale below
