@@ -31,6 +31,8 @@
         // the blocks' entrance and the scene grown (five seconds)
         setTimeout(function () {
           try { Array.prototype.forEach.call(d.querySelectorAll('.st-b'), function (b) { b.classList.add('in'); }); } catch (e) {}
+          ready(d).then(function () {
+          if (document.visibilityState === 'hidden') throw new Error('caché');
           try {
             var hide = d.createElement('style');
             hide.textContent = 'html,body{scrollbar-width:none;overflow:hidden}::-webkit-scrollbar{display:none}';
@@ -44,15 +46,49 @@
             fonts.then(function () { return fontCss(d); }).then(function (css) {
               var bg = w.getComputedStyle(d.body).backgroundColor || '#ffffff';
               return w.htmlToImage.toBlob(d.body, { width: W, height: H, pixelRatio: 2, backgroundColor: bg, type: 'image/jpeg', quality: 0.86, fontEmbedCSS: css || '' });
-            }).then(function (blob) { clearTimeout(timer); end(blob ? null : new Error('vide'), blob); },
-              function (e) { clearTimeout(timer); end(e || new Error('dessin')); });
+            }).then(function (blob) {
+              clearTimeout(timer);
+              // put away while drawing (the organiser went to WhatsApp): the page may have stopped half-way
+              if (document.visibilityState === 'hidden') { end(new Error('caché')); return; }
+              end(blob ? null : new Error('vide'), blob);
+            }, function (e) { clearTimeout(timer); end(e || new Error('dessin')); });
           };
           d.head.appendChild(s);
+          }).catch(function (e) { clearTimeout(timer); end(e || new Error('pas prête')); });
         }, 5000);
       };
       f.src = '/e/' + encodeURIComponent(ctx.slug) + '?vitrine=1' + (ctx.preview ? '&apercu=' + encodeURIComponent(ctx.preview) : '') + '&t=' + Date.now();
       document.body.appendChild(f);
     });
+  }
+
+  // The first screen really drawn before it is taken (the owner: a shared
+  // link showed a dark card with an empty frame — the picture had been
+  // taken while the phone had put Studio away, the photo never loaded and
+  // the living picture never painted). Its photos asked for at once and
+  // waited for; its scenes' canvases painted (a pixel that is not empty).
+  // Not ready in fifteen seconds: no picture rather than an unfinished one.
+  function ready(d) {
+    var top = Array.prototype.filter.call(d.images, function (im) { var r = im.getBoundingClientRect(); return r.top < H && r.bottom > 0; });
+    top.forEach(function (im) { im.loading = 'eager'; });
+    var pics = Promise.all(top.map(function (im) {
+      if (im.complete && im.naturalWidth) return Promise.resolve();
+      return new Promise(function (ok, no) { im.addEventListener('load', ok, { once: true }); im.addEventListener('error', function () { no(new Error('photo')); }, { once: true }); });
+    }));
+    var painted = function () {
+      return Array.prototype.every.call(d.querySelectorAll('.st-scene canvas'), function (c) {
+        var r = c.getBoundingClientRect(); if (r.top >= H || r.bottom <= 0 || !c.width || !c.height) return true;
+        var g; try { g = c.getContext('2d'); } catch (e) { return true; }
+        if (!g) return true;   // drawn by the graphics chip: not readable, trusted
+        try { var px = g.getImageData(0, 0, c.width, c.height).data, step = Math.max(4, Math.floor(px.length / 4 / 400) * 4);
+          for (var i = 3; i < px.length; i += step) if (px[i] > 0) return true; } catch (e) { return true; }
+        return false;
+      });
+    };
+    var scenes = new Promise(function (ok, no) {
+      var n = 0; (function look() { if (painted()) ok(); else if (++n > 40) no(new Error('décor')); else setTimeout(look, 250); })();
+    });
+    return Promise.race([Promise.all([pics, scenes]), new Promise(function (ok, no) { setTimeout(function () { no(new Error('pas prête')); }, 15000); })]);
   }
 
   // The card's fonts, only the Latin ones (accents included): Google's
@@ -119,16 +155,28 @@
   }
 
   // The card's picture, drawn and sent; one at a time, the last asked wins.
+  var waiting = null;
+  function later(ctx) {
+    waiting = ctx;
+    if (later.on) return; later.on = true;
+    document.addEventListener('visibilitychange', function back() {
+      if (document.visibilityState !== 'visible' || !waiting) return;
+      document.removeEventListener('visibilitychange', back); later.on = false;
+      var c = waiting; waiting = null; setTimeout(function () { S.cardPicture(c); }, 800);
+    });
+  }
   S.cardPicture = function (ctx) {
     if (!ctx || !ctx.slug || !ctx.edit || !ctx.uploads || !window.Promise || !window.fetch) return Promise.resolve(null);
     if (busy) { again = ctx; return Promise.resolve(null); }
+    // Studio put away (another app, the screen off): drawn when it is back
+    if (document.visibilityState === 'hidden') { later(ctx); return Promise.resolve(null); }
     busy = true;
     return shoot(ctx).then(function (blob) {
       return send(ctx, blob).then(function (r) {
         // the wide one for a shared link (180), from the same picture
         return banner(blob).then(function (b) { return sendOg(ctx, b); }).then(function () { return r; }, function () { return r; });
       });
-    }).then(function (r) { return r && r.key || null; }, function () { return null; })
+    }).then(function (r) { return r && r.key || null; }, function (e) { if (e && e.message === 'caché') later(ctx); return null; })
       .then(function (key) {
         busy = false;
         if (again) { var next = again; again = null; return S.cardPicture(next); }

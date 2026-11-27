@@ -984,22 +984,42 @@
   };
   // The films (above): each loop loaded and played only while its block is
   // on screen, paused off it; « reduce motion »: the first picture only.
-  var filmIo = null;
+  // Paused by the phone (a call, another app, the screen off, a battery
+  // saver that refuses a film until the screen is touched — the owner:
+  // « Motion stopped »): the films on screen start again when the page is
+  // back, at the first touch, and when one stops without being asked to.
+  var filmIo = null, onScreen = [];
+  function filmPlay(v) {
+    if (!v.isConnected || document.visibilityState === 'hidden') return;
+    if (!v.getAttribute('src')) { v.setAttribute('src', v.getAttribute('data-film')); v.preload = 'auto'; }
+    v.muted = true;
+    var p = v.play(); if (p && p.catch) p.catch(function () { /* the picture stays until the next try */ });
+  }
+  function filmsAgain() { onScreen = onScreen.filter(function (v) { return v.isConnected; }); onScreen.forEach(function (v) { if (v.paused) filmPlay(v); }); }
   S.films = function (root) {
     var vids = root.querySelectorAll('video[data-film]');
     if (!vids.length) return;
     var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (still || !('IntersectionObserver' in window)) return;
-    if (!filmIo) filmIo = new IntersectionObserver(function (es) {
-      es.forEach(function (e) {
-        var v = e.target;
-        if (e.isIntersecting) {
-          if (!v.getAttribute('src')) { v.setAttribute('src', v.getAttribute('data-film')); v.preload = 'auto'; }
-          var p = v.play(); if (p && p.catch) p.catch(function () { /* the picture stays */ });
-        } else if (!v.paused) v.pause();
-      });
-    }, { rootMargin: '25% 0px' });
-    Array.prototype.forEach.call(vids, function (v) { v.muted = true; filmIo.observe(v); });
+    if (!filmIo) {
+      filmIo = new IntersectionObserver(function (es) {
+        es.forEach(function (e) {
+          var v = e.target, i = onScreen.indexOf(v);
+          if (e.isIntersecting) { if (i < 0) onScreen.push(v); filmPlay(v); }
+          else { if (i >= 0) onScreen.splice(i, 1); if (!v.paused) v.pause(); }
+        });
+      }, { rootMargin: '25% 0px' });
+      document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') setTimeout(filmsAgain, 300); });
+      window.addEventListener('pageshow', filmsAgain);
+      ['pointerdown', 'touchstart', 'keydown'].forEach(function (t) { document.addEventListener(t, filmsAgain, { passive: true, capture: true }); });
+    }
+    Array.prototype.forEach.call(vids, function (v) {
+      if (v._st) return; v._st = true;
+      v.muted = true;
+      // stopped while on screen and the page in view, not by us: again, a moment later
+      v.addEventListener('pause', function () { if (onScreen.indexOf(v) >= 0) setTimeout(function () { if (v.paused && onScreen.indexOf(v) >= 0) filmPlay(v); }, 1500); });
+      filmIo.observe(v);
+    });
   };
 
   // The envelope (theme.intro 'enveloppe'): the card arrives sealed — the
