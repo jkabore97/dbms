@@ -992,9 +992,29 @@
   function filmPlay(v) {
     if (!v.isConnected || document.visibilityState === 'hidden') return;
     if (!v.getAttribute('src')) { v.setAttribute('src', v.getAttribute('data-film')); v.preload = 'auto'; }
-    v.muted = true;
-    var p = v.play(); if (p && p.catch) p.catch(function () { /* the picture stays until the next try */ });
+    v.muted = true; v.defaultMuted = true; v.playsInline = true;
+    var p = v.play();
+    if (p && p.then) p.then(function () { v._why = 'joue'; diag(); }, function (e) { v._why = (e && e.name) || 'refusé'; diag(); });
   }
+  // « ?diag=1 »: what the phone says about each film, on the card itself
+  // (the owner: « Still no motion » — said by the phone, not guessed).
+  var diagOn = /[?&]diag=1/.test(location.search), diagEl = null;
+  function diag() {
+    if (!diagOn) return;
+    if (!diagEl) { diagEl = document.createElement('pre'); diagEl.style.cssText = 'position:fixed;left:6px;right:6px;bottom:6px;z-index:99;margin:0;padding:8px;max-height:45vh;overflow:auto;background:rgba(0,0,0,.82);color:#9f9;font:11px/1.35 monospace;white-space:pre-wrap;border-radius:8px;pointer-events:none'; document.body.appendChild(diagEl); }
+    var mm = function (q) { return window.matchMedia && window.matchMedia(q).matches ? 'oui' : 'non'; };
+    var c = navigator.connection || {};
+    var lines = ['page: ' + document.visibilityState + ' · animations réduites: ' + mm('(prefers-reduced-motion: reduce)') + ' · économie de données: ' + (c.saveData ? 'oui' : 'non') + ' · activation: ' + (navigator.userActivation ? (navigator.userActivation.hasBeenActive ? 'oui' : 'non') : '?'),
+      'navigateur: ' + navigator.userAgent.replace(/^Mozilla\/5\.0 /, '').slice(0, 140)];
+    Array.prototype.forEach.call(document.querySelectorAll('video[data-film]'), function (v, i) {
+      var e = v.error;
+      lines.push('film ' + (i + 1) + ' ' + (v.getAttribute('data-film') || '').split('/').pop() + ': ' + (onScreen.indexOf(v) >= 0 ? 'à l’écran' : 'hors écran') +
+        ' · src ' + (v.getAttribute('src') ? 'oui' : 'non') + ' · prêt ' + v.readyState + ' · réseau ' + v.networkState + ' · ' + (v.paused ? 'en pause' : 'joue') +
+        ' · t=' + v.currentTime.toFixed(1) + (e ? ' · ERREUR ' + e.code + (e.message ? ' ' + e.message : '') : '') + (v._why ? ' · play(): ' + v._why : ''));
+    });
+    diagEl.textContent = lines.join('\n');
+  }
+  if (diagOn) setInterval(diag, 1000);
   function filmsAgain() { onScreen = onScreen.filter(function (v) { return v.isConnected; }); onScreen.forEach(function (v) { if (v.paused) filmPlay(v); }); }
   S.films = function (root) {
     var vids = root.querySelectorAll('video[data-film]');
@@ -1011,7 +1031,8 @@
       }, { rootMargin: '25% 0px' });
       document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') setTimeout(filmsAgain, 300); });
       window.addEventListener('pageshow', filmsAgain);
-      ['pointerdown', 'touchstart', 'keydown'].forEach(function (t) { document.addEventListener(t, filmsAgain, { passive: true, capture: true }); });
+      // a touch lets a phone play only when the finger lifts (« touchend », « click »), not when it lands
+      ['pointerup', 'touchend', 'click', 'keydown'].forEach(function (t) { document.addEventListener(t, filmsAgain, { passive: true, capture: true }); });
     }
     Array.prototype.forEach.call(vids, function (v) {
       if (v._st) return; v._st = true;

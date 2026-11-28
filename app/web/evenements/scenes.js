@@ -1250,7 +1250,11 @@
       w0 = w; var wl = h * .78;
       tg.globalCompositeOperation = 'destination-out'; tg.fillStyle = 'rgba(0,0,0,.16)'; tg.fillRect(0, 0, w, h);
       tg.globalCompositeOperation = 'lighter';
-      // the names, written by sparks, once
+      // the names, written by sparks, once — on the first animated cards, whose page holds them
+      // (S, lay()). A Studio card has neither (« S is not defined », thrown each frame and
+      // swallowed: a night with no fireworks at all); it writes its names itself, so its
+      // fireworks start at once.
+      if (!pts && t > .4 && !(typeof S === 'object' && S && typeof lay === 'function')) { pts = []; phase = 2; }
       if (!pts && t > .4) {
         var L = lay(), nm = (S.a || 'A') + (S.b && S.b.trim() ? ' & ' + S.b : ''), tx = document.createElement('canvas'); tx.width = w; tx.height = Math.round(h * .3); var tc = tx.getContext('2d');
         var fs = Math.min(w * .17, h * .07); tc.font = '400 ' + fs + 'px ' + (L.fd || 'serif'); tc.textAlign = 'center'; tc.textBaseline = 'middle'; tc.fillStyle = '#fff';
